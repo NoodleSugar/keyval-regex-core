@@ -29,18 +29,18 @@ public final class RegexToAutomatonConverter
 
 	private static class StateBijection
 	{
-		HashMap<Integer, ArrayList<Integer>> bijection;
-		
-		StateBijection()
+		private HashMap<Integer, ArrayList<Integer>> bijection;
+
+		public StateBijection()
 		{
 			bijection = new HashMap<>();
 		}
-		
+
 		public void add(int alias, ArrayList<Integer> states)
 		{
 			bijection.put(alias, states);
 		}
-		
+
 		public int getAlias(ArrayList<Integer> states)
 		{
 			for(Map.Entry<Integer, ArrayList<Integer>> entry : bijection.entrySet())
@@ -63,7 +63,7 @@ public final class RegexToAutomatonConverter
 			}
 			return -1;
 		}
-		
+
 		@Override
 		public String toString()
 		{
@@ -78,118 +78,157 @@ public final class RegexToAutomatonConverter
 			return s.toString();
 		}
 	}
-	
+
 	private static class AutomatonArray
 	{
-		RegexAutomaton.Builder builder;
-		StateBijection bijection;
-		HashMap<Integer, HashMap<String, ArrayList<Integer>>> lines;
-		
-		AutomatonArray(RegexAutomaton.Builder builder)
+		private class Symbol
+		{
+			public String str;
+			public EdgeData.Type type;
+
+			public Symbol(EdgeData.Type type, String str)
+			{
+				this.type = type;
+				this.str = str;
+			}
+
+			@Override
+			public boolean equals(Object o)
+			{
+				if(o instanceof Symbol)
+				{
+					Symbol e = (Symbol) o;
+					if(e.type == type && e.str.equals(str))
+						return true;
+				}
+
+				return false;
+			}
+
+			@Override
+			public int hashCode()
+			{
+				return 7 * str.hashCode() + 13 * type.hashCode();
+			}
+
+			@Override
+			public String toString()
+			{
+				if(type == EdgeData.Type.REGEX)
+					return "~" + str + "~";
+				return str;
+			}
+		};
+
+		private RegexAutomaton.Builder builder;
+		private StateBijection bijection;
+		private HashMap<Integer, HashMap<Symbol, ArrayList<Integer>>> lines;
+
+		public AutomatonArray(RegexAutomaton.Builder builder)
 		{
 			this.builder = builder;
 			bijection = new StateBijection();
 			lines = new HashMap<>();
-			
+
 			for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
 			{
 				int currentState = entry.getKey();
 				ArrayList<EdgeData> edges = entry.getValue();
-				
-				HashMap<String, ArrayList<Integer>> line = new HashMap<>();
+
+				HashMap<Symbol, ArrayList<Integer>> line = new HashMap<>();
 				for(EdgeData edge : edges)
 				{
-					String word = edge.str;
-					ArrayList<Integer> arrayCase = line.get(word);
+					Symbol symbol = new Symbol(edge.type, edge.str);
+					ArrayList<Integer> arrayCase = line.get(symbol);
 					if(arrayCase == null)
 						arrayCase = new ArrayList<Integer>();
-					
+
 					arrayCase.add(edge.endState);
-					line.put(word, arrayCase);
+					line.put(symbol, arrayCase);
 				}
 				lines.put(currentState, line);
 			}
 		}
-		
-		void determinize()
+
+		public void determinize()
 		{
-			//On ajoute toutes les lignes du tableau à la queue
-			ArrayDeque<Map.Entry<Integer, HashMap<String, ArrayList<Integer>>>> queue = new ArrayDeque<>();
-			for(Map.Entry<Integer, HashMap<String, ArrayList<Integer>>> line : lines.entrySet())
+			ArrayDeque<Map.Entry<Integer, HashMap<Symbol, ArrayList<Integer>>>> queue = new ArrayDeque<>();
+			for(Map.Entry<Integer, HashMap<Symbol, ArrayList<Integer>>> line : lines.entrySet())
+				// On ajoute toutes les lignes du tableau Ã  la queue
 				queue.offer(line);
-			
-			//Tant que la queue n'est pas vide
+
+			// Tant que la queue n'est pas vide
 			while(!queue.isEmpty())
 			{
-				Map.Entry<Integer, HashMap<String, ArrayList<Integer>>> line = queue.poll();
+				Map.Entry<Integer, HashMap<Symbol, ArrayList<Integer>>> line = queue.poll();
 				int currentState = line.getKey();
-				
-				//Pour chaque case de la ligne
-				for(Map.Entry<String, ArrayList<Integer>> arrayCase : line.getValue().entrySet())
+
+				// Pour chaque case de la ligne
+				for(Map.Entry<Symbol, ArrayList<Integer>> arrayCase : line.getValue().entrySet())
 				{
-					String word = arrayCase.getKey();
+					Symbol symbol = arrayCase.getKey();
 					ArrayList<Integer> nextStates = arrayCase.getValue();
-					
-					//Si cette case contient plusieurs états successeurs
-					//on créé un nouvel état qui est la fusion de ces précédents
+
+					// Si cette case contient plusieurs Ã©tats successeurs
+					// on crÃ©Ã© un nouvel Ã©tat qui est la fusion de ces prÃ©cÃ©dents
 					if(nextStates.size() > 1)
 					{
-						//On vérifie si l'état fusion existe déja
+						// On vÃ©rifie si l'Ã©tat fusion existe dÃ©ja
 						int newState = bijection.getAlias(nextStates);
-						
-						//Si il n'existe pas on le créé
+
+						// Si il n'existe pas on le crÃ©Ã©
 						if(newState == -1)
 						{
 							newState = builder.addState();
-							HashMap<String, ArrayList<Integer>> newArrayCases = mergeLines(newState, nextStates);
-							
-							Map.Entry<Integer, HashMap<String, ArrayList<Integer>>> newLine =
-									new AbstractMap.SimpleEntry<Integer, HashMap<String, ArrayList<Integer>>>(newState, newArrayCases);
+							HashMap<Symbol, ArrayList<Integer>> newArrayCases = mergeLines(newState, nextStates);
+
+							Map.Entry<Integer, HashMap<Symbol, ArrayList<Integer>>> newLine = new AbstractMap.SimpleEntry<Integer, HashMap<Symbol, ArrayList<Integer>>>(
+									newState, newArrayCases);
 							queue.offer(newLine);
 						}
-						
-						//On supprime ensuite les arcs portant sur le même mot
-						//puis on ajoute l'arc vers le nouvel état fusion
+
+						// On supprime ensuite les arcs portant sur le mÃªme mot
+						// puis on ajoute l'arc vers le nouvel Ã©tat fusion
 						ArrayList<EdgeData> edges = builder.edges.get(currentState);
-						edges.removeIf(edge -> word.equals(edge.str));
-						edges.add(new EdgeData(currentState, newState, word, EdgeData.Type.STRING_EQUALS));
+						edges.removeIf(edge -> symbol.str.equals(edge.str) && symbol.type == edge.type);
+						edges.add(new EdgeData(currentState, newState, symbol.str, symbol.type));
 					}
 				}
 			}
 		}
-		
-		HashMap<String, ArrayList<Integer>> mergeLines(int newState, ArrayList<Integer> caseStates)
+
+		private HashMap<Symbol, ArrayList<Integer>> mergeLines(int newState, ArrayList<Integer> caseStates)
 		{
-			//Les cases de la nouvelle ligne
-			HashMap<String, ArrayList<Integer>> newArrayCases = new HashMap<>();
+			// Les cases de la nouvelle ligne
+			HashMap<Symbol, ArrayList<Integer>> newArrayCases = new HashMap<>();
 			ArrayList<EdgeData> edges = new ArrayList<>();
 			bijection.add(newState, caseStates);
-			
-			//On parcourt tous les états de la case
+
+			// On parcourt tous les ï¿½tats de la case
 			for(int state : caseStates)
 			{
-				//On récupère la ligne correspondant à l'état actuel
-				HashMap<String, ArrayList<Integer>> line = lines.get(state);
+				// On rÃ©cupÃ¨re la ligne correspondant Ã  l'Ã©tat actuel
+				HashMap<Symbol, ArrayList<Integer>> line = lines.get(state);
 				if(line == null)
 					continue;
-				
-				//On parcourt les cases de la ligne actuelle
-				for(Map.Entry<String, ArrayList<Integer>> arrayCase : line.entrySet())
+
+				// On parcourt les cases de la ligne actuelle
+				for(Map.Entry<Symbol, ArrayList<Integer>> arrayCase : line.entrySet())
 				{
-					String word = arrayCase.getKey();
+					Symbol symbol = arrayCase.getKey();
 					ArrayList<Integer> states = arrayCase.getValue();
-					
-					ArrayList<Integer> newStates = newArrayCases.get(word);
+
+					ArrayList<Integer> newStates = newArrayCases.get(symbol);
 					if(newStates == null)
 					{
 						newStates = new ArrayList<Integer>();
-						newArrayCases.put(word, newStates);
+						newArrayCases.put(symbol, newStates);
 					}
 					for(int s : states)
 					{
 						if(!newStates.contains(s))
 						{
-							edges.add(new EdgeData(newState, s, word, EdgeData.Type.STRING_EQUALS));
+							edges.add(new EdgeData(newState, s, symbol.str, symbol.type));
 							newStates.add(s);
 						}
 						if(builder.finalState.contains(s))
@@ -201,17 +240,17 @@ public final class RegexToAutomatonConverter
 			builder.edges.put(newState, edges);
 			return newArrayCases;
 		}
-		
+
 		@Override
 		public String toString()
 		{
 			StringBuffer s = new StringBuffer();
-			for(Map.Entry<Integer, HashMap<String, ArrayList<Integer>>> entry1 : lines.entrySet())
+			for(Map.Entry<Integer, HashMap<Symbol, ArrayList<Integer>>> entry1 : lines.entrySet())
 			{
 				s.append(entry1.getKey()).append("|");
-				for(Map.Entry<String, ArrayList<Integer>> entry2: entry1.getValue().entrySet())
+				for(Map.Entry<Symbol, ArrayList<Integer>> entry2 : entry1.getValue().entrySet())
 				{
-					s.append(entry2.getKey()).append(" :");
+					s.append(entry2.getKey().str).append(" :");
 					for(int state : entry2.getValue())
 						s.append(" ").append(state);
 					s.append("| ");
@@ -222,23 +261,59 @@ public final class RegexToAutomatonConverter
 			return s.toString();
 		}
 	}
-	
+
 	private static void determinize(RegexAutomaton.Builder builder)
 	{
-		//Remplacement des epsilons transitions
+		// Remplacement des epsilons transitions
 		cleanEpsilon(builder);
-		
-		//Suppression des noeuds innaccessibles et de leurs arcs
+
+		// Suppression des noeuds innaccessibles et de leurs arcs
 		cleanInaccessible(builder);
-		
-		//Déterminisation
+
+		// Gestion des collisions entre symbol et regex
+		determinizeRegex(builder);
+
+		// DÃ©terminisation
 		AutomatonArray array = new AutomatonArray(builder);
 		array.determinize();
-		
-		//Suppression des noeuds innaccessibles et de leurs arcs
+
+		// Suppression des noeuds innaccessibles et de leurs arcs
 		cleanInaccessible(builder);
 	}
-	
+
+	private static void determinizeRegex(RegexAutomaton.Builder builder)
+	{
+
+		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
+		{
+			ArrayList<EdgeData> edges = entry.getValue();
+			ArrayList<EdgeData> newEdges = new ArrayList<>();
+
+			// On parcourt chaque arcs du noeuds courant
+			for(EdgeData edge : edges)
+			{
+				// Si l'arc est de type regex
+				if(edge.type == EdgeData.Type.REGEX)
+				{
+					// On regarde les arcs du noeud suivant
+					ArrayList<EdgeData> nextEdges = builder.edges.get(edge.endState);
+					if(nextEdges == null)
+						continue;
+					for(EdgeData nextEdge : nextEdges)
+					{
+						// Si l'arc courant du noeud suivant est de type string et est inclue dans regex
+						if(nextEdge.type == EdgeData.Type.STRING_EQUALS && nextEdge.str.matches(edge.str))
+							// On crÃ©Ã© un nouvel arc du mÃªme type avec la mÃªme string du noeud de dÃ©part au
+							// noeud de fin de l'arc regex
+							newEdges.add(new EdgeData(edge.startState, edge.endState, nextEdge.str, nextEdge.type));
+					}
+				}
+			}
+			// On ajoute tous les nouveaux arcs Ã  l'ensemble des arcs du builder
+			edges.addAll(newEdges);
+		}
+	}
+
 	private static void cleanEpsilon(RegexAutomaton.Builder builder)
 	{
 		ArrayDeque<EdgeData> epsilonEdges = new ArrayDeque<>();
@@ -250,7 +325,7 @@ public final class RegexToAutomatonConverter
 					epsilonEdges.offer(edge);
 			}
 		}
-		
+
 		while(!epsilonEdges.isEmpty())
 		{
 			EdgeData epsilonEdge = epsilonEdges.poll();
@@ -259,7 +334,7 @@ public final class RegexToAutomatonConverter
 			if(epsilonEdge.startState != epsilonEdge.endState)
 			{
 				ArrayList<EdgeData> endStateEdges = builder.edges.get(epsilonEdge.endState);
-				//Héritage des arcs du noeud suivant la epsilon transition
+				// HÃ©ritage des arcs du noeud suivant la epsilon transition
 				if(endStateEdges != null)
 				{
 					for(EdgeData edge : endStateEdges)
@@ -271,13 +346,13 @@ public final class RegexToAutomatonConverter
 							epsilonEdges.offer(newEdge);
 					}
 				}
-				//Héritage du status final du noeud suivant la epsilon transition
+				// Hï¿½ritage du status final du noeud suivant la epsilon transition
 				if(builder.finalState.contains(epsilonEdge.endState))
 					builder.finalState.add(epsilonEdge.startState);
 			}
 		}
 	}
-	
+
 	private static void cleanInaccessible(RegexAutomaton.Builder builder)
 	{
 		ArrayList<Integer> accessibleStates = new ArrayList<>();
@@ -290,7 +365,7 @@ public final class RegexToAutomatonConverter
 		}
 		builder.states.removeIf(state -> !accessibleStates.contains(state));
 	}
-	
+
 	private static void getAccessibles(RegexAutomaton.Builder builder, List<Integer> accessibles, int state)
 	{
 		List<EdgeData> edges = builder.edges.get(state);
@@ -306,11 +381,11 @@ public final class RegexToAutomatonConverter
 			}
 		}
 	}
-	
+
 	private static RegexAutomaton.Builder recursiveConstruct(IElement element) throws BuilderException
 	{
 		RegexAutomaton.Builder builder = new RegexAutomaton.Builder();
-		
+
 		if(element instanceof Key)
 		{
 			Key key = (Key) element;
@@ -357,14 +432,14 @@ public final class RegexToAutomatonConverter
 		Quantifier q = element.getQuantifier();
 		int inf = q.getInf();
 		int sup = q.getSup();
-		
+
 		if(inf != 1 || sup != 1)
 		{
 			RegexAutomaton.Builder quantifiedBuilder = new RegexAutomaton.Builder();
 			int start = 0;
 			for(int i = 0; i < inf; i++)
 				start = quantifiedBuilder.mergeBuilder(start, -1, builder);
-			
+
 			if(sup == -1)
 			{
 				quantifiedBuilder.mergeBuilder(start, start, builder);
@@ -389,5 +464,5 @@ public final class RegexToAutomatonConverter
 		else
 			return builder;
 	}
-	
+
 }

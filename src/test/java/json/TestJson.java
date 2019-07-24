@@ -2,11 +2,17 @@ package json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
 
 import insomnia.json.JsonParser;
+import insomnia.json.JsonValueExtractor;
+import insomnia.json.JsonWriter;
 
 class TestJson
 {
@@ -20,15 +26,15 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"Value expected");
 	}
-	
+
 	@Test
 	void errorKey()
 	{
 		file = "error_key.json";
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
-	"Invalid key");
+				"Invalid key");
 	}
-	
+
 	@Test
 	void errorColon()
 	{
@@ -36,7 +42,7 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"Missing ':' after the key 'key'");
 	}
-	
+
 	@Test
 	void errorCloseObject()
 	{
@@ -44,7 +50,7 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"Expected ',' or '}'");
 	}
-	
+
 	@Test
 	void errorCloseArray()
 	{
@@ -52,7 +58,7 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"Expected ',' or ']'");
 	}
-	
+
 	@Test
 	void errorKeyExists()
 	{
@@ -60,7 +66,7 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"Key 'key' already exists");
 	}
-	
+
 	@Test
 	void errorInvalidJson()
 	{
@@ -68,7 +74,7 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"Invalid Json stream");
 	}
-	
+
 	@Test
 	void errorInvalidCharacter()
 	{
@@ -76,6 +82,7 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"Invalid character '\\'");
 	}
+
 	@Test
 	void errorEOF()
 	{
@@ -83,6 +90,7 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"EOF while reading String value");
 	}
+
 	@Test
 	void errorNumber()
 	{
@@ -90,7 +98,7 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"Invalid number syntax '20e'");
 	}
-	
+
 	@Test
 	void errorLiterral()
 	{
@@ -98,13 +106,27 @@ class TestJson
 		assertThrows(ParseException.class, () -> parser.readJsonStream(this.getClass().getResourceAsStream(file)),
 				"Unknown literal 'TRUE'");
 	}
-	
-	//TODO
+
 	@Test
-	void valid()
+	void valid() throws ParseException, IOException
 	{
-		file = "valid.json";
-		String jsonData = "";
-		assertEquals(jsonData, jsonData);
+		String jsonData = "{\"key\":\"value\",\"key2\":[true,false,20.0],\"key3\":{\"object\":\"blabla\"}}";
+		ByteArrayInputStream jsonStream = new ByteArrayInputStream(jsonData.getBytes());
+		Object data = parser.readJsonStream(jsonStream);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		JsonWriter.writeJson(out, data, true);
+		assertEquals(jsonData, out.toString());
+	}
+
+	@Test
+	void values() throws ParseException, IOException
+	{
+		file = "values.json";
+		Object data = parser.readJsonStream(this.getClass().getResourceAsStream(file));
+		ArrayList<String> paths = new ArrayList<>();
+		paths.add("object.array.key");
+		ArrayList<Object> values = JsonValueExtractor.getValues(data, paths);
+		assertEquals("Pouet", values.get(0));
+		assertEquals(true, values.get(1));
 	}
 }

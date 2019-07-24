@@ -12,14 +12,6 @@ public class Path extends ArrayDeque<String>
 		super();
 	}
 	
-	public Path(String s)
-	{
-		super();
-		String[] sarray = s.split("\\.");
-		for(String str : sarray)
-			push(str);
-	}
-	
 	public String getPath()
 	{
 		return String.join(".", this);

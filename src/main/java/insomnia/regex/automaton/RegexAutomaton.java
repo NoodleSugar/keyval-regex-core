@@ -41,11 +41,11 @@ public final class RegexAutomaton implements IAutomaton<String>
 			}
 		}
 
-		int initialState;
-		int junctionState;
-		ArrayList<Integer> finalState;
-		TreeSet<Integer> states;
-		HashMap<Integer, ArrayList<EdgeData>> edges;
+		protected int initialState;
+		protected int junctionState;
+		protected ArrayList<Integer> finalState;
+		protected TreeSet<Integer> states;
+		protected HashMap<Integer, ArrayList<EdgeData>> edges;
 
 		public Builder()
 		{
@@ -98,15 +98,15 @@ public final class RegexAutomaton implements IAutomaton<String>
 		{
 			int last = states.last();
 
-			// On supprime la jonction de fin du builder importé
+			// On supprime la jonction de fin du builder importï¿½
 			if(end != -1)
 				builder.states.remove(builder.junctionState);
 
-			// On ajout les états en réindixant
+			// On ajout les ï¿½tats en rï¿½indixant
 			for(int state : builder.states)
 				states.add(state + last);
 
-			// On ajoute les arcs en réindexant les états de début et fin
+			// On ajoute les arcs en rï¿½indexant les ï¿½tats de dï¿½but et fin
 			int startState;
 			int endState;
 			for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
@@ -132,7 +132,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 				}
 			}
 
-			// On remet la jonction de fin précédement supprimée
+			// On remet la jonction de fin prï¿½cï¿½dement supprimï¿½e
 			if(end != -1)
 				builder.states.add(builder.junctionState);
 
@@ -144,19 +144,19 @@ public final class RegexAutomaton implements IAutomaton<String>
 			return new RegexAutomaton(this);
 		}
 
-		static class EdgeData
+		public static class EdgeData
 		{
-			int startState;
-			int endState;
-			String str;
-			Type type;
+			protected int startState;
+			protected int endState;
+			protected String str;
+			protected Type type;
 
-			enum Type
+			public enum Type
 			{
 				EMPTY, STRING_EQUALS, REGEX;
 			};
 
-			EdgeData(int start, int end, String str, Type type)
+			public EdgeData(int start, int end, String str, Type type)
 			{
 				startState = start;
 				endState = end;
@@ -208,8 +208,8 @@ public final class RegexAutomaton implements IAutomaton<String>
 		}
 	}
 
-	IState<String> initialState;
-	IState<String> currentState;
+	private IState<String> initialState;
+	private IState<String> currentState;
 	private ArrayList<IState<String>> states;
 
 	private RegexAutomaton(Builder b) throws AutomatonException
@@ -233,22 +233,21 @@ public final class RegexAutomaton implements IAutomaton<String>
 		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : b.edges.entrySet())
 		{
 			int startId = entry.getKey();
+			State startState = (State) getState(startId);
+			ArrayList<EdgeRegex> regexEdges = new ArrayList<>();
 			for(EdgeData d : entry.getValue())
 			{
-				State startState = (State) getState(startId);
 				State endState = (State) getState(d.endState);
-				IEdge<String> edge;
 				if(d.type == EdgeData.Type.STRING_EQUALS)
-					edge = new EdgeStringEqual(endState, d.str);
-				else if(d.type == EdgeData.Type.REGEX)
-					edge = new EdgeRegex(endState, d.str);
+					startState.add(new EdgeStringEqual(endState, d.str));
 				else if(d.type == EdgeData.Type.EMPTY)
-					edge = new EdgeEmpty(endState);
+					startState.add(new EdgeEmpty(endState));
+				else if(d.type == EdgeData.Type.REGEX)
+					regexEdges.add(new EdgeRegex(endState, d.str));
 				else
 					throw new AutomatonException("Invalid edge type : " + d.type);
-
-				startState.add(edge);
 			}
+			startState.addAll(regexEdges);
 		}
 	}
 

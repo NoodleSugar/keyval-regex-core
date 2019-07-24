@@ -9,5 +9,5 @@ public interface IEdge<E>
 {
 	boolean isValid(E element);
 
-	IState<String> getNextState();
+	IState<E> getNextState();
 }

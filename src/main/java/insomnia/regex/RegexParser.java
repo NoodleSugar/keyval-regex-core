@@ -151,7 +151,7 @@ public class RegexParser
 						data += c;
 						break;
 					}
-					throw new ParseException("Unexpected character '" + c + "'", offset);
+					throw new ParseException("Invalid character '" + c + "'", offset);
 
 				case NUMBER:
 					if(Character.isDigit(c))
@@ -208,7 +208,7 @@ public class RegexParser
 					
 				case BACKSLASH:
 					if(d == -1)
-						throw new ParseException("Unexpected backslash before EOF", offset);
+						throw new ParseException("EOF while reading String value", offset);
 					lexerState = wordState;
 					data += c;
 					break;
@@ -399,7 +399,7 @@ public class RegexParser
 				MultipleElement container = (MultipleElement) elementStack.peek();
 				boolean addElt = true;
 
-				// Si le conteneur n'a qu'un élément
+				// Si le conteneur n'a qu'un Ã©lÃ©ment
 				if(element instanceof MultipleElement)
 				{
 					MultipleElement top = (MultipleElement) element;

@@ -1,4 +1,4 @@
-package insomnia.query;
+package insomnia.json;
 
 import java.util.ArrayList;
 import java.util.List;
