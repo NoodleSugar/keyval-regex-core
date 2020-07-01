@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import insomnia.automaton.AutomatonException;
-import insomnia.regex.automaton.RegexAutomaton.Builder.BuilderException;
-import insomnia.regex.automaton.RegexAutomaton.Builder.EdgeData;
+import insomnia.regex.automaton.RegexAutomatonBuilder.BuilderException;
+import insomnia.regex.automaton.RegexAutomatonBuilder.EdgeData;
 import insomnia.regex.element.IElement;
 import insomnia.regex.element.Key;
 import insomnia.regex.element.MultipleElement;
@@ -22,7 +22,7 @@ public final class RegexToAutomatonConverter
 {
 	public static RegexAutomaton convert(IElement elements) throws AutomatonException, BuilderException
 	{
-		RegexAutomaton.Builder builder = recursiveConstruct(elements);
+		RegexAutomatonBuilder builder = recursiveConstruct(elements);
 		determinize(builder);
 		return builder.build();
 	}
@@ -120,11 +120,11 @@ public final class RegexToAutomatonConverter
 			}
 		};
 
-		private RegexAutomaton.Builder builder;
+		private RegexAutomatonBuilder builder;
 		private StateBijection bijection;
 		private HashMap<Integer, HashMap<Symbol, ArrayList<Integer>>> lines;
 
-		public AutomatonArray(RegexAutomaton.Builder builder)
+		public AutomatonArray(RegexAutomatonBuilder builder)
 		{
 			this.builder = builder;
 			bijection = new StateBijection();
@@ -204,7 +204,7 @@ public final class RegexToAutomatonConverter
 			ArrayList<EdgeData> edges = new ArrayList<>();
 			bijection.add(newState, caseStates);
 
-			// On parcourt tous les �tats de la case
+			// On parcourt tous les états de la case
 			for(int state : caseStates)
 			{
 				// On récupère la ligne correspondant à l'état actuel
@@ -262,7 +262,7 @@ public final class RegexToAutomatonConverter
 		}
 	}
 
-	private static void determinize(RegexAutomaton.Builder builder)
+	private static void determinize(RegexAutomatonBuilder builder)
 	{
 		// Remplacement des epsilons transitions
 		cleanEpsilon(builder);
@@ -281,7 +281,7 @@ public final class RegexToAutomatonConverter
 		cleanInaccessible(builder);
 	}
 
-	private static void determinizeRegex(RegexAutomaton.Builder builder)
+	private static void determinizeRegex(RegexAutomatonBuilder builder)
 	{
 
 		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
@@ -314,7 +314,7 @@ public final class RegexToAutomatonConverter
 		}
 	}
 
-	private static void cleanEpsilon(RegexAutomaton.Builder builder)
+	private static void cleanEpsilon(RegexAutomatonBuilder builder)
 	{
 		ArrayDeque<EdgeData> epsilonEdges = new ArrayDeque<>();
 		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
@@ -353,7 +353,7 @@ public final class RegexToAutomatonConverter
 		}
 	}
 
-	private static void cleanInaccessible(RegexAutomaton.Builder builder)
+	private static void cleanInaccessible(RegexAutomatonBuilder builder)
 	{
 		ArrayList<Integer> accessibleStates = new ArrayList<>();
 		accessibleStates.add(builder.initialState);
@@ -366,7 +366,7 @@ public final class RegexToAutomatonConverter
 		builder.states.removeIf(state -> !accessibleStates.contains(state));
 	}
 
-	private static void getAccessibles(RegexAutomaton.Builder builder, List<Integer> accessibles, int state)
+	private static void getAccessibles(RegexAutomatonBuilder builder, List<Integer> accessibles, int state)
 	{
 		List<EdgeData> edges = builder.edges.get(state);
 		if(edges == null)
@@ -382,9 +382,9 @@ public final class RegexToAutomatonConverter
 		}
 	}
 
-	private static RegexAutomaton.Builder recursiveConstruct(IElement element) throws BuilderException
+	private static RegexAutomatonBuilder recursiveConstruct(IElement element) throws BuilderException
 	{
-		RegexAutomaton.Builder builder = new RegexAutomaton.Builder();
+		RegexAutomatonBuilder builder = new RegexAutomatonBuilder();
 
 		if(element instanceof Key)
 		{
@@ -407,7 +407,7 @@ public final class RegexToAutomatonConverter
 			builder.addFinalState(1);
 			for(IElement e : oe)
 			{
-				RegexAutomaton.Builder newBuilder = recursiveConstruct(e);
+				RegexAutomatonBuilder newBuilder = recursiveConstruct(e);
 				int start = builder.addState();
 				builder.addEdge(0, start, null, EdgeData.Type.EMPTY);
 				builder.mergeBuilder(start, 1, newBuilder);
@@ -421,7 +421,7 @@ public final class RegexToAutomatonConverter
 			for(IElement e : me)
 			{
 				start = end;
-				RegexAutomaton.Builder newBuilder = recursiveConstruct(e);
+				RegexAutomatonBuilder newBuilder = recursiveConstruct(e);
 				end = builder.mergeBuilder(start, -1, newBuilder);
 			}
 			builder.addFinalState(end);
@@ -435,7 +435,7 @@ public final class RegexToAutomatonConverter
 
 		if(inf != 1 || sup != 1)
 		{
-			RegexAutomaton.Builder quantifiedBuilder = new RegexAutomaton.Builder();
+			RegexAutomatonBuilder quantifiedBuilder = new RegexAutomatonBuilder();
 			int start = 0;
 			for(int i = 0; i < inf; i++)
 				start = quantifiedBuilder.mergeBuilder(start, -1, builder);
