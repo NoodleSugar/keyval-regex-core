@@ -1,10 +1,7 @@
 package insomnia.regex.automaton;
 
 import java.security.InvalidParameterException;
-import java.util.AbstractMap;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,91 +26,75 @@ public final class RegexToAutomatonConverter
 
 	private static void determinize(RegexAutomatonBuilder builder)
 	{
-		// Remplacement des epsilons transitions
-		cleanEpsilon(builder);
-
-		// Suppression des noeuds innaccessibles et de leurs arcs
-		cleanInaccessible(builder);
-
-		// Gestion des collisions entre symbol et regex
-		determinizeRegex(builder);
-
-		// Déterminisation
-		RegexAutomatonArray array = new RegexAutomatonArray(builder);
-		array.determinize();
-
-		// Suppression des noeuds innaccessibles et de leurs arcs
-		cleanInaccessible(builder);
-	}
-
-	private static void determinizeRegex(RegexAutomatonBuilder builder)
-	{
-
-		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
+		// On parcourt tous les états de l'automate
+		for(int state : builder.states)
 		{
-			ArrayList<EdgeData> edges = entry.getValue();
-			ArrayList<EdgeData> newEdges = new ArrayList<>();
+			/*
+			 * Gestion des epsilon transitions
+			 */
+			// On calcule la epsilon fermeture de l'état
+			// puis on supprime ses epsilon transitions
+			List<Integer> closure = new ArrayList<>();
+			epsilonClosure(builder, state, closure);
+			List<EdgeData> state_edges = builder.edges.get(state);
+			state_edges.removeIf(e -> e.startState == state && e.type == EdgeData.Type.EPSILON);
 
-			// On parcourt chaque arcs du noeuds courant
-			for(EdgeData edge : edges)
+			// Pour chaque état de la epsilon fermeture
+			for(int s : closure)
 			{
-				// Si l'arc est de type regex
+				// Pour chaque transition sortante de cet état
+				for(EdgeData edge : builder.edges.get(s))
+				{
+					// Si ce n'est pas une epsilon transition
+					if(edge.type != EdgeData.Type.EPSILON)
+						// On ajoute la transition à l'état actuel
+						state_edges.add(new EdgeData(state, edge.endState, edge.str, edge.type));
+				}
+			}
+
+			/*
+			 * Gestion collision entre label et label regex
+			 */
+			// Pour chaque transition sortante de l'état actuel
+			for(EdgeData edge : state_edges)
+			{
+				// Si c'est une regex transition
 				if(edge.type == EdgeData.Type.REGEX)
 				{
-					// On regarde les arcs du noeud suivant
-					ArrayList<EdgeData> nextEdges = builder.edges.get(edge.endState);
-					if(nextEdges == null)
-						continue;
-					for(EdgeData nextEdge : nextEdges)
+					// Pour chaque autre transition non regex
+					for(EdgeData e : state_edges)
 					{
-						// Si l'arc courant du noeud suivant est de type string et est inclue dans regex
-						if(nextEdge.type == EdgeData.Type.STRING_EQUALS && nextEdge.str.matches(edge.str))
-							// On créé un nouvel arc du même type avec la même string du noeud de départ au
-							// noeud de fin de l'arc regex
-							newEdges.add(new EdgeData(edge.startState, edge.endState, nextEdge.str, nextEdge.type));
+						// Si il y a collision
+						if(e.type == EdgeData.Type.STRING_EQUALS && e.str.matches(edge.str))
+						{
+							// On ajoute une nouvelle transition (si elle n'existe pas déja)
+							// du noeud de départ vers le noeuds d'arrivée de la regex transition
+							// et ayant pour label celui de la collision
+							EdgeData newEdge = new EdgeData(state, edge.endState, e.str, EdgeData.Type.STRING_EQUALS);
+							if(!state_edges.contains(newEdge))
+								state_edges.add(newEdge);
+						}
 					}
 				}
 			}
-			// On ajoute tous les nouveaux arcs à l'ensemble des arcs du builder
-			edges.addAll(newEdges);
 		}
+
+		// Suppression des noeuds innaccessibles et de leurs arcs
+		cleanInaccessible(builder);
 	}
 
-	private static void cleanEpsilon(RegexAutomatonBuilder builder)
+	// Calcule la epsilon fermeture de l'état state, privée de ce dernier
+	private static void epsilonClosure(RegexAutomatonBuilder builder, int state, List<Integer> closure)
 	{
-		ArrayDeque<EdgeData> epsilonEdges = new ArrayDeque<>();
-		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
+		List<EdgeData> edges = builder.edges.get(state);
+		for(EdgeData edge : edges)
 		{
-			for(EdgeData edge : entry.getValue())
+			// Si l'arc est une epsilon transition
+			if(edge.type == EdgeData.Type.EPSILON)
 			{
-				if(edge.str == null)
-					epsilonEdges.offer(edge);
-			}
-		}
-
-		while(!epsilonEdges.isEmpty())
-		{
-			EdgeData epsilonEdge = epsilonEdges.poll();
-			ArrayList<EdgeData> startStateEdges = builder.edges.get(epsilonEdge.startState);
-			startStateEdges.remove(epsilonEdge);
-			if(epsilonEdge.startState != epsilonEdge.endState)
-			{
-				ArrayList<EdgeData> endStateEdges = builder.edges.get(epsilonEdge.endState);
-				// Héritage des arcs du noeud suivant la epsilon transition
-				if(endStateEdges != null)
-				{
-					for(EdgeData edge : endStateEdges)
-					{
-						EdgeData newEdge = new EdgeData(epsilonEdge.startState, edge.endState, edge.str, edge.type);
-						if(!startStateEdges.contains(newEdge))
-							startStateEdges.add(newEdge);
-						if(newEdge.str == null)
-							epsilonEdges.offer(newEdge);
-					}
-				}
-				// H�ritage du status final du noeud suivant la epsilon transition
-				if(builder.finalState.contains(epsilonEdge.endState))
-					builder.finalState.add(epsilonEdge.startState);
+				// On ajoute l'état pointé par la transition dans la fermeture
+				closure.add(edge.endState);
+				epsilonClosure(builder, edge.endState, closure);
 			}
 		}
 	}
@@ -174,7 +155,7 @@ public final class RegexToAutomatonConverter
 			{
 				RegexAutomatonBuilder newBuilder = recursiveConstruct(e);
 				int start = builder.addState();
-				builder.addEdge(0, start, null, EdgeData.Type.EMPTY);
+				builder.addEdge(0, start, null, EdgeData.Type.EPSILON);
 				builder.mergeBuilder(start, 1, newBuilder);
 			}
 		}
@@ -209,7 +190,7 @@ public final class RegexToAutomatonConverter
 			{
 				quantifiedBuilder.mergeBuilder(start, start, builder);
 				int end = quantifiedBuilder.addState();
-				quantifiedBuilder.addEdge(start, end, null, EdgeData.Type.EMPTY);
+				quantifiedBuilder.addEdge(start, end, null, EdgeData.Type.EPSILON);
 				start = end;
 			}
 			else
@@ -217,10 +198,10 @@ public final class RegexToAutomatonConverter
 				int end = quantifiedBuilder.addState();
 				for(int i = 0; i < sup - inf - 1; i++)
 				{
-					quantifiedBuilder.addEdge(start, end, null, EdgeData.Type.EMPTY);
+					quantifiedBuilder.addEdge(start, end, null, EdgeData.Type.EPSILON);
 					start = quantifiedBuilder.mergeBuilder(start, -1, builder);
 				}
-				quantifiedBuilder.addEdge(start, end, null, EdgeData.Type.EMPTY);
+				quantifiedBuilder.addEdge(start, end, null, EdgeData.Type.EPSILON);
 				start = quantifiedBuilder.mergeBuilder(start, end, builder);
 			}
 			quantifiedBuilder.addFinalState(start);

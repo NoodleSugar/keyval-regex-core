@@ -29,6 +29,48 @@ public class RegexAutomatonBuilder
 		}
 	}
 
+	public static class EdgeData
+	{
+		protected int startState;
+		protected int endState;
+		protected String str;
+		protected Type type;
+
+		public enum Type
+		{
+			EPSILON, STRING_EQUALS, REGEX;
+		};
+
+		public EdgeData(int start, int end, String str, Type type)
+		{
+			startState = start;
+			endState = end;
+			this.str = str;
+			this.type = type;
+		}
+
+		@Override
+		public boolean equals(Object o)
+		{
+			if(o == null)
+				return false;
+			if(o instanceof EdgeData)
+			{
+				EdgeData d = (EdgeData) o;
+				if(startState == d.startState && endState == d.endState
+						&& ((str == null && d.str == null) || (str != null && str.equals(d.str))))
+					return true;
+			}
+			return false;
+		}
+
+		@Override
+		public String toString()
+		{
+			return startState + ":" + endState + " " + str;
+		}
+	}
+
 	protected int initialState;
 	protected int junctionState;
 	protected ArrayList<Integer> finalState;
@@ -53,7 +95,7 @@ public class RegexAutomatonBuilder
 
 	public void addState(int state) throws BuilderException
 	{
-		if (!states.add(state))
+		if(!states.add(state))
 			throw new BuilderException("State " + state + " already in");
 	}
 
@@ -68,12 +110,13 @@ public class RegexAutomatonBuilder
 	{
 		EdgeData edge = new EdgeData(startState, endState, str, type);
 		ArrayList<EdgeData> stateEdges;
-		if (edges.containsKey(startState))
+		if(edges.containsKey(startState))
 		{
 			stateEdges = edges.get(startState);
-			if (stateEdges.contains(edge))
+			if(stateEdges.contains(edge))
 				throw new BuilderException("Edge " + edge + " already in");
-		} else
+		}
+		else
 		{
 			stateEdges = new ArrayList<EdgeData>();
 			edges.put(startState, stateEdges);
@@ -86,31 +129,31 @@ public class RegexAutomatonBuilder
 		int last = states.last();
 
 		// On supprime la jonction de fin du builder import�
-		if (end != -1)
+		if(end != -1)
 			builder.states.remove(builder.junctionState);
 
 		// On ajout les �tats en r�indixant
-		for (int state : builder.states)
+		for(int state : builder.states)
 			states.add(state + last);
 
 		// On ajoute les arcs en r�indexant les �tats de d�but et fin
 		int startState;
 		int endState;
-		for (Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
+		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
 		{
 			int edgeStartState = entry.getKey();
-			for (EdgeData d : entry.getValue())
+			for(EdgeData d : entry.getValue())
 			{
-				if (edgeStartState == builder.initialState)
+				if(edgeStartState == builder.initialState)
 					startState = start;
-				else if (end != -1 && edgeStartState == builder.junctionState)
+				else if(end != -1 && edgeStartState == builder.junctionState)
 					startState = end;
 				else
 					startState = edgeStartState + last;
 
-				if (d.endState == builder.initialState)
+				if(d.endState == builder.initialState)
 					endState = start;
-				else if (end != -1 && d.endState == builder.junctionState)
+				else if(end != -1 && d.endState == builder.junctionState)
 					endState = end;
 				else
 					endState = d.endState + last;
@@ -120,7 +163,7 @@ public class RegexAutomatonBuilder
 		}
 
 		// On remet la jonction de fin pr�c�dement supprim�e
-		if (end != -1)
+		if(end != -1)
 			builder.states.add(builder.junctionState);
 
 		return end != -1 ? end : builder.junctionState + last;
@@ -131,62 +174,20 @@ public class RegexAutomatonBuilder
 		return new RegexAutomaton(this);
 	}
 
-	public static class EdgeData
-	{
-		protected int startState;
-		protected int endState;
-		protected String str;
-		protected Type type;
-
-		public enum Type
-		{
-			EMPTY, STRING_EQUALS, REGEX;
-		};
-
-		public EdgeData(int start, int end, String str, Type type)
-		{
-			startState = start;
-			endState = end;
-			this.str = str;
-			this.type = type;
-		}
-
-		@Override
-		public boolean equals(Object o)
-		{
-			if (o == null)
-				return false;
-			if (o instanceof EdgeData)
-			{
-				EdgeData d = (EdgeData) o;
-				if (startState == d.startState && endState == d.endState
-						&& ((str == null && d.str == null) || (str != null && str.equals(d.str))))
-					return true;
-			}
-			return false;
-		}
-
-		@Override
-		public String toString()
-		{
-			return startState + ":" + endState + " " + str;
-		}
-	}
-
 	@Override
 	public String toString()
 	{
 		StringBuffer s = new StringBuffer();
 
 		s.append("Initial : ").append(initialState).append("\nJunction : ").append(junctionState).append("\nNodes : {");
-		for (int state : states)
+		for(int state : states)
 			s.append(state).append(" ");
 		s.append("}\n");
 
 		s.append("Edges :\n");
-		for (Map.Entry<Integer, ArrayList<EdgeData>> entry : edges.entrySet())
+		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : edges.entrySet())
 		{
-			for (EdgeData d : entry.getValue())
+			for(EdgeData d : entry.getValue())
 				s.append(d).append("\n");
 		}
 

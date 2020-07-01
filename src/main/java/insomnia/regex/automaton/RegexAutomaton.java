@@ -49,7 +49,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 				State endState = (State) getState(d.endState);
 				if(d.type == EdgeData.Type.STRING_EQUALS)
 					startState.add(new EdgeStringEqual(endState, d.str));
-				else if(d.type == EdgeData.Type.EMPTY)
+				else if(d.type == EdgeData.Type.EPSILON)
 					startState.add(new EdgeEmpty(endState));
 				else if(d.type == EdgeData.Type.REGEX)
 					regexEdges.add(new EdgeRegex(endState, d.str));
