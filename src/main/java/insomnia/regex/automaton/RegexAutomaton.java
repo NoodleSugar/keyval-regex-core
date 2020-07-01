@@ -70,8 +70,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 		throw new AutomatonException("State '" + id + "' not found");
 	}
 
-	@Override
-	public boolean stepForward(String word) throws AutomatonException
+	private boolean stepForward(String word) throws AutomatonException
 	{
 		if(currentState == null)
 			throw new AutomatonException("Automaton has no current state");
@@ -87,6 +86,21 @@ public final class RegexAutomaton implements IAutomaton<String>
 			}
 		}
 		return false;
+	}
+	
+	@Override
+	public boolean run(String path) throws AutomatonException
+	{
+		String[] array = path.split("\\.");
+
+		currentState = initialState;
+		for(String word : array)
+		{
+			if(!stepForward(word))
+				return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -128,20 +142,6 @@ public final class RegexAutomaton implements IAutomaton<String>
 	public boolean existPath(ISummary summary) throws AutomatonException
 	{
 		return getPathsFromSummary(summary).size() != 0;
-	}
-
-	public boolean isValidPath(String path) throws AutomatonException
-	{
-		String[] array = path.split("\\.");
-
-		currentState = initialState;
-		for(String word : array)
-		{
-			if(!stepForward(word))
-				return false;
-		}
-
-		return true;
 	}
 
 	/**

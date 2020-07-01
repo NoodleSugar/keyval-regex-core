@@ -10,5 +10,5 @@ public interface IAutomaton<E>
 	 * @return true if it succeed
 	 * @throws AutomatonException
 	 */
-	boolean stepForward(E element) throws AutomatonException;
+	boolean run(E element) throws AutomatonException;
 }
