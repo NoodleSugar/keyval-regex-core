@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import insomnia.automaton.AutomatonException;
 import insomnia.regex.RegexParser;
 import insomnia.regex.automaton.RegexAutomaton;
+import insomnia.regex.automaton.RegexAutomatonBuilder;
 import insomnia.regex.automaton.RegexAutomatonBuilder.BuilderException;
-import insomnia.regex.automaton.RegexToAutomatonConverter;
 import insomnia.regex.element.IElement;
 
 public class TestAutomaton
@@ -28,10 +28,12 @@ public class TestAutomaton
 	{
 		RegexParser parser = new RegexParser();
 		IElement elements;
+		RegexAutomatonBuilder builder;
 		try
 		{
 			elements = parser.readRegexStream(new ByteArrayInputStream(regex.getBytes()));
-			automaton = RegexToAutomatonConverter.convert(elements);
+			builder = new RegexAutomatonBuilder(elements);
+			automaton = builder.determinize().build();
 			System.out.println(elements);
 			System.out.println(automaton);
 		}
