@@ -100,7 +100,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 				return false;
 		}
 
-		return true;
+		return currentState.isFinal();
 	}
 
 	/**

@@ -26,9 +26,11 @@ public final class RegexToAutomatonConverter
 
 	private static void determinize(RegexAutomatonBuilder builder)
 	{
-		// On parcourt tous les états de l'automate
-		for(int state : builder.states)
+		// On parcourt tous les états de l'automate possédant des transitions
+		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
 		{
+			int state = entry.getKey();
+			List<EdgeData> stateEdges = entry.getValue();
 			/*
 			 * Gestion des epsilon transitions
 			 */
@@ -36,19 +38,28 @@ public final class RegexToAutomatonConverter
 			// puis on supprime ses epsilon transitions
 			List<Integer> closure = new ArrayList<>();
 			epsilonClosure(builder, state, closure);
-			List<EdgeData> state_edges = builder.edges.get(state);
-			state_edges.removeIf(e -> e.startState == state && e.type == EdgeData.Type.EPSILON);
+			stateEdges.removeIf(e -> e.startState == state && e.type == EdgeData.Type.EPSILON);
 
+			
+			
 			// Pour chaque état de la epsilon fermeture
 			for(int s : closure)
 			{
+				// Si cet état est final
+				if(builder.finalState.contains(s))
+					// L'état actuel devient final
+					builder.finalState.add(state);
+				
 				// Pour chaque transition sortante de cet état
-				for(EdgeData edge : builder.edges.get(s))
+				ArrayList<EdgeData> nextEdges = builder.edges.get(s);
+				if(nextEdges == null)
+					continue;
+				for(EdgeData edge : nextEdges)
 				{
 					// Si ce n'est pas une epsilon transition
 					if(edge.type != EdgeData.Type.EPSILON)
 						// On ajoute la transition à l'état actuel
-						state_edges.add(new EdgeData(state, edge.endState, edge.str, edge.type));
+						stateEdges.add(new EdgeData(state, edge.endState, edge.str, edge.type));
 				}
 			}
 
@@ -56,13 +67,13 @@ public final class RegexToAutomatonConverter
 			 * Gestion collision entre label et label regex
 			 */
 			// Pour chaque transition sortante de l'état actuel
-			for(EdgeData edge : state_edges)
+			for(EdgeData edge : stateEdges)
 			{
 				// Si c'est une regex transition
 				if(edge.type == EdgeData.Type.REGEX)
 				{
 					// Pour chaque autre transition non regex
-					for(EdgeData e : state_edges)
+					for(EdgeData e : stateEdges)
 					{
 						// Si il y a collision
 						if(e.type == EdgeData.Type.STRING_EQUALS && e.str.matches(edge.str))
@@ -71,8 +82,8 @@ public final class RegexToAutomatonConverter
 							// du noeud de départ vers le noeuds d'arrivée de la regex transition
 							// et ayant pour label celui de la collision
 							EdgeData newEdge = new EdgeData(state, edge.endState, e.str, EdgeData.Type.STRING_EQUALS);
-							if(!state_edges.contains(newEdge))
-								state_edges.add(newEdge);
+							if(!stateEdges.contains(newEdge))
+								stateEdges.add(newEdge);
 						}
 					}
 				}
@@ -87,6 +98,8 @@ public final class RegexToAutomatonConverter
 	private static void epsilonClosure(RegexAutomatonBuilder builder, int state, List<Integer> closure)
 	{
 		List<EdgeData> edges = builder.edges.get(state);
+		if(edges == null)
+			return;
 		for(EdgeData edge : edges)
 		{
 			// Si l'arc est une epsilon transition

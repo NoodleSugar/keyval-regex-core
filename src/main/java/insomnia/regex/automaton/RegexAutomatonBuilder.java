@@ -73,7 +73,7 @@ public class RegexAutomatonBuilder
 
 	protected int initialState;
 	protected int junctionState;
-	protected ArrayList<Integer> finalState;
+	protected TreeSet<Integer> finalState;
 	protected TreeSet<Integer> states;
 	protected HashMap<Integer, ArrayList<EdgeData>> edges;
 
@@ -81,7 +81,7 @@ public class RegexAutomatonBuilder
 	{
 		initialState = 0;
 		junctionState = -1;
-		finalState = new ArrayList<Integer>();
+		finalState = new TreeSet<Integer>();
 		states = new TreeSet<Integer>();
 		states.add(0);
 		edges = new HashMap<Integer, ArrayList<EdgeData>>();
