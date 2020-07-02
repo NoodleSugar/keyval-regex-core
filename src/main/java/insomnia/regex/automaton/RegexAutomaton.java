@@ -1,12 +1,16 @@
 package insomnia.regex.automaton;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import insomnia.automaton.AutomatonException;
 import insomnia.automaton.IAutomaton;
-import insomnia.automaton.edge.EdgeEmpty;
+import insomnia.automaton.algorithm.DeterministicValidation;
+import insomnia.automaton.algorithm.IValidation;
+import insomnia.automaton.algorithm.NonDeterministicValidation;
+import insomnia.automaton.edge.EdgeEpsilon;
 import insomnia.automaton.edge.EdgeRegex;
 import insomnia.automaton.edge.EdgeStringEqual;
 import insomnia.automaton.edge.IEdge;
@@ -17,15 +21,22 @@ import insomnia.summary.ISummary;
 
 public final class RegexAutomaton implements IAutomaton<String>
 {
+	private boolean synchronous;
+	private boolean deterministic;
+	private IValidation<String> validator;
 	private IState<String> initialState;
 	private IState<String> currentState;
-	private ArrayList<IState<String>> states;
+	private List<IState<String>> finalStates;
+	private List<IState<String>> states;
 
 	protected RegexAutomaton(RegexAutomatonBuilder b) throws AutomatonException
 	{
 		states = new ArrayList<>();
+		finalStates = new ArrayList<>();
 		currentState = null;
 
+		HashMap<Integer, HashMap<String, List<Integer>>> stateEedges = new HashMap<>();
+		
 		for(int id : b.states)
 		{
 			State state = new State();
@@ -36,7 +47,10 @@ public final class RegexAutomaton implements IAutomaton<String>
 				state.setInitial(true);
 			}
 			if(b.finalState.contains(id))
+			{
+				finalStates.add(state);
 				state.setFinal(true);
+			}
 			states.add(state);
 		}
 		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : b.edges.entrySet())
@@ -44,19 +58,160 @@ public final class RegexAutomaton implements IAutomaton<String>
 			int startId = entry.getKey();
 			State startState = (State) getState(startId);
 			ArrayList<EdgeRegex> regexEdges = new ArrayList<>();
+			HashMap<String, List<Integer>> Eedges = new HashMap<>();
 			for(EdgeData d : entry.getValue())
 			{
 				State endState = (State) getState(d.endState);
 				if(d.type == EdgeData.Type.STRING_EQUALS)
+				{
 					startState.add(new EdgeStringEqual(endState, d.str));
+					
+					List<Integer> l = Eedges.get(d.str);
+					if(l == null)
+					{
+						l = new ArrayList<Integer>();
+						Eedges.put(d.str, l);
+					}
+					l.add(d.endState);
+				}
 				else if(d.type == EdgeData.Type.EPSILON)
-					startState.add(new EdgeEmpty(endState));
+				{
+					startState.add(new EdgeEpsilon(endState));
+					
+					List<Integer> l = Eedges.get(d.str);
+					if(l == null)
+					{
+						l = new ArrayList<Integer>();
+						Eedges.put(null, l);
+					}
+					l.add(d.endState);
+				}
 				else if(d.type == EdgeData.Type.REGEX)
 					regexEdges.add(new EdgeRegex(endState, d.str));
 				else
 					throw new AutomatonException("Invalid edge type : " + d.type);
 			}
 			startState.addAll(regexEdges);
+			stateEedges.put(startId, Eedges);
+		}
+
+		deterministic = true;
+		synchronous = true;
+		
+		loop:
+		for(IState<String> state : states)
+		{
+			for(IEdge<String> edge : state)
+			{
+				if(edge instanceof EdgeEpsilon)
+				{
+					synchronous = false;
+					break loop;
+				}
+			}
+		}
+		
+		for(Map.Entry<Integer, HashMap<String, List<Integer>>> eedges : stateEedges.entrySet())
+		{
+			for(Map.Entry<String, List<Integer>> entry : eedges.getValue().entrySet())
+			{
+				if(entry.getValue().size() > 1)
+				{
+					deterministic = false;
+					break;
+				}
+			}
+		}
+		
+		if(deterministic)
+			validator = new DeterministicValidation<String>();
+		else
+			validator = new NonDeterministicValidation<String>();
+			
+	}
+
+	@Override
+	public boolean run(List<String> path) throws AutomatonException
+	{
+		return validator.check(this, path);
+	}
+
+	@Override
+	public boolean isDeterministic()
+	{
+		return deterministic;
+	}
+
+	@Override
+	public boolean isSynchronous()
+	{
+		return synchronous;
+	}
+
+	@Override
+	public List<Integer> nextStates(String word)
+	{
+		List<Integer> nexts = new ArrayList<Integer>();
+
+		for(IEdge<String> edge : currentState)
+		{
+			if(!(edge instanceof EdgeEpsilon) && edge.isValid(word))
+				nexts.add(edge.getNextState().getId());
+		}
+
+		return nexts;
+	}
+
+	@Override
+	public List<Integer> nextEpsilonStates()
+	{
+		List<Integer> nexts = new ArrayList<Integer>();
+
+		for(IEdge<String> edge : currentState)
+		{
+			if(edge instanceof EdgeEpsilon)
+				nexts.add(edge.getNextState().getId());
+		}
+
+		return nexts;
+	}
+
+	@Override
+	public List<Integer> getFinalStates()
+	{
+		List<Integer> states_list = new ArrayList<Integer>();
+		for(IState<String> s : states)
+		{
+			if(s.isFinal())
+				states_list.add(s.getId());
+		}
+		return states_list;
+	}
+
+	@Override
+	public List<Integer> getInitialStates()
+	{
+		List<Integer> states_list = new ArrayList<Integer>();
+		states_list.add(initialState.getId());
+		return states_list;
+	}
+
+	@Override
+	public int getCurrentState()
+	{
+		return currentState.getId();
+	}
+
+	@Override
+	public void goToState(int state)
+	{
+		try
+		{
+			currentState = getState(state);
+		}
+		catch(AutomatonException e)
+		{
+			e.printStackTrace();
 		}
 	}
 
@@ -86,21 +241,6 @@ public final class RegexAutomaton implements IAutomaton<String>
 			}
 		}
 		return false;
-	}
-	
-	@Override
-	public boolean run(String path) throws AutomatonException
-	{
-		String[] array = path.split("\\.");
-
-		currentState = initialState;
-		for(String word : array)
-		{
-			if(!stepForward(word))
-				return false;
-		}
-
-		return currentState.isFinal();
 	}
 
 	/**

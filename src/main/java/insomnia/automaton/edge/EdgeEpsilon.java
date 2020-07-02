@@ -5,9 +5,9 @@ import insomnia.automaton.state.IState;
 /**
  * Edge for epsilon transition
  */
-public class EdgeEmpty extends Edge
+public class EdgeEpsilon extends Edge
 {	
-	public EdgeEmpty(IState<String> nextState)
+	public EdgeEpsilon(IState<String> nextState)
 	{
 		super(nextState);
 	}
@@ -26,7 +26,7 @@ public class EdgeEmpty extends Edge
 	@Override
 	public boolean equals(Object o)
 	{
-		if(o instanceof EdgeEmpty)
+		if(o instanceof EdgeEpsilon)
 			return true;
 		return false;
 	}
