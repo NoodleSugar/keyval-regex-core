@@ -58,6 +58,20 @@ public class TestAutomaton
 	}
 	
 	@Test
+	void synch()
+	{
+		assertFalse(automaton.isSynchronous());
+		assertTrue(dautomaton.isSynchronous());
+	}
+	
+	@Test
+	void deter()
+	{
+		assertFalse(automaton.isDeterministic());
+		assertTrue(dautomaton.isDeterministic());
+	}
+	
+	@Test
 	void match1()
 	{
 		try
@@ -243,6 +257,21 @@ public class TestAutomaton
 		try
 		{
 			ArrayList<String> a = array("d.f.f.re");
+			assertFalse(automaton.run(a));
+			assertFalse(dautomaton.run(a));
+		}
+		catch(AutomatonException e)
+		{
+			fail("Regex Automaton Run Error : " + e.getMessage());
+		}
+	}
+	
+	@Test
+	void match14()
+	{
+		try
+		{
+			ArrayList<String> a = array("a.b.c.e");
 			assertFalse(automaton.run(a));
 			assertFalse(dautomaton.run(a));
 		}

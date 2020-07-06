@@ -85,6 +85,8 @@ public class RegexAutomatonBuilder
 	protected TreeSet<Integer> states;
 	protected HashMap<Integer, ArrayList<EdgeData>> edges;
 
+	//TODO initialisation statique de classe
+
 	public RegexAutomatonBuilder(IElement elements) throws BuilderException
 	{
 		this();
@@ -284,7 +286,7 @@ public class RegexAutomatonBuilder
 	{
 		ArrayList<Integer> accessibleStates = new ArrayList<>();
 		accessibleStates.add(initialState);
-		getAccessibles(accessibleStates, initialState);
+		getAccessibles(initialState, accessibleStates);
 		for(int state : states)
 		{
 			if(!accessibleStates.contains(state))
@@ -293,7 +295,7 @@ public class RegexAutomatonBuilder
 		states.removeIf(state -> !accessibleStates.contains(state));
 	}
 
-	private void getAccessibles(List<Integer> accessibles, int state)
+	private void getAccessibles(int state, List<Integer> accessibles)
 	{
 		List<EdgeData> stateEdges = edges.get(state);
 		if(stateEdges == null)
@@ -304,7 +306,7 @@ public class RegexAutomatonBuilder
 			if(!accessibles.contains(nextState))
 			{
 				accessibles.add(nextState);
-				getAccessibles(accessibles, nextState);
+				getAccessibles(nextState, accessibles);
 			}
 		}
 	}

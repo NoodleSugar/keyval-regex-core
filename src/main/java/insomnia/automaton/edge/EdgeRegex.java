@@ -12,34 +12,34 @@ public class EdgeRegex extends Edge
 	String regex;
 	Pattern pattern;
 
-	public EdgeRegex(IState<String> nextState, String regex)
+	public EdgeRegex(IState<String> parent, IState<String> child, String regex)
 	{
-		super(nextState);
+		super(parent, child);
 		this.regex = regex;
 		pattern = Pattern.compile(regex);
 	}
-	
+
 	@Override
 	public boolean isValid(String element)
 	{
 		return pattern.matcher(element).matches();
 	}
-	
+
 	@Override
 	public String toString()
 	{
-		return " -> " + nextState + " : if matches " + regex;
+		return parent + " -> " + child + " : if matches " + regex;
 	}
-	
+
 	@Override
 	public boolean equals(Object o)
 	{
-		if(o instanceof EdgeStringEqual)
-		{
-			EdgeStringEqual e = (EdgeStringEqual) o;
-			if(e.nextState.equals(nextState) && e.strCmp.equals(regex))
-				return true;
-		}
+		if(!(o instanceof EdgeStringEqual))
+			return false;
+
+		EdgeStringEqual e = (EdgeStringEqual) o;
+		if(e.parent.equals(parent) && e.child.equals(child) && e.strCmp.equals(regex))
+			return true;
 		
 		return false;
 	}

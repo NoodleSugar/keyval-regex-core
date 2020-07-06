@@ -9,5 +9,6 @@ public interface IEdge<E>
 {
 	boolean isValid(E element);
 
-	IState<E> getNextState();
+	IState<E> getParent();
+	IState<E> getChild();
 }

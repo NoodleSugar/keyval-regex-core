@@ -64,7 +64,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 				State endState = (State) getState(d.endState);
 				if(d.type == EdgeData.Type.STRING_EQUALS)
 				{
-					startState.add(new EdgeStringEqual(endState, d.str));
+					startState.add(new EdgeStringEqual(startState, endState, d.str));
 					
 					List<Integer> l = Eedges.get(d.str);
 					if(l == null)
@@ -76,7 +76,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 				}
 				else if(d.type == EdgeData.Type.EPSILON)
 				{
-					startState.add(new EdgeEpsilon(endState));
+					startState.add(new EdgeEpsilon(startState, endState));
 					
 					List<Integer> l = Eedges.get(d.str);
 					if(l == null)
@@ -87,7 +87,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 					l.add(d.endState);
 				}
 				else if(d.type == EdgeData.Type.REGEX)
-					regexEdges.add(new EdgeRegex(endState, d.str));
+					regexEdges.add(new EdgeRegex(startState, endState, d.str));
 				else
 					throw new AutomatonException("Invalid edge type : " + d.type);
 			}
@@ -133,7 +133,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 	@Override
 	public boolean run(List<String> path) throws AutomatonException
 	{
-		return validator.check(this, path);
+		return validator.test(this, path);
 	}
 
 	@Override
@@ -149,70 +149,57 @@ public final class RegexAutomaton implements IAutomaton<String>
 	}
 
 	@Override
-	public List<Integer> nextStates(String word)
+	public List<IState<String>> nextStates(String word)
 	{
-		List<Integer> nexts = new ArrayList<Integer>();
+		List<IState<String>> nexts = new ArrayList<>();
 
 		for(IEdge<String> edge : currentState)
 		{
 			if(!(edge instanceof EdgeEpsilon) && edge.isValid(word))
-				nexts.add(edge.getNextState().getId());
+				nexts.add(edge.getChild());
 		}
 
 		return nexts;
 	}
 
 	@Override
-	public List<Integer> nextEpsilonStates()
+	public List<IState<String>> nextEpsilonStates()
 	{
-		List<Integer> nexts = new ArrayList<Integer>();
+		List<IState<String>> nexts = new ArrayList<>();
 
 		for(IEdge<String> edge : currentState)
 		{
 			if(edge instanceof EdgeEpsilon)
-				nexts.add(edge.getNextState().getId());
+				nexts.add(edge.getChild());
 		}
 
 		return nexts;
 	}
 
 	@Override
-	public List<Integer> getFinalStates()
+	public List<IState<String>> getFinalStates()
 	{
-		List<Integer> states_list = new ArrayList<Integer>();
-		for(IState<String> s : states)
-		{
-			if(s.isFinal())
-				states_list.add(s.getId());
-		}
+		return finalStates;
+	}
+
+	@Override
+	public List<IState<String>> getInitialStates()
+	{
+		List<IState<String>> states_list = new ArrayList<>();
+		states_list.add(initialState);
 		return states_list;
 	}
 
 	@Override
-	public List<Integer> getInitialStates()
+	public IState<String> getCurrentState()
 	{
-		List<Integer> states_list = new ArrayList<Integer>();
-		states_list.add(initialState.getId());
-		return states_list;
+		return currentState;
 	}
 
 	@Override
-	public int getCurrentState()
+	public void goToState(IState<String> state)
 	{
-		return currentState.getId();
-	}
-
-	@Override
-	public void goToState(int state)
-	{
-		try
-		{
-			currentState = getState(state);
-		}
-		catch(AutomatonException e)
-		{
-			e.printStackTrace();
-		}
+		currentState = state;
 	}
 
 	private IState<String> getState(int id) throws AutomatonException
@@ -225,6 +212,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 		throw new AutomatonException("State '" + id + "' not found");
 	}
 
+	//TODO A supprimer
 	private boolean stepForward(String word) throws AutomatonException
 	{
 		if(currentState == null)
@@ -236,7 +224,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 		{
 			if(edge.isValid(word))
 			{
-				currentState = edge.getNextState();
+				currentState = edge.getChild();
 				return true;
 			}
 		}
@@ -306,7 +294,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 			currentState = state;
 			if(!stepForward(word))
 				continue;
-			automaton.currentState = edge.getNextState();
+			automaton.currentState = edge.getChild();
 
 			path.push(word);
 			if(currentState.isFinal())

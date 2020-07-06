@@ -6,10 +6,10 @@ import insomnia.automaton.state.IState;
  * Edge for epsilon transition
  */
 public class EdgeEpsilon extends Edge
-{	
-	public EdgeEpsilon(IState<String> nextState)
+{
+	public EdgeEpsilon(IState<String> parent, IState<String> child)
 	{
-		super(nextState);
+		super(parent, child);
 	}
 	
 	@Override
@@ -20,7 +20,7 @@ public class EdgeEpsilon extends Edge
 	
 	public String toString()
 	{
-		return " -> " + nextState + " : Empty";
+		return parent + " -> " + child + " : Empty";
 	}
 	
 	@Override

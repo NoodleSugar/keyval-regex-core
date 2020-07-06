@@ -4,16 +4,24 @@ import insomnia.automaton.state.IState;
 
 public abstract class Edge implements IEdge<String>
 {
-	protected IState<String> nextState;
+	protected IState<String> parent;
+	protected IState<String> child;
 
-	protected Edge(IState<String> nextState)
+	protected Edge(IState<String> parent, IState<String> child)
 	{
-		this.nextState = nextState;
+		this.parent = parent;
+		this.child = child;
 	}
 
 	@Override
-	public IState<String> getNextState()
+	public IState<String> getParent()
 	{
-		return nextState;
+		return parent;
+	}
+	
+	@Override
+	public IState<String> getChild()
+	{
+		return child;
 	}
 }

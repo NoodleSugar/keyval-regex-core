@@ -2,6 +2,8 @@ package insomnia.automaton;
 
 import java.util.List;
 
+import insomnia.automaton.state.IState;
+
 /**
  * E : type of tested elements
  */
@@ -22,15 +24,15 @@ public interface IAutomaton<E>
 	 * @param element to test
 	 * @return the list of the next valid states
 	 */
-	List<Integer> nextStates(E element);
+	List<IState<E>> nextStates(E element);
 
-	List<Integer> nextEpsilonStates();
+	List<IState<E>> nextEpsilonStates();
 
-	List<Integer> getInitialStates();
+	List<IState<E>> getInitialStates();
 
-	List<Integer> getFinalStates();
+	List<IState<E>> getFinalStates();
 
-	int getCurrentState();
+	IState<E> getCurrentState();
 
-	void goToState(int state);
+	void goToState(IState<E> state);
 }
