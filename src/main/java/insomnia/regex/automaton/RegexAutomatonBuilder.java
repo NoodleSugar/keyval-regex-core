@@ -85,15 +85,6 @@ public class RegexAutomatonBuilder
 	protected TreeSet<Integer> states;
 	protected HashMap<Integer, ArrayList<EdgeData>> edges;
 
-	//TODO initialisation statique de classe
-
-	public RegexAutomatonBuilder(IElement elements) throws BuilderException
-	{
-		this();
-		recursiveConstruct(elements, this);
-	}
-	
-	private RegexAutomatonBuilder()
 	{
 		initialState = 0;
 		junctionState = -1;
@@ -102,7 +93,17 @@ public class RegexAutomatonBuilder
 		states.add(0);
 		edges = new HashMap<Integer, ArrayList<EdgeData>>();
 	}
-	
+
+	public RegexAutomatonBuilder(IElement elements) throws BuilderException
+	{
+		this();
+		recursiveConstruct(elements, this);
+	}
+
+	private RegexAutomatonBuilder()
+	{
+	}
+
 	private void copy(RegexAutomatonBuilder builder)
 	{
 		initialState = builder.initialState;
@@ -157,11 +158,11 @@ public class RegexAutomatonBuilder
 		if(end != -1)
 			builder.states.remove(builder.junctionState);
 
-		// On ajout les �tats en r�indixant
+		// On ajout les états en réindixant
 		for(int state : builder.states)
 			states.add(state + last);
 
-		// On ajoute les arcs en r�indexant les �tats de d�but et fin
+		// On ajoute les arcs en réindexant les états de début et fin
 		int startState;
 		int endState;
 		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
@@ -187,7 +188,7 @@ public class RegexAutomatonBuilder
 			}
 		}
 
-		// On remet la jonction de fin pr�c�dement supprim�e
+		// On remet la jonction de fin précédement supprimée
 		if(end != -1)
 			builder.states.add(builder.junctionState);
 

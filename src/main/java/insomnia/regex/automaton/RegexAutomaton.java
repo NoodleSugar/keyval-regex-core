@@ -37,6 +37,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 
 		HashMap<Integer, HashMap<String, List<Integer>>> stateEedges = new HashMap<>();
 		
+		// Ajout des états
 		for(int id : b.states)
 		{
 			State state = new State();
@@ -53,15 +54,19 @@ public final class RegexAutomaton implements IAutomaton<String>
 			}
 			states.add(state);
 		}
+		// Ajout des arcs
 		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : b.edges.entrySet())
 		{
 			int startId = entry.getKey();
 			State startState = (State) getState(startId);
 			ArrayList<EdgeRegex> regexEdges = new ArrayList<>();
 			HashMap<String, List<Integer>> Eedges = new HashMap<>();
+			
+			// Pour chaque arc dans le builder
 			for(EdgeData d : entry.getValue())
 			{
 				State endState = (State) getState(d.endState);
+				// Si c'est une transition labelée
 				if(d.type == EdgeData.Type.STRING_EQUALS)
 				{
 					startState.add(new EdgeStringEqual(startState, endState, d.str));
@@ -74,6 +79,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 					}
 					l.add(d.endState);
 				}
+				// Si c'est un epsilon transition
 				else if(d.type == EdgeData.Type.EPSILON)
 				{
 					startState.add(new EdgeEpsilon(startState, endState));
@@ -86,6 +92,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 					}
 					l.add(d.endState);
 				}
+				// Si c'est une regex transition
 				else if(d.type == EdgeData.Type.REGEX)
 					regexEdges.add(new EdgeRegex(startState, endState, d.str));
 				else
@@ -98,6 +105,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 		deterministic = true;
 		synchronous = true;
 		
+		// Vérification de la synchronicité
 		loop:
 		for(IState<String> state : states)
 		{
@@ -111,6 +119,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 			}
 		}
 		
+		// Vérification du déterminisme
 		for(Map.Entry<Integer, HashMap<String, List<Integer>>> eedges : stateEedges.entrySet())
 		{
 			for(Map.Entry<String, List<Integer>> entry : eedges.getValue().entrySet())
@@ -123,6 +132,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 			}
 		}
 		
+		// Adaptation de l'algorithme de validation en fonction du déterminisme
 		if(deterministic)
 			validator = new DeterministicValidation<String>();
 		else
@@ -212,7 +222,6 @@ public final class RegexAutomaton implements IAutomaton<String>
 		throw new AutomatonException("State '" + id + "' not found");
 	}
 
-	//TODO A supprimer
 	private boolean stepForward(String word) throws AutomatonException
 	{
 		if(currentState == null)
@@ -356,7 +365,7 @@ public final class RegexAutomaton implements IAutomaton<String>
 		{
 			s1.append(state + " ");
 			for(IEdge<String> edge : state)
-				s2.append(state.toString() + edge.toString() + "\n");
+				s2.append(edge.toString() + "\n");
 		}
 		s1.append("}\n");
 		s1.append(s2);
