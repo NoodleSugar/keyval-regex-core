@@ -2,13 +2,17 @@ package insomnia.rule.tree;
 
 import java.util.List;
 
-import insomnia.rule.value.IValue;
-
 public interface IPath extends ITree
 {
 	List<String> getKeys();
-	
-	boolean isValued();
 
-	IValue getValue();
+	boolean isTerminal();
+
+	boolean isIncluded(IPath path);
+
+	boolean isPrefix(IPath path);
+
+	boolean isSuffix(IPath path);
+	
+	boolean hasPrefixInSuffix(IPath path);
 }
