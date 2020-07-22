@@ -13,19 +13,30 @@ public class PathRule implements IRule<IPath>
 	private boolean valued;
 	private boolean existential;
 
-	public PathRule(String b, String h)
+	public static PathRule create(String b, String h, boolean isRooted, boolean isValued)
 	{
-		this(b, h, false, false, false);
+		return new PathRule(b, h, isRooted, isValued, isValued, false);
 	}
 
-	public PathRule(String b, String h, boolean isRooted, boolean isValued, boolean isExistential)
+	public static PathRule createExistential(String b, String h, boolean isRooted, boolean isValued)
+	{
+		return new PathRule(b, h, isRooted, isValued, false, true);
+	}
+
+	public PathRule(String b, String h)
+	{
+		this(b, h, false, false, false, false);
+	}
+
+	private PathRule(String b, String h, boolean isRooted, boolean isBodyValued, boolean isHeadValued,
+			boolean isExistential)
 	{
 		context = null;
 		foot = null;
-		body = new Path(b, isRooted, isValued);
-		head = new Path(h, isRooted, isValued);
+		body = new Path(b, isRooted, isBodyValued);
+		head = new Path(h, isRooted, isHeadValued);
 		rooted = isRooted;
-		valued = isValued;
+		valued = isBodyValued;
 		existential = isExistential;
 	}
 
