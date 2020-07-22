@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayDeque;
 
+import insomnia.regex.element.Const;
 import insomnia.regex.element.IElement;
 import insomnia.regex.element.Key;
 import insomnia.regex.element.MultipleElement;
@@ -19,10 +20,10 @@ public class RegexParser
 	 */
 	private enum Token
 	{
-		END, WORD, REGEX,//
-		POINT, VERTICAL_BAR,//
-		OPEN_BRACKET, CLOSE_BRACKET,//
-		OPEN_RBRACKET, COMMA, CLOSE_RBRACKET, NUMBER,//
+		END, WORD, REGEX, //
+		POINT, VERTICAL_BAR, //
+		OPEN_BRACKET, CLOSE_BRACKET, //
+		OPEN_RBRACKET, COMMA, CLOSE_RBRACKET, NUMBER, //
 		STAR, PLUS, QUESTION_MARK;
 	}
 
@@ -58,6 +59,7 @@ public class RegexParser
 	{
 		START, WORD, DELIMITED_WORD, REGEX, NUMBER, BACKSLASH;
 	}
+
 	private class Lexer
 	{
 		private InputStream regexStream;
@@ -162,15 +164,14 @@ public class RegexParser
 					readLastChar = true;
 					lastChar = d;
 					return new LexerValue(Token.NUMBER, data);
-					
+
 				case WORD:
 					if(c == '\\')
 					{
 						lexerState = LexerState.BACKSLASH;
 						break;
 					}
-					if(Character.isLetter(c) || c == '_' || c == '-' 
-					|| c == '\\' || c == '"' || c == '\'' || c == '/')
+					if(Character.isLetter(c) || c == '_' || c == '-' || c == '\\' || c == '"' || c == '\'' || c == '/')
 					{
 						data += c;
 						break;
@@ -205,7 +206,7 @@ public class RegexParser
 						break;
 					}
 					return new LexerValue(Token.REGEX, data);
-					
+
 				case BACKSLASH:
 					if(d == -1)
 						throw new ParseException("EOF while reading String value", offset);
@@ -224,12 +225,22 @@ public class RegexParser
 
 	private enum ReaderState
 	{
-		END, STORE,//
-		OR_ELEMENT, MULTI_ELEMENT, ELEMENT,//
-		SYMBOL, QUANTIFIER, QUANT_INF, QUANT_SUP,//
-		POINT, VERTICAL_BAR,//
+		END, STORE, //
+		OR_ELEMENT, MULTI_ELEMENT, ELEMENT, //
+		SYMBOL, QUANTIFIER, QUANT_INF, QUANT_SUP, //
+		POINT, VERTICAL_BAR, //
 		COMMA, CLOSE_RBRACKET, CLOSE_BRACKET;
 	};
+
+	public IElement readRegexStream(InputStream regexStream, String value) throws IOException, ParseException
+	{
+		IElement elts = readRegexStream(regexStream);
+		MultipleElement e = new MultipleElement();
+		e.add(elts);
+		e.add(new Const(value));
+		
+		return e;
+	}
 
 	public IElement readRegexStream(InputStream regexStream) throws IOException, ParseException
 	{
@@ -250,10 +261,10 @@ public class RegexParser
 		LexerValue v = null;
 		Token token = null;
 		String data = null;
-		
+
 		int quant_inf = 0;
 		int quant_sup = 0;
-		
+
 		boolean skipLexer = false;
 		while(true)
 		{
@@ -355,24 +366,24 @@ public class RegexParser
 					throw new ParseException("Expected number", lexer.offset);
 				quant_inf = Integer.parseInt(data);
 				break;
-				
+
 			case QUANT_SUP:
 				if(token != Token.NUMBER)
 					throw new ParseException("Expected number", lexer.offset);
 				quant_sup = Integer.parseInt(data);
 				break;
-				
+
 			case COMMA:
 				if(token != Token.COMMA)
 					throw new ParseException("Expected ','", lexer.offset);
 				break;
-				
+
 			case CLOSE_RBRACKET:
 				if(token != Token.CLOSE_RBRACKET)
 					throw new ParseException("Expected ']'", lexer.offset);
 				elementStack.peek().setQuantifier(Quantifier.from(quant_inf, quant_sup));
 				break;
-				
+
 			case POINT:
 				if(token == Token.POINT)
 					readerStateStack.push(ReaderState.MULTI_ELEMENT);

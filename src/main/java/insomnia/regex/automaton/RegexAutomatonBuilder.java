@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import insomnia.automaton.AutomatonException;
+import insomnia.regex.element.Const;
 import insomnia.regex.element.IElement;
 import insomnia.regex.element.Key;
 import insomnia.regex.element.MultipleElement;
@@ -42,11 +43,12 @@ public class RegexAutomatonBuilder
 		protected int startState;
 		protected int endState;
 		protected String str;
+		protected double num;
 		protected Type type;
 
 		public enum Type
 		{
-			EPSILON, STRING_EQUALS, REGEX;
+			EPSILON, STRING_EQUALS, NUMBER, REGEX;
 		};
 
 		public EdgeData(int start, int end, String str, Type type)
@@ -55,6 +57,14 @@ public class RegexAutomatonBuilder
 			endState = end;
 			this.str = str;
 			this.type = type;
+		}
+
+		public EdgeData(int start, int end, double number, Type type)
+		{
+			startState = start;
+			endState = end;
+			this.type = type;
+			num = number;
 		}
 
 		@Override
@@ -142,6 +152,20 @@ public class RegexAutomatonBuilder
 			if(stateEdges.contains(edge))
 				throw new BuilderException("Edge " + edge + " already in");
 		}
+		else
+		{
+			stateEdges = new ArrayList<EdgeData>();
+			edges.put(startState, stateEdges);
+		}
+		stateEdges.add(edge);
+	}
+	
+	private void addEdge(int startState, int endState, double number) throws BuilderException
+	{
+		EdgeData edge = new EdgeData(startState, endState, number, EdgeData.Type.NUMBER);
+		ArrayList<EdgeData> stateEdges;
+		if(edges.containsKey(startState))
+			stateEdges = edges.get(startState);
 		else
 		{
 			stateEdges = new ArrayList<EdgeData>();
@@ -355,6 +379,16 @@ public class RegexAutomatonBuilder
 				end = builder.mergeBuilder(start, -1, newBuilder);
 			}
 			builder.addFinalState(end);
+		}
+		else if(element instanceof Const)
+		{
+			Const c = (Const) element;
+			builder.addFinalState(1);
+			builder.addState(1);
+			if(c.isNumber())
+				builder.addEdge(0, 1, c.num);
+			else
+				builder.addEdge(0, 1, c.str, EdgeData.Type.STRING_EQUALS);
 		}
 		else
 			throw new InvalidParameterException("Invalid type for parameter");
