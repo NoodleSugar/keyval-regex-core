@@ -147,14 +147,14 @@ public class Path implements IPath
 		keys = path.keys.subList(begin, end);
 		nodes = path.nodes.subList(begin, end + 1);
 		root = path.nodes.get(begin);
-		last = path.nodes.get(end + 1);
+		last = path.nodes.get(end);
 	}
 
 	public Path(String path)
 	{
 		this(path, false, false);
 	}
-
+	
 	// path doit contenir au moins une clé
 	public Path(String path, boolean rooted, boolean terminal)
 	{
