@@ -3,11 +3,12 @@ package insomnia.rule.ontology;
 import java.util.List;
 
 import insomnia.rule.IRule;
+import insomnia.rule.tree.ITree;
 
 /**
  * Graph of Rule Dependency
  */
-public interface IGRD<R extends IRule<?>>
+public interface IGRD<T extends ITree, R extends IRule<T>>
 {
 	public enum DependencyMode
 	{
@@ -49,4 +50,6 @@ public interface IGRD<R extends IRule<?>>
 		parents.addAll(getParents(rule, DependencyMode.STRONG));
 		return parents;
 	}
+	
+	List<R> getQueryDependencies(T query);
 }

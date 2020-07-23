@@ -17,8 +17,4 @@ public interface IRule<E extends ITree>
 	boolean isValued();
 	
 	boolean isExistential();
-
-	boolean dependsStrongOn(IRule<E> rule);
-
-	boolean dependsWeakOn(IRule<E> rule);
 }

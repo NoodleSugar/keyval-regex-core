@@ -8,9 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import insomnia.rule.IRule;
 import insomnia.rule.PathRule;
+import insomnia.rule.tree.IPath;
+import insomnia.rule.tree.ITree;
+import insomnia.rule.tree.Path;
 
-public class PathGRD implements IGRD<PathRule>
+public class PathGRD implements IGRD<IPath, PathRule>
 {
 	private class RuleDep
 	{
@@ -58,36 +62,36 @@ public class PathGRD implements IGRD<PathRule>
 			RuleDep dependency2 = entry.getValue();
 
 			// Vérification des dépendances de la rule2 à rule
-			if(rule2.dependsWeakOn(rule))
+			if(dependsWeakOn(rule2, rule))
 			{
 				dependency.children.get(DependencyMode.WEAK).add(rule2);
 				dependency2.parents.get(DependencyMode.WEAK).add(rule);
 			}
-			if(rule2.dependsStrongOn(rule))
+			if(dependsStrongOn(rule2, rule))
 			{
 				dependency.children.get(DependencyMode.STRONG).add(rule2);
 				dependency2.parents.get(DependencyMode.STRONG).add(rule);
 			}
 
 			// Vérification des dépendances de rule à rule2
-			if(rule.dependsWeakOn(rule2))
+			if(dependsWeakOn(rule, rule2))
 			{
 				dependency2.children.get(DependencyMode.WEAK).add(rule);
 				dependency.parents.get(DependencyMode.WEAK).add(rule2);
 			}
-			if(rule.dependsStrongOn(rule2))
+			if(dependsStrongOn(rule, rule2))
 			{
 				dependency2.children.get(DependencyMode.STRONG).add(rule);
 				dependency.parents.get(DependencyMode.STRONG).add(rule2);
 			}
 
 			// Vérification des dépendances de rule à rule
-			if(rule.dependsWeakOn(rule))
+			if(dependsWeakOn(rule, rule))
 			{
 				dependency.children.get(DependencyMode.WEAK).add(rule);
 				dependency.parents.get(DependencyMode.WEAK).add(rule);
 			}
-			if(rule.dependsStrongOn(rule))
+			if(dependsStrongOn(rule, rule))
 			{
 				dependency.children.get(DependencyMode.STRONG).add(rule);
 				dependency.parents.get(DependencyMode.STRONG).add(rule);
@@ -169,5 +173,105 @@ public class PathGRD implements IGRD<PathRule>
 	public List<PathRule> getParents(PathRule rule, DependencyMode mode)
 	{
 		return dependencies.get(rule).parents.get(mode);
+	}
+
+	public boolean dependsWeakOn(PathRule rule1, PathRule rule2)
+	{
+		IPath body1 = rule1.getBody();
+		IPath head2 = rule2.getHead();
+
+		// Si R2 est existentielle
+		// Si R1 est valuée
+		// Si R2 n'est pas valuée
+		if(rule2.isExistential() && rule1.isValued() && !rule2.isValued())
+			return false;
+
+		// Si R2 est enracinée
+		if(rule2.isRooted())
+		{
+			// Si R2 est valuée
+			if(rule2.isValued())
+				// Si h2 est égal à b1
+				return head2.getKeys().equals(body1.getKeys());
+
+			// Si R2 non valuée
+			else
+				// Si un suffixe de h2 est préfixe de b1
+				return body1.hasPrefixInSuffix(head2);
+		}
+
+		// Si R2 non enracinée
+		else
+		{
+			// Si R2 est valuée
+			if(rule2.isValued())
+				// Si un préfixe de h2 est suffixe de b1
+				return head2.hasPrefixInSuffix(body1);
+
+			// Si R2 non valuée
+			else
+				// Si h2 est inclu dans b1 OU
+				// Si un préfixe de h2 est suffixe de b1 OU
+				// Si un suffixe de h2 est préfixe de b1
+				return head2.isIncluded(body1) || //
+						head2.hasPrefixInSuffix(body1) || //
+						body1.hasPrefixInSuffix(head2);
+		}
+
+	}
+
+	public boolean dependsStrongOn(PathRule rule1, PathRule rule2)
+	{
+		IPath body1 = rule1.getBody();
+		IPath head2 = rule2.getHead();
+
+		// Si R2 est existentielle
+		// Si R1 est valuée
+		// Si R2 n'est pas valuée
+		if(rule2.isExistential() && rule1.isValued() && !rule2.isValued())
+			return false;
+
+		// Si R1 est enracinée
+		if(rule1.isRooted())
+		{
+			// Si R1 est valuée
+			if(rule1.isValued())
+				// Si b1 est égal à h2
+				return body1.getKeys().equals(head2.getKeys());
+
+			// Si R1 non valuée
+			else
+				// Si b1 est préfixe de h2
+				return body1.isPrefix(head2);
+		}
+
+		// Si R1 non enracinée
+		else
+		{
+			// Si R1 est valuée
+			if(rule1.isValued())
+				// Si b1 est suffixe de h2
+				return body1.isSuffix(head2);
+
+			// Si R1 non valuée
+			else
+				// Si b1 est inclu dans h2
+				return body1.isIncluded(head2);
+		}
+	}
+
+	@Override
+	public List<PathRule> getQueryDependencies(IPath query)
+	{
+		List<PathRule> dep = new ArrayList<>();
+		PathRule q;
+
+		for(Map.Entry<PathRule, RuleDep> entry : dependencies.entrySet())
+		{
+			PathRule rule = entry.getKey();
+			if(dependsWeakOn(q, rule) || dependsStrongOn(q, rule))
+				dep.add(rule);
+		}
+		return dep;
 	}
 }
