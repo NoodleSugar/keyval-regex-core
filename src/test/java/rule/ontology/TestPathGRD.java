@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import insomnia.rule.PathRule;
 import insomnia.rule.ontology.PathGRD;
 import insomnia.rule.ontology.PathOntology;
+import insomnia.rule.tree.Path;
 import insomnia.rule.ontology.IGRD.DependencyMode;
 
 class TestPathGRD
@@ -162,5 +163,19 @@ class TestPathGRD
 			assertTrue(grd.dependsStrongOn(r2,r1) == args.getBoolean(5));
 			assertTrue(grd.dependsStrongOn(r1,r1) == args.getBoolean(6));
 			assertTrue(grd.dependsStrongOn(r2,r2) == args.getBoolean(7));
+		}
+		
+		@ParameterizedTest
+		@CsvSource({
+				"a.b, false, false", //
+		})
+		void queryDependencies(ArgumentsAccessor args)
+		{
+			Path q = new Path(args.getString(0), args.getBoolean(1), args.getBoolean(2));
+			List<PathRule> deps = grd.getQueryDependencies(q);
+			
+			assertEquals(2, deps.size());
+			assertTrue(deps.contains(rules.get(0)));
+			assertTrue(deps.contains(rules.get(4)));
 		}
 }

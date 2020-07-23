@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.StringUtils;
+
 import insomnia.rule.IRule;
 import insomnia.rule.PathRule;
 import insomnia.rule.tree.IPath;
@@ -264,7 +266,8 @@ public class PathGRD implements IGRD<IPath, PathRule>
 	public List<PathRule> getQueryDependencies(IPath query)
 	{
 		List<PathRule> dep = new ArrayList<>();
-		PathRule q;
+		String b = StringUtils.join(query.getKeys(), '.');
+		PathRule q = PathRule.create(b, "", query.isRooted(), true);
 
 		for(Map.Entry<PathRule, RuleDep> entry : dependencies.entrySet())
 		{
