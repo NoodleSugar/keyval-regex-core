@@ -188,6 +188,7 @@ public class PathGRD implements IGRD<IPath, PathRule>
 		if(rule2.isExistential() && rule1.isValued() && !rule2.isValued())
 			return false;
 
+		
 		// Si R2 est enracinée
 		if(rule2.isRooted())
 		{
@@ -198,8 +199,10 @@ public class PathGRD implements IGRD<IPath, PathRule>
 
 			// Si R2 non valuée
 			else
+				// Si on a pas R2 est existentielle et si 
 				// Si un suffixe de h2 est préfixe de b1
-				return body1.hasPrefixInSuffix(head2);
+				return !(rule2.isExistential() && body1.isSuffix(head2)) && //
+						body1.hasPrefixInSuffix(head2);
 		}
 
 		// Si R2 non enracinée
