@@ -3,8 +3,8 @@ package insomnia.automaton.algorithm;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-import insomnia.automaton.IAutomaton;
+import insomnia.automaton.IGAutomaton;
 
-public interface IValidation<E> extends BiPredicate<IAutomaton<E>, List<E>>
+public interface IValidation<E> extends BiPredicate<IGAutomaton<E>, List<E>>
 {
 }

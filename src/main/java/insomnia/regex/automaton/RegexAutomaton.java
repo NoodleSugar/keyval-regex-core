@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import insomnia.automaton.AutomatonException;
-import insomnia.automaton.IAutomaton;
+import insomnia.automaton.IGAutomaton;
 import insomnia.automaton.algorithm.DeterministicValidation;
 import insomnia.automaton.algorithm.IValidation;
 import insomnia.automaton.algorithm.NonDeterministicValidation;
@@ -19,7 +19,7 @@ import insomnia.automaton.state.State;
 import insomnia.regex.automaton.RegexAutomatonBuilder.EdgeData;
 import insomnia.summary.ISummary;
 
-public final class RegexAutomaton implements IAutomaton<String>
+public final class RegexAutomaton implements IGAutomaton<String>
 {
 	private boolean synchronous;
 	private boolean deterministic;
