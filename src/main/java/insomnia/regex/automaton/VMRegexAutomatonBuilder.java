@@ -18,15 +18,15 @@ public class VMRegexAutomatonBuilder
 	protected class InstructionData
 	{
 		public Type type;
-		public String key;
+		public String str;
 
 		public int inst1;
 		public int inst2;
 
-		public InstructionData(Type t, String k, int i1, int i2)
+		public InstructionData(Type t, String s, int i1, int i2)
 		{
 			type = t;
-			key = k;
+			str = s;
 			inst1 = i1;
 			inst2 = i2;
 		}
@@ -36,41 +36,44 @@ public class VMRegexAutomatonBuilder
 
 	public VMRegexAutomatonBuilder(IElement elements) throws BuilderException
 	{
+		instructions = new ArrayList<>();
 		recursiveConstruct(elements, 0, true);
 	}
 
-	// TODO check
 	private int recursiveConstruct(IElement element, int current, boolean matching) throws BuilderException
 	{
 		Quantifier q = element.getQuantifier();
 		int inf = q.getInf();
 		int sup = q.getSup();
 
-		if(inf != 1 || sup != 1)
+		for(int i = 0; i < inf; i++)
+			current = subRecursiveConstruct(element, current, matching);
+		if(sup == -1)
 		{
-			for(int i = 0; i < inf; i++)
-				current = subRecursiveConstruct(element, current, matching);
-			if(sup == -1)
-			{
-				int next = subRecursiveConstruct(element, current, matching);
-				instructions.add(new InstructionData(Type.SPLIT, null, current, ++next));
-				current = next;
-			}
-			else
-			{
-				ArrayList<InstructionData> splits = new ArrayList<>();
-				for(int i = 0; i < sup - inf - 1; i++)
-				{
-					InstructionData split = //
-							new InstructionData(Type.SPLIT, null, ++current, 0);
-					instructions.add(split);
-					splits.add(split);
-					current = subRecursiveConstruct(element, current, matching);
-				}
-				for(InstructionData split : splits)
-					split.inst2 = current;
-			}
+			InstructionData split = //
+					new InstructionData(Type.SPLIT, null, ++current, 0);
+			instructions.add(split);
+			int next = subRecursiveConstruct(element, current, matching);
+			instructions.add(split);
+
+			split.inst2 = ++next;
+			current = next;
 		}
+		else
+		{
+			ArrayList<InstructionData> splits = new ArrayList<>();
+			for(int i = 0; i < sup - inf; i++)
+			{
+				InstructionData split = //
+						new InstructionData(Type.SPLIT, null, ++current, 0);
+				instructions.add(split);
+				splits.add(split);
+				current = subRecursiveConstruct(element, current, matching);
+			}
+			for(InstructionData split : splits)
+				split.inst2 = current;
+		}
+
 		return current;
 	}
 
@@ -93,21 +96,32 @@ public class VMRegexAutomatonBuilder
 		else if(element instanceof OrElement)
 		{
 			OrElement oe = (OrElement) element;
-			int n = oe.size() - 1;
-			IElement[] elts = (IElement[]) oe.toArray();
+			int n = oe.size();
+			IElement[] elts = new IElement[n];
+			elts = oe.toArray(elts);
 
-			InstructionData split;
-			for(int i = 0; i < n; i++)
+			ArrayList<InstructionData> jumps = new ArrayList<>();
+			for(int i = 0; i < n - 1; i++)
 			{
+				InstructionData split, jump;
 				split = new InstructionData(Type.SPLIT, null, ++current, 0);
 				instructions.add(split);
 
 				current = recursiveConstruct(elts[i], current, false);
 				if(matching)
 					instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
+				else
+				{
+					jump = new InstructionData(Type.JUMP, null, ++current, 0);
+					jumps.add(jump);
+					instructions.add(jump);
+				}
+
 				split.inst2 = current;
 			}
-			current = recursiveConstruct(elts[n], current, false);
+			current = recursiveConstruct(elts[n - 1], current, false);
+			for(InstructionData jump : jumps)
+				jump.inst1 = current;
 			if(matching)
 				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
 		}
@@ -125,7 +139,7 @@ public class VMRegexAutomatonBuilder
 		return current;
 	}
 
-	VMRegexAutomaton build()
+	public VMRegexAutomaton build()
 	{
 		return new VMRegexAutomaton(this);
 	}

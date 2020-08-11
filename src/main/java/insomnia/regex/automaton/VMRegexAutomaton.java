@@ -1,9 +1,11 @@
 package insomnia.regex.automaton;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import insomnia.automaton.AutomatonException;
 import insomnia.automaton.IAutomaton;
+import insomnia.regex.automaton.VMRegexAutomatonBuilder.InstructionData;
 
 public class VMRegexAutomaton implements IAutomaton<String>
 {
@@ -15,31 +17,58 @@ public class VMRegexAutomaton implements IAutomaton<String>
 	protected class Instruction
 	{
 		public Type type;
-		public String key;
+		public String str;
 
 		public Instruction inst1;
 		public Instruction inst2;
 
-		public Instruction(Type t, String k, Instruction i1, Instruction i2)
 		{
-			type = t;
-			key = k;
-			inst1 = i1;
-			inst2 = i2;
+			str = null;
+			inst1 = null;
+			inst2 = null;
 		}
 	}
 
-	private Instruction root;
-	
+	List<Instruction> instructions;
+
 	protected VMRegexAutomaton(VMRegexAutomatonBuilder builder)
 	{
-		
+		int n = builder.instructions.size();
+		instructions = new ArrayList<>();
+
+		for(int i = 0; i < n; i++)
+			instructions.add(new Instruction());
+
+		for(int i = 0; i < n; i++)
+		{
+			Instruction inst = instructions.get(i);
+			InstructionData data = builder.instructions.get(i);
+
+			inst.type = data.type;
+			switch(data.type)
+			{
+			case KEY:
+			case REGEX:
+				inst.str = data.str;
+				inst.inst1 = instructions.get(data.inst1);
+				break;
+			case JUMP:
+				inst.inst1 = instructions.get(data.inst1);
+				break;
+			case SPLIT:
+				inst.inst1 = instructions.get(data.inst1);
+				inst.inst2 = instructions.get(data.inst2);
+				break;
+			case MATCH:
+				break;
+			}
+		}
 	}
 
 	@Override
 	public boolean run(List<String> elements) throws AutomatonException
 	{
-		return run(elements, root, 0);
+		return run(elements, instructions.get(0), 0);
 	}
 
 	private boolean run(List<String> elements, Instruction inst, int index)
@@ -47,10 +76,15 @@ public class VMRegexAutomaton implements IAutomaton<String>
 		switch(inst.type)
 		{
 		case KEY:
-			return inst.key.equals(elements.get(index)) && //
+			return index < elements.size() && //
+					elements.get(index).equals(inst.str) && //
+					run(elements, inst.inst1, index + 1);
+		case REGEX:
+			return index < elements.size() && //
+					elements.get(index).matches(inst.str) && //
 					run(elements, inst.inst1, index + 1);
 		case MATCH:
-			return true;
+			return index == elements.size();
 		case JUMP:
 			return run(elements, inst.inst1, index);
 		case SPLIT:
@@ -58,5 +92,48 @@ public class VMRegexAutomaton implements IAutomaton<String>
 					run(elements, inst.inst2, index);
 		}
 		return false;
+	}
+
+	@Override
+	public String toString()
+	{
+		StringBuffer buf = new StringBuffer();
+		for(int i = 0; i < instructions.size(); i++)
+		{
+			Instruction inst = instructions.get(i);
+			buf.append(i);
+			switch(inst.type)
+			{
+			case KEY:
+				buf.append(" : KEY ");
+				buf.append(inst.str);
+				buf.append('\n');
+				break;
+			case REGEX:
+				buf.append(" : REGEX ");
+				buf.append(inst.str);
+				buf.append('\n');
+				break;
+			case MATCH:
+				buf.append(" : MATCH\n");
+				break;
+			case JUMP:
+				buf.append(" : JUMP ");
+				buf.append(instructions.indexOf(inst.inst1));
+				buf.append('\n');
+				break;
+			case SPLIT:
+				buf.append(" : SPLIT ");
+				buf.append(instructions.indexOf(inst.inst1));
+				buf.append('|');
+				buf.append(instructions.indexOf(inst.inst2));
+				buf.append('\n');
+				break;
+			default:
+				buf.append('\n');
+				break;
+			}
+		}
+		return buf.toString();
 	}
 }
