@@ -108,6 +108,7 @@ class TestPathGRD
 	}
 	
 	// TODO ajouter des tests existentiels
+	// a -> il existe bc n'implique pas cd -> e
 
 		@ParameterizedTest
 		@CsvSource({

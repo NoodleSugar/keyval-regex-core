@@ -101,6 +101,7 @@ public class Unifier
 			// Si body n'est pas terminal
 			if(!body.isRooted() && !body.isTerminal())
 			{
+				// Inclusions strictes de body dans head
 				int[] indexs = findAllInclusions(body, head);
 				for(int i : indexs)
 				{
@@ -137,6 +138,7 @@ public class Unifier
 			// Si head n'est pas terminal
 			if(!head.isRooted() && !head.isTerminal())
 			{
+				// Inclusions strictes de head dans body
 				int[] indexs = findAllInclusions(head, body);
 				for(int i : indexs)
 				{
