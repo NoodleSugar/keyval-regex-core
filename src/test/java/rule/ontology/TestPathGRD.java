@@ -14,8 +14,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import insomnia.rule.PathRule;
 import insomnia.rule.ontology.PathGRD;
 import insomnia.rule.ontology.PathOntology;
-import insomnia.rule.tree.Path;
 import insomnia.rule.ontology.IGRD.DependencyMode;
+import insomnia.rule.tree.Path;
 
 class TestPathGRD
 {

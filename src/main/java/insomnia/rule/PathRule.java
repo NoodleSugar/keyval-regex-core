@@ -1,14 +1,13 @@
 package insomnia.rule;
 
-import insomnia.rule.tree.IPath;
 import insomnia.rule.tree.Path;
 
-public class PathRule implements IRule<IPath>
+public class PathRule implements IRule<Path>
 {
-	private IPath context;
-	private IPath foot;
-	private IPath body;
-	private IPath head;
+	private Path context;
+	private Path foot;
+	private Path body;
+	private Path head;
 	private boolean rooted;
 	private boolean valued;
 	private boolean existential;
@@ -41,25 +40,25 @@ public class PathRule implements IRule<IPath>
 	}
 
 	@Override
-	public IPath getContext()
+	public Path getContext()
 	{
 		return context;
 	}
 
 	@Override
-	public IPath getFoot()
+	public Path getFoot()
 	{
 		return foot;
 	}
 
 	@Override
-	public IPath getBody()
+	public Path getBody()
 	{
 		return body;
 	}
 
 	@Override
-	public IPath getHead()
+	public Path getHead()
 	{
 		return head;
 	}

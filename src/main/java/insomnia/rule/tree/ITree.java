@@ -1,17 +1,17 @@
 package insomnia.rule.tree;
 
 import java.util.List;
-import java.util.Map.Entry;
 
+import insomnia.rule.tree.edge.IEdge;
 import insomnia.rule.tree.node.INode;
 
-public interface ITree
+public interface ITree<E>
 {
-	INode getRoot();
+	INode<E> getRoot();
 
-	INode getParent(INode node) throws TreeException;
+	IEdge<E> getParent(INode<E> node);
 
-	List<Entry<String, INode>> getChildren(INode node) throws TreeException;
-	
+	List<? extends IEdge<E>> getChildren(INode<E> node);
+
 	boolean isRooted();
 }

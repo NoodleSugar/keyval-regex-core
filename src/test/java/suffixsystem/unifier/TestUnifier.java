@@ -102,19 +102,19 @@ class TestUnifier
 		if(u.prefixBody == null)
 			pb = null;
 		else
-			pb = StringUtils.join(u.prefixBody.getKeys(), '.');
+			pb = StringUtils.join(u.prefixBody.getLabels(), '.');
 		if(u.suffixBody == null)
 			sb = null;
 		else
-			sb = StringUtils.join(u.suffixBody.getKeys(), '.');
+			sb = StringUtils.join(u.suffixBody.getLabels(), '.');
 		if(u.prefixHead == null)
 			ph = null;
 		else
-			ph = StringUtils.join(u.prefixHead.getKeys(), '.');
+			ph = StringUtils.join(u.prefixHead.getLabels(), '.');
 		if(u.suffixHead == null)
 			sh = null;
 		else
-			sh = StringUtils.join(u.suffixHead.getKeys(), '.');
+			sh = StringUtils.join(u.suffixHead.getLabels(), '.');
 
 		String[] unif = {
 				pb, sb, ph, sh

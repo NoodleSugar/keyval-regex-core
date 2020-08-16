@@ -25,8 +25,8 @@ public class Unifier
 	{
 		ArrayList<Integer> array = new ArrayList<>();
 
-		List<String> keys1 = p.getKeys();
-		List<String> keys2 = s.getKeys();
+		List<String> keys1 = p.getLabels();
+		List<String> keys2 = s.getLabels();
 
 		int n1 = keys1.size();
 		int n2 = keys2.size();
@@ -50,8 +50,8 @@ public class Unifier
 	{
 		ArrayList<Integer> array = new ArrayList<>();
 
-		List<String> keys1 = i.getKeys();
-		List<String> keys2 = c.getKeys();
+		List<String> keys1 = i.getLabels();
+		List<String> keys2 = c.getLabels();
 
 		int n1 = keys1.size();
 		int n2 = keys2.size();

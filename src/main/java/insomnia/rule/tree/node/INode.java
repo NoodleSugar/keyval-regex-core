@@ -4,13 +4,9 @@ import java.util.List;
 
 import insomnia.rule.tree.edge.IEdge;
 
-public interface INode
+public interface INode<E>
 {
-	List<IEdge> getParents();
+	List<? extends IEdge<E>> getParents();
 
-	List<IEdge> getChildren();
-
-	boolean isRoot();
-
-	boolean isLeaf();
+	List<? extends IEdge<E>> getChildren();
 }

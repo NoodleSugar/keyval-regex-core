@@ -22,7 +22,7 @@ public class OntologyValidator implements IOntologyValidator<PathRule>
 		// Vérification clé -> clé (a)
 		// Vérification suffixe (b)
 		return rule.isExistential() //
-				|| rule.getBody().getKeys().size() == 1 && rule.getHead().getKeys().size() == 1 //
+				|| rule.getBody().getLabels().size() == 1 && rule.getHead().getLabels().size() == 1 //
 				|| rule.isValued();
 	}
 }

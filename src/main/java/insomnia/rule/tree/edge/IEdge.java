@@ -2,11 +2,11 @@ package insomnia.rule.tree.edge;
 
 import insomnia.rule.tree.node.INode;
 
-public interface IEdge
+public interface IEdge<E>
 {
-	String getKey();
+	E getLabel();
 
-	INode getParent();
+	INode<E> getParent();
 
-	INode getChild();
+	INode<E> getChild();
 }

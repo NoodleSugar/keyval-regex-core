@@ -10,13 +10,10 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 
-import insomnia.rule.IRule;
 import insomnia.rule.PathRule;
-import insomnia.rule.tree.IPath;
-import insomnia.rule.tree.ITree;
 import insomnia.rule.tree.Path;
 
-public class PathGRD implements IGRD<IPath, PathRule>
+public class PathGRD implements IGRD<Path, PathRule>
 {
 	private class RuleDep
 	{
@@ -179,8 +176,8 @@ public class PathGRD implements IGRD<IPath, PathRule>
 
 	public boolean dependsWeakOn(PathRule rule1, PathRule rule2)
 	{
-		IPath body1 = rule1.getBody();
-		IPath head2 = rule2.getHead();
+		Path body1 = rule1.getBody();
+		Path head2 = rule2.getHead();
 
 		// Si R2 est existentielle
 		// Si R1 est valuée
@@ -188,18 +185,17 @@ public class PathGRD implements IGRD<IPath, PathRule>
 		if(rule2.isExistential() && rule1.isValued() && !rule2.isValued())
 			return false;
 
-		
 		// Si R2 est enracinée
 		if(rule2.isRooted())
 		{
 			// Si R2 est valuée
 			if(rule2.isValued())
 				// Si h2 est égal à b1
-				return head2.getKeys().equals(body1.getKeys());
+				return head2.getLabels().equals(body1.getLabels());
 
 			// Si R2 non valuée
 			else
-				// Si on a pas R2 est existentielle et si 
+				// Si on a pas R2 est existentielle et si
 				// Si un suffixe de h2 est préfixe de b1
 				return !(rule2.isExistential() && body1.isSuffix(head2)) && //
 						body1.hasPrefixInSuffix(head2);
@@ -227,8 +223,8 @@ public class PathGRD implements IGRD<IPath, PathRule>
 
 	public boolean dependsStrongOn(PathRule rule1, PathRule rule2)
 	{
-		IPath body1 = rule1.getBody();
-		IPath head2 = rule2.getHead();
+		Path body1 = rule1.getBody();
+		Path head2 = rule2.getHead();
 
 		// Si R2 est existentielle
 		// Si R1 est valuée
@@ -242,7 +238,7 @@ public class PathGRD implements IGRD<IPath, PathRule>
 			// Si R1 est valuée
 			if(rule1.isValued())
 				// Si b1 est égal à h2
-				return body1.getKeys().equals(head2.getKeys());
+				return body1.getLabels().equals(head2.getLabels());
 
 			// Si R1 non valuée
 			else
@@ -266,10 +262,10 @@ public class PathGRD implements IGRD<IPath, PathRule>
 	}
 
 	@Override
-	public List<PathRule> getQueryDependencies(IPath query)
+	public List<PathRule> getQueryDependencies(Path query)
 	{
 		List<PathRule> dep = new ArrayList<>();
-		String b = StringUtils.join(query.getKeys(), '.');
+		String b = StringUtils.join(query.getLabels(), '.');
 		PathRule q = PathRule.create(b, "", query.isRooted(), true);
 
 		for(Map.Entry<PathRule, RuleDep> entry : dependencies.entrySet())

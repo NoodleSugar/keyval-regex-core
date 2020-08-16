@@ -8,7 +8,7 @@ import insomnia.rule.tree.ITree;
 /**
  * Graph of Rule Dependency
  */
-public interface IGRD<T extends ITree, R extends IRule<T>>
+public interface IGRD<T extends ITree<?>, R extends IRule<T>>
 {
 	public enum DependencyMode
 	{

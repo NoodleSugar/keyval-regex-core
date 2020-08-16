@@ -2,7 +2,11 @@ package insomnia.rule.tree.node;
 
 import insomnia.rule.tree.edge.IEdge;
 
-public interface ITreeNode extends INode
+public interface ITreeNode<E> extends INode<E>
 {
-	IEdge getParent();
+	IEdge<E> getParent();
+	
+	boolean isRoot();
+
+	boolean isLeaf();
 }
