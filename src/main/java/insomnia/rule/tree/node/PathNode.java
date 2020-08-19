@@ -1,77 +1,72 @@
 package insomnia.rule.tree.node;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import insomnia.rule.tree.edge.Edge;
 
 public class PathNode implements IPathNode<String>
 {
-	private Edge parent;
-	private Edge child;
-	private boolean root;
-	private boolean leaf;
+	final private static String emptyLabel = "";
+
+	private Optional<PathNode> parentNode;
+	private Optional<Edge>     childEdge;
 
 	public PathNode()
 	{
-		this(null, null, false, false);
+		this(null, emptyLabel);
 	}
 
-	public PathNode(PathNode parent, String label)
+	public PathNode(PathNode parentNode, String label)
 	{
-		this(parent, label, false, false);
-	}
+		this.parentNode = Optional.ofNullable(parentNode);
+		this.childEdge  = Optional.empty();
 
-	public PathNode(PathNode parent, String label, boolean isRoot, boolean isLeaf)
-	{
-		this.parent = new Edge(parent, this, label);
-		child = null;
-		root = isRoot;
-		leaf = isLeaf;
-	}
+		/*
+		 * By construction we cannot reuse a node already in a path
+		 */
+		if (parentNode == null)
+			return;
 
-	public void setChild(PathNode child)
-	{
-		this.child = child.parent;
-	}
+		assert (parentNode.childEdge.isPresent() == false);
 
-	@Override
-	public boolean isRoot()
-	{
-		return root;
-	}
-
-	@Override
-	public boolean isLeaf()
-	{
-		return leaf;
+		parentNode.childEdge = Optional.of(new Edge(parentNode, this, label));
 	}
 
 	@Override
 	public List<Edge> getParents()
 	{
-		List<Edge> p = new ArrayList<>();
-		p.add(parent);
-		return p;
+		Optional<Edge> parentEdge = getParent();
+
+		if (parentEdge.isPresent())
+			return Arrays.asList(parentEdge.get());
+
+		return Collections.emptyList();
 	}
 
 	@Override
 	public List<Edge> getChildren()
 	{
-		List<Edge> c = new ArrayList<>();
-		c.add(child);
-		return c;
+		if (childEdge.isPresent())
+			return Arrays.asList(childEdge.get());
+
+		return Collections.emptyList();
 	}
 
 	@Override
-	public Edge getParent()
+	public Optional<Edge> getParent()
 	{
-		return parent;
+		if (parentNode.isPresent())
+			return parentNode.get().getChild();
+
+		return Optional.empty();
 	}
 
 	@Override
-	public Edge getChild()
+	public Optional<Edge> getChild()
 	{
-		return child;
+		return childEdge;
 	}
 }
