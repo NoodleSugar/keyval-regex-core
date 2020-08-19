@@ -24,12 +24,12 @@ public class PathNode implements IPathNode<String>
 		this.parentNode = Optional.ofNullable(parentNode);
 		this.childEdge  = Optional.empty();
 
-		/*
-		 * By construction we cannot reuse a node already in a path
-		 */
 		if (parentNode == null)
 			return;
 
+		/*
+		 * By construction we cannot reuse a node already in a path
+		 */
 		assert (parentNode.childEdge.isPresent() == false);
 
 		parentNode.childEdge = Optional.of(new Edge(parentNode, this, label));

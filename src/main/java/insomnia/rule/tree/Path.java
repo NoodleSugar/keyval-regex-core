@@ -40,6 +40,10 @@ public class Path implements IPath<String>
 		this.isRooted   = isRooted;
 		this.isTerminal = isTerminal;
 
+		// Premier Noeud
+		root = new PathNode();
+		nodes.add(root);
+
 		/*
 		 * Empty path
 		 */
@@ -55,10 +59,6 @@ public class Path implements IPath<String>
 		String   label;
 		PathNode newPathNode;
 		PathNode lastPathNode;
-
-		// Premier Noeud
-		root = new PathNode();
-		nodes.add(root);
 
 		lastPathNode = root;
 
@@ -231,6 +231,22 @@ public class Path implements IPath<String>
 		}
 
 		return false;
+	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (o == null || !(o instanceof Path))
+			return false;
+
+		Path p = (Path) o;
+		return this.labels.equals(p.labels);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return this.labels.hashCode();
 	}
 
 	@Override
