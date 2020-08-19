@@ -1,42 +1,55 @@
 package insomnia.rule;
 
+import java.util.regex.Pattern;
+
 import insomnia.rule.tree.Path;
 
 public class PathRule implements IRule<Path>
 {
+	public final static String separator = Pattern.quote(".");
+
 	private Path context;
 	private Path foot;
 	private Path body;
 	private Path head;
-	private boolean rooted;
-	private boolean valued;
-	private boolean existential;
 
-	public static PathRule create(String b, String h, boolean isRooted, boolean isValued)
+	private boolean isExistential;
+
+	public static PathRule create(String body, String head)
 	{
-		return new PathRule(b, h, isRooted, isValued, isValued, false);
+		return create(body, head, false, false);
 	}
 
-	public static PathRule createExistential(String b, String h, boolean isRooted, boolean isValued)
+	public static PathRule create(String body, String head, boolean isRooted, boolean isTerminal)
 	{
-		return new PathRule(b, h, isRooted, isValued, false, true);
+		return new PathRule( //
+			new Path(isRooted, isTerminal, body.split(separator)), //
+			new Path(isRooted, isTerminal, head.split(separator)), //
+			false);
 	}
 
-	public PathRule(String b, String h)
+	public static PathRule createExistential(String body, String head, boolean isRooted, boolean isBodyTerminal, boolean isHeadTerminal)
 	{
-		this(b, h, false, false, false, false);
+		return new PathRule(//
+			new Path(isRooted, isBodyTerminal, body.split(separator)), //
+			new Path(isRooted, isHeadTerminal, head.split(separator)), //
+			true);
 	}
 
-	private PathRule(String b, String h, boolean isRooted, boolean isBodyValued, boolean isHeadValued,
-			boolean isExistential)
+	public PathRule(Path body, Path head, boolean isExistential) throws IllegalArgumentException
 	{
-		context = null;
-		foot = null;
-		body = new Path(b, isRooted, isBodyValued);
-		head = new Path(h, isRooted, isHeadValued);
-		rooted = isRooted;
-		valued = isBodyValued;
-		existential = isExistential;
+		if (body.isRooted() != head.isRooted())
+			throw new IllegalArgumentException("body and head must have the same isRooted value");
+
+		if (!isExistential && body.isTerminal() != head.isTerminal())
+			throw new IllegalArgumentException("body and head must have the same isTerminal value for non existential rule");
+
+//		context = null;
+//		foot = null;
+
+		this.body          = body;
+		this.head          = head;
+		this.isExistential = isExistential;
 	}
 
 	@Override
@@ -78,6 +91,6 @@ public class PathRule implements IRule<Path>
 	@Override
 	public boolean isExistential()
 	{
-		return existential;
+		return isExistential;
 	}
 }
