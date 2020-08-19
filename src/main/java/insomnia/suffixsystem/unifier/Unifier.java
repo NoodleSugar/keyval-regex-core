@@ -11,6 +11,7 @@ public class Unifier
 	public Path suffixBody;
 	public Path prefixHead;
 	public Path suffixHead;
+	public Path reference;
 
 	private Unifier(Path pb, Path sb, Path ph, Path sh)
 	{
@@ -20,6 +21,11 @@ public class Unifier
 		suffixHead = sh;
 	}
 
+	private Unifier(Path pb, Path sb, Path ph, Path sh, Path ref)
+	{
+		this(pb, sb, ph, sh);
+		reference = ref;
+	}
 	// Préfixes et suffixes stricts (limites exclues)
 	public static int[] findAllPrefixSuffix(Path p, Path s)
 	{
