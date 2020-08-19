@@ -2,14 +2,13 @@ package insomnia.rule.tree;
 
 import java.util.List;
 
-import insomnia.rule.tree.edge.IEdge;
-import insomnia.rule.tree.node.INode;
-
 public interface IPath<E> extends ITree<E>
 {
 	List<E> getLabels();
 
-	int getSize();
+	int size();
+
+	boolean isEmpty();
 
 	boolean isTerminal();
 
