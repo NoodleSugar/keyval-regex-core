@@ -4,68 +4,84 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import insomnia.rule.tree.edge.Edge;
-import insomnia.rule.tree.node.INode;
 import insomnia.rule.tree.node.PathNode;
 
 public class Path implements IPath<String>
 {
-	private List<String> labels;
+	public final static boolean default_isRoot     = false;
+	public final static boolean default_isTerminal = false;
+
+	private List<String>   labels;
 	private List<PathNode> nodes;
+
 	private PathNode root;
-	private PathNode last;
+//	private PathNode last;
+
+	private boolean isRooted;
+	private boolean isTerminal;
 
 	// Constructeur de sous-chemin
 	public Path(Path path, int begin, int end)
 	{
 		labels = path.labels.subList(begin, end);
-		nodes = path.nodes.subList(begin, end + 1);
-		root = path.nodes.get(begin);
-		last = path.nodes.get(end);
+		nodes  = path.nodes.subList(begin, end + 1);
+		root   = path.nodes.get(begin);
+//		last = path.nodes.get(end);
 	}
 
-	public Path(String path)
+	public Path(String... path)
 	{
-		this(path, false, false);
+		this(default_isRoot, default_isTerminal, path);
 	}
 
 	// path doit contenir au moins une clé
-	public Path(String path, boolean rooted, boolean terminal)
+	public Path(boolean isRooted, boolean isTerminal, String... path)
 	{
-		labels = new ArrayList<>();
-		nodes = new ArrayList<>();
+		this.isRooted   = isRooted;
+		this.isTerminal = isTerminal;
 
-		String[] path_labels = path.split("\\.");
-		String label;
+		/*
+		 * Empty path
+		 */
+		if (path.length == 0)
+		{
+			labels = Collections.emptyList();
+			nodes  = Collections.emptyList();
+			return;
+		}
+		labels = new ArrayList<>(path.length);
+		nodes  = new ArrayList<>(path.length);
+
+		String   label;
 		PathNode newPathNode;
 		PathNode lastPathNode;
 
 		// Premier Noeud
-		lastPathNode = new PathNode(null, null, rooted, false);
-		nodes.add(lastPathNode);
-		root = lastPathNode;
+		root = new PathNode();
+		nodes.add(root);
+
+		lastPathNode = root;
 
 		// Noeuds intermédiaires
-		int n = path_labels.length;
-		for(int i = 0; i < n - 1; i++)
+		final int n = path.length;
+
+		for (int i = 0; i < n; i++)
 		{
-			label = path_labels[i];
+			label = path[i];
 			labels.add(label);
 
 			newPathNode = new PathNode(lastPathNode, label);
-			lastPathNode.setChild(newPathNode);
-
 			nodes.add(newPathNode);
+
 			lastPathNode = newPathNode;
 		}
+//		last = lastPathNode;
+	}
 
-		// Dernier noeud
-		label = path_labels[n - 1];
-		labels.add(label);
-
-		last = new PathNode(lastPathNode, label, false, terminal);
-		lastPathNode.setChild(last);
-		nodes.add(last);
+	@Override
+	public boolean isEmpty()
+	{
+		return nodes.isEmpty();
 	}
 
 	@Override
@@ -81,7 +97,7 @@ public class Path implements IPath<String>
 	}
 
 	@Override
-	public int getSize()
+	public int size()
 	{
 		return labels.size();
 	}
@@ -89,13 +105,13 @@ public class Path implements IPath<String>
 	@Override
 	public boolean isRooted()
 	{
-		return root.isRoot();
+		return isRooted;
 	}
 
 	@Override
 	public boolean isTerminal()
 	{
-		return last.isLeaf();
+		return isTerminal;
 	}
 
 	@Override
@@ -103,15 +119,15 @@ public class Path implements IPath<String>
 	{
 		List<String> labels2 = path.getLabels();
 
-		if(labels.size() > labels2.size())
+		if (labels.size() > labels2.size())
 			return false;
 
 		int index = 0;
 		// Pour chaque clé de labels2
-		for(String k : labels2)
+		for (String k : labels2)
 		{
 			// Si k et la clé de labels à l'index sont égales
-			if(k.equals(labels.get(index)))
+			if (k.equals(labels.get(index)))
 				// Incrémentation de l'index de labels
 				index++;
 			// Sinon remise à 0 de l'index
@@ -119,7 +135,7 @@ public class Path implements IPath<String>
 				index = 0;
 
 			// Si la dernière clé a été validée
-			if(index == labels.size())
+			if (index == labels.size())
 				return true;
 		}
 		return false;
@@ -130,15 +146,15 @@ public class Path implements IPath<String>
 	{
 		List<String> labels2 = path.getLabels();
 
-		if(labels.size() > labels2.size())
+		if (labels.size() > labels2.size())
 			return false;
 
 		int index = 0;
 		// Pour chaque clé de labels2
-		for(String k : labels2)
+		for (String k : labels2)
 		{
 			// Si k et la clé de labels à l'index sont égales
-			if(k.equals(labels.get(index)))
+			if (k.equals(labels.get(index)))
 				// Incrémentation de l'index de labels
 				index++;
 			// Sinon ce n'est pas un préfixe
@@ -146,7 +162,7 @@ public class Path implements IPath<String>
 				return false;
 
 			// Si la dernière clé a été validée
-			if(index == labels.size())
+			if (index == labels.size())
 				return true;
 		}
 
@@ -160,15 +176,15 @@ public class Path implements IPath<String>
 		labels2.addAll(path.getLabels());
 		Collections.reverse(labels2);
 
-		if(labels.size() > labels2.size())
+		if (labels.size() > labels2.size())
 			return false;
 
 		int index = labels.size() - 1;
 		// Pour chaque clé de labels2
-		for(String k : labels2)
+		for (String k : labels2)
 		{
 			// Si k et la clé de labels à l'index sont égales
-			if(k.equals(labels.get(index)))
+			if (k.equals(labels.get(index)))
 				// Décrémentation de l'index de labels
 				index--;
 			// Sinon ce n'est pas un suffixe
@@ -176,7 +192,7 @@ public class Path implements IPath<String>
 				return false;
 
 			// Si la dernière clé a été validée
-			if(index == -1)
+			if (index == -1)
 				return true;
 		}
 
@@ -186,7 +202,7 @@ public class Path implements IPath<String>
 	@Override
 	public boolean isEqual(IPath<String> path)
 	{
-		if(labels.size() != path.getLabels().size())
+		if (labels.size() != path.getLabels().size())
 			return false;
 
 		return isPrefix(path);
@@ -199,19 +215,27 @@ public class Path implements IPath<String>
 		StringBuffer suffix = new StringBuffer();
 
 		List<String> labels2 = path.getLabels();
-		int n = labels2.size();
+
+		int n   = labels2.size();
 		int min = Math.min(n, labels.size());
+
 		int i = 0;
 
-		while(i < min)
+		while (i < min)
 		{
 			prefix.append(labels.get(i));
 			suffix.insert(0, labels2.get(n - i - 1));
 			i++;
-			if(prefix.toString().equals(suffix.toString()))
+			if (prefix.toString().equals(suffix.toString()))
 				return true;
 		}
 
 		return false;
+	}
+
+	@Override
+	public String toString()
+	{
+		return String.join(".", labels);
 	}
 }
