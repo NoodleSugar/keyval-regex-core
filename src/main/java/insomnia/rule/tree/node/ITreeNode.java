@@ -1,8 +1,10 @@
 package insomnia.rule.tree.node;
 
+import java.util.Optional;
+
 import insomnia.rule.tree.edge.IEdge;
 
 public interface ITreeNode<E> extends INode<E>
 {
-	IEdge<E> getParent();
+	Optional<? extends IEdge<E>> getParent();
 }
