@@ -15,7 +15,6 @@ public class Path implements IPath<String>
 	private List<PathNode> nodes;
 
 	private PathNode root;
-//	private PathNode last;
 
 	private boolean isRooted;
 	private boolean isTerminal;
@@ -26,7 +25,6 @@ public class Path implements IPath<String>
 		labels = path.labels.subList(begin, end);
 		nodes  = path.nodes.subList(begin, end + 1);
 		root   = path.nodes.get(begin);
-//		last = path.nodes.get(end);
 	}
 
 	public Path(String... path)
@@ -39,6 +37,7 @@ public class Path implements IPath<String>
 	{
 		this.isRooted   = isRooted;
 		this.isTerminal = isTerminal;
+		nodes           = new ArrayList<>(path.length + 1);
 
 		// Premier Noeud
 		root = new PathNode();
@@ -50,11 +49,9 @@ public class Path implements IPath<String>
 		if (path.length == 0)
 		{
 			labels = Collections.emptyList();
-			nodes  = Collections.emptyList();
 			return;
 		}
 		labels = new ArrayList<>(path.length);
-		nodes  = new ArrayList<>(path.length);
 
 		String   label;
 		PathNode newPathNode;
@@ -75,7 +72,6 @@ public class Path implements IPath<String>
 
 			lastPathNode = newPathNode;
 		}
-//		last = lastPathNode;
 	}
 
 	@Override
