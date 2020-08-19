@@ -26,6 +26,17 @@ public class Unifier
 		this(pb, sb, ph, sh);
 		reference = ref;
 	}
+
+	public boolean emptyBody()
+	{
+		return prefixBody.isEmpty() && suffixBody.isEmpty();
+	}
+
+	public boolean emptyHead()
+	{
+		return prefixHead.isEmpty() && suffixHead.isEmpty();
+	}
+
 	// Préfixes et suffixes stricts (limites exclues)
 	public static int[] findAllPrefixSuffix(Path p, Path s)
 	{
