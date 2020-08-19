@@ -19,18 +19,6 @@ public class Tree implements ITree<String>
 	}
 
 	@Override
-	public Edge getParent(INode<String> node)
-	{
-		return null;
-	}
-
-	@Override
-	public List<Edge> getChildren(INode<String> node)
-	{
-		return null;
-	}
-
-	@Override
 	public boolean isRooted()
 	{
 		return root.isRoot();

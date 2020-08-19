@@ -7,8 +7,6 @@ import insomnia.rule.tree.node.INode;
 
 public interface IPath<E> extends ITree<E>
 {
-	IEdge<E> getChild(INode<E> node);
-
 	List<E> getLabels();
 
 	int getSize();

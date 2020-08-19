@@ -74,36 +74,6 @@ public class Path implements IPath<String>
 		return root;
 	}
 
-	/*
-	 * node doit appartenir au chemin
-	 */
-	@Override
-	public Edge getParent(INode<String> node)
-	{
-		return ((PathNode) node).getParent();
-	}
-
-	/*
-	 * node doit appartenir au chemin
-	 */
-	@Override
-	public Edge getChild(INode<String> node)
-	{
-		return ((PathNode) node).getChild();
-	}
-
-	/*
-	 * node doit appartenir au chemin
-	 */
-	@Override
-	public List<Edge> getChildren(INode<String> node)
-	{
-		ArrayList<Edge> a = new ArrayList<>();
-		a.add(getChild(node));
-
-		return a;
-	}
-
 	@Override
 	public List<String> getLabels()
 	{
