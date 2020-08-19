@@ -28,11 +28,11 @@ class TestPathGRD
 	{
 		//TODO ajouter des règles intéréssantes
 		rules = new ArrayList<>();
-		rules.add(new PathRule("a", "b"));
-		rules.add(new PathRule("a.b.c", "d"));
-		rules.add(new PathRule("b.c", "e"));
-		rules.add(new PathRule("b", "d"));
-		rules.add(new PathRule("c.e", "a"));
+		rules.add(PathRule.create("a", "b"));
+		rules.add(PathRule.create("a.b.c", "d"));
+		rules.add(PathRule.create("b.c", "e"));
+		rules.add(PathRule.create("b", "d"));
+		rules.add(PathRule.create("c.e", "a"));
 
 		ontology = new PathOntology(rules);
 		grd = new PathGRD(ontology);
@@ -125,8 +125,8 @@ class TestPathGRD
 			PathRule r1, r2;
 			if(args.size() == 8)
 			{
-				r1 = new PathRule(args.getString(0), args.getString(1));
-				r2 = new PathRule(args.getString(2), args.getString(3));
+				r1 = PathRule.create(args.getString(0), args.getString(1));
+				r2 = PathRule.create(args.getString(2), args.getString(3));
 			}
 			else
 			{
@@ -152,8 +152,8 @@ class TestPathGRD
 			PathRule r1, r2;
 			if(args.size() == 8)
 			{
-				r1 = new PathRule(args.getString(0), args.getString(1));
-				r2 = new PathRule(args.getString(2), args.getString(3));
+				r1 = PathRule.create(args.getString(0), args.getString(1));
+				r2 = PathRule.create(args.getString(2), args.getString(3));
 			}
 			else
 			{
@@ -172,7 +172,7 @@ class TestPathGRD
 		})
 		void queryDependencies(ArgumentsAccessor args)
 		{
-			Path q = new Path(args.getString(0), args.getBoolean(1), args.getBoolean(2));
+			Path q = new Path(args.getBoolean(1), args.getBoolean(2), args.getString(0));
 			List<PathRule> deps = grd.getQueryDependencies(q);
 			
 			assertEquals(2, deps.size());
