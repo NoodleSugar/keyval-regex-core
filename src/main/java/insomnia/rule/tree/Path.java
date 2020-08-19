@@ -117,86 +117,19 @@ public class Path implements IPath<String>
 	@Override
 	public boolean isIncluded(IPath<String> path)
 	{
-		List<String> labels2 = path.getLabels();
-
-		if (labels.size() > labels2.size())
-			return false;
-
-		int index = 0;
-		// Pour chaque clé de labels2
-		for (String k : labels2)
-		{
-			// Si k et la clé de labels à l'index sont égales
-			if (k.equals(labels.get(index)))
-				// Incrémentation de l'index de labels
-				index++;
-			// Sinon remise à 0 de l'index
-			else
-				index = 0;
-
-			// Si la dernière clé a été validée
-			if (index == labels.size())
-				return true;
-		}
-		return false;
+		return Paths.isIncluded(this, path);
 	}
 
 	@Override
 	public boolean isPrefix(IPath<String> path)
 	{
-		List<String> labels2 = path.getLabels();
-
-		if (labels.size() > labels2.size())
-			return false;
-
-		int index = 0;
-		// Pour chaque clé de labels2
-		for (String k : labels2)
-		{
-			// Si k et la clé de labels à l'index sont égales
-			if (k.equals(labels.get(index)))
-				// Incrémentation de l'index de labels
-				index++;
-			// Sinon ce n'est pas un préfixe
-			else
-				return false;
-
-			// Si la dernière clé a été validée
-			if (index == labels.size())
-				return true;
-		}
-
-		return false;
+		return Paths.isPrefix(this, path);
 	}
 
 	@Override
 	public boolean isSuffix(IPath<String> path)
 	{
-		List<String> labels2 = new ArrayList<>();
-		labels2.addAll(path.getLabels());
-		Collections.reverse(labels2);
-
-		if (labels.size() > labels2.size())
-			return false;
-
-		int index = labels.size() - 1;
-		// Pour chaque clé de labels2
-		for (String k : labels2)
-		{
-			// Si k et la clé de labels à l'index sont égales
-			if (k.equals(labels.get(index)))
-				// Décrémentation de l'index de labels
-				index--;
-			// Sinon ce n'est pas un suffixe
-			else
-				return false;
-
-			// Si la dernière clé a été validée
-			if (index == -1)
-				return true;
-		}
-
-		return false;
+		return Paths.isSuffix(this, path);
 	}
 
 	@Override
@@ -211,36 +144,19 @@ public class Path implements IPath<String>
 	@Override
 	public boolean hasPrefixInSuffix(IPath<String> path)
 	{
-		StringBuffer prefix = new StringBuffer();
-		StringBuffer suffix = new StringBuffer();
-
-		List<String> labels2 = path.getLabels();
-
-		int n   = labels2.size();
-		int min = Math.min(n, labels.size());
-
-		int i = 0;
-
-		while (i < min)
-		{
-			prefix.append(labels.get(i));
-			suffix.insert(0, labels2.get(n - i - 1));
-			i++;
-			if (prefix.toString().equals(suffix.toString()))
-				return true;
-		}
-
-		return false;
+		return Paths.hasPrefixInSuffix(this, path);
 	}
+
+	// =========================================================================
+	// Object Override
 
 	@Override
 	public boolean equals(Object o)
 	{
-		if (o == null || !(o instanceof Path))
+		if (o == null || !(o instanceof IPath))
 			return false;
 
-		Path p = (Path) o;
-		return this.labels.equals(p.labels);
+		return Paths.areEquals(this, (IPath<?>) o);
 	}
 
 	@Override
