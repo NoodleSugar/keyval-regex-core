@@ -119,19 +119,19 @@ public class Path implements IPath<String>
 	@Override
 	public boolean isPrefix(IPath<String> path)
 	{
-		return Paths.isPrefix(this, path);
+		return Paths.isSimplePrefix(this, path);
 	}
 
 	@Override
 	public boolean isSuffix(IPath<String> path)
 	{
-		return Paths.isSuffix(this, path);
+		return Paths.isSimpleSuffix(this, path);
 	}
 
 	@Override
 	public boolean hasPrefixInSuffix(IPath<String> path)
 	{
-		return Paths.hasPrefixInSuffix(this, path);
+		return Paths.hasSimplePrefixInSuffix(this, path);
 	}
 
 	// =========================================================================
@@ -143,7 +143,7 @@ public class Path implements IPath<String>
 		if (o == null || !(o instanceof IPath))
 			return false;
 
-		return Paths.areEquals(this, (IPath<?>) o);
+		return Paths.areSimplyEquals(this, (IPath<?>) o);
 	}
 
 	@Override
