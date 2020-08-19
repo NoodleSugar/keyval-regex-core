@@ -8,9 +8,9 @@ public class OntologyValidator implements IOntologyValidator<PathRule>
 	@Override
 	public boolean test(IOntology<PathRule> ontology)
 	{
-		for(PathRule rule : ontology)
+		for (PathRule rule : ontology)
 		{
-			if(!isValid(rule))
+			if (!isValid(rule))
 				return false;
 		}
 		return true;
@@ -21,8 +21,9 @@ public class OntologyValidator implements IOntologyValidator<PathRule>
 		// Vérification existentielle (c)
 		// Vérification clé -> clé (a)
 		// Vérification suffixe (b)
-		return rule.isExistential() //
-				|| rule.getBody().getLabels().size() == 1 && rule.getHead().getLabels().size() == 1 //
-				|| rule.isValued();
+		return (rule.isExistential() && rule.getHead().isTerminal() == false) //
+			|| (rule.getBody().size() == 1 && rule.getHead().size() == 1) //
+			|| (rule.isExistential() == false && rule.getBody().isTerminal()) //
+		;
 	}
 }
