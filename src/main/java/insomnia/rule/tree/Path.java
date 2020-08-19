@@ -133,15 +133,6 @@ public class Path implements IPath<String>
 	}
 
 	@Override
-	public boolean isEqual(IPath<String> path)
-	{
-		if (labels.size() != path.getLabels().size())
-			return false;
-
-		return isPrefix(path);
-	}
-
-	@Override
 	public boolean hasPrefixInSuffix(IPath<String> path)
 	{
 		return Paths.hasPrefixInSuffix(this, path);

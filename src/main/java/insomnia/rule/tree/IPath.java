@@ -18,7 +18,5 @@ public interface IPath<E> extends ITree<E>
 
 	boolean isSuffix(IPath<E> path);
 
-	boolean isEqual(IPath<E> path);
-
 	boolean hasPrefixInSuffix(IPath<E> path);
 }
