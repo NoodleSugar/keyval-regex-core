@@ -182,14 +182,14 @@ public class PathGRD implements IGRD<Path, PathRule>
 		// Si R2 est existentielle
 		// Si R1 est valuée
 		// Si R2 n'est pas valuée
-		if(rule2.isExistential() && rule1.isValued() && !rule2.isValued())
+		if(rule2.isExistential() && rule1.isTerminal() && !rule2.isTerminal())
 			return false;
 
 		// Si R2 est enracinée
 		if(rule2.isRooted())
 		{
 			// Si R2 est valuée
-			if(rule2.isValued())
+			if(rule2.isTerminal())
 				// Si h2 est égal à b1
 				return head2.getLabels().equals(body1.getLabels());
 
@@ -205,7 +205,7 @@ public class PathGRD implements IGRD<Path, PathRule>
 		else
 		{
 			// Si R2 est valuée
-			if(rule2.isValued())
+			if(rule2.isTerminal())
 				// Si un préfixe de h2 est suffixe de b1
 				return head2.hasPrefixInSuffix(body1);
 
@@ -229,14 +229,14 @@ public class PathGRD implements IGRD<Path, PathRule>
 		// Si R2 est existentielle
 		// Si R1 est valuée
 		// Si R2 n'est pas valuée
-		if(rule2.isExistential() && rule1.isValued() && !rule2.isValued())
+		if(rule2.isExistential() && rule1.isTerminal() && !rule2.isTerminal())
 			return false;
 
 		// Si R1 est enracinée
 		if(rule1.isRooted())
 		{
 			// Si R1 est valuée
-			if(rule1.isValued())
+			if(rule1.isTerminal())
 				// Si b1 est égal à h2
 				return body1.getLabels().equals(head2.getLabels());
 
@@ -250,7 +250,7 @@ public class PathGRD implements IGRD<Path, PathRule>
 		else
 		{
 			// Si R1 est valuée
-			if(rule1.isValued())
+			if(rule1.isTerminal())
 				// Si b1 est suffixe de h2
 				return body1.isSuffix(head2);
 
