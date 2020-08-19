@@ -66,13 +66,13 @@ public class PathRule implements IRule<Path>
 	@Override
 	public boolean isRooted()
 	{
-		return rooted;
+		return body.isRooted();
 	}
 
 	@Override
-	public boolean isValued()
+	public boolean isTerminal()
 	{
-		return valued;
+		return body.isTerminal();
 	}
 
 	@Override

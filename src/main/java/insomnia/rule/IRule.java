@@ -12,9 +12,15 @@ public interface IRule<E extends ITree<?>>
 
 	E getHead();
 
+	/**
+	 * Rooted for both body and head
+	 */
 	boolean isRooted();
 
-	boolean isValued();
+	/**
+	 * Body is rooted
+	 */
+	boolean isTerminal();
 	
 	boolean isExistential();
 }
