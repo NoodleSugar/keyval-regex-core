@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.jws.soap.InitParam;
+
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.BooleanUtils;
 
 import insomnia.rule.tree.node.PathNode;
@@ -29,6 +32,14 @@ public class Path implements IPath<String>
 	// Constructeur de sous-chemin
 	public Path(Path path, int begin, int end)
 	{
+		if (begin == end)
+		{
+			initPath(this, default_isRoot, default_isTerminal);
+			return;
+		}
+		boolean isRooted   = false;
+		boolean isTerminal = false;
+
 		if (path.isRooted)
 		{
 			if (begin > 0)
@@ -38,22 +49,20 @@ public class Path implements IPath<String>
 			}
 			else
 			{
-				this.isRooted = true;
+				isRooted = true;
 				end--;
 			}
 		}
 
 		if (path.isTerminal)
 		{
-			if(end == path.labels.size() + 1)
+			if (end == path.labels.size() + 1)
 			{
-				this.isTerminal = true;
+				isTerminal = true;
 				end--;
 			}
 		}
-		labels = path.labels.subList(begin, end);
-		nodes  = path.nodes.subList(begin, end + 1);
-		root   = path.nodes.get(begin);
+		initPath(this, isRooted, isTerminal, path.labels.subList(begin, end).toArray(new String[0]));
 	}
 
 	public Path(String... path)
@@ -62,42 +71,47 @@ public class Path implements IPath<String>
 	}
 
 	// path doit contenir au moins une clé
-	public Path(boolean isRooted, boolean isTerminal, String... path)
+	public Path(boolean isRooted, boolean isTerminal, String... labels)
 	{
-		this.isRooted   = isRooted;
-		this.isTerminal = isTerminal;
-		nodes           = new ArrayList<>(path.length + 1);
+		initPath(this, isRooted, isTerminal, labels);
+	}
+
+	private static void initPath(Path path, boolean isRooted, boolean isTerminal, String... labels)
+	{
+		path.isRooted   = isRooted;
+		path.isTerminal = isTerminal;
+		path.nodes      = new ArrayList<>(labels.length + 1);
 
 		// Premier Noeud
-		root = new PathNode();
-		nodes.add(root);
+		path.root = new PathNode();
+		path.nodes.add(path.root);
 
 		/*
 		 * Empty path
 		 */
-		if (path.length == 0)
+		if (labels.length == 0)
 		{
-			labels = Collections.emptyList();
+			path.labels = Collections.emptyList();
 			return;
 		}
-		labels = new ArrayList<>(path.length);
+		path.labels = new ArrayList<>(labels.length);
 
 		String   label;
 		PathNode newPathNode;
 		PathNode lastPathNode;
 
-		lastPathNode = root;
+		lastPathNode = path.root;
 
 		// Noeuds intermédiaires
-		final int n = path.length;
+		final int n = labels.length;
 
 		for (int i = 0; i < n; i++)
 		{
-			label = path[i];
-			labels.add(label);
+			label = labels[i];
+			path.labels.add(label);
 
 			newPathNode = new PathNode(lastPathNode, label);
-			nodes.add(newPathNode);
+			path.nodes.add(newPathNode);
 
 			lastPathNode = newPathNode;
 		}
@@ -148,13 +162,13 @@ public class Path implements IPath<String>
 		if (o == null || !(o instanceof IPath))
 			return false;
 
-		return Paths.areSimplyEquals(this, (IPath<?>) o);
+		return Paths.areEquals(this, (IPath<?>) o);
 	}
 
 	@Override
 	public int hashCode()
 	{
-		return this.labels.hashCode();
+		return this.labels.hashCode() + BooleanUtils.toInteger(isRooted) + BooleanUtils.toInteger(isTerminal);
 	}
 
 	@Override
