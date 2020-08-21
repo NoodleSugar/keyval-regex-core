@@ -249,6 +249,9 @@ class TestPaths
 				{ !true, pathFromString("a    "), pathFromString("a.b.a.a      "), new int[] { 0, 2, 3 } }, //
 				{ !true, pathFromString("a.b.a"), pathFromString("a.b.a.b.a    "), new int[] { 0, 2 } }, //
 				{ !true, pathFromString("a.b.a"), pathFromString("z.a.b.a.b.a.z"), new int[] { 1, 3 } }, //
+
+				{ !true, pathFromString("a.b.c"), pathFromString("x.a.b.e.c.z"), new int[] {} }, //
+				{ !true, pathFromString("a.b.c"), pathFromString("e.a.b.c.f  "), new int[] { 1 } }, //
 		});
 	}
 
@@ -275,6 +278,12 @@ class TestPaths
 				{ !true, pathFromString("a.b.a    "), pathFromString("a.b.a.z  "), new int[] { 1, 3 } }, //
 				{ !true, pathFromString("z.a.b.a.b"), pathFromString("a.b.a.b  "), new int[] { 2, 4 } }, //
 				{ !true, pathFromString("z.a.b.a  "), pathFromString("a.b.a    "), new int[] { 1, 3 } }, //
+
+				{ true, pathFromString("a"), pathFromString("a"), new int[] {} }, //
+				{ true, pathFromString("a.b"), pathFromString("b.a.b.a"), new int[] { 1 } }, //
+				{ true, pathFromString("a.b.a"), pathFromString("b.a.b.a"), new int[] { 2 } }, //
+				{ true, pathFromString("a.a.a.b"), pathFromString("a.a.a.a"), new int[] {} }, //
+				{ true, pathFromString("a.b.a.b"), pathFromString("b.a.b.a"), new int[] { 1, 3 } }, //
 		});
 	}
 
@@ -301,6 +310,12 @@ class TestPaths
 				{ !true, pathFromString("a.b.a    "), pathFromString("z.a.b.a  "), new int[] { 1, 3 } }, //
 				{ !true, pathFromString("a.b.a.b.z"), pathFromString("a.b.a.b  "), new int[] { 2, 4 } }, //
 				{ !true, pathFromString("a.b.a.z  "), pathFromString("a.b.a    "), new int[] { 1, 3 } }, //
+
+				{ true, pathFromString("a"), pathFromString("a"), new int[] {} }, //
+				{ true, pathFromString("a.b"), pathFromString("b.a.b.a"), new int[] { 1 } }, //
+				{ true, pathFromString("a.b.a"), pathFromString("b.a.b.a"), new int[] { 1 } }, //
+				{ true, pathFromString("a.a.a.b"), pathFromString("a.a.a.a"), new int[] { 1, 2, 3 } }, //
+				{ true, pathFromString("a.b.a.b"), pathFromString("b.a.b.a"), new int[] { 1, 3 } }, //
 		});
 	}
 

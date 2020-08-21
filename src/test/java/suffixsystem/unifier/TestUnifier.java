@@ -18,55 +18,6 @@ import insomnia.suffixsystem.unifier.Unifier;
 class TestUnifier
 {
 	private final static String separator = Pattern.quote(".");
-
-	@ParameterizedTest
-	@CsvSource({ //
-			"a      , a      , 0, 0", //
-			"a.b    , b.a.b.a, 1, 1, 1, 1", //
-			"a.b.a  , b.a.b.a, 1, 1, 1, 2", //
-			"a.a.a.b, a.a.a.a, 3, 0, 1, 2, 3", //
-			"a.b.a.b, b.a.b.a, 2, 2, 1, 3, 1, 3" //
-
-	})
-	void findPrefixSuffix(ArgumentsAccessor args)
-	{
-		Path body = new Path(args.getString(0).split(separator));
-		Path head = new Path(args.getString(1).split(separator));
-
-		int n1 = args.getInteger(2);
-		int n2 = args.getInteger(3);
-
-		int[] b_in_h = Unifier.findAllPrefixSuffix(body, head);
-		assertEquals(n1, b_in_h.length);
-		for (int i = 0; i < n1; i++)
-			assertEquals((int) args.getInteger(4 + i), b_in_h[i]);
-
-		int[] h_in_b = Unifier.findAllPrefixSuffix(head, body);
-		assertEquals(n2, h_in_b.length);
-		for (int i = 0; i < n2; i++)
-			assertEquals((int) args.getInteger(4 + n1 + i), h_in_b[i]);
-	}
-
-	@ParameterizedTest
-	@CsvSource({ //
-			"a.b  , b.a.b.a.b.a, 2, 1, 3", //
-			"a.b.c, x.a.b.e.c.z, 0", //
-			"a.b.c, e.a.b.c.f  , 1, 1" //
-	})
-	void findInclusions(ArgumentsAccessor args)
-	{
-		Path body = new Path(args.getString(0).split(separator));
-		Path head = new Path(args.getString(1).split(separator));
-
-		int n = args.getInteger(2);
-
-		int[] inc = Unifier.findAllInclusions(body, head);
-		assertEquals(n, inc.length);
-
-		for (int i = 0; i < n; i++)
-			assertEquals((int) args.getInteger(3 + i), inc[i]);
-	}
-
 	@ParameterizedTest
 	// b, h, number, [pb, sb, ph, sh, ...]
 	@CsvSource({ //
