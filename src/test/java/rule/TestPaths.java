@@ -18,161 +18,451 @@ class TestPaths
 
 	public static Path pathFromString(String p)
 	{
-		return pathFromString(p, false, false);
+		p = p.trim();
+
+		boolean isRooted   = p.charAt(0) == '.';
+		boolean isTerminal = p.charAt(p.length() - 1) == '.';
+
+		p = p.substring(isRooted ? 1 : 0, p.length() - (isTerminal ? 1 : 0));
+		return pathFromString(p, isRooted, isTerminal);
 	}
 
 	public static Path pathFromString(String p, boolean isRooted, boolean isTerminal)
 	{
-		return new Path(isRooted, isTerminal, p.split(Pattern.quote(".")));
+		return new Path(isRooted, isTerminal, p.trim().split(Pattern.quote(".")));
 	}
 
 	static List<Object[]> isSimplePrefixSource()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("a"), pathFromString("a"), false }, //
-				{ pathFromString("a"), pathFromString("a.b"), true }, //
-				{ pathFromString("a"), pathFromString("b.a"), false }, //
-				{ pathFromString("b.a"), pathFromString("b.a"), false }, //
-				{ pathFromString("b.a.a"), pathFromString("b.a"), false }, //
-				{ pathFromString("a.b.c.d"), pathFromString("a.b.c.d.z.z"), true }, //
+				{ true, pathFromString("a      "), pathFromString("a          "), false }, //
+				{ true, pathFromString("a      "), pathFromString("a.b        "), true }, //
+				{ true, pathFromString("a      "), pathFromString("b.a        "), false }, //
+				{ true, pathFromString("b.a    "), pathFromString("b.a        "), false }, //
+				{ true, pathFromString("b.a.a  "), pathFromString("b.a        "), false }, //
+				{ true, pathFromString("a.b.c.d"), pathFromString("a.b.c.d.z.z"), true }, //
+				{ true, pathFromString("a.b    "), pathFromString("a          "), false }, //
+
+				{ !true, pathFromString("a      "), pathFromString("a          "), true }, //
+				{ !true, pathFromString("a      "), pathFromString("a.b        "), true }, //
+				{ !true, pathFromString("a      "), pathFromString("b.a        "), false }, //
+				{ !true, pathFromString("b.a    "), pathFromString("b.a        "), true }, //
+				{ !true, pathFromString("b.a.a  "), pathFromString("b.a        "), false }, //
+				{ !true, pathFromString("a.b.c.d"), pathFromString("a.b.c.d.z.z"), true }, //
+				{ !true, pathFromString("a.b    "), pathFromString("a          "), false }, //
+
 		});
 	}
 
 	@ParameterizedTest
 	@MethodSource("isSimplePrefixSource")
-	void isSimplePrefixTest(Path needle, Path haystack, boolean isPrefix)
+	void isSimplePrefixTest(boolean proper, Path needle, Path haystack, boolean isPrefix)
 	{
-		assertEquals(isPrefix, Paths.isSimplePrefix(needle, haystack));
+		assertEquals(isPrefix, Paths.isSimplePrefix(needle, haystack, proper));
 	}
 
 	static List<Object[]> isPrefixSource()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ //
-						pathFromString("a", true, false), //
-						pathFromString("a.b", false, false), //
-						true //
-				}, //
-				{ //
-						pathFromString("a", true, false), //
-						pathFromString("a.b", true, false), //
-						true //
-				}, //
-				{ //
-						pathFromString("a", false, false), //
-						pathFromString("a.b", true, false), //
-						false //
-				}, //
-				{ //
-						pathFromString("a", true, true), //
-						pathFromString("a.b", false, false), //
-						false //
-				}, //
-				{ //
-						pathFromString("a", true, true), //
-						pathFromString("a.b", true, false), //
-						false //
-				}, //
+				{ true, pathFromString(" a"), pathFromString(" a"), false }, //
+				{ true, pathFromString(" a"), pathFromString(".a"), false }, //
+				{ true, pathFromString(".a"), pathFromString(" a"), false }, //
+				{ true, pathFromString(".a"), pathFromString(".a"), false }, //
+				// 4
+				{ true, pathFromString(" a"), pathFromString(" a."), true }, //
+				{ true, pathFromString(" a"), pathFromString(".a."), false }, //
+				{ true, pathFromString(".a"), pathFromString(" a."), false }, //
+				{ true, pathFromString(".a"), pathFromString(".a."), true }, //
+				// 8
+				{ true, pathFromString(" a"), pathFromString("a.b"), true }, //
+				{ true, pathFromString(" a"), pathFromString(".a.b"), false }, //
+				{ true, pathFromString(".a"), pathFromString(" a.b"), false }, //
+				{ true, pathFromString(".a"), pathFromString(".a.b"), true }, //
+				// 12
+				{ true, pathFromString(" a."), pathFromString(" a.b"), false }, //
+				{ true, pathFromString(" a."), pathFromString(".a.b"), false }, //
+				{ true, pathFromString(".a."), pathFromString(" a.b"), false }, //
+				{ true, pathFromString(".a."), pathFromString(".a.b"), false }, //
+				// 16
+				{ true, pathFromString(" a."), pathFromString(" a.b."), false }, //
+				{ true, pathFromString(" a."), pathFromString(".a.b."), false }, //
+				{ true, pathFromString(".a."), pathFromString(" a.b."), false }, //
+				{ true, pathFromString(".a."), pathFromString(".a.b."), false }, //
+				// 20
+
+				// not proper
+
+				{ !true, pathFromString(" a"), pathFromString(" a"), true }, //
+				{ !true, pathFromString(" a"), pathFromString(".a"), false }, //
+				{ !true, pathFromString(".a"), pathFromString(" a"), false }, //
+				{ !true, pathFromString(".a"), pathFromString(".a"), true }, //
+				// 24
+				{ !true, pathFromString(" a"), pathFromString(" a."), true }, //
+				{ !true, pathFromString(" a"), pathFromString(".a."), false }, //
+				{ !true, pathFromString(".a"), pathFromString(" a."), false }, //
+				{ !true, pathFromString(".a"), pathFromString(".a."), true }, //
+				// 28
+				{ !true, pathFromString(" a"), pathFromString("a.b"), true }, //
+				{ !true, pathFromString(" a"), pathFromString(".a.b"), false }, //
+				{ !true, pathFromString(".a"), pathFromString(" a.b"), false }, //
+				{ !true, pathFromString(".a"), pathFromString(".a.b"), true }, //
+				// 32
+				{ !true, pathFromString(" a."), pathFromString(" a.b"), false }, //
+				{ !true, pathFromString(" a."), pathFromString(".a.b"), false }, //
+				{ !true, pathFromString(".a."), pathFromString(" a.b"), false }, //
+				{ !true, pathFromString(".a."), pathFromString(".a.b"), false }, //
+				// 36
+				{ !true, pathFromString(" a."), pathFromString(" a.b."), false }, //
+				{ !true, pathFromString(" a."), pathFromString(".a.b."), false }, //
+				{ !true, pathFromString(".a."), pathFromString(" a.b."), false }, //
+				{ !true, pathFromString(".a."), pathFromString(".a.b."), false }, //
+				// 40
+				{ !true, pathFromString(" a.b "), pathFromString(".a.b."), false }, //
+				{ !true, pathFromString(" a.b."), pathFromString(".a.b."), false }, //
+				{ !true, pathFromString(".a.b."), pathFromString(".a.b."), true }, //
+				{ !true, pathFromString(".a.b "), pathFromString(".a.b."), true }, //
+				// 44
+
+				// Rooted/Terminal cases
+
+				{ true, pathFromString(" a"), pathFromString("a.b"), true }, //
+				{ true, pathFromString(" a"), pathFromString("a.b."), true }, //
+				{ true, pathFromString(".a"), pathFromString(".a.b"), true }, //
+				{ true, pathFromString(".a"), pathFromString(".a.b."), true }, //
+				// 48
+				{ !true, pathFromString(" a"), pathFromString("a.b"), true }, //
+				{ !true, pathFromString(" a"), pathFromString("a.b."), true }, //
+				{ !true, pathFromString(".a"), pathFromString(".a.b"), true }, //
+				{ !true, pathFromString(".a"), pathFromString(".a.b."), true }, //
+				// 52
+
 		});
 	}
 
 	@ParameterizedTest
 	@MethodSource("isPrefixSource")
-	void isPrefixTest(Path needle, Path haystack, boolean isPrefix)
+	void isPrefixTest(boolean proper, Path needle, Path haystack, boolean isPrefix)
 	{
-		assertEquals(isPrefix, Paths.isPrefix(needle, haystack));
+		assertEquals(isPrefix, Paths.isPrefix(needle, haystack, proper));
 	}
 
 	static List<Object[]> isSimpleSuffixSource()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("a"), pathFromString("a"), true }, //
-				{ pathFromString("a"), pathFromString("a.b"), false }, //
-				{ pathFromString("a.b"), pathFromString("a"), false }, //
-				{ pathFromString("a"), pathFromString("b.a"), true }, //
-				{ pathFromString("b.a"), pathFromString("b.a"), true }, //
-				{ pathFromString("b.a.a"), pathFromString("b.a"), false }, //
-				{ pathFromString("a.b.c.d"), pathFromString("z.z.a.b.c.d"), true }, //
+				{ true, pathFromString("a      "), pathFromString("a          "), false }, //
+				{ true, pathFromString("a      "), pathFromString("a.b        "), false }, //
+				{ true, pathFromString("a.b    "), pathFromString("a          "), false }, //
+				{ true, pathFromString("a      "), pathFromString("b.a        "), true }, //
+				{ true, pathFromString("b.a    "), pathFromString("b.a        "), false }, //
+				{ true, pathFromString("b.a.a  "), pathFromString("b.a        "), false }, //
+				{ true, pathFromString("a.b.c.d"), pathFromString("z.z.a.b.c.d"), true }, //
+
+				{ !true, pathFromString("a      "), pathFromString("a          "), true }, //
+				{ !true, pathFromString("a      "), pathFromString("a.b        "), false }, //
+				{ !true, pathFromString("a.b    "), pathFromString("a          "), false }, //
+				{ !true, pathFromString("a      "), pathFromString("b.a        "), true }, //
+				{ !true, pathFromString("b.a    "), pathFromString("b.a        "), true }, //
+				{ !true, pathFromString("b.a.a  "), pathFromString("b.a        "), false }, //
+				{ !true, pathFromString("a.b.c.d"), pathFromString("z.z.a.b.c.d"), true }, //
 		});
 	}
 
 	@ParameterizedTest
 	@MethodSource("isSimpleSuffixSource")
-	void isSimpleSuffixTest(Path needle, Path haystack, boolean isSuffix)
+	void isSimpleSuffixTest(boolean proper, Path needle, Path haystack, boolean isSuffix)
 	{
-		assertEquals(isSuffix, Paths.isSimpleSuffix(needle, haystack));
+		assertEquals(isSuffix, Paths.isSimpleSuffix(needle, haystack, proper));
 	}
 
-	static List<Object[]> findAllSimpleInclusionsSource()
+	static List<Object[]> isSuffixSource()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("a"), pathFromString("a"), new int[] {} }, //
-				{ pathFromString("a"), pathFromString("a.b.a.a"), new int[] { 2 } }, //
-				{ pathFromString("a.b.a"), pathFromString("a.b.a.b.a"), new int[] { } }, //
-				{ pathFromString("a.b.a"), pathFromString("z.a.b.a.b.a.z"), new int[] { 1, 3 } }, //
+				{ true, pathFromString("a "), pathFromString("a "), false }, //
+				{ true, pathFromString("a "), pathFromString("a."), false }, //
+				{ true, pathFromString("a."), pathFromString("a "), false }, //
+				{ true, pathFromString("a."), pathFromString("a."), false }, //
+				// 4
+				{ true, pathFromString("a "), pathFromString(".a "), true }, //
+				{ true, pathFromString("a "), pathFromString(".a."), false }, //
+				{ true, pathFromString("a."), pathFromString(".a "), false }, //
+				{ true, pathFromString("a."), pathFromString(".a."), true }, //
+				// 8
+				{ true, pathFromString("a "), pathFromString("b.a "), true }, //
+				{ true, pathFromString("a "), pathFromString("b.a."), false }, //
+				{ true, pathFromString("a."), pathFromString("b.a "), false }, //
+				{ true, pathFromString("a."), pathFromString("b.a."), true }, //
+				// 12
+				{ true, pathFromString(".a "), pathFromString(" b.a "), false }, //
+				{ true, pathFromString(".a "), pathFromString(" b.a."), false }, //
+				{ true, pathFromString(".a."), pathFromString(" b.a "), false }, //
+				{ true, pathFromString(".a."), pathFromString(" b.a."), false }, //
+				// 16
+				{ true, pathFromString(".a "), pathFromString(".b.a "), false }, //
+				{ true, pathFromString(".a "), pathFromString(".b.a."), false }, //
+				{ true, pathFromString(".a."), pathFromString(".b.a."), false }, //
+				{ true, pathFromString(".a."), pathFromString(".b.a "), false }, //
+				// 20
+				{ true, pathFromString(" a.b "), pathFromString(".a.b."), false }, //
+				{ true, pathFromString(" a.b."), pathFromString(".a.b."), true }, //
+				{ true, pathFromString(".a.b."), pathFromString(".a.b."), false }, //
+				{ true, pathFromString(".a.b "), pathFromString(".a.b."), false }, //
+				// 24
+
+				// not proper
+
+				{ !true, pathFromString("a "), pathFromString("a "), true }, //
+				{ !true, pathFromString("a "), pathFromString("a."), false }, //
+				{ !true, pathFromString("a."), pathFromString("a "), false }, //
+				{ !true, pathFromString("a."), pathFromString("a."), true }, //
+				// 28
+				{ !true, pathFromString("a "), pathFromString(".a "), true }, //
+				{ !true, pathFromString("a "), pathFromString(".a."), false }, //
+				{ !true, pathFromString("a."), pathFromString(".a "), false }, //
+				{ !true, pathFromString("a."), pathFromString(".a."), true }, //
+				// 32
+				{ !true, pathFromString("a "), pathFromString("b.a "), true }, //
+				{ !true, pathFromString("a "), pathFromString("b.a."), false }, //
+				{ !true, pathFromString("a."), pathFromString("b.a "), false }, //
+				{ !true, pathFromString("a."), pathFromString("b.a."), true }, //
+				// 36
+				{ !true, pathFromString(".a "), pathFromString(" b.a "), false }, //
+				{ !true, pathFromString(".a "), pathFromString(" b.a."), false }, //
+				{ !true, pathFromString(".a."), pathFromString(" b.a "), false }, //
+				{ !true, pathFromString(".a."), pathFromString(" b.a."), false }, //
+				// 40
+				{ !true, pathFromString(".a "), pathFromString(".b.a "), false }, //
+				{ !true, pathFromString(".a "), pathFromString(".b.a."), false }, //
+				{ !true, pathFromString(".a."), pathFromString(".b.a."), false }, //
+				{ !true, pathFromString(".a."), pathFromString(".b.a "), false },//
+				// 44
+				{ !true, pathFromString(" a.b "), pathFromString(".a.b."), false }, //
+				{ !true, pathFromString(" a.b."), pathFromString(".a.b."), true }, //
+				{ !true, pathFromString(".a.b."), pathFromString(".a.b."), true }, //
+				{ !true, pathFromString(".a.b "), pathFromString(".a.b."), false }, //
+				// 48
 		});
 	}
 
 	@ParameterizedTest
-	@MethodSource("findAllSimpleInclusionsSource")
-	void findAllSimpleInclusionTest(Path needle, Path haystack, int[] result)
+	@MethodSource("isSuffixSource")
+	void isSuffixTest(boolean proper, Path needle, Path haystack, boolean isSuffix)
 	{
-		assertArrayEquals(result, Paths.findAllSimpleInclusions(needle, haystack));
+		assertEquals(isSuffix, Paths.isSuffix(needle, haystack, proper));
 	}
 
-	static List<Object[]> findAllSimpleSuffixPrefixSource()
+	static List<Object[]> findSimpleInclusionsSource()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("a.b"), pathFromString("b.a"), new int[] { 1 } }, //
-				{ pathFromString("a.b.a"), pathFromString("a.b.a"), new int[] { 1 } }, //
-				{ pathFromString("a.b.a.b"), pathFromString("a.b.a.b.z"), new int[] { 2, 4 } }, //
-				{ pathFromString("a.b.a"), pathFromString("a.b.a.z"), new int[] { 1, 3 } }, //
-				{ pathFromString("z.a.b.a.b"), pathFromString("a.b.a.b"), new int[] { 2, 4 } }, //
-				{ pathFromString("z.a.b.a"), pathFromString("a.b.a"), new int[] { 1, 3 } }, //
+				{ true, pathFromString("a    "), pathFromString("a            "), new int[] {} }, //
+				{ true, pathFromString("a    "), pathFromString("a.b.a.a      "), new int[] { 2 } }, //
+				{ true, pathFromString("a.b.a"), pathFromString("a.b.a.b.a    "), new int[] {} }, //
+				{ true, pathFromString("a.b.a"), pathFromString("z.a.b.a.b.a.z"), new int[] { 1, 3 } }, //
+
+				{ !true, pathFromString("a    "), pathFromString("a            "), new int[] { 0 } }, //
+				{ !true, pathFromString("a    "), pathFromString("a.b.a.a      "), new int[] { 0, 2, 3 } }, //
+				{ !true, pathFromString("a.b.a"), pathFromString("a.b.a.b.a    "), new int[] { 0, 2 } }, //
+				{ !true, pathFromString("a.b.a"), pathFromString("z.a.b.a.b.a.z"), new int[] { 1, 3 } }, //
 		});
 	}
 
 	@ParameterizedTest
-	@MethodSource("findAllSimpleSuffixPrefixSource")
-	void findAllSuffixPrefixTest(Path needle, Path haystack, int[] result)
+	@MethodSource("findSimpleInclusionsSource")
+	void findSimpleInclusionTest(boolean noSuffOrPref, Path needle, Path haystack, int[] result)
 	{
-		assertArrayEquals(result, Paths.findAllSimpleSuffixPrefix(needle, haystack));
+		assertArrayEquals(result, Paths.findSimpleInclusions(needle, haystack, noSuffOrPref));
 	}
 
-	static List<Object[]> findAllSimplePrefixSuffixSource()
+	static List<Object[]> findSimpleSuffixPrefixSource()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("a.b"), pathFromString("b.a"), new int[] { 1 } }, //
-				{ pathFromString("a.b.a"), pathFromString("a.b.a"), new int[] { 1 } }, //
-				{ pathFromString("a.b.a.b"), pathFromString("z.a.b.a.b"), new int[] { 2, 4 } }, //
-				{ pathFromString("a.b.a"), pathFromString("z.a.b.a"), new int[] { 1, 3 } }, //
-				{ pathFromString("a.b.a.b.z"), pathFromString("a.b.a.b"), new int[] { 2, 4 } }, //
-				{ pathFromString("a.b.a.z"), pathFromString("a.b.a"), new int[] { 1, 3 } }, //
+				{ true, pathFromString("a.b      "), pathFromString("b.a      "), new int[] { 1 } }, //
+				{ true, pathFromString("a.b.a    "), pathFromString("a.b.a    "), new int[] { 1 } }, //
+				{ true, pathFromString("a.b.a.b  "), pathFromString("a.b.a.b.z"), new int[] { 2 } }, //
+				{ true, pathFromString("a.b.a    "), pathFromString("a.b.a.z  "), new int[] { 1 } }, //
+				{ true, pathFromString("z.a.b.a.b"), pathFromString("a.b.a.b  "), new int[] { 2 } }, //
+				{ true, pathFromString("z.a.b.a  "), pathFromString("a.b.a    "), new int[] { 1 } }, //
+
+				{ !true, pathFromString("a.b      "), pathFromString("b.a      "), new int[] { 1 } }, //
+				{ !true, pathFromString("a.b.a    "), pathFromString("a.b.a    "), new int[] { 1, 3 } }, //
+				{ !true, pathFromString("a.b.a.b  "), pathFromString("a.b.a.b.z"), new int[] { 2, 4 } }, //
+				{ !true, pathFromString("a.b.a    "), pathFromString("a.b.a.z  "), new int[] { 1, 3 } }, //
+				{ !true, pathFromString("z.a.b.a.b"), pathFromString("a.b.a.b  "), new int[] { 2, 4 } }, //
+				{ !true, pathFromString("z.a.b.a  "), pathFromString("a.b.a    "), new int[] { 1, 3 } }, //
 		});
 	}
 
 	@ParameterizedTest
-	@MethodSource("findAllSimplePrefixSuffixSource")
-	void findAllPrefixSuffixTest(Path needle, Path haystack, int[] result)
+	@MethodSource("findSimpleSuffixPrefixSource")
+	void findSuffixPrefixTest(boolean proper, Path needle, Path haystack, int[] result)
 	{
-		assertArrayEquals(result, Paths.findAllSimplePrefixSuffix(needle, haystack));
+		assertArrayEquals(result, Paths.findSimpleSuffixPrefix(needle, haystack, proper));
 	}
 
-	static List<Object[]> findAllPossiblePrefixesSource()
+	static List<Object[]> findSimplePrefixSuffixSource()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("a.b"), pathFromString("a.b.c"), new int[] { 2 } }, //
-				{ pathFromString("a.b"), pathFromString("b"), new int[] { 1 } }, //
-				{ pathFromString("a.b"), pathFromString("a.b"), new int[] {} }, //
-				{ pathFromString("a.b.a"), pathFromString("a.b"), new int[] { 1 } }, //
-				{ pathFromString("a.b.a"), pathFromString("b.a"), new int[] { 2 } }, //
+				{ true, pathFromString("a.b      "), pathFromString("b.a      "), new int[] { 1 } }, //
+				{ true, pathFromString("a.b.a    "), pathFromString("a.b.a    "), new int[] { 1 } }, //
+				{ true, pathFromString("a.b.a.b  "), pathFromString("z.a.b.a.b"), new int[] { 2 } }, //
+				{ true, pathFromString("a.b.a    "), pathFromString("z.a.b.a  "), new int[] { 1 } }, //
+				{ true, pathFromString("a.b.a.b.z"), pathFromString("a.b.a.b  "), new int[] { 2 } }, //
+				{ true, pathFromString("a.b.a.z  "), pathFromString("a.b.a    "), new int[] { 1 } }, //
+
+				{ !true, pathFromString("a.b      "), pathFromString("b.a      "), new int[] { 1 } }, //
+				{ !true, pathFromString("a.b.a    "), pathFromString("a.b.a    "), new int[] { 1, 3 } }, //
+				{ !true, pathFromString("a.b.a.b  "), pathFromString("z.a.b.a.b"), new int[] { 2, 4 } }, //
+				{ !true, pathFromString("a.b.a    "), pathFromString("z.a.b.a  "), new int[] { 1, 3 } }, //
+				{ !true, pathFromString("a.b.a.b.z"), pathFromString("a.b.a.b  "), new int[] { 2, 4 } }, //
+				{ !true, pathFromString("a.b.a.z  "), pathFromString("a.b.a    "), new int[] { 1, 3 } }, //
 		});
 	}
 
 	@ParameterizedTest
-	@MethodSource("findAllPossiblePrefixesSource")
-	void findAllPossiblePrefixesTest(Path needle, Path haystack, int[] result)
+	@MethodSource("findSimplePrefixSuffixSource")
+	void findSimplePrefixSuffixTest(boolean proper, Path needle, Path haystack, int[] result)
 	{
-		assertArrayEquals(result, Paths.findAllPossiblePrefixes(needle, haystack));
+		assertArrayEquals(result, Paths.findSimplePrefixSuffix(needle, haystack, proper));
+	}
+
+	static List<Object[]> findPossiblePrefixesSource()
+	{
+		return Arrays.asList(new Object[][] { //
+				{ true, pathFromString("a.b  "), pathFromString("a.b.c"), new int[] { 2 } }, //
+				{ true, pathFromString("a.b  "), pathFromString("b    "), new int[] { 1 } }, //
+				{ true, pathFromString("a.b  "), pathFromString("a.b  "), new int[] {} }, //
+				{ true, pathFromString("a.b.a"), pathFromString("a.b  "), new int[] { 1 } }, //
+				{ true, pathFromString("a.b.a"), pathFromString("b.a  "), new int[] { 2 } }, //
+				// 5
+				{ !true, pathFromString("a.b  "), pathFromString("a.b.c"), new int[] { 2 } }, //
+				{ !true, pathFromString("a.b  "), pathFromString("b    "), new int[] { 1 } }, //
+				{ !true, pathFromString("a.b  "), pathFromString("a.b  "), new int[] { 2 } }, //
+				{ !true, pathFromString("a.b.a"), pathFromString("a.b  "), new int[] { 1 } }, //
+				{ !true, pathFromString("a.b.a"), pathFromString("b.a  "), new int[] { 2 } }, //
+				// 10
+				{ true, pathFromString(" a.b."), pathFromString("b "), new int[] {} }, //
+				{ true, pathFromString(" a.b."), pathFromString("b."), new int[] { 1 } }, //
+				{ true, pathFromString(".a.b."), pathFromString("b "), new int[] {} }, //
+				{ true, pathFromString(".a.b."), pathFromString("b."), new int[] { 1 } }, //
+				// 14
+				{ !true, pathFromString(".a"), pathFromString(" a"), new int[] { 1 } }, //
+				{ !true, pathFromString(" a"), pathFromString(".a"), new int[] {} }, //
+				{ !true, pathFromString(".a"), pathFromString(".a"), new int[] { 1 } }, //
+				// 17
+				{ !true, pathFromString(".b.a"), pathFromString(" a"), new int[] { 1 } }, //
+				{ !true, pathFromString(" b.a"), pathFromString(".a"), new int[] {} }, //
+				{ !true, pathFromString(".b.a"), pathFromString(".a"), new int[] {} }, //
+				// 20
+				{ !true, pathFromString(".a"), pathFromString(" a.b"), new int[] { 1 } }, //
+				{ !true, pathFromString(" a"), pathFromString(".a.b"), new int[] {} }, //
+				{ !true, pathFromString(".a"), pathFromString(".a.b"), new int[] { 1 } }, //
+				// 23
+
+				// Impossible cases
+				{ !true, pathFromString(" a."), pathFromString(" a "), new int[] {} }, //
+				{ !true, pathFromString(" a."), pathFromString(".a "), new int[] {} }, //
+				{ !true, pathFromString(" a "), pathFromString(".a "), new int[] {} }, //
+				{ !true, pathFromString(" a."), pathFromString(".a "), new int[] {} }, //
+				// 27
+				{ !true, pathFromString(" a."), pathFromString(".a."), new int[] {} }, //
+				{ !true, pathFromString(".a."), pathFromString(".a "), new int[] {} }, //
+				{ !true, pathFromString(" a "), pathFromString(".a."), new int[] {} }, //
+				// 30
+
+				// Possible cases
+				{ !true, pathFromString(" a "), pathFromString(" a "), new int[] { 1 } }, //
+				{ !true, pathFromString(" a "), pathFromString(" a."), new int[] { 1 } }, //
+				{ !true, pathFromString(".a "), pathFromString(" a."), new int[] { 1 } }, //
+				{ !true, pathFromString(".a "), pathFromString(" a "), new int[] { 1 } }, //
+				{ !true, pathFromString(".a."), pathFromString(".a."), new int[] { 1 } }, //
+				// 35
+				{ !true, pathFromString(".a "), pathFromString(".a "), new int[] { 1 } }, //
+				{ !true, pathFromString(".a "), pathFromString(".a."), new int[] { 1 } }, //
+				{ !true, pathFromString(".a."), pathFromString(" a."), new int[] { 1 } }, //
+				{ !true, pathFromString(" a."), pathFromString(" a."), new int[] { 1 } }, //
+				// 39
+
+				{ true, pathFromString(" a "), pathFromString(" a "), new int[] {} }, //
+				{ true, pathFromString(" a "), pathFromString(" a."), new int[] { 1 } }, //
+				{ true, pathFromString(".a "), pathFromString(" a."), new int[] { 1 } }, //
+				{ true, pathFromString(".a "), pathFromString(" a "), new int[] { 1 } }, //
+				{ true, pathFromString(".a."), pathFromString(".a."), new int[] {} }, //
+				// 44
+				{ true, pathFromString(".a "), pathFromString(".a "), new int[] {} }, //
+				{ true, pathFromString(".a "), pathFromString(".a."), new int[] { 1 } }, //
+				{ true, pathFromString(".a."), pathFromString(" a."), new int[] { 1 } }, //
+				{ true, pathFromString(" a."), pathFromString(" a."), new int[] {} }, //
+				// 48
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource("findPossiblePrefixesSource")
+	void findPossiblePrefixesTest(boolean proper, Path needle, Path haystack, int[] result)
+	{
+		assertArrayEquals(result, Paths.findPossiblePrefixes(needle, haystack, proper));
+	}
+
+	static List<Object[]> findPossibleSuffixesSource()
+	{
+		return Arrays.asList(new Object[][] { //
+				{ true, pathFromString("b.c  "), pathFromString("a.b.c"), new int[] { 2 } }, //
+				{ true, pathFromString("b.a  "), pathFromString("b    "), new int[] { 1 } }, //
+				{ true, pathFromString("a.b  "), pathFromString("a.b  "), new int[] {} }, //
+				{ true, pathFromString("b.a.b"), pathFromString("a.b  "), new int[] { 1 } }, //
+				{ true, pathFromString("b.a.b"), pathFromString("b.a  "), new int[] { 2 } }, //
+				// 5
+				{ !true, pathFromString("b.c  "), pathFromString("a.b.c"), new int[] { 2 } }, //
+				{ !true, pathFromString("b.a  "), pathFromString("b    "), new int[] { 1 } }, //
+				{ !true, pathFromString("a.b  "), pathFromString("a.b  "), new int[] { 2 } }, //
+				{ !true, pathFromString("b.a.b"), pathFromString("a.b  "), new int[] { 1 } }, //
+				{ !true, pathFromString("b.a.b"), pathFromString("b.a  "), new int[] { 2 } }, //
+				// 10
+
+				// Impossible cases
+				{ !true, pathFromString(" a "), pathFromString(" a."), new int[] {} }, //
+				{ !true, pathFromString(" a "), pathFromString(".a."), new int[] {} }, //
+				{ !true, pathFromString(".a "), pathFromString(" a "), new int[] {} }, //
+				{ !true, pathFromString(".a "), pathFromString(" a."), new int[] {} }, //
+				{ !true, pathFromString(".a."), pathFromString(" a "), new int[] {} }, //
+				// 15
+
+				{ !true, pathFromString(".a "), pathFromString(".a."), new int[] {} }, //
+				{ !true, pathFromString(".a."), pathFromString(" a."), new int[] {} }, //
+				// 17
+
+				// Possible cases
+				{ !true, pathFromString(" a "), pathFromString(" a "), new int[] { 1 } }, //
+				{ !true, pathFromString(" a "), pathFromString(".a "), new int[] { 1 } }, //
+				{ !true, pathFromString(" a."), pathFromString(" a "), new int[] { 1 } }, //
+				// 20
+
+				{ !true, pathFromString(" a."), pathFromString(".a "), new int[] { 1 } }, //
+				{ !true, pathFromString(" a."), pathFromString(" a."), new int[] { 1 } }, //
+				{ !true, pathFromString(" a."), pathFromString(".a."), new int[] { 1 } }, //
+				{ !true, pathFromString(".a."), pathFromString(".a."), new int[] { 1 } }, //
+				{ !true, pathFromString(".a "), pathFromString(".a "), new int[] { 1 } }, //
+				{ !true, pathFromString(".a."), pathFromString(".a "), new int[] { 1 } }, //
+				// 26
+
+				{ true, pathFromString(" a "), pathFromString(" a "), new int[] {} }, //
+				{ true, pathFromString(" a "), pathFromString(".a "), new int[] { 1 } }, //
+				{ true, pathFromString(" a."), pathFromString(" a "), new int[] { 1 } }, //
+				{ true, pathFromString(" a."), pathFromString(".a "), new int[] { 1 } }, //
+				// 30
+
+				{ true, pathFromString(" a."), pathFromString(" a."), new int[] {} }, //
+				{ true, pathFromString(" a."), pathFromString(".a."), new int[] { 1 } }, //
+				{ true, pathFromString(".a."), pathFromString(".a."), new int[] {} }, //
+				{ true, pathFromString(".a "), pathFromString(".a "), new int[] {} }, //
+				{ true, pathFromString(".a."), pathFromString(".a "), new int[] { 1 } }, //
+				// 35
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource("findPossibleSuffixesSource")
+	void findPossibleSuffixesTest(boolean proper, Path needle, Path haystack, int[] result)
+	{
+		assertArrayEquals(result, Paths.findPossibleSuffixes(needle, haystack, proper));
 	}
 }

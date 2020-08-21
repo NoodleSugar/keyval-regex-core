@@ -12,6 +12,11 @@ public interface IPath<E> extends ITree<E>
 
 	boolean isTerminal();
 
+	default boolean isComplete()
+	{
+		return isRooted() && isTerminal();
+	}
+
 	boolean isIncluded(IPath<E> path);
 
 	boolean isPrefix(IPath<E> path);
