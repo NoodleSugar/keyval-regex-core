@@ -87,7 +87,7 @@ public final class Paths
 		return isIncluded(needle, haystack, false);
 	}
 
-	static public <E> boolean isProperlyIncluded(IPath<E> needle, IPath<E> haystack)
+	static public <E> boolean isNoPrefSuffIncluded(IPath<E> needle, IPath<E> haystack)
 	{
 		return isIncluded(needle, haystack, true);
 	}
@@ -97,7 +97,7 @@ public final class Paths
 		return findInclusions(needle, haystack, true, noSuffixOrPrefix).length == 1;
 	}
 
-	public static <E> int[] findProperInclusions(IPath<E> needle, IPath<E> haystack)
+	public static <E> int[] findNoPrefSuffInclusions(IPath<E> needle, IPath<E> haystack)
 	{
 		return findInclusions(needle, haystack, true);
 	}
@@ -144,7 +144,7 @@ public final class Paths
 	/**
 	 * Search all inclusions of needle in haystack but not the equal inclusion.
 	 */
-	public static <E> int[] findProperSimpleInclusions(IPath<E> needle, IPath<E> haystack)
+	public static <E> int[] findNoPrefSuffSimpleInclusions(IPath<E> needle, IPath<E> haystack)
 	{
 		return findSimpleInclusions(needle, haystack, true);
 	}
