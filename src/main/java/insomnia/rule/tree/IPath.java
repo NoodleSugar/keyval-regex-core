@@ -16,12 +16,4 @@ public interface IPath<E> extends ITree<E>
 	{
 		return isRooted() && isTerminal();
 	}
-
-	boolean isIncluded(IPath<E> path);
-
-	boolean isPrefix(IPath<E> path);
-
-	boolean isSuffix(IPath<E> path);
-
-	boolean hasPrefixInSuffix(IPath<E> path);
 }

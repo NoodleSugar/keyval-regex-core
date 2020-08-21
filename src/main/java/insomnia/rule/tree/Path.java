@@ -110,30 +110,6 @@ public class Path implements IPath<String>
 		return isTerminal;
 	}
 
-	@Override
-	public boolean isIncluded(IPath<String> path)
-	{
-		return Paths.isIncluded(this, path);
-	}
-
-	@Override
-	public boolean isPrefix(IPath<String> path)
-	{
-		return Paths.isSimplePrefix(this, path);
-	}
-
-	@Override
-	public boolean isSuffix(IPath<String> path)
-	{
-		return Paths.isSimpleSuffix(this, path);
-	}
-
-	@Override
-	public boolean hasPrefixInSuffix(IPath<String> path)
-	{
-		return Paths.hasSimplePrefixInSuffix(this, path);
-	}
-
 	// =========================================================================
 	// Object Override
 
@@ -155,6 +131,6 @@ public class Path implements IPath<String>
 	@Override
 	public String toString()
 	{
-		return String.join(".", labels);
+		return (isRooted ? "." : "") + String.join(".", labels) + (isTerminal ? "." : "");
 	}
 }
