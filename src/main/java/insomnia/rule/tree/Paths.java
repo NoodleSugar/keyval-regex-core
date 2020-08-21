@@ -24,6 +24,12 @@ public final class Paths
 		if (p.isEmpty())
 			return new Path();
 
+		if (p.equals("^"))
+			return new Path(true, false, "");
+
+		if (p.equals("$"))
+			return new Path(false, true, "");
+
 		p = p.trim();
 
 		boolean isRooted   = p.charAt(0) == '.';
