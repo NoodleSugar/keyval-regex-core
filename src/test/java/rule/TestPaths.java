@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -15,21 +14,9 @@ import insomnia.rule.tree.Paths;
 
 class TestPaths
 {
-
 	public static Path pathFromString(String p)
 	{
-		p = p.trim();
-
-		boolean isRooted   = p.charAt(0) == '.';
-		boolean isTerminal = p.charAt(p.length() - 1) == '.';
-
-		p = p.substring(isRooted ? 1 : 0, p.length() - (isTerminal ? 1 : 0));
-		return pathFromString(p, isRooted, isTerminal);
-	}
-
-	public static Path pathFromString(String p, boolean isRooted, boolean isTerminal)
-	{
-		return new Path(isRooted, isTerminal, p.trim().split(Pattern.quote(".")));
+		return Paths.pathFromString(p);
 	}
 
 	static List<Object[]> isSimplePrefixSource()
