@@ -128,7 +128,7 @@ public final class Paths
 			if (!noSuffixOrPrefix && isPrefix(needle, haystack, true))
 				return new int[] { 0 };
 
-			return new int[0];
+			return ArrayUtils.EMPTY_INT_ARRAY;
 		}
 
 		if (needle.isTerminal())
@@ -136,9 +136,22 @@ public final class Paths
 			if (!noSuffixOrPrefix && isSuffix(needle, haystack, true))
 				return new int[] { haystack.size() - needle.size() };
 
-			return new int[0];
+			return ArrayUtils.EMPTY_INT_ARRAY;
 		}
-		return findSimpleInclusions(needle, haystack, noSuffixOrPrefix, noSuffixOrPrefix);
+
+		if (haystack.isFree())
+			return findSimpleInclusions(needle, haystack, firstFind, noSuffixOrPrefix);
+
+		if (Paths.areSimplyEquals(needle, haystack))
+			return new int[] { haystack.isRooted() ? 1 : 0 };
+
+		int[] ret = findSimpleInclusions(needle, haystack, firstFind, false);
+
+		if (haystack.isRooted())
+			for (int i = 0; i < ret.length; i++)
+				ret[i]++;
+
+		return ret;
 	}
 
 	/**
@@ -165,20 +178,20 @@ public final class Paths
 	 * @param needle
 	 * @param haystack
 	 * @param firstFind        Stop the process at the first inclusion founded
-	 * @param noSuffixOrPrefix Do not consider a suffix or a prefix of needle in haystack as an inclusion
+	 * @param noSuffixOrPrefix Do not consider a proper suffix or prefix of needle in haystack as an inclusion
 	 * @return The positions of each inclusion.
 	 */
 	private static <E> int[] findSimpleInclusions(IPath<E> needle, IPath<E> haystack, boolean firstFind, boolean noSuffixOrPrefix)
 	{
 		List<E>   n_labels = needle.getLabels();
 		List<E>   h_labels = haystack.getLabels();
-		final int n_size   = needle.size();
-		final int h_size   = haystack.size();
+		final int n_size   = n_labels.size();
+		final int h_size   = h_labels.size();
 
 		ArrayList<Integer> ret = new ArrayList<>();
 
-		if (n_size > h_size)
-			return new int[0];
+		if (n_size >= h_size)
+			return ArrayUtils.EMPTY_INT_ARRAY;
 
 		int h_i;
 
@@ -246,7 +259,7 @@ public final class Paths
 		boolean ret = isSimplePrefix(needle, haystack, false);
 
 		// Handle the terminal case if we want proper prefix
-		if (ret && properPrefix && needle.size() == haystack.size())
+		if (ret && properPrefix && needle.getLabels().size() == haystack.getLabels().size())
 			return haystack.isTerminal();
 
 		return ret;
@@ -262,7 +275,7 @@ public final class Paths
 
 		boolean ret = isSimpleSuffix(needle, haystack, false);
 
-		if (ret && properSuffix && needle.size() == haystack.size())
+		if (ret && properSuffix && needle.getLabels().size() == haystack.getLabels().size())
 			return haystack.isRooted();
 
 		return ret;
@@ -294,8 +307,8 @@ public final class Paths
 	 */
 	static public boolean isSimplePrefix(IPath<?> needle, IPath<?> haystack, boolean properPrefix)
 	{
-		final int n_size = needle.size();
-		final int h_size = haystack.size();
+		final int n_size = needle.getLabels().size();
+		final int h_size = haystack.getLabels().size();
 
 		if (properPrefix && n_size >= h_size //
 			|| !properPrefix && n_size > h_size //
@@ -311,8 +324,8 @@ public final class Paths
 	 */
 	static public boolean isSimpleSuffix(IPath<?> needle, IPath<?> haystack, boolean properSuffix)
 	{
-		final int n_size = needle.size();
-		final int h_size = haystack.size();
+		final int n_size = needle.getLabels().size();
+		final int h_size = haystack.getLabels().size();
 
 		if (properSuffix && n_size >= h_size //
 			|| !properSuffix && n_size > h_size //
@@ -340,14 +353,17 @@ public final class Paths
 	// =========================================================================
 
 	/**
-	 * Check if needle may be a prefix of haystack considering haystack non rooted and non complete.
+	 * Check if needle may be a prefix of haystack.
 	 * Test if a suffix of needle is a prefix of haystack.
 	 * The trivial prefix (needle == haystack) is not an answer.
 	 * 
 	 * @return The size of the founded prefixes.
 	 */
-	static public <E> int[] findPossiblePrefixes(IPath<E> needle, IPath<E> haystack, boolean properPrefix)
+	static public <E> int[] findPossiblePrefixes(IPath<E> needle, IPath<E> haystack, boolean findFirst, boolean properPrefix)
 	{
+		final int nl_size = needle.getLabels().size();
+		final int hl_size = haystack.getLabels().size();
+
 		/*
 		 * The overlap case
 		 */
@@ -357,11 +373,11 @@ public final class Paths
 			 * We had compute the non proper suffix prefix.
 			 * So we must check if the last element is not the trivial Prefix if we don't want it.
 			 */
-			int ret[] = findSimpleSuffixPrefix(needle, haystack, false);
+			int ret[] = findSimpleSuffixPrefix(needle, haystack, findFirst, false);
 
-			if (properPrefix //
-				&& needle.size() == haystack.size() //
-				&& ret[ret.length - 1] == haystack.size() //
+			if (ret.length > 0 && properPrefix //
+				&& nl_size == hl_size //
+				&& ret[ret.length - 1] == hl_size //
 				&& !needle.isRooted() //
 				&& !haystack.isTerminal() //
 			)
@@ -388,33 +404,9 @@ public final class Paths
 		return ArrayUtils.EMPTY_INT_ARRAY;
 	}
 
-	static public <E> int[] findPossibleSuffixes(IPath<E> needle, IPath<E> haystack, boolean properSuffix)
+	static public <E> int[] findPossibleSuffixes(IPath<E> needle, IPath<E> haystack, boolean findFirst, boolean properSuffix)
 	{
-		if (!needle.isRooted() && !haystack.isTerminal())
-		{
-			int ret[] = findSimplePrefixSuffix(needle, haystack, false);
-
-			if (properSuffix //
-				&& needle.size() == haystack.size() //
-				&& ret[ret.length - 1] == haystack.size() //
-				&& !needle.isTerminal() //
-				&& !haystack.isRooted() //
-			)
-				return ArrayUtils.remove(ret, ret.length - 1);
-
-			return ret;
-		}
-		else if (needle.isTerminal() && haystack.isTerminal())
-		{
-			if ((!properSuffix && areEquals(needle, haystack)) || isSuffix(needle, haystack, properSuffix))
-				return new int[] { needle.size() };
-		}
-		else if (needle.isRooted() && haystack.isRooted())
-		{
-			if (isPrefix(haystack, needle, properSuffix))
-				return new int[] { haystack.size() };
-		}
-		return ArrayUtils.EMPTY_INT_ARRAY;
+		return findPossiblePrefixes(haystack, needle, findFirst, properSuffix);
 	}
 
 	// =========================================================================
@@ -501,8 +493,8 @@ public final class Paths
 		List<E> n_labels = needle.getLabels();
 		List<E> h_labels = haystack.getLabels();
 
-		int n_size = needle.size();
-		int h_size = haystack.size();
+		int n_size = needle.getLabels().size();
+		int h_size = haystack.getLabels().size();
 		int min;
 
 		min = Math.min(h_size, n_size);
