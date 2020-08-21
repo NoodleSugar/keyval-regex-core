@@ -59,7 +59,7 @@ public class Unifier
 	// rule1 dépend de rule2
 	public static List<Unifier> compute(Path body, Path head)
 	{
-		List<Unifier> unifiers = new ArrayList<>();
+		Set<Unifier> unifiers = new HashSet<>();
 
 		int n1 = body.size();
 		int n2 = head.size();
@@ -165,7 +165,7 @@ public class Unifier
 				unifiers.add(new Unifier(new Path(body, 0, n1 - i), null, null, new Path(head, i, n2)));
 		}
 
-		return unifiers;
+		return new ArrayList<>(unifiers);
 	}
 
 	@Override
