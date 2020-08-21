@@ -245,7 +245,7 @@ class TestPaths
 				{ true, pathFromString("a.b.a"), pathFromString("a.b.a.b.a    "), new int[] {} }, //
 				{ true, pathFromString("a.b.a"), pathFromString("z.a.b.a.b.a.z"), new int[] { 1, 3 } }, //
 
-				{ !true, pathFromString("a    "), pathFromString("a            "), new int[] { } }, //
+				{ !true, pathFromString("a    "), pathFromString("a            "), new int[] {} }, //
 				{ !true, pathFromString("a    "), pathFromString("a.b.a.a      "), new int[] { 0, 2, 3 } }, //
 				{ !true, pathFromString("a.b.a"), pathFromString("a.b.a.b.a    "), new int[] { 0, 2 } }, //
 				{ !true, pathFromString("a.b.a"), pathFromString("z.a.b.a.b.a.z"), new int[] { 1, 3 } }, //
@@ -305,6 +305,11 @@ class TestPaths
 				{ !true, pathFromString(".a."), pathFromString(" a.b."), new int[] {} }, //
 				{ !true, pathFromString(".a."), pathFromString(".a.b."), new int[] {} }, //
 				// 32
+				{ true, pathFromString("y"), pathFromString(".a.y"), new int[] {} }, //
+				{ true, pathFromString("y"), pathFromString("y.b."), new int[] {} }, //
+
+				{ !true, pathFromString("y"), pathFromString(".a.y"), new int[] { 2 } }, //
+				{ !true, pathFromString("y"), pathFromString("y.b."), new int[] { 0 } }, //
 		});
 	}
 
