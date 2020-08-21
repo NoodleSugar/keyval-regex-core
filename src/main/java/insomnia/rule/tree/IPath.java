@@ -16,4 +16,14 @@ public interface IPath<E> extends ITree<E>
 	{
 		return isRooted() && isTerminal();
 	}
+
+	default boolean isFree()
+	{
+		return !isRooted() && !isTerminal();
+	}
+
+	default boolean isFixed()
+	{
+		return isRooted() || isTerminal();
+	}
 }
