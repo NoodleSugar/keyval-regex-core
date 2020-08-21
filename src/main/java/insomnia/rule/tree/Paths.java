@@ -352,6 +352,26 @@ public final class Paths
 	// FIND ALL POSSIBLE PREFIXES/SUFFIXES
 	// =========================================================================
 
+	static public <E> int[] findOverlappedPossiblePrefixes(IPath<E> needle, IPath<E> haystack)
+	{
+		return findOverlappedPossiblePrefixes(needle, haystack, false);
+	}
+
+	static public <E> int[] findOverlappedPossiblePrefixes(IPath<E> needle, IPath<E> haystack, boolean firstFind)
+	{
+		int ret[] = findPossiblePrefixes(needle, haystack, firstFind, true);
+
+		if (ret.length == 0)
+			return ArrayUtils.EMPTY_INT_ARRAY;
+
+		int i = ret.length - 1;
+
+		if (ret[i] == needle.size() || ret[i] == haystack.size())
+			ret = ArrayUtils.remove(ret, i);
+
+		return ret;
+	}
+
 	/**
 	 * Check if needle may be a prefix of haystack.
 	 * Test if a suffix of needle is a prefix of haystack.
