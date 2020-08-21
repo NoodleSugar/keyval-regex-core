@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.BooleanUtils;
+
 import insomnia.rule.tree.node.PathNode;
 
 public class Path implements IPath<String>
@@ -19,9 +21,36 @@ public class Path implements IPath<String>
 	private boolean isRooted;
 	private boolean isTerminal;
 
+	public Path subPath(int begin, int end)
+	{
+		return new Path(this, begin, end);
+	}
+
 	// Constructeur de sous-chemin
 	public Path(Path path, int begin, int end)
 	{
+		if (path.isRooted)
+		{
+			if (begin > 0)
+			{
+				begin--;
+				end -= 2;
+			}
+			else
+			{
+				this.isRooted = true;
+				end--;
+			}
+		}
+
+		if (path.isTerminal)
+		{
+			if(end == path.labels.size() + 1)
+			{
+				this.isTerminal = true;
+				end--;
+			}
+		}
 		labels = path.labels.subList(begin, end);
 		nodes  = path.nodes.subList(begin, end + 1);
 		root   = path.nodes.get(begin);
@@ -95,7 +124,7 @@ public class Path implements IPath<String>
 	@Override
 	public int size()
 	{
-		return labels.size();
+		return labels.size() + BooleanUtils.toInteger(isRooted) + BooleanUtils.toInteger(isTerminal);
 	}
 
 	@Override
