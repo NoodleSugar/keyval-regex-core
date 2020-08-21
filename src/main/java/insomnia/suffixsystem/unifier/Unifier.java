@@ -13,18 +13,20 @@ public class Unifier
 	public Path suffixHead;
 	public Path reference;
 
-	private Unifier(Path pb, Path sb, Path ph, Path sh)
+	static private Path emptyPath = new Path();
+
+	public Unifier(Path pb, Path sb, Path ph, Path sh)
 	{
-		prefixBody = pb;
-		suffixBody = sb;
-		prefixHead = ph;
-		suffixHead = sh;
+		this(pb, sb, ph, sh, null);
 	}
 
-	private Unifier(Path pb, Path sb, Path ph, Path sh, Path ref)
+	public Unifier(Path pb, Path sb, Path ph, Path sh, Path ref)
 	{
-		this(pb, sb, ph, sh);
-		reference = ref;
+		prefixBody = ObjectUtils.defaultIfNull(pb, emptyPath);
+		suffixBody = ObjectUtils.defaultIfNull(sb, emptyPath);
+		prefixHead = ObjectUtils.defaultIfNull(ph, emptyPath);
+		suffixHead = ObjectUtils.defaultIfNull(sh, emptyPath);
+		reference  = ObjectUtils.defaultIfNull(ref, emptyPath);
 	}
 
 	public boolean emptyBody()
