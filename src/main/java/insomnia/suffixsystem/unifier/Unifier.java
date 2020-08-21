@@ -1,9 +1,7 @@
 package insomnia.suffixsystem.unifier;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -56,116 +54,163 @@ public class Unifier
 		return Paths.findAllInclusions(i, c);
 	}
 
-	// rule1 dépend de rule2
-	public static List<Unifier> compute(Path body, Path head)
+	public static List<Unifier> weakUnifiers(Path head, Path body)
 	{
-		Set<Unifier> unifiers = new HashSet<>();
+		return weakUnifiers(head, body, false);
+	}
 
-		int n1 = body.size();
-		int n2 = head.size();
+	public static List<Unifier> strongUnifiers(Path head, Path body)
+	{
+		return strongUnifiers(head, body, false);
+	}
 
-		// Si body et head ont la même taille
-		if (n1 == n2)
+	public static List<Unifier> weakUnifiers(Path head, Path body, boolean firstFind)
+	{
+		List<Unifier> ret = new ArrayList<>();
+
+		final int h_size = head.size();
+		final int b_size = body.size();
+
+		int tmp[];
+		int i;
+
+		/*
+		 * head : A.y
+		 * body : y.B
+		 */
+		tmp = Paths.findOverlappedPossiblePrefixes(head, body, firstFind);
+
+		for (i = 0; i < tmp.length; i++)
 		{
-			// Si body et head sont égaux
-			if (body.equals(head))
-				unifiers.add(new Unifier(null, null, null, null, body));
+			int size = tmp[i];
+			ret.add(new Unifier( //
+				null, body.subPath(size, b_size), //
+				head.subPath(0, h_size - size), null, //
+				body.subPath(0, size)));
 		}
-		// Si body est plus petit que head
-		else if (n1 < n2)
+		/*
+		 * head : y.A
+		 * body : B.y
+		 */
+		tmp = Paths.findOverlappedPossiblePrefixes(body, head, firstFind);
+
+		for (i = 0; i < tmp.length; i++)
 		{
-			// Si body n'est pas enraciné
-			// Si body est un suffixe de head
-			if (!body.isRooted() && Paths.isProperSimpleSuffix(body, head))
-				unifiers.add(new Unifier(null, null, new Path(head, 0, n2 - n1), null));
+			int size = tmp[i];
+			ret.add(new Unifier( //
+				body.subPath(0, b_size - size), null, //
+				null, head.subPath(size, h_size), //
+				head.subPath(0, size)));
+		}
+		/*
+		 * head : y
+		 * body : B.y
+		 */
+		if (Paths.isProperSuffix(head, body))
+		{
+			ret.add(new Unifier( //
+				body.subPath(0, b_size - h_size), null, //
+				null, null, //
+				head));
+		}
+		/*
+		 * head : y
+		 * body : y.B
+		 */
+		if (Paths.isProperPrefix(head, body))
+		{
+			ret.add(new Unifier( //
+				null, body.subPath(h_size, b_size), //
+				null, null, //
+				head));
+		}
+		/*
+		 * head : y
+		 * body : B1.y.B2
+		 */
+		tmp = Paths.findInclusions(head, body, firstFind, true);
 
-			// Si body n'est pas terminal
-			// Si body est un préfixe de head
-			if (!body.isTerminal() && Paths.isProperSimplePrefix(body, head))
-				unifiers.add(new Unifier(null, null, null, new Path(head, n1, n2)));
+		for (i = 0; i < tmp.length; i++)
+		{
+			int pos = tmp[i];
 
-			// Si body n'est pas enraciné
-			// Si body n'est pas terminal
-			if (!body.isRooted() && !body.isTerminal())
+			ret.add(new Unifier( //
+				body.subPath(0, pos), body.subPath(pos + h_size, b_size), //
+				null, null, //
+				head));
+		}
+
+		if (firstFind && ret.size() > 1)
+			return ret.subList(0, 1);
+
+		return ret;
+	}
+
+	public static List<Unifier> strongUnifiers(Path head, Path body, boolean firstFind)
+	{
+		List<Unifier> ret = new ArrayList<>();
+
+		final int h_size = head.size();
+		final int b_size = body.size();
+
+		int tmp[];
+		int i;
+
+		/*
+		 * head : y
+		 * body : y
+		 * OR
+		 * head : A.y
+		 * body : y
+		 */
+		if (Paths.isSuffix(body, head, false))
+		{
+			ret.add(new Unifier( //
+				null, null, //
+				head.subPath(0, h_size - b_size), null, //
+				body));
+		}
+		/*
+		 * head : y.A
+		 * body : y
+		 */
+		if (Paths.isPrefix(body, head, true))
+		{
+			ret.add(new Unifier( //
+				null, null, //
+				null, head.subPath(b_size, h_size), //
+				body));
+		}
+		/*
+		 * head : A1.y.A2
+		 * body : y
+		 */
+		{
+			tmp = Paths.findInclusions(body, head, firstFind, true);
+
+			for (i = 0; i < tmp.length; i++)
 			{
-				// Inclusions strictes de body dans head
-				int[] indexs = findAllInclusions(body, head);
-				for (int i : indexs)
-				{
-					Path ph, sh;
-					if (i == 0)
-						ph = null;
-					else
-						ph = new Path(head, 0, i);
+				int pos = tmp[i];
 
-					if (i + n1 == n2)
-						sh = null;
-					else
-						sh = new Path(head, i + n1, n2);
-
-					unifiers.add(new Unifier(null, null, ph, sh));
-				}
-
+				ret.add(new Unifier( //
+					null, null, //
+					head.subPath(0, pos), head.subPath(pos + b_size, h_size), //
+					body));
 			}
 		}
-		// Si body est plus grand que head
-		else
-		{
-			// Si head n'est pas enraciné
-			// Si head est un suffixe de body
-			if (!head.isRooted() && Paths.isProperSimpleSuffix(head, body))
-				unifiers.add(new Unifier(new Path(body, 0, n1 - n2), null, null, null));
 
-			// Si head n'est pas terminal
-			// Si head est un préfixe de body
-			if (head.isTerminal() && Paths.isProperSimplePrefix(head, body))
-				unifiers.add(new Unifier(null, new Path(body, n2, n1), null, null));
+		if (firstFind && ret.size() > 1)
+			return ret.subList(0, 1);
 
-			// Si head n'est pas enraciné
-			// Si head n'est pas terminal
-			if (!head.isRooted() && !head.isTerminal())
-			{
-				// Inclusions strictes de head dans body
-				int[] indexs = findAllInclusions(head, body);
-				for (int i : indexs)
-				{
-					Path pb, sb;
-					if (i == 0)
-						pb = null;
-					else
-						pb = new Path(body, 0, i);
+		return ret;
+	}
 
-					if (i + n2 == n1)
-						sb = null;
-					else
-						sb = new Path(body, i + n2, n1);
-
-					unifiers.add(new Unifier(pb, sb, null, null));
-				}
-			}
-		}
-
-		// Si body n'est pas enraciné
-		// Si head n'est pas terminal
-		if (!body.isRooted() && !head.isTerminal())
-		{
-			// Calcul des préfixes de body qui sont suffixes de head
-			int[] lengths = findAllPrefixSuffix(body, head);
-			for (int i : lengths)
-				unifiers.add(new Unifier(null, new Path(body, i, n1), new Path(head, 0, n2 - i), null));
-		}
-
-		// Si head n'est pas enraciné
-		// Si body n'est pas terminal
-		if (!head.isRooted() && !body.isTerminal())
-		{
-			// Calcul des préfixes de head qui sont suffixes de body
-			int[] lengths = findAllPrefixSuffix(head, body);
-			for (int i : lengths)
-				unifiers.add(new Unifier(new Path(body, 0, n1 - i), null, null, new Path(head, i, n2)));
-		}
-
-		return new ArrayList<>(unifiers);
+	// rule1 dépend de rule2
+	public static List<Unifier> compute(Path head, Path body)
+	{
+		List<Unifier> ret = weakUnifiers(head, body);
+		ret.addAll(strongUnifiers(head, body));
+		return ret;
 	}
 
 	@Override
@@ -198,7 +243,8 @@ public class Unifier
 	@Override
 	public String toString()
 	{
-		return "B=" + prefixBody + "___" + suffixBody //
-			+ " H=" + prefixHead + "___" + suffixHead;
+		return "B:" + prefixBody + "_" + suffixBody //
+			+ " H:" + prefixHead + "_" + suffixHead //
+			+ " _:" + reference;
 	}
 }
