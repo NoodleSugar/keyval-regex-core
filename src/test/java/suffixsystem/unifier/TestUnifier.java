@@ -22,22 +22,27 @@ class TestUnifier
 
 	public static Unifier unifierFromStrings(String pb, String sb, String ph, String sh)
 	{
-		return new Unifier(pathFromString(pb), pathFromString(sb), pathFromString(ph), pathFromString(sh));
+		return unifierFromStrings(pb, sb, ph, sh, "");
+	}
+
+	public static Unifier unifierFromStrings(String pb, String sb, String ph, String sh, String ref)
+	{
+		return new Unifier(pathFromString(pb), pathFromString(sb), pathFromString(ph), pathFromString(sh), pathFromString(ref));
 	}
 
 	static List<Object[]> computeSource()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("a.b"), pathFromString("b.a.b.a"), new Unifier[] { //
-						unifierFromStrings("a", "", "", "a.b.a"), //
-						unifierFromStrings("", "b", "b.a.b", ""), //
-						unifierFromStrings("", "", "b", "a"), //
+				{ pathFromString("b.a.b.a"), pathFromString("a.b"), new Unifier[] { //
+						unifierFromStrings("a", "", "", "a.b.a", "b"), //
+						unifierFromStrings("", "b", "b.a.b", "", "a"), //
+						unifierFromStrings("", "", "b", "a", "a.b"), //
 				} }, //
-				{ pathFromString("a.a"), pathFromString("a.a.a"), new Unifier[] { //
-						unifierFromStrings("a", "", "", "a.a"), //
-						unifierFromStrings("", "", "", "a"), //
-						unifierFromStrings("", "", "a", ""), //
-						unifierFromStrings("", "a", "a.a", ""), //
+				{ pathFromString("a.a.a"), pathFromString("a.a"), new Unifier[] { //
+						unifierFromStrings("a", "", "", "a.a", "a"), //
+						unifierFromStrings("", "", "", "a", "a.a"), //
+						unifierFromStrings("", "", "a", "", "a.a"), //
+						unifierFromStrings("", "a", "a.a", "", "a"), //
 				} }, //
 		});
 
@@ -45,12 +50,85 @@ class TestUnifier
 
 	@ParameterizedTest
 	@MethodSource("computeSource")
-	void compute(Path body, Path head, Unifier ref_unifiers[])
+	void compute(Path head, Path body, Unifier ref_unifiers[])
 	{
-		List<Unifier> unifiers = Unifier.compute(body, head);
+		List<Unifier> unifiers = Unifier.compute(head, body);
 		assertEquals(ref_unifiers.length, unifiers.size());
 
-		for(Unifier ref : ref_unifiers)
+		for (Unifier ref : ref_unifiers)
+			assertTrue(unifiers.contains(ref));
+	}
+
+	static List<Object[]> weakUnifiersSource()
+	{
+		return Arrays.asList(new Object[][] { //
+				{ pathFromString("A.y"), pathFromString("y.B"), new Unifier[] { //
+						unifierFromStrings("", "B", "A", "", "y"), //
+				} }, //
+				{ pathFromString("y.A"), pathFromString("B.y"), new Unifier[] { //
+						unifierFromStrings("B", "", "", "A", "y"), //
+				} }, //
+				{ pathFromString("y"), pathFromString("y.B"), new Unifier[] { //
+						unifierFromStrings("", "B", "", "", "y"), //
+				} }, //
+				{ pathFromString("y"), pathFromString("B.y"), new Unifier[] { //
+						unifierFromStrings("B", "", "", "", "y"), //
+				} }, //
+				{ pathFromString("y"), pathFromString("B.y.B"), new Unifier[] { //
+						unifierFromStrings("B", "B", "", "", "y"), //
+				} }, //
+
+				// Strong cases
+				{ pathFromString("A.y  "), pathFromString("y"), new Unifier[] {} }, //
+				{ pathFromString("  y.A"), pathFromString("y"), new Unifier[] {} }, //
+				{ pathFromString("A.y.A"), pathFromString("y"), new Unifier[] {} }, //
+				{ pathFromString("  y  "), pathFromString("y"), new Unifier[] {} }, //
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource("weakUnifiersSource")
+	void weakUnifier(Path head, Path body, Unifier ref_unifiers[])
+	{
+		List<Unifier> unifiers = Unifier.weakUnifiers(head, body);
+		assertEquals(ref_unifiers.length, unifiers.size());
+
+		for (Unifier ref : ref_unifiers)
+			assertTrue(unifiers.contains(ref));
+	}
+
+	static List<Object[]> strongUnifiersSource()
+	{
+		return Arrays.asList(new Object[][] { //
+				{ pathFromString("A.y"), pathFromString("y"), new Unifier[] { //
+						unifierFromStrings("", "", "A", "", "y"), //
+				} }, //
+				{ pathFromString("y.A"), pathFromString("y"), new Unifier[] { //
+						unifierFromStrings("", "", "", "A", "y"), //
+				} }, //
+				{ pathFromString("A.y.A"), pathFromString("y"), new Unifier[] { //
+						unifierFromStrings("", "", "A", "A", "y"), //
+				} }, //
+				{ pathFromString("y"), pathFromString("y"), new Unifier[] { //
+						unifierFromStrings("", "", "", "", "y"), //
+				} }, //
+				// Weak cases
+				{ pathFromString("A.y  "), pathFromString("  y.B"), new Unifier[] {} }, //
+				{ pathFromString("  y.A"), pathFromString("B.y  "), new Unifier[] {} }, //
+				{ pathFromString("  y  "), pathFromString("  y.B"), new Unifier[] {} }, //
+				{ pathFromString("  y  "), pathFromString("B.y  "), new Unifier[] {} }, //
+				{ pathFromString("  y  "), pathFromString("B.y.B"), new Unifier[] {} }, //
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource("strongUnifiersSource")
+	void strongUnifier(Path head, Path body, Unifier ref_unifiers[])
+	{
+		List<Unifier> unifiers = Unifier.strongUnifiers(head, body);
+		assertEquals(ref_unifiers.length, unifiers.size());
+
+		for (Unifier ref : ref_unifiers)
 			assertTrue(unifiers.contains(ref));
 	}
 }
