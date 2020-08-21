@@ -372,6 +372,16 @@ public final class Paths
 		return ret;
 	}
 
+	static public <E> int[] findPossiblePrefixes(IPath<E> needle, IPath<E> haystack, boolean properSuffix)
+	{
+		return findPossiblePrefixes(needle, haystack, false, properSuffix);
+	}
+
+	static public <E> int[] findPossibleSuffixes(IPath<E> needle, IPath<E> haystack, boolean properSuffix)
+	{
+		return findPossibleSuffixes(needle, haystack, false, properSuffix);
+	}
+
 	/**
 	 * Check if needle may be a prefix of haystack.
 	 * Test if a suffix of needle is a prefix of haystack.
