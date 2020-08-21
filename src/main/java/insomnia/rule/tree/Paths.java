@@ -42,6 +42,16 @@ public final class Paths
 	// INCLUSION METHODS
 	// =========================================================================
 
+	static public <E> boolean isAllIncluded(IPath<E> needle, IPath<E> haystack)
+	{
+		return isIncluded(needle, haystack, false);
+	}
+
+	static public <E> boolean isProperlyIncluded(IPath<E> needle, IPath<E> haystack)
+	{
+		return isIncluded(needle, haystack, true);
+	}
+
 	static public <E> boolean isIncluded(IPath<E> needle, IPath<E> haystack, boolean noSuffixOrPrefix)
 	{
 		return findInclusions(needle, haystack, true, noSuffixOrPrefix).length == 1;
@@ -370,6 +380,26 @@ public final class Paths
 	// =========================================================================
 	// HAS SUFFIX <- in -> PREFIX
 	// =========================================================================
+
+	static public <E> boolean hasAllSimpleSuffixInPrefix(IPath<E> needle, IPath<E> haystack)
+	{
+		return hasSimpleSuffixInPrefix(needle, haystack, false);
+	}
+
+	static public <E> boolean hasProperSimpleSuffixInPrefix(IPath<E> needle, IPath<E> haystack)
+	{
+		return hasSimpleSuffixInPrefix(needle, haystack, true);
+	}
+
+	static public <E> boolean hasAllSimplePrefixInSuffix(IPath<E> needle, IPath<E> haystack)
+	{
+		return hasSimplePrefixInSuffix(needle, haystack, false);
+	}
+
+	static public <E> boolean hasProperSimplePrefixInSuffix(IPath<E> needle, IPath<E> haystack)
+	{
+		return hasSimplePrefixInSuffix(needle, haystack, true);
+	}
 
 	static public <E> boolean hasSimpleSuffixInPrefix(IPath<E> needle, IPath<E> haystack, boolean properPrefixSuffix)
 	{
