@@ -1,9 +1,14 @@
 package insomnia.suffixsystem.unifier;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang3.ObjectUtils;
 
 import insomnia.rule.tree.Path;
+import insomnia.rule.tree.Paths;
 
 public class Unifier
 {
@@ -42,48 +47,13 @@ public class Unifier
 	// Préfixes et suffixes stricts (limites exclues)
 	public static int[] findAllPrefixSuffix(Path p, Path s)
 	{
-		ArrayList<Integer> array = new ArrayList<>();
-
-		List<String> keys1 = p.getLabels();
-		List<String> keys2 = s.getLabels();
-
-		int n1  = keys1.size();
-		int n2  = keys2.size();
-		int min = Math.min(n1, n2);
-
-		loop_ps: for (int len = 1; len < min; len++)
-		{
-			for (int offset = 0; offset < len; offset++)
-			{
-				if (!keys1.get(offset).equals(keys2.get(n2 - len + offset)))
-					continue loop_ps;
-			}
-			array.add(len);
-		}
-		return array.stream().mapToInt(Integer::intValue).toArray();
+		return Paths.findProperSimplePrefixSuffix(p, s);
 	}
 
 	// Inclusions strictes (limites exclues)
 	public static int[] findAllInclusions(Path i, Path c)
 	{
-		ArrayList<Integer> array = new ArrayList<>();
-
-		List<String> keys1 = i.getLabels();
-		List<String> keys2 = c.getLabels();
-
-		int n1 = keys1.size();
-		int n2 = keys2.size();
-
-		loop_inc: for (int shift = 1; shift < n2 - n1; shift++)
-		{
-			for (int offset = 0; offset < n1; offset++)
-			{
-				if (!keys1.get(offset).equals(keys2.get(shift + offset)))
-					continue loop_inc;
-			}
-			array.add(shift);
-		}
-		return array.stream().mapToInt(Integer::intValue).toArray();
+		return Paths.findAllInclusions(i, c);
 	}
 
 	// rule1 dépend de rule2
@@ -106,12 +76,12 @@ public class Unifier
 		{
 			// Si body n'est pas enraciné
 			// Si body est un suffixe de head
-			if (!body.isRooted() && body.isSuffix(head))
+			if (!body.isRooted() && Paths.isProperSimpleSuffix(body, head))
 				unifiers.add(new Unifier(null, null, new Path(head, 0, n2 - n1), null));
 
 			// Si body n'est pas terminal
 			// Si body est un préfixe de head
-			if (!body.isTerminal() && body.isPrefix(head))
+			if (!body.isTerminal() && Paths.isProperSimplePrefix(body, head))
 				unifiers.add(new Unifier(null, null, null, new Path(head, n1, n2)));
 
 			// Si body n'est pas enraciné
@@ -143,12 +113,12 @@ public class Unifier
 		{
 			// Si head n'est pas enraciné
 			// Si head est un suffixe de body
-			if (!head.isRooted() && head.isSuffix(body))
+			if (!head.isRooted() && Paths.isProperSimpleSuffix(head, body))
 				unifiers.add(new Unifier(new Path(body, 0, n1 - n2), null, null, null));
 
 			// Si head n'est pas terminal
 			// Si head est un préfixe de body
-			if (head.isTerminal() && head.isPrefix(body))
+			if (head.isTerminal() && Paths.isProperSimplePrefix(head, body))
 				unifiers.add(new Unifier(null, new Path(body, n2, n1), null, null));
 
 			// Si head n'est pas enraciné
