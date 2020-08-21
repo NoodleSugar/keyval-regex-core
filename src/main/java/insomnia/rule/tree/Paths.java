@@ -38,6 +38,46 @@ public final class Paths
 		return new Path(isRooted, isTerminal, p.trim().split(Pattern.quote(".")));
 	}
 
+	public static int nbLabelsFromPrefixSize(IPath<?> p, int size)
+	{
+		assert (0 < size && size <= p.size());
+
+		if (size == 0)
+			return 0;
+
+		if (size == p.size())
+			return p.getLabels().size();
+
+		if (p.isRooted())
+			return size - 1;
+
+		return size;
+	}
+
+	public static int nbLabelsFromSuffixSize(IPath<?> p, int size)
+	{
+		assert (0 < size && size <= p.size());
+
+		if (size == 0)
+			return 0;
+
+		if (size == p.size())
+			return p.getLabels().size();
+
+		if (p.isTerminal())
+			return size - 1;
+
+		return size;
+	}
+
+	public static int labelPosFromPathPos(IPath<?> p, int pos)
+	{
+		if (p.isRooted())
+			return pos - 1;
+
+		return pos;
+	}
+
 	// =========================================================================
 	// INCLUSION METHODS
 	// =========================================================================
