@@ -152,10 +152,19 @@ public final class Paths
 			return new int[] { haystack.isRooted() ? 1 : 0 };
 
 		int[] ret = findSimpleInclusions(needle, haystack, firstFind, false);
+		int   i;
 
 		if (haystack.isRooted())
-			for (int i = 0; i < ret.length; i++)
+		{
+			for (i = 0; i < ret.length; i++)
 				ret[i]++;
+
+			if (noSuffixOrPrefix && ret.length > 0 && ret[--i] == haystack.size() - needle.size())
+				ret = ArrayUtils.remove(ret, i);
+		}
+		// Haystack.isTerminal
+		else if (noSuffixOrPrefix && ret.length > 0 && ret[0] == 0)
+			ret = ArrayUtils.remove(ret, 0);
 
 		return ret;
 	}
