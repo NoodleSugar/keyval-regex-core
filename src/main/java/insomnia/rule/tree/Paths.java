@@ -121,7 +121,7 @@ public final class Paths
 	 * @param noSuffixOrPrefix Do not consider a suffix or a prefix of needle in haystack as an inclusion
 	 * @return The positions of each inclusion.
 	 */
-	private static <E> int[] findInclusions(IPath<E> needle, IPath<E> haystack, boolean firstFind, boolean noSuffixOrPrefix)
+	public static <E> int[] findInclusions(IPath<E> needle, IPath<E> haystack, boolean firstFind, boolean noSuffixOrPrefix)
 	{
 		if (needle.isRooted())
 		{
