@@ -141,6 +141,26 @@ public final class Paths
 	// PREFIX SUFFIX METHODS
 	// =========================================================================
 
+	static public <E> boolean isAllPrefix(IPath<E> needle, IPath<E> haystack)
+	{
+		return isPrefix(needle, haystack, false);
+	}
+
+	static public <E> boolean isProperPrefix(IPath<E> needle, IPath<E> haystack)
+	{
+		return isPrefix(needle, haystack, true);
+	}
+
+	static public <E> boolean isAllSuffix(IPath<E> needle, IPath<E> haystack)
+	{
+		return isSuffix(needle, haystack, false);
+	}
+
+	static public <E> boolean isProperSuffix(IPath<E> needle, IPath<E> haystack)
+	{
+		return isSuffix(needle, haystack, true);
+	}
+
 	static public <E> boolean isPrefix(IPath<E> needle, IPath<E> haystack, boolean properPrefix)
 	{
 		if (haystack.isRooted() != needle.isRooted())
@@ -173,6 +193,26 @@ public final class Paths
 			return haystack.isRooted();
 
 		return ret;
+	}
+
+	static public <E> boolean isAllSimplePrefix(IPath<E> needle, IPath<E> haystack)
+	{
+		return isSimplePrefix(needle, haystack, false);
+	}
+
+	static public <E> boolean isProperSimplePrefix(IPath<E> needle, IPath<E> haystack)
+	{
+		return isSimplePrefix(needle, haystack, true);
+	}
+
+	static public <E> boolean isAllSimpleSuffix(IPath<E> needle, IPath<E> haystack)
+	{
+		return isSimpleSuffix(needle, haystack, false);
+	}
+
+	static public <E> boolean isProperSimpleSuffix(IPath<E> needle, IPath<E> haystack)
+	{
+		return isSimpleSuffix(needle, haystack, true);
 	}
 
 	/**
