@@ -83,6 +83,23 @@ class TestUnifier
 				{ pathFromString("  y.A"), pathFromString("y"), new Unifier[] {} }, //
 				{ pathFromString("A.y.A"), pathFromString("y"), new Unifier[] {} }, //
 				{ pathFromString("  y  "), pathFromString("y"), new Unifier[] {} }, //
+
+				// Fixed cases
+				{ pathFromString(".A.y"), pathFromString("y.B"), new Unifier[] { //
+						unifierFromStrings("", "B", ".A", "", "y"), //
+				} }, //
+				{ pathFromString("A.y"), pathFromString("y.B."), new Unifier[] { //
+						unifierFromStrings("", "B.", "A", "", "y"), //
+				} }, //
+				{ pathFromString(".A.y"), pathFromString("y.B."), new Unifier[] { //
+						unifierFromStrings("", "B.", ".A", "", "y"), //
+				} }, //
+
+				// False fixed cases
+				{ pathFromString(" A.y."), pathFromString(" y.B"), new Unifier[] {} }, //
+				{ pathFromString(" A.y "), pathFromString(".y.B"), new Unifier[] {} }, //
+				{ pathFromString(".A.y."), pathFromString(".y.B"), new Unifier[] {} }, //
+
 		});
 	}
 
@@ -113,11 +130,20 @@ class TestUnifier
 						unifierFromStrings("", "", "", "", "y"), //
 				} }, //
 				// Weak cases
-				{ pathFromString("A.y  "), pathFromString("  y.B"), new Unifier[] {} }, //
+				{ pathFromString(" A.y  "), pathFromString("y.B"), new Unifier[] {} }, //
+				{ pathFromString(".A.y  "), pathFromString("y."), new Unifier[] {} }, //
+				{ pathFromString(" A.y  "), pathFromString("y."), new Unifier[] {} }, //
 				{ pathFromString("  y.A"), pathFromString("B.y  "), new Unifier[] {} }, //
 				{ pathFromString("  y  "), pathFromString("  y.B"), new Unifier[] {} }, //
 				{ pathFromString("  y  "), pathFromString("B.y  "), new Unifier[] {} }, //
 				{ pathFromString("  y  "), pathFromString("B.y.B"), new Unifier[] {} }, //
+
+				// Fixed cases
+				{ pathFromString(".A.y"), pathFromString("y"), new Unifier[] { //
+						unifierFromStrings("", "", ".A", "", "y"), //
+				} }, //
+				// False fixed cases
+				{ pathFromString("A.y"), pathFromString(".y"), new Unifier[] {} }, //
 		});
 	}
 
