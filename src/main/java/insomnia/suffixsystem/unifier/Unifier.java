@@ -197,4 +197,38 @@ public class Unifier
 
 		return unifiers;
 	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (obj == null)
+			return false;
+
+		if (!(obj instanceof Unifier))
+			return false;
+
+		Unifier u = (Unifier) obj;
+		return this.prefixBody.equals(u.prefixBody) //
+			&& this.suffixBody.equals(u.suffixBody) //
+			&& this.prefixHead.equals(u.prefixHead) //
+			&& this.suffixHead.equals(u.suffixHead) //
+			&& this.reference.equals(u.reference);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return this.prefixBody.hashCode() //
+			+ this.suffixBody.hashCode() //
+			+ this.prefixHead.hashCode() //
+			+ this.suffixHead.hashCode() //
+			+ this.reference.hashCode();
+	}
+
+	@Override
+	public String toString()
+	{
+		return "B=" + prefixBody + "___" + suffixBody //
+			+ " H=" + prefixHead + "___" + suffixHead;
+	}
 }
