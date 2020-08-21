@@ -245,7 +245,7 @@ class TestPaths
 				{ true, pathFromString("a.b.a"), pathFromString("a.b.a.b.a    "), new int[] {} }, //
 				{ true, pathFromString("a.b.a"), pathFromString("z.a.b.a.b.a.z"), new int[] { 1, 3 } }, //
 
-				{ !true, pathFromString("a    "), pathFromString("a            "), new int[] { 0 } }, //
+				{ !true, pathFromString("a    "), pathFromString("a            "), new int[] { } }, //
 				{ !true, pathFromString("a    "), pathFromString("a.b.a.a      "), new int[] { 0, 2, 3 } }, //
 				{ !true, pathFromString("a.b.a"), pathFromString("a.b.a.b.a    "), new int[] { 0, 2 } }, //
 				{ !true, pathFromString("a.b.a"), pathFromString("z.a.b.a.b.a.z"), new int[] { 1, 3 } }, //
@@ -260,6 +260,59 @@ class TestPaths
 	void findSimpleInclusionTest(boolean noSuffOrPref, Path needle, Path haystack, int[] result)
 	{
 		assertArrayEquals(result, Paths.findSimpleInclusions(needle, haystack, noSuffOrPref));
+	}
+
+	static List<Object[]> findInclusionsSource()
+	{
+		return Arrays.asList(new Object[][] { //
+				{ !true, pathFromString(" a "), pathFromString(" a "), new int[] {} }, //
+				{ !true, pathFromString(" a "), pathFromString(".a "), new int[] { 1 } }, //
+				{ !true, pathFromString(" a "), pathFromString(" a."), new int[] { 0 } }, //
+				{ !true, pathFromString(" a "), pathFromString(".a."), new int[] { 1 } }, //
+				// 4
+				{ !true, pathFromString(" a."), pathFromString(" a "), new int[] {} }, //
+				{ !true, pathFromString(" a."), pathFromString(".a "), new int[] {} }, //
+				{ !true, pathFromString(" a."), pathFromString(" a."), new int[] {} }, //
+				{ !true, pathFromString(" a."), pathFromString(".a."), new int[] { 1 } }, //
+				// 8
+				{ !true, pathFromString(".a "), pathFromString(" a "), new int[] {} }, //
+				{ !true, pathFromString(".a "), pathFromString(".a "), new int[] {} }, //
+				{ !true, pathFromString(".a "), pathFromString(" a."), new int[] {} }, //
+				{ !true, pathFromString(".a "), pathFromString(".a."), new int[] { 0 } }, //
+				// 12
+				{ !true, pathFromString(".a."), pathFromString(" a "), new int[] {} }, //
+				{ !true, pathFromString(".a."), pathFromString(".a "), new int[] {} }, //
+				{ !true, pathFromString(".a."), pathFromString(" a."), new int[] {} }, //
+				{ !true, pathFromString(".a."), pathFromString(".a."), new int[] {} }, //
+				// 16
+				{ !true, pathFromString(" a "), pathFromString(" a.b "), new int[] { 0 } }, //
+				{ !true, pathFromString(" a "), pathFromString(".a.b "), new int[] { 1 } }, //
+				{ !true, pathFromString(" a "), pathFromString(" a.b."), new int[] { 0 } }, //
+				{ !true, pathFromString(" a "), pathFromString(".a.b."), new int[] { 1 } }, //
+				// 20
+				{ !true, pathFromString(" a."), pathFromString(" a.b "), new int[] {} }, //
+				{ !true, pathFromString(" a."), pathFromString(".a.b "), new int[] {} }, //
+				{ !true, pathFromString(" a."), pathFromString(" a.b."), new int[] {} }, //
+				{ !true, pathFromString(" a."), pathFromString(".a.b."), new int[] {} }, //
+				// 24
+				{ !true, pathFromString(".a "), pathFromString(" a.b "), new int[] {} }, //
+				{ !true, pathFromString(".a "), pathFromString(".a.b "), new int[] { 0 } }, //
+				{ !true, pathFromString(".a "), pathFromString(" a.b."), new int[] {} }, //
+				{ !true, pathFromString(".a "), pathFromString(".a.b."), new int[] { 0 } }, //
+				// 28
+				{ !true, pathFromString(".a."), pathFromString(" a.b "), new int[] {} }, //
+				{ !true, pathFromString(".a."), pathFromString(".a.b "), new int[] {} }, //
+				{ !true, pathFromString(".a."), pathFromString(" a.b."), new int[] {} }, //
+				{ !true, pathFromString(".a."), pathFromString(".a.b."), new int[] {} }, //
+				// 32
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource("findInclusionsSource")
+	void findInclusionTest(boolean noSuffOrPref, Path needle, Path haystack, int[] result)
+	{
+		assertArrayEquals(result, Paths.findInclusions(needle, haystack, noSuffOrPref));
 	}
 
 	static List<Object[]> findSimpleSuffixPrefixSource()
@@ -342,13 +395,13 @@ class TestPaths
 				{ !true, pathFromString("a.b.a"), pathFromString("b.a  "), new int[] { 2 } }, //
 				// 10
 				{ true, pathFromString(" a.b."), pathFromString("b "), new int[] {} }, //
-				{ true, pathFromString(" a.b."), pathFromString("b."), new int[] { 1 } }, //
+				{ true, pathFromString(" a.b."), pathFromString("b."), new int[] { 2 } }, //
 				{ true, pathFromString(".a.b."), pathFromString("b "), new int[] {} }, //
-				{ true, pathFromString(".a.b."), pathFromString("b."), new int[] { 1 } }, //
+				{ true, pathFromString(".a.b."), pathFromString("b."), new int[] { 2 } }, //
 				// 14
 				{ !true, pathFromString(".a"), pathFromString(" a"), new int[] { 1 } }, //
 				{ !true, pathFromString(" a"), pathFromString(".a"), new int[] {} }, //
-				{ !true, pathFromString(".a"), pathFromString(".a"), new int[] { 1 } }, //
+				{ !true, pathFromString(".a"), pathFromString(".a"), new int[] { 2 } }, //
 				// 17
 				{ !true, pathFromString(".b.a"), pathFromString(" a"), new int[] { 1 } }, //
 				{ !true, pathFromString(" b.a"), pathFromString(".a"), new int[] {} }, //
@@ -356,7 +409,7 @@ class TestPaths
 				// 20
 				{ !true, pathFromString(".a"), pathFromString(" a.b"), new int[] { 1 } }, //
 				{ !true, pathFromString(" a"), pathFromString(".a.b"), new int[] {} }, //
-				{ !true, pathFromString(".a"), pathFromString(".a.b"), new int[] { 1 } }, //
+				{ !true, pathFromString(".a"), pathFromString(".a.b"), new int[] { 2 } }, //
 				// 23
 
 				// Impossible cases
@@ -375,12 +428,12 @@ class TestPaths
 				{ !true, pathFromString(" a "), pathFromString(" a."), new int[] { 1 } }, //
 				{ !true, pathFromString(".a "), pathFromString(" a."), new int[] { 1 } }, //
 				{ !true, pathFromString(".a "), pathFromString(" a "), new int[] { 1 } }, //
-				{ !true, pathFromString(".a."), pathFromString(".a."), new int[] { 1 } }, //
+				{ !true, pathFromString(".a."), pathFromString(".a."), new int[] { 3 } }, //
 				// 35
-				{ !true, pathFromString(".a "), pathFromString(".a "), new int[] { 1 } }, //
-				{ !true, pathFromString(".a "), pathFromString(".a."), new int[] { 1 } }, //
-				{ !true, pathFromString(".a."), pathFromString(" a."), new int[] { 1 } }, //
-				{ !true, pathFromString(" a."), pathFromString(" a."), new int[] { 1 } }, //
+				{ !true, pathFromString(".a "), pathFromString(".a "), new int[] { 2 } }, //
+				{ !true, pathFromString(".a "), pathFromString(".a."), new int[] { 2 } }, //
+				{ !true, pathFromString(".a."), pathFromString(" a."), new int[] { 2 } }, //
+				{ !true, pathFromString(" a."), pathFromString(" a."), new int[] { 2 } }, //
 				// 39
 
 				{ true, pathFromString(" a "), pathFromString(" a "), new int[] {} }, //
@@ -390,8 +443,8 @@ class TestPaths
 				{ true, pathFromString(".a."), pathFromString(".a."), new int[] {} }, //
 				// 44
 				{ true, pathFromString(".a "), pathFromString(".a "), new int[] {} }, //
-				{ true, pathFromString(".a "), pathFromString(".a."), new int[] { 1 } }, //
-				{ true, pathFromString(".a."), pathFromString(" a."), new int[] { 1 } }, //
+				{ true, pathFromString(".a "), pathFromString(".a."), new int[] { 2 } }, //
+				{ true, pathFromString(".a."), pathFromString(" a."), new int[] { 2 } }, //
 				{ true, pathFromString(" a."), pathFromString(" a."), new int[] {} }, //
 				// 48
 		});
@@ -439,11 +492,11 @@ class TestPaths
 				// 20
 
 				{ !true, pathFromString(" a."), pathFromString(".a "), new int[] { 1 } }, //
-				{ !true, pathFromString(" a."), pathFromString(" a."), new int[] { 1 } }, //
-				{ !true, pathFromString(" a."), pathFromString(".a."), new int[] { 1 } }, //
-				{ !true, pathFromString(".a."), pathFromString(".a."), new int[] { 1 } }, //
-				{ !true, pathFromString(".a "), pathFromString(".a "), new int[] { 1 } }, //
-				{ !true, pathFromString(".a."), pathFromString(".a "), new int[] { 1 } }, //
+				{ !true, pathFromString(" a."), pathFromString(" a."), new int[] { 2 } }, //
+				{ !true, pathFromString(" a."), pathFromString(".a."), new int[] { 2 } }, //
+				{ !true, pathFromString(".a."), pathFromString(".a."), new int[] { 3 } }, //
+				{ !true, pathFromString(".a "), pathFromString(".a "), new int[] { 2 } }, //
+				{ !true, pathFromString(".a."), pathFromString(".a "), new int[] { 2 } }, //
 				// 26
 
 				{ true, pathFromString(" a "), pathFromString(" a "), new int[] {} }, //
@@ -453,10 +506,10 @@ class TestPaths
 				// 30
 
 				{ true, pathFromString(" a."), pathFromString(" a."), new int[] {} }, //
-				{ true, pathFromString(" a."), pathFromString(".a."), new int[] { 1 } }, //
+				{ true, pathFromString(" a."), pathFromString(".a."), new int[] { 2 } }, //
 				{ true, pathFromString(".a."), pathFromString(".a."), new int[] {} }, //
 				{ true, pathFromString(".a "), pathFromString(".a "), new int[] {} }, //
-				{ true, pathFromString(".a."), pathFromString(".a "), new int[] { 1 } }, //
+				{ true, pathFromString(".a."), pathFromString(".a "), new int[] { 2 } }, //
 				// 35
 		});
 	}
