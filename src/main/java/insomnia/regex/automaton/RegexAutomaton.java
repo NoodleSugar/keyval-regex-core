@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import insomnia.automaton.AutomatonException;
-import insomnia.automaton.IGAutomaton;
-import insomnia.automaton.algorithm.DeterministicValidation;
-import insomnia.automaton.algorithm.IValidation;
-import insomnia.automaton.algorithm.NonDeterministicValidation;
+import insomnia.automaton.IPAutomaton;
+import insomnia.automaton.algorithm.DeterministicPValidation;
+import insomnia.automaton.algorithm.IPValidation;
+import insomnia.automaton.algorithm.NonDeterministicPValidation;
 import insomnia.automaton.edge.EdgeEpsilon;
 import insomnia.automaton.edge.EdgeRegex;
 import insomnia.automaton.edge.EdgeStringEqual;
@@ -19,11 +19,11 @@ import insomnia.automaton.state.State;
 import insomnia.regex.automaton.RegexAutomatonBuilder.EdgeData;
 import insomnia.summary.ISummary;
 
-public final class RegexAutomaton implements IGAutomaton<String>
+public final class RegexAutomaton implements IPAutomaton<String>
 {
 	private boolean synchronous;
 	private boolean deterministic;
-	private IValidation<String> validator;
+	private IPValidation<String> validator;
 	private IState<String> initialState;
 	private IState<String> currentState;
 	private List<IState<String>> finalStates;
@@ -36,22 +36,19 @@ public final class RegexAutomaton implements IGAutomaton<String>
 		currentState = null;
 
 		HashMap<Integer, HashMap<String, List<Integer>>> stateEedges = new HashMap<>();
-		
+
 		// Ajout des états
 		for(int id : b.states)
 		{
-			State state = new State();
-			state.setId(id);
-			if(b.initialState == id)
-			{
+			boolean isInitial = b.initialState == id;
+			boolean isFinal = b.finalState.contains(id);
+			State state = new State(id, isInitial, isFinal);
+			
+			if(isInitial)
 				initialState = state;
-				state.setInitial(true);
-			}
-			if(b.finalState.contains(id))
-			{
+			if(isFinal)
 				finalStates.add(state);
-				state.setFinal(true);
-			}
+
 			states.add(state);
 		}
 		// Ajout des arcs
@@ -61,7 +58,7 @@ public final class RegexAutomaton implements IGAutomaton<String>
 			State startState = (State) getState(startId);
 			ArrayList<EdgeRegex> regexEdges = new ArrayList<>();
 			HashMap<String, List<Integer>> Eedges = new HashMap<>();
-			
+
 			// Pour chaque arc dans le builder
 			for(EdgeData d : entry.getValue())
 			{
@@ -70,7 +67,7 @@ public final class RegexAutomaton implements IGAutomaton<String>
 				if(d.type == EdgeData.Type.STRING_EQUALS)
 				{
 					startState.add(new EdgeStringEqual(startState, endState, d.str));
-					
+
 					List<Integer> l = Eedges.get(d.str);
 					if(l == null)
 					{
@@ -83,7 +80,7 @@ public final class RegexAutomaton implements IGAutomaton<String>
 				else if(d.type == EdgeData.Type.EPSILON)
 				{
 					startState.add(new EdgeEpsilon(startState, endState));
-					
+
 					List<Integer> l = Eedges.get(d.str);
 					if(l == null)
 					{
@@ -104,7 +101,7 @@ public final class RegexAutomaton implements IGAutomaton<String>
 
 		deterministic = true;
 		synchronous = true;
-		
+
 		// Vérification de la synchronicité
 		loop:
 		for(IState<String> state : states)
@@ -118,7 +115,7 @@ public final class RegexAutomaton implements IGAutomaton<String>
 				}
 			}
 		}
-		
+
 		// Vérification du déterminisme
 		for(Map.Entry<Integer, HashMap<String, List<Integer>>> eedges : stateEedges.entrySet())
 		{
@@ -131,13 +128,13 @@ public final class RegexAutomaton implements IGAutomaton<String>
 				}
 			}
 		}
-		
+
 		// Adaptation de l'algorithme de validation en fonction du déterminisme
 		if(deterministic)
-			validator = new DeterministicValidation<String>();
+			validator = new DeterministicPValidation<String>();
 		else
-			validator = new NonDeterministicValidation<String>();
-			
+			validator = new NonDeterministicPValidation<String>();
+
 	}
 
 	@Override

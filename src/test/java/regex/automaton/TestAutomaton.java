@@ -15,7 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import insomnia.automaton.AutomatonException;
-import insomnia.automaton.algorithm.DeterministicValidation;
+import insomnia.automaton.algorithm.DeterministicPValidation;
 import insomnia.regex.RegexParser;
 import insomnia.regex.automaton.RegexAutomaton;
 import insomnia.regex.automaton.RegexAutomatonBuilder;
@@ -27,7 +27,7 @@ public class TestAutomaton
 	static String regex = "a*.b?.c+|(d.(e|f)[2,5]).~r*e?g+~";
 	static RegexAutomaton automaton;
 	static RegexAutomaton dautomaton;
-	static DeterministicValidation<String> valid = new DeterministicValidation<String>();
+	static DeterministicPValidation<String> valid = new DeterministicPValidation<String>();
 
 	@BeforeAll
 	static void init()

@@ -3,15 +3,15 @@ package insomnia.automaton.algorithm;
 import java.util.ArrayList;
 import java.util.List;
 
-import insomnia.automaton.IGAutomaton;
+import insomnia.automaton.IPAutomaton;
 import insomnia.automaton.edge.EdgeEpsilon;
 import insomnia.automaton.edge.IEdge;
 import insomnia.automaton.state.IState;
 
-public class NonDeterministicValidation<E> implements IValidation<E>
+public class NonDeterministicPValidation<E> implements IPValidation<E>
 {
 	@Override
-	public boolean test(IGAutomaton<E> automaton, List<E> elements)
+	public boolean test(IPAutomaton<E> automaton, List<E> elements)
 	{
 		List<IState<E>> states = new ArrayList<>();
 		List<IState<E>> nextStates = new ArrayList<>();

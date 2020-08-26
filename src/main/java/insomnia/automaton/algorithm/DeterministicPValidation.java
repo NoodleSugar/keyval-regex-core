@@ -2,13 +2,13 @@ package insomnia.automaton.algorithm;
 
 import java.util.List;
 
-import insomnia.automaton.IGAutomaton;
+import insomnia.automaton.IPAutomaton;
 import insomnia.automaton.state.IState;
 
-public class DeterministicValidation<E> implements IValidation<E>
+public class DeterministicPValidation<E> implements IPValidation<E>
 {
 	@Override
-	public boolean test(IGAutomaton<E> automaton, List<E> elements)
+	public boolean test(IPAutomaton<E> automaton, List<E> elements)
 	{
 		// Initialisation de l'automate à son état de départ
 		IState<E> initialState = automaton.getInitialStates().get(0);
