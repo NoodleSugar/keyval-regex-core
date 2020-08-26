@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 
 import insomnia.rule.tree.edge.Edge;
-import insomnia.rule.tree.node.INode;
 import insomnia.rule.tree.node.PathNode;
 
 public class Path implements IPath<String>
@@ -37,11 +36,12 @@ public class Path implements IPath<String>
 
 		String[] path_labels = path.split("\\.");
 		String label;
+		Edge edge;
 		PathNode newPathNode;
 		PathNode lastPathNode;
 
 		// Premier Noeud
-		lastPathNode = new PathNode(null, null, rooted, false);
+		lastPathNode = new PathNode(null, rooted);
 		nodes.add(lastPathNode);
 		root = lastPathNode;
 
@@ -52,8 +52,12 @@ public class Path implements IPath<String>
 			label = path_labels[i];
 			labels.add(label);
 
-			newPathNode = new PathNode(lastPathNode, label);
-			lastPathNode.setChild(newPathNode);
+			edge = new Edge(label);
+			newPathNode = new PathNode(edge, false);
+			lastPathNode.setChild(edge);
+
+			edge.setParent(lastPathNode);
+			edge.setChild(newPathNode);
 
 			nodes.add(newPathNode);
 			lastPathNode = newPathNode;
@@ -63,8 +67,13 @@ public class Path implements IPath<String>
 		label = path_labels[n - 1];
 		labels.add(label);
 
-		last = new PathNode(lastPathNode, label, false, terminal);
-		lastPathNode.setChild(last);
+		edge = new Edge(label);
+		last = new PathNode(edge, false);
+		lastPathNode.setChild(edge);
+
+		edge.setParent(lastPathNode);
+		edge.setChild(last);
+
 		nodes.add(last);
 	}
 
@@ -74,34 +83,11 @@ public class Path implements IPath<String>
 		return root;
 	}
 
-	/*
-	 * node doit appartenir au chemin
-	 */
 	@Override
-	public Edge getParent(INode<String> node)
+	public List<PathNode> getLeaves()
 	{
-		return ((PathNode) node).getParent();
-	}
-
-	/*
-	 * node doit appartenir au chemin
-	 */
-	@Override
-	public Edge getChild(INode<String> node)
-	{
-		return ((PathNode) node).getChild();
-	}
-
-	/*
-	 * node doit appartenir au chemin
-	 */
-	@Override
-	public List<Edge> getChildren(INode<String> node)
-	{
-		ArrayList<Edge> a = new ArrayList<>();
-		a.add(getChild(node));
-
-		return a;
+		// TODO
+		return null;
 	}
 
 	@Override
@@ -144,6 +130,10 @@ public class Path implements IPath<String>
 			if(k.equals(labels.get(index)))
 				// Incrémentation de l'index de labels
 				index++;
+			// Sinon si k et la première clé de labels sont égales
+			else if(k.equals(labels.get(0)))
+				// Incrémentation de l'index de labels
+				index = 1;
 			// Sinon remise à 0 de l'index
 			else
 				index = 0;

@@ -1,17 +1,32 @@
 package insomnia.rule.tree.edge;
 
-import insomnia.rule.tree.node.PathNode;
+import insomnia.rule.tree.node.INode;
 
 public class Edge implements IEdge<String>
 {
 	private String label;
-	private PathNode parent;
-	private PathNode child;
+	private INode<String> parent;
+	private INode<String> child;
 
-	public Edge(PathNode parent, PathNode child, String label)
+	public Edge(INode<String> parent, INode<String> child, String label)
 	{
 		this.label = label;
 		this.parent = parent;
+		this.child = child;
+	}
+	
+	public Edge(String label)
+	{
+		this(null, null, label);
+	}
+	
+	public void setParent(INode<String> parent)
+	{
+		this.parent = parent;
+	}
+	
+	public void setChild(INode<String> child)
+	{
 		this.child = child;
 	}
 
@@ -22,13 +37,13 @@ public class Edge implements IEdge<String>
 	}
 
 	@Override
-	public PathNode getParent()
+	public INode<String> getParent()
 	{
 		return parent;
 	}
 
 	@Override
-	public PathNode getChild()
+	public INode<String> getChild()
 	{
 		return child;
 	}

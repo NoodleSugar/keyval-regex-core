@@ -2,16 +2,13 @@ package insomnia.rule.tree;
 
 import java.util.List;
 
-import insomnia.rule.tree.edge.IEdge;
-import insomnia.rule.tree.node.INode;
+import insomnia.rule.tree.node.ITreeNode;
 
 public interface ITree<E>
 {
-	INode<E> getRoot();
+	ITreeNode<E> getRoot();
 
-	IEdge<E> getParent(INode<E> node);
-
-	List<? extends IEdge<E>> getChildren(INode<E> node);
+	List<? extends ITreeNode<E>> getLeaves();
 
 	boolean isRooted();
 }

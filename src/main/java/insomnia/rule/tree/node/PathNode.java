@@ -4,35 +4,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 import insomnia.rule.tree.edge.Edge;
+import insomnia.rule.tree.value.Value;
 
 public class PathNode implements IPathNode<String>
 {
 	private Edge parent;
 	private Edge child;
+	private Value value;
 	private boolean root;
 	private boolean leaf;
 
-	public PathNode()
+	public PathNode(Edge parent, boolean root)
 	{
-		this(null, null, false, false);
+		this.parent = parent;
+		this.root = root;
 	}
 
-	public PathNode(PathNode parent, String label)
+	public PathNode(Edge parent, boolean root, Value value)
 	{
-		this(parent, label, false, false);
+		this(parent, root);
+		this.leaf = true;
+		this.value = value;
 	}
 
-	public PathNode(PathNode parent, String label, boolean isRoot, boolean isLeaf)
+	public void setChild(Edge child)
 	{
-		this.parent = new Edge(parent, this, label);
-		child = null;
-		root = isRoot;
-		leaf = isLeaf;
-	}
-
-	public void setChild(PathNode child)
-	{
-		this.child = child.parent;
+		this.child = child;
 	}
 
 	@Override
@@ -73,5 +70,11 @@ public class PathNode implements IPathNode<String>
 	public Edge getChild()
 	{
 		return child;
+	}
+
+	@Override
+	public Value getValue()
+	{
+		return value;
 	}
 }
