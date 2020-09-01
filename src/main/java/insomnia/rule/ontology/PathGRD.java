@@ -11,8 +11,8 @@ import java.util.Map.Entry;
 import org.apache.commons.lang3.StringUtils;
 
 import insomnia.rule.PathRule;
+import insomnia.rule.PathRules;
 import insomnia.rule.tree.Path;
-import insomnia.suffixsystem.unifier.Unifier;
 
 public class PathGRD implements IGRD<Path, PathRule>
 {
@@ -177,16 +177,12 @@ public class PathGRD implements IGRD<Path, PathRule>
 
 	public boolean dependsWeakOn(PathRule rule1, PathRule rule2)
 	{
-		Path body1 = rule1.getBody();
-		Path head2 = rule2.getHead();
-		return Unifier.weakUnifiers(head2, body1, true, rule2.isExistential()).size() > 0;
+		return PathRules.weakDependency(rule2, rule1);
 	}
 
 	public boolean dependsStrongOn(PathRule rule1, PathRule rule2)
 	{
-		Path body1 = rule1.getBody();
-		Path head2 = rule2.getHead();
-		return Unifier.strongUnifiers(head2, body1, true).size() > 0;
+		return PathRules.strongDependency(rule2, rule1);
 	}
 
 	@Override
