@@ -54,9 +54,14 @@ public class Unifier
 		return Paths.findAllInclusions(i, c);
 	}
 
+	public static List<Unifier> weakUnifiers(Path head, Path body, boolean existentialHead)
+	{
+		return weakUnifiers(head, body, false, existentialHead);
+	}
+
 	public static List<Unifier> weakUnifiers(Path head, Path body)
 	{
-		return weakUnifiers(head, body, false);
+		return weakUnifiers(head, body, false, false);
 	}
 
 	public static List<Unifier> strongUnifiers(Path head, Path body)
@@ -64,7 +69,7 @@ public class Unifier
 		return strongUnifiers(head, body, false);
 	}
 
-	public static List<Unifier> weakUnifiers(Path head, Path body, boolean firstFind)
+	public static List<Unifier> weakUnifiers(Path head, Path body, boolean firstFind, boolean existentialHead)
 	{
 		List<Unifier> ret = new ArrayList<>();
 
@@ -74,20 +79,6 @@ public class Unifier
 		int tmp[];
 		int i;
 
-		/*
-		 * head : A.y
-		 * body : y.B
-		 */
-		tmp = Paths.findOverlappedPossiblePrefixes(head, body, firstFind);
-
-		for (i = 0; i < tmp.length; i++)
-		{
-			int size = tmp[i];
-			ret.add(new Unifier( //
-				null, body.subPath(size, b_size), //
-				head.subPath(0, h_size - size), null, //
-				body.subPath(0, size)));
-		}
 		/*
 		 * head : y.A
 		 * body : B.y
@@ -113,31 +104,49 @@ public class Unifier
 				null, null, //
 				head));
 		}
-		/*
-		 * head : y
-		 * body : y.B
-		 */
-		if (Paths.isProperPrefix(head, body))
-		{
-			ret.add(new Unifier( //
-				null, body.subPath(h_size, b_size), //
-				null, null, //
-				head));
-		}
-		/*
-		 * head : y
-		 * body : B1.y.B2
-		 */
-		tmp = Paths.findInclusions(head, body, firstFind, true);
 
-		for (i = 0; i < tmp.length; i++)
+		if (!existentialHead)
 		{
-			int pos = tmp[i];
+			/*
+			 * head : A.y
+			 * body : y.B
+			 */
+			tmp = Paths.findOverlappedPossiblePrefixes(head, body, firstFind);
 
-			ret.add(new Unifier( //
-				body.subPath(0, pos), body.subPath(pos + h_size, b_size), //
-				null, null, //
-				head));
+			for (i = 0; i < tmp.length; i++)
+			{
+				int size = tmp[i];
+				ret.add(new Unifier( //
+					null, body.subPath(size, b_size), //
+					head.subPath(0, h_size - size), null, //
+					body.subPath(0, size)));
+			}
+			/*
+			 * head : y
+			 * body : y.B
+			 */
+			if (Paths.isProperPrefix(head, body))
+			{
+				ret.add(new Unifier( //
+					null, body.subPath(h_size, b_size), //
+					null, null, //
+					head));
+			}
+			/*
+			 * head : y
+			 * body : B1.y.B2
+			 */
+			tmp = Paths.findInclusions(head, body, firstFind, true);
+
+			for (i = 0; i < tmp.length; i++)
+			{
+				int pos = tmp[i];
+
+				ret.add(new Unifier( //
+					body.subPath(0, pos), body.subPath(pos + h_size, b_size), //
+					null, null, //
+					head));
+			}
 		}
 
 		if (firstFind && ret.size() > 1)
