@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import insomnia.rule.PathRule;
 import insomnia.rule.tree.Path;
+import insomnia.suffixsystem.unifier.Unifier;
 
 public class PathGRD implements IGRD<Path, PathRule>
 {
@@ -178,87 +179,14 @@ public class PathGRD implements IGRD<Path, PathRule>
 	{
 		Path body1 = rule1.getBody();
 		Path head2 = rule2.getHead();
-
-		// Si R2 est existentielle
-		// Si R1 est valuée
-		// Si R2 n'est pas valuée
-		if(rule2.isExistential() && rule1.isTerminal() && !rule2.isTerminal())
-			return false;
-
-		// Si R2 est enracinée
-		if(rule2.isRooted())
-		{
-			// Si R2 est valuée
-			if(rule2.isTerminal())
-				// Si h2 est égal à b1
-				return head2.getLabels().equals(body1.getLabels());
-
-			// Si R2 non valuée
-			else
-				// Si on a pas R2 est existentielle et si
-				// Si un suffixe de h2 est préfixe de b1
-				return !(rule2.isExistential() && body1.isSuffix(head2)) && //
-						body1.hasPrefixInSuffix(head2);
-		}
-
-		// Si R2 non enracinée
-		else
-		{
-			// Si R2 est valuée
-			if(rule2.isTerminal())
-				// Si un préfixe de h2 est suffixe de b1
-				return head2.hasPrefixInSuffix(body1);
-
-			// Si R2 non valuée
-			else
-				// Si h2 est inclu dans b1 OU
-				// Si un préfixe de h2 est suffixe de b1 OU
-				// Si un suffixe de h2 est préfixe de b1
-				return head2.isIncluded(body1) || //
-						head2.hasPrefixInSuffix(body1) || //
-						body1.hasPrefixInSuffix(head2);
-		}
-
+		return Unifier.weakUnifiers(head2, body1, true, rule2.isExistential()).size() > 0;
 	}
 
 	public boolean dependsStrongOn(PathRule rule1, PathRule rule2)
 	{
 		Path body1 = rule1.getBody();
 		Path head2 = rule2.getHead();
-
-		// Si R2 est existentielle
-		// Si R1 est valuée
-		// Si R2 n'est pas valuée
-		if(rule2.isExistential() && rule1.isTerminal() && !rule2.isTerminal())
-			return false;
-
-		// Si R1 est enracinée
-		if(rule1.isRooted())
-		{
-			// Si R1 est valuée
-			if(rule1.isTerminal())
-				// Si b1 est égal à h2
-				return body1.getLabels().equals(head2.getLabels());
-
-			// Si R1 non valuée
-			else
-				// Si b1 est préfixe de h2
-				return body1.isPrefix(head2);
-		}
-
-		// Si R1 non enracinée
-		else
-		{
-			// Si R1 est valuée
-			if(rule1.isTerminal())
-				// Si b1 est suffixe de h2
-				return body1.isSuffix(head2);
-
-			// Si R1 non valuée
-			else
-				// Si b1 est inclu dans h2
-				return body1.isIncluded(head2);
-		}
+		return Unifier.strongUnifiers(head2, body1, true).size() > 0;
 	}
 
 	@Override
