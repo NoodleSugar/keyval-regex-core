@@ -42,6 +42,16 @@ public class Unifier
 		return prefixHead.isEmpty() && suffixHead.isEmpty();
 	}
 
+	public boolean isWeak()
+	{
+		return !emptyBody();
+	}
+
+	public boolean isStrong()
+	{
+		return emptyBody();
+	}
+
 	// Préfixes et suffixes stricts (limites exclues)
 	public static int[] findAllPrefixSuffix(Path p, Path s)
 	{
