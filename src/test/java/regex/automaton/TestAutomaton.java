@@ -16,11 +16,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import insomnia.automaton.AutomatonException;
 import insomnia.automaton.algorithm.DeterministicValidation;
-import insomnia.regex.RegexParser;
-import insomnia.regex.automaton.RegexAutomaton;
-import insomnia.regex.automaton.RegexAutomatonBuilder;
-import insomnia.regex.automaton.RegexAutomatonBuilder.BuilderException;
-import insomnia.regex.element.IElement;
+import insomnia.kv.regex.RegexParser;
+import insomnia.kv.regex.automaton.RegexAutomaton;
+import insomnia.kv.regex.automaton.RegexAutomatonBuilder;
+import insomnia.kv.regex.automaton.RegexAutomatonBuilder.BuilderException;
+import insomnia.kv.regex.element.IElement;
 
 public class TestAutomaton
 {

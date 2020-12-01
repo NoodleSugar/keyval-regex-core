@@ -9,8 +9,8 @@ import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.rule.tree.Path;
-import insomnia.rule.tree.Paths;
+import insomnia.data.tree.Path;
+import insomnia.data.tree.Paths;
 
 class TestPaths
 {

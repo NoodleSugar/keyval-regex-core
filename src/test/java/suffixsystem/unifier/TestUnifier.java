@@ -9,9 +9,9 @@ import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.rule.tree.Path;
-import insomnia.rule.tree.Paths;
-import insomnia.suffixsystem.unifier.Unifier;
+import insomnia.data.tree.Path;
+import insomnia.data.tree.Paths;
+import insomnia.kv.suffixsystem.unifier.Unifier;
 
 class TestUnifier
 {

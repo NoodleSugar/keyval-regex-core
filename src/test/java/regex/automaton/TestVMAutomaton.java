@@ -14,11 +14,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import insomnia.automaton.AutomatonException;
-import insomnia.regex.RegexParser;
-import insomnia.regex.automaton.RegexAutomatonBuilder.BuilderException;
-import insomnia.regex.automaton.VMRegexAutomaton;
-import insomnia.regex.automaton.VMRegexAutomatonBuilder;
-import insomnia.regex.element.IElement;
+import insomnia.kv.regex.RegexParser;
+import insomnia.kv.regex.automaton.VMRegexAutomaton;
+import insomnia.kv.regex.automaton.VMRegexAutomatonBuilder;
+import insomnia.kv.regex.automaton.RegexAutomatonBuilder.BuilderException;
+import insomnia.kv.regex.element.IElement;
 
 class TestVMAutomaton
 {

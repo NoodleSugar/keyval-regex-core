@@ -7,7 +7,7 @@ import java.text.ParseException;
 
 import org.junit.jupiter.api.Test;
 
-import insomnia.regex.RegexParser;
+import insomnia.kv.regex.RegexParser;
 
 class TestRegex
 {

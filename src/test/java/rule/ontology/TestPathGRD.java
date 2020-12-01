@@ -11,11 +11,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.aggregator.ArgumentsAccessor;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import insomnia.rule.PathRule;
-import insomnia.rule.ontology.PathGRD;
-import insomnia.rule.ontology.PathOntology;
-import insomnia.rule.ontology.IGRD.DependencyMode;
-import insomnia.rule.tree.Path;
+import insomnia.data.tree.Path;
+import insomnia.kv.rule.PathRule;
+import insomnia.kv.rule.ontology.PathGRD;
+import insomnia.kv.rule.ontology.PathOntology;
+import insomnia.kv.rule.ontology.IGRD.DependencyMode;
 
 class TestPathGRD
 {
