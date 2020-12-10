@@ -15,34 +15,6 @@ import org.apache.commons.lang3.ArrayUtils;
  */
 public final class Paths
 {
-	/*
-	 * Help function for creating paths.
-	 * These must be temporary
-	 */
-	public static Path pathFromString(String p)
-	{
-		if (p.isEmpty())
-			return new Path();
-
-		if (p.equals("^"))
-			return new Path(true, false, "");
-
-		if (p.equals("$"))
-			return new Path(false, true, "");
-
-		p = p.trim();
-
-		boolean isRooted   = p.charAt(0) == '.';
-		boolean isTerminal = p.charAt(p.length() - 1) == '.';
-
-		p = p.substring(isRooted ? 1 : 0, p.length() - (isTerminal ? 1 : 0));
-		return pathFromString(p, isRooted, isTerminal);
-	}
-
-	public static Path pathFromString(String p, boolean isRooted, boolean isTerminal)
-	{
-		return new Path(isRooted, isTerminal, p.trim().split(Pattern.quote(".")));
-	}
 
 	public static int nbLabelsFromPrefixSize(IPath<?> p, int size)
 	{
