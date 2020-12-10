@@ -1,179 +1,157 @@
-package insomnia.data.tree;
+package insomnia.implem.kv.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
-import javax.jws.soap.InitParam;
+import insomnia.data.AbstractPath;
+import insomnia.data.INode;
+import insomnia.data.INodeFactory;
+import insomnia.data.IPath;
 
-import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.BooleanUtils;
-
-import insomnia.data.tree.node.PathNode;
-
-public class Path implements IPath<String>
+public class KVPath extends AbstractPath<KVValue, KVLabel>
 {
-	public final static boolean default_isRoot     = false;
-	public final static boolean default_isTerminal = false;
+	static INodeFactory<KVValue, KVLabel> nodeFactory;
+	static KVLabelFactory                 kvlabelFactory;
 
-	private List<String>   labels;
-	private List<PathNode> nodes;
-
-	private PathNode root;
-
-	private boolean isRooted;
-	private boolean isTerminal;
-
-	public Path subPath(int begin, int end)
+	static
 	{
-		return new Path(this, begin, end);
-	}
-
-	// Constructeur de sous-chemin
-	public Path(Path path, int begin, int end)
-	{
-		if (begin == end)
-		{
-			initPath(this, default_isRoot, default_isTerminal);
-			return;
-		}
-		boolean isRooted   = false;
-		boolean isTerminal = false;
-
-		if (path.isRooted)
-		{
-			if (begin > 0)
-			{
-				begin--;
-				end -= 2;
-			}
-			else
-			{
-				isRooted = true;
-				end--;
-			}
-		}
-
-		if (path.isTerminal)
-		{
-			if (end == path.labels.size() + 1)
-			{
-				isTerminal = true;
-				end--;
-			}
-		}
-		initPath(this, isRooted, isTerminal, path.labels.subList(begin, end).toArray(new String[0]));
-	}
-
-	public Path(String... path)
-	{
-		this(default_isRoot, default_isTerminal, path);
-	}
-
-	// path doit contenir au moins une clé
-	public Path(boolean isRooted, boolean isTerminal, String... labels)
-	{
-		initPath(this, isRooted, isTerminal, labels);
-	}
-
-	private static void initPath(Path path, boolean isRooted, boolean isTerminal, String... labels)
-	{
-		path.isRooted   = isRooted;
-		path.isTerminal = isTerminal;
-		path.nodes      = new ArrayList<>(labels.length + 1);
-
-		// Premier Noeud
-		path.root = new PathNode();
-		path.nodes.add(path.root);
-
-		/*
-		 * Empty path
-		 */
-		if (labels.length == 0)
-		{
-			path.labels = Collections.emptyList();
-			return;
-		}
-		path.labels = new ArrayList<>(labels.length);
-
-		String   label;
-		PathNode newPathNode;
-		PathNode lastPathNode;
-
-		lastPathNode = path.root;
-
-		// Noeuds intermédiaires
-		final int n = labels.length;
-
-		for (int i = 0; i < n; i++)
-		{
-			label = labels[i];
-			path.labels.add(label);
-
-			newPathNode = new PathNode(lastPathNode, label);
-			path.nodes.add(newPathNode);
-
-			lastPathNode = newPathNode;
-		}
+		kvlabelFactory = new KVLabelFactory();
 	}
 
 	@Override
-	public boolean isEmpty()
+	public KVValue emptyValue()
 	{
-		return nodes.isEmpty();
+		return new KVValue();
 	}
 
-	@Override
-	public PathNode getRoot()
+	public static List<KVLabel> string2KVLabel(List<String> labels)
 	{
-		return root;
-	}
+		List<KVLabel> kvlabels = new ArrayList<>(labels.size());
 
-	@Override
-	public List<String> getLabels()
-	{
-		return labels;
-	}
+		for (String l : labels)
+			kvlabels.add(new KVLabel(l));
 
-	@Override
-	public int size()
-	{
-		return labels.size() + BooleanUtils.toInteger(isRooted) + BooleanUtils.toInteger(isTerminal);
-	}
-
-	@Override
-	public boolean isRooted()
-	{
-		return isRooted;
-	}
-
-	@Override
-	public boolean isTerminal()
-	{
-		return isTerminal;
+		return kvlabels;
 	}
 
 	// =========================================================================
-	// Object Override
 
-	@Override
-	public boolean equals(Object o)
+	public KVPath()
 	{
-		if (o == null || !(o instanceof IPath))
-			return false;
+		super(Collections.emptyList());
+	}
 
-		return Paths.areEquals(this, (IPath<?>) o);
+	// Constructeur de sous-chemin
+	public KVPath(IPath<KVValue, KVLabel> path, int begin, int end)
+	{
+		super(path, begin, end);
+	}
+
+	public KVPath(List<KVLabel> labels)
+	{
+		super(labels);
+	}
+
+	// path doit contenir au moins une clé
+	public KVPath(boolean isRooted, List<KVLabel> labels)
+	{
+		super(isRooted, labels);
+	}
+
+	public KVPath(List<KVLabel> labels, KVValue value)
+	{
+		super(labels, value);
+	}
+
+	// path doit contenir au moins une clé
+	public KVPath(boolean isRooted, List<KVLabel> labels, KVValue value)
+	{
+		super(isRooted, labels, value);
+	}
+
+	// path doit contenir au moins une clé
+	public KVPath(boolean isRooted, boolean isTerminal, List<KVLabel> labels)
+	{
+		super(isRooted, isTerminal, labels);
 	}
 
 	@Override
-	public int hashCode()
+	public KVPath subPath(int begin, int end)
 	{
-		return this.labels.hashCode() + BooleanUtils.toInteger(isRooted) + BooleanUtils.toInteger(isTerminal);
+		return new KVPath(this, begin, end);
+	}
+
+	// =========================================================================
+
+	public static KVPath pathFromString(String p, boolean isRooted, boolean isTerminal)
+	{
+		return new KVPath(isRooted, isTerminal, string2KVLabel(Arrays.asList(p.trim().split(Pattern.quote(".")))));
+	}
+
+	/*
+	 * Help function for creating paths.
+	 * These must be temporary
+	 */
+	public static KVPath pathFromString(String p)
+	{
+		if (p.isEmpty())
+			return new KVPath(Collections.emptyList());
+
+		if (p.equals("^"))
+			return new KVPath(true, Collections.emptyList());
+
+		if (p.equals("$"))
+			return new KVPath(false, true, Collections.emptyList());
+
+		p = p.trim();
+
+		boolean isRooted   = p.charAt(0) == '.';
+		boolean isTerminal = p.charAt(p.length() - 1) == '.';
+
+		p = p.substring(isRooted ? 1 : 0, p.length() - (isTerminal ? 1 : 0));
+		return pathFromString(p, isRooted, isTerminal);
+	}
+
+	// =========================================================================
+
+	@Override
+	public List<KVEdge> getChildren(INode<KVValue, KVLabel> node)
+	{
+		assert (node instanceof KVPathNode);
+		KVPathNode kvnode = (KVPathNode) node;
+
+		if (kvnode.pos == nbLabels())
+			return null;
+
+		int pos = kvnode.pos + 1;
+		return Collections.singletonList(new KVEdge(kvnode, new KVPathNode(pos), getLabels().get(pos)));
 	}
 
 	@Override
-	public String toString()
+	public KVEdge getParent(INode<KVValue, KVLabel> node)
 	{
-		return (isRooted ? "." : "") + String.join(".", labels) + (isTerminal ? "." : "");
+		assert (node instanceof KVPathNode);
+		KVPathNode kvnode = (KVPathNode) node;
+
+		if (kvnode.pos == 0)
+			return null;
+
+		int pos = kvnode.pos - 1;
+		return new KVEdge(new KVPathNode(pos), kvnode, getLabels().get(pos));
+	}
+
+	@Override
+	public INode<KVValue, KVLabel> getRoot()
+	{
+		return new KVPathNode(0);
+	}
+
+	@Override
+	public IPath<KVValue, KVLabel> setValue(KVValue value)
+	{
+		return new KVPath(isRooted(), getLabels(), value);
 	}
 }
