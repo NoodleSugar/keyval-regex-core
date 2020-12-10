@@ -1,27 +1,57 @@
-package insomnia.automaton.edge;
+package insomnia.implem.FSA;
 
-import insomnia.automaton.state.IState;
+import java.text.NumberFormat;
+import java.text.ParseException;
 
-public class NumberEdge extends Edge
+import insomnia.FSA.AbstractFSAEdge;
+import insomnia.FSA.IFSALabel;
+import insomnia.FSA.IFSAState;
+
+public class FSAEdgeNumber<E, N extends Number> extends AbstractFSAEdge<E> implements IFSALabel<E>
 {
-	double num;
+	Number n;
 
-	protected NumberEdge(IState<String> parent, IState<String> child, double num)
+	public FSAEdgeNumber(IFSAState<E> parent, IFSAState<E> child, N n)
 	{
 		super(parent, child);
+		this.n = n;
 	}
 
 	@Override
-	public boolean isValid(String element)
+	public boolean test(E element)
 	{
 		try
 		{
-			return Double.compare(num, Double.parseDouble(element)) == 0;
+			return n.equals(NumberFormat.getInstance().parse(element.toString()));
 		}
-		catch(NumberFormatException nfe)
+		catch (ParseException e)
 		{
 			return false;
 		}
+	}
+
+	@Override
+	public boolean test()
+	{
+		return false;
+	}
+
+	@Override
+	public IFSALabel<E> getLabel()
+	{
+		return this;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (!(obj instanceof FSAEdgeNumber))
+			return false;
+
+		@SuppressWarnings("unchecked")
+		FSAEdgeNumber<E, N> edge = (FSAEdgeNumber<E, N>) obj;
+
+		return super.equals(obj) && n.equals(edge.n);
 	}
 
 }

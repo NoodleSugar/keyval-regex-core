@@ -1,15 +1,17 @@
-package insomnia.automaton.edge;
+package insomnia.implem.FSA;
 
-import insomnia.automaton.state.IState;
+import insomnia.FSA.AbstractFSAEdge;
+import insomnia.FSA.IFSALabel;
+import insomnia.FSA.IFSAState;
 
 /**
  * Edge for words
  */
-public class EdgeStringEqual extends Edge
+public class FSAEdgeStringEq<E> extends AbstractFSAEdge<E> implements IFSALabel<E>
 {
 	String strCmp;
 
-	public EdgeStringEqual(IState<String> parent, IState<String> child, String strCmp)
+	public FSAEdgeStringEq(IFSAState<E> parent, IFSAState<E> child, String strCmp)
 	{
 		super(parent, child);
 		this.strCmp = strCmp;
@@ -21,27 +23,46 @@ public class EdgeStringEqual extends Edge
 	}
 
 	@Override
-	public boolean isValid(String element)
+	public boolean test(E element)
 	{
-		return strCmp.equals(element);
+		return strCmp.equals(element.toString());
+	}
+
+	@Override
+	public boolean test()
+	{
+		return false;
 	}
 
 	@Override
 	public String toString()
 	{
-		return parent + " -> " + child + " : if equal " + strCmp;
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(parent).append(" -[\"").append(strCmp).append("\"]-> ").append(child);
+		return buffer.toString();
 	}
 
 	@Override
-	public boolean equals(Object o)
+	public boolean equals(Object obj)
 	{
-		if(!(o instanceof EdgeStringEqual))
+		if (!(obj instanceof FSAEdgeStringEq))
 			return false;
 
-		EdgeStringEqual e = (EdgeStringEqual) o;
-		if(e.parent.equals(parent) && e.child.equals(child) && e.strCmp.equals(strCmp))
-			return true;
+		@SuppressWarnings("unchecked")
+		FSAEdgeStringEq<E> edge = (FSAEdgeStringEq<E>) obj;
 
-		return false;
+		return super.equals(obj) && strCmp.equals(edge.strCmp);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return super.hashCode() + strCmp.hashCode();
+	}
+
+	@Override
+	public IFSALabel<E> getLabel()
+	{
+		return this;
 	}
 }

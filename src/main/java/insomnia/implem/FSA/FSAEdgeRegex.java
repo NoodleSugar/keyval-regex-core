@@ -1,46 +1,65 @@
-package insomnia.automaton.edge;
+package insomnia.implem.FSA;
 
 import java.util.regex.Pattern;
 
-import insomnia.automaton.state.IState;
+import insomnia.FSA.AbstractFSAEdge;
+import insomnia.FSA.IFSALabel;
+import insomnia.FSA.IFSAState;
 
 /**
  * Edge for regex
  */
-public class EdgeRegex extends Edge
+public class FSAEdgeRegex<E> extends AbstractFSAEdge<E> implements IFSALabel<E>
 {
-	String regex;
 	Pattern pattern;
 
-	public EdgeRegex(IState<String> parent, IState<String> child, String regex)
+	public FSAEdgeRegex(IFSAState<E> parent, IFSAState<E> child, String regex)
 	{
 		super(parent, child);
-		this.regex = regex;
 		pattern = Pattern.compile(regex);
 	}
 
 	@Override
-	public boolean isValid(String element)
+	public boolean test(E element)
 	{
-		return pattern.matcher(element).matches();
+		return pattern.matcher(element.toString()).matches();
+	}
+
+	@Override
+	public boolean test()
+	{
+		return false;
 	}
 
 	@Override
 	public String toString()
 	{
-		return parent + " -> " + child + " : if matches " + regex;
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(parent).append(" -/").append(pattern.toString()).append("/-> ").append(child);
+		return buffer.toString();
 	}
 
 	@Override
-	public boolean equals(Object o)
+	public boolean equals(Object obj)
 	{
-		if(!(o instanceof EdgeStringEqual))
+		if (!(obj instanceof FSAEdgeStringEq))
 			return false;
 
-		EdgeStringEqual e = (EdgeStringEqual) o;
-		if(e.parent.equals(parent) && e.child.equals(child) && e.strCmp.equals(regex))
-			return true;
-		
-		return false;
+		@SuppressWarnings("unchecked")
+		FSAEdgeRegex<E> edge = (FSAEdgeRegex<E>) obj;
+
+		return pattern.toString().equals(edge.pattern.toString());
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return super.hashCode() + pattern.toString().hashCode();
+	}
+
+	@Override
+	public IFSALabel<E> getLabel()
+	{
+		return this;
 	}
 }
