@@ -13,89 +13,84 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import insomnia.automaton.AutomatonException;
-import insomnia.kv.regex.RegexParser;
-import insomnia.kv.regex.automaton.VMRegexAutomaton;
-import insomnia.kv.regex.automaton.VMRegexAutomatonBuilder;
-import insomnia.kv.regex.automaton.RegexAutomatonBuilder.BuilderException;
-import insomnia.kv.regex.element.IElement;
+import insomnia.FSA.FSAException;
+import insomnia.implem.kv.regex.RegexParser;
+import insomnia.implem.kv.regex.automaton.VMRegexAutomaton;
+import insomnia.implem.kv.regex.automaton.VMRegexAutomatonBuilder;
+import insomnia.implem.kv.regex.element.IElement;
 
 class TestVMAutomaton
 {
-	static String regex = "a*.b?.c+|(d.(e|f)[2,5]).~r*e?g+~";
+	static String regex = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
 
 	static VMRegexAutomaton automaton;
-	
+
 	@BeforeAll
 	static void init()
 	{
-		RegexParser parser = new RegexParser();
-		IElement elements;
+		RegexParser             parser = new RegexParser();
+		IElement                elements;
 		VMRegexAutomatonBuilder builder;
 		try
 		{
-			elements = parser.readRegexStream(new ByteArrayInputStream(regex.getBytes()));
-			builder = new VMRegexAutomatonBuilder(elements);
+			elements  = parser.readRegexStream(new ByteArrayInputStream(regex.getBytes()));
+			builder   = new VMRegexAutomatonBuilder(elements);
 			automaton = builder.build();
 		}
-		catch(IOException | ParseException | BuilderException e)
+		catch (IOException | ParseException e)
 		{
 			fail(e.getMessage());
 		}
 	}
-	
+
 	ArrayList<String> array(String path)
 	{
 		ArrayList<String> a = new ArrayList<String>();
-		
-		for(String s : 	path.split("\\."))
+
+		for (String s : path.split("\\."))
 		{
 			a.add(s);
 		}
 		return a;
 	}
-	
+
 	@ParameterizedTest
-	@ValueSource(strings = {
-			"a.b.c", //
+	@ValueSource(strings = { "a.b.c", //
 			"b.c.c.c.c.c", //
 			"a.a.a.c.c", //
 			"c", //
 			"d.e.f.e.e.f.reg", //
 			"d.f.f.gggg", //
 			"d.e.e.rrrrrrreg", //
-			"c"
-	})
+			"c" })
 	void match(String s)
 	{
 		ArrayList<String> a = array(s);
 		try
 		{
-			assertTrue(automaton.run(a));
+			assertTrue(automaton.test(a));
 		}
-		catch(AutomatonException e)
+		catch (FSAException e)
 		{
 			fail("Regex Automaton Run Error : " + e.getMessage());
 		}
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {
-			"a.b.b.c", //
+	@ValueSource(strings = { "a.b.b.c", //
 			"a.b", //
 			"d.e.reg", //
 			"e.e.reg", //
 			"d.f.f.re", //
-			"a.b.c.e"
-	})
+			"a.b.c.e" })
 	void matchNot(String s)
 	{
 		ArrayList<String> a = array(s);
 		try
 		{
-			assertFalse(automaton.run(a));
+			assertFalse(automaton.test(a));
 		}
-		catch(AutomatonException e)
+		catch (FSAException e)
 		{
 			fail("Regex Automaton Run Error : " + e.getMessage());
 		}
