@@ -9,14 +9,14 @@ import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.data.tree.Path;
-import insomnia.data.tree.Paths;
+import insomnia.data.PathOp;
+import insomnia.implem.kv.data.KVPath;
 
 class TestPaths
 {
-	public static Path pathFromString(String p)
+	public static KVPath pathFromString(String p)
 	{
-		return Paths.pathFromString(p);
+		return KVPath.pathFromString(p);
 	}
 
 	static List<Object[]> isSimplePrefixSource()
@@ -43,9 +43,9 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("isSimplePrefixSource")
-	void isSimplePrefixTest(boolean proper, Path needle, Path haystack, boolean isPrefix)
+	void isSimplePrefixTest(boolean proper, KVPath needle, KVPath haystack, boolean isPrefix)
 	{
-		assertEquals(isPrefix, Paths.isSimplePrefix(needle, haystack, proper));
+		assertEquals(isPrefix, PathOp.isSimplePrefix(needle, haystack, proper));
 	}
 
 	static List<Object[]> isPrefixSource()
@@ -128,9 +128,9 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("isPrefixSource")
-	void isPrefixTest(boolean proper, Path needle, Path haystack, boolean isPrefix)
+	void isPrefixTest(boolean proper, KVPath needle, KVPath haystack, boolean isPrefix)
 	{
-		assertEquals(isPrefix, Paths.isPrefix(needle, haystack, proper));
+		assertEquals(isPrefix, PathOp.isPrefix(needle, haystack, proper));
 	}
 
 	static List<Object[]> isSimpleSuffixSource()
@@ -156,9 +156,9 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("isSimpleSuffixSource")
-	void isSimpleSuffixTest(boolean proper, Path needle, Path haystack, boolean isSuffix)
+	void isSimpleSuffixTest(boolean proper, KVPath needle, KVPath haystack, boolean isSuffix)
 	{
-		assertEquals(isSuffix, Paths.isSimpleSuffix(needle, haystack, proper));
+		assertEquals(isSuffix, PathOp.isSimpleSuffix(needle, haystack, proper));
 	}
 
 	static List<Object[]> isSuffixSource()
@@ -232,9 +232,9 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("isSuffixSource")
-	void isSuffixTest(boolean proper, Path needle, Path haystack, boolean isSuffix)
+	void isSuffixTest(boolean proper, KVPath needle, KVPath haystack, boolean isSuffix)
 	{
-		assertEquals(isSuffix, Paths.isSuffix(needle, haystack, proper));
+		assertEquals(isSuffix, PathOp.isSuffix(needle, haystack, proper));
 	}
 
 	static List<Object[]> findSimpleInclusionsSource()
@@ -257,9 +257,9 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findSimpleInclusionsSource")
-	void findSimpleInclusionTest(boolean noSuffOrPref, Path needle, Path haystack, int[] result)
+	void findSimpleInclusionTest(boolean noSuffOrPref, KVPath needle, KVPath haystack, int[] result)
 	{
-		assertArrayEquals(result, Paths.findSimpleInclusions(needle, haystack, noSuffOrPref));
+		assertArrayEquals(result, PathOp.findSimpleInclusions(needle, haystack, noSuffOrPref));
 	}
 
 	static List<Object[]> findInclusionsSource()
@@ -315,9 +315,9 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findInclusionsSource")
-	void findInclusionTest(boolean noSuffOrPref, Path needle, Path haystack, int[] result)
+	void findInclusionTest(boolean noSuffOrPref, KVPath needle, KVPath haystack, int[] result)
 	{
-		assertArrayEquals(result, Paths.findInclusions(needle, haystack, noSuffOrPref));
+		assertArrayEquals(result, PathOp.findInclusions(needle, haystack, noSuffOrPref));
 	}
 
 	static List<Object[]> findSimpleSuffixPrefixSource()
@@ -347,9 +347,9 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findSimpleSuffixPrefixSource")
-	void findSuffixPrefixTest(boolean proper, Path needle, Path haystack, int[] result)
+	void findSuffixPrefixTest(boolean proper, KVPath needle, KVPath haystack, int[] result)
 	{
-		assertArrayEquals(result, Paths.findSimpleSuffixPrefix(needle, haystack, proper));
+		assertArrayEquals(result, PathOp.findSimpleSuffixPrefix(needle, haystack, proper));
 	}
 
 	static List<Object[]> findSimplePrefixSuffixSource()
@@ -379,9 +379,9 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findSimplePrefixSuffixSource")
-	void findSimplePrefixSuffixTest(boolean proper, Path needle, Path haystack, int[] result)
+	void findSimplePrefixSuffixTest(boolean proper, KVPath needle, KVPath haystack, int[] result)
 	{
-		assertArrayEquals(result, Paths.findSimplePrefixSuffix(needle, haystack, proper));
+		assertArrayEquals(result, PathOp.findSimplePrefixSuffix(needle, haystack, proper));
 	}
 
 	static List<Object[]> findPossiblePrefixesSource()
@@ -457,9 +457,9 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findPossiblePrefixesSource")
-	void findPossiblePrefixesTest(boolean proper, Path needle, Path haystack, int[] result)
+	void findPossiblePrefixesTest(boolean proper, KVPath needle, KVPath haystack, int[] result)
 	{
-		assertArrayEquals(result, Paths.findPossiblePrefixes(needle, haystack, proper));
+		assertArrayEquals(result, PathOp.findPossiblePrefixes(needle, haystack, proper));
 	}
 
 	static List<Object[]> findPossibleSuffixesSource()
@@ -521,8 +521,8 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findPossibleSuffixesSource")
-	void findPossibleSuffixesTest(boolean proper, Path needle, Path haystack, int[] result)
+	void findPossibleSuffixesTest(boolean proper, KVPath needle, KVPath haystack, int[] result)
 	{
-		assertArrayEquals(result, Paths.findPossibleSuffixes(needle, haystack, proper));
+		assertArrayEquals(result, PathOp.findPossibleSuffixes(needle, haystack, proper));
 	}
 }
