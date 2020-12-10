@@ -1,4 +1,4 @@
-package insomnia.kv.regex.element;
+package insomnia.implem.kv.regex.element;
 
 /**
  * Regex element (delimited by ~)

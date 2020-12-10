@@ -1,13 +1,13 @@
-package insomnia.kv.regex.automaton;
+package insomnia.implem.kv.regex.automaton;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import insomnia.automaton.AutomatonException;
-import insomnia.automaton.IAutomaton;
-import insomnia.kv.regex.automaton.VMRegexAutomatonBuilder.InstructionData;
+import insomnia.FSA.FSAException;
+import insomnia.FSA.IFSAutomaton;
+import insomnia.implem.kv.regex.automaton.VMRegexAutomatonBuilder.InstructionData;
 
-public class VMRegexAutomaton implements IAutomaton<String>
+public class VMRegexAutomaton implements IFSAutomaton<String>
 {
 	protected enum Type
 	{
@@ -66,7 +66,7 @@ public class VMRegexAutomaton implements IAutomaton<String>
 	}
 
 	@Override
-	public boolean run(List<String> elements) throws AutomatonException
+	public boolean test(List<String> elements) throws FSAException
 	{
 		return run(elements, instructions.get(0), 0);
 	}

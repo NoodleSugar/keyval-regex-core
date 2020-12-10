@@ -1,4 +1,4 @@
-package insomnia.kv.regex.element;
+package insomnia.implem.kv.regex.element;
 
 public abstract class AbstractElement implements IElement
 {

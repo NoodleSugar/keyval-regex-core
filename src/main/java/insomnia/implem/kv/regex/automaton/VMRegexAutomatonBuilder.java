@@ -1,23 +1,22 @@
-package insomnia.kv.regex.automaton;
+package insomnia.implem.kv.regex.automaton;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
-import insomnia.kv.regex.automaton.RegexAutomatonBuilder.BuilderException;
-import insomnia.kv.regex.automaton.VMRegexAutomaton.Type;
-import insomnia.kv.regex.element.IElement;
-import insomnia.kv.regex.element.Key;
-import insomnia.kv.regex.element.MultipleElement;
-import insomnia.kv.regex.element.OrElement;
-import insomnia.kv.regex.element.Quantifier;
-import insomnia.kv.regex.element.Regex;
+import insomnia.implem.kv.regex.automaton.VMRegexAutomaton.Type;
+import insomnia.implem.kv.regex.element.IElement;
+import insomnia.implem.kv.regex.element.Key;
+import insomnia.implem.kv.regex.element.MultipleElement;
+import insomnia.implem.kv.regex.element.OrElement;
+import insomnia.implem.kv.regex.element.Quantifier;
+import insomnia.implem.kv.regex.element.Regex;
 
 public class VMRegexAutomatonBuilder
 {
 	protected class InstructionData
 	{
-		public Type type;
+		public Type   type;
 		public String str;
 
 		public int inst1;
@@ -25,8 +24,8 @@ public class VMRegexAutomatonBuilder
 
 		public InstructionData(Type t, String s, int i1, int i2)
 		{
-			type = t;
-			str = s;
+			type  = t;
+			str   = s;
 			inst1 = i1;
 			inst2 = i2;
 		}
@@ -34,81 +33,81 @@ public class VMRegexAutomatonBuilder
 
 	List<InstructionData> instructions;
 
-	public VMRegexAutomatonBuilder(IElement elements) throws BuilderException
+	public VMRegexAutomatonBuilder(IElement elements)
 	{
 		instructions = new ArrayList<>();
 		recursiveConstruct(elements, 0, true);
 	}
 
-	private int recursiveConstruct(IElement element, int current, boolean matching) throws BuilderException
+	private int recursiveConstruct(IElement element, int current, boolean matching)
 	{
-		Quantifier q = element.getQuantifier();
-		int inf = q.getInf();
-		int sup = q.getSup();
+		Quantifier q   = element.getQuantifier();
+		int        inf = q.getInf();
+		int        sup = q.getSup();
 
-		for(int i = 0; i < inf; i++)
+		for (int i = 0; i < inf; i++)
 			current = subRecursiveConstruct(element, current, matching);
-		if(sup == -1)
+		if (sup == -1)
 		{
 			InstructionData split = //
-					new InstructionData(Type.SPLIT, null, ++current, 0);
+				new InstructionData(Type.SPLIT, null, ++current, 0);
 			instructions.add(split);
 			int next = subRecursiveConstruct(element, current, matching);
 			instructions.add(split);
 
 			split.inst2 = ++next;
-			current = next;
+			current     = next;
 		}
 		else
 		{
 			ArrayList<InstructionData> splits = new ArrayList<>();
-			for(int i = 0; i < sup - inf; i++)
+			for (int i = 0; i < sup - inf; i++)
 			{
 				InstructionData split = //
-						new InstructionData(Type.SPLIT, null, ++current, 0);
+					new InstructionData(Type.SPLIT, null, ++current, 0);
 				instructions.add(split);
 				splits.add(split);
 				current = subRecursiveConstruct(element, current, matching);
 			}
-			for(InstructionData split : splits)
+			for (InstructionData split : splits)
 				split.inst2 = current;
 		}
 
 		return current;
 	}
 
-	private int subRecursiveConstruct(IElement element, int current, boolean matching) throws BuilderException
+	private int subRecursiveConstruct(IElement element, int current, boolean matching)
 	{
-		if(element instanceof Key)
+		if (element instanceof Key)
 		{
 			Key key = (Key) element;
 			instructions.add(new InstructionData(Type.KEY, key.getLabel(), ++current, 0));
-			if(matching)
+			if (matching)
 				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
 		}
-		else if(element instanceof Regex)
+		else if (element instanceof Regex)
 		{
 			Regex regex = (Regex) element;
 			instructions.add(new InstructionData(Type.REGEX, regex.getRegex(), ++current, 0));
-			if(matching)
+			if (matching)
 				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
 		}
-		else if(element instanceof OrElement)
+		else if (element instanceof OrElement)
 		{
-			OrElement oe = (OrElement) element;
-			int n = oe.size();
+			OrElement  oe   = (OrElement) element;
+			int        n    = oe.size();
 			IElement[] elts = new IElement[n];
 			elts = oe.toArray(elts);
 
 			ArrayList<InstructionData> jumps = new ArrayList<>();
-			for(int i = 0; i < n - 1; i++)
+			for (int i = 0; i < n - 1; i++)
 			{
 				InstructionData split, jump;
 				split = new InstructionData(Type.SPLIT, null, ++current, 0);
 				instructions.add(split);
 
 				current = recursiveConstruct(elts[i], current, false);
-				if(matching)
+				if (matching)
 					instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
 				else
 				{
@@ -120,17 +119,17 @@ public class VMRegexAutomatonBuilder
 				split.inst2 = current;
 			}
 			current = recursiveConstruct(elts[n - 1], current, false);
-			for(InstructionData jump : jumps)
+			for (InstructionData jump : jumps)
 				jump.inst1 = current;
-			if(matching)
+			if (matching)
 				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
 		}
-		else if(element instanceof MultipleElement)
+		else if (element instanceof MultipleElement)
 		{
 			MultipleElement me = (MultipleElement) element;
-			for(IElement e : me)
+			for (IElement e : me)
 				current = recursiveConstruct(e, current, false);
-			if(matching)
+			if (matching)
 				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
 		}
 		else

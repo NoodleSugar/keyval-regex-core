@@ -1,454 +1,263 @@
-package insomnia.kv.regex.automaton;
+package insomnia.implem.kv.regex.automaton;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
 
-import insomnia.automaton.AutomatonException;
-import insomnia.kv.regex.element.Const;
-import insomnia.kv.regex.element.IElement;
-import insomnia.kv.regex.element.Key;
-import insomnia.kv.regex.element.MultipleElement;
-import insomnia.kv.regex.element.OrElement;
-import insomnia.kv.regex.element.Quantifier;
-import insomnia.kv.regex.element.Regex;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DirectedPseudograph;
 
-public class RegexAutomatonBuilder
+import insomnia.FSA.FSAException;
+import insomnia.FSA.IFSAutomaton;
+import insomnia.implem.FSA.GCEdgeData;
+import insomnia.implem.FSA.GCEdgeData.Type;
+import insomnia.implem.FSA.GCState;
+import insomnia.implem.FSA.GraphChunk;
+import insomnia.implem.kv.regex.element.Const;
+import insomnia.implem.kv.regex.element.IElement;
+import insomnia.implem.kv.regex.element.Key;
+import insomnia.implem.kv.regex.element.MultipleElement;
+import insomnia.implem.kv.regex.element.OrElement;
+import insomnia.implem.kv.regex.element.Quantifier;
+import insomnia.implem.kv.regex.element.Regex;
+
+public class RegexAutomatonFactory<E>
 {
-	public class BuilderException extends Exception
+	private class GChunk extends GraphChunk
 	{
-		private static final long serialVersionUID = 7602220617759700956L;
-
-		public BuilderException(String message)
+		public GChunk()
 		{
-			super(message);
+			super(null, null, graphSupplier());
 		}
 
-		public BuilderException(Throwable cause)
+		public GChunk(GCState start, GCState end)
 		{
-			super(cause);
+			super(start, end, graphSupplier());
 		}
 
-		public BuilderException(String message, Throwable cause)
+		public GChunk copy()
 		{
-			super(message, cause);
-		}
-	}
-
-	protected static class EdgeData
-	{
-		protected int startState;
-		protected int endState;
-		protected String str;
-		protected double num;
-		protected Type type;
-
-		public enum Type
-		{
-			EPSILON, STRING_EQUALS, NUMBER, REGEX;
-		};
-
-		public EdgeData(int start, int end, String str, Type type)
-		{
-			startState = start;
-			endState = end;
-			this.str = str;
-			this.type = type;
-		}
-
-		public EdgeData(int start, int end, double number, Type type)
-		{
-			startState = start;
-			endState = end;
-			this.type = type;
-			num = number;
+			GChunk cpy = new GChunk();
+			copy(cpy);
+			return cpy;
 		}
 
 		@Override
-		public boolean equals(Object o)
+		public GCState freshState()
 		{
-			if(o == null)
-				return false;
-			if(o instanceof EdgeData)
+			return RegexAutomatonFactory.this.freshState();
+		}
+
+		public void cleanGraph()
+		{
+			setGraph(graphSupplier());
+		}
+
+		public GCState addVertex()
+		{
+			GCState state = freshState();
+			addVertex(state);
+			return state;
+		}
+
+		public void addVertex(GCState vertex)
+		{
+			getGraph().addVertex(vertex);
+		}
+
+		public void prependEdge(GCState start, GCEdgeData e)
+		{
+			addEdge(start, getStart(), e);
+			setStart(start);
+		}
+
+		public void appendEdge(GCState end, GCEdgeData e)
+		{
+			addEdge(getEnd(), end, e);
+			setEnd(end);
+		}
+
+		public void addEdge(GCState sourceVertex, GCState targetVertex, GCEdgeData e)
+		{
+			getGraph().addEdge(sourceVertex, targetVertex, e);
+
+			if (e.getType() == Type.EPSILON)
+				setProperties(getProperties().setSynchronous(false));
+		}
+
+		public void concat(GChunk b, int nb)
+		{
+			while (nb-- != 0)
 			{
-				EdgeData d = (EdgeData) o;
-				if(startState == d.startState && endState == d.endState
-						&& ((str == null && d.str == null) || (str != null && str.equals(d.str))))
-					return true;
-			}
-			return false;
-		}
+				concat(b);
 
-		@Override
-		public String toString()
-		{
-			return startState + ":" + endState + " " + str;
-		}
-	}
+				if (nb == 0)
+					break;
 
-	protected int initialState;
-	protected int junctionState;
-	protected TreeSet<Integer> finalState;
-	protected TreeSet<Integer> states;
-	protected HashMap<Integer, ArrayList<EdgeData>> edges;
-
-	{
-		initialState = 0;
-		junctionState = -1;
-		finalState = new TreeSet<Integer>();
-		states = new TreeSet<Integer>();
-		states.add(0);
-		edges = new HashMap<Integer, ArrayList<EdgeData>>();
-	}
-
-	public RegexAutomatonBuilder(IElement elements) throws BuilderException
-	{
-		this();
-		recursiveConstruct(elements, this);
-	}
-
-	private RegexAutomatonBuilder()
-	{
-	}
-
-	private void copy(RegexAutomatonBuilder builder)
-	{
-		initialState = builder.initialState;
-		junctionState = builder.junctionState;
-		finalState = builder.finalState;
-		states = builder.states;
-		edges = builder.edges;
-	}
-
-	private void addFinalState(int end)
-	{
-		finalState.add(end);
-		junctionState = end;
-	}
-
-	private void addState(int state) throws BuilderException
-	{
-		if(!states.add(state))
-			throw new BuilderException("State " + state + " already in");
-	}
-
-	private int addState()
-	{
-		int state = states.last() + 1;
-		states.add(state);
-		return state;
-	}
-
-	private void addEdge(int startState, int endState, String str, EdgeData.Type type) throws BuilderException
-	{
-		EdgeData edge = new EdgeData(startState, endState, str, type);
-		ArrayList<EdgeData> stateEdges;
-		if(edges.containsKey(startState))
-		{
-			stateEdges = edges.get(startState);
-			if(stateEdges.contains(edge))
-				throw new BuilderException("Edge " + edge + " already in");
-		}
-		else
-		{
-			stateEdges = new ArrayList<EdgeData>();
-			edges.put(startState, stateEdges);
-		}
-		stateEdges.add(edge);
-	}
-	
-	private void addEdge(int startState, int endState, double number) throws BuilderException
-	{
-		EdgeData edge = new EdgeData(startState, endState, number, EdgeData.Type.NUMBER);
-		ArrayList<EdgeData> stateEdges;
-		if(edges.containsKey(startState))
-			stateEdges = edges.get(startState);
-		else
-		{
-			stateEdges = new ArrayList<EdgeData>();
-			edges.put(startState, stateEdges);
-		}
-		stateEdges.add(edge);
-	}
-
-	private int mergeBuilder(int start, int end, RegexAutomatonBuilder builder) throws BuilderException
-	{
-		int last = states.last();
-
-		// On supprime la jonction de fin du builder import�
-		if(end != -1)
-			builder.states.remove(builder.junctionState);
-
-		// On ajout les états en réindixant
-		for(int state : builder.states)
-			states.add(state + last);
-
-		// On ajoute les arcs en réindexant les états de début et fin
-		int startState;
-		int endState;
-		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : builder.edges.entrySet())
-		{
-			int edgeStartState = entry.getKey();
-			for(EdgeData d : entry.getValue())
-			{
-				if(edgeStartState == builder.initialState)
-					startState = start;
-				else if(end != -1 && edgeStartState == builder.junctionState)
-					startState = end;
-				else
-					startState = edgeStartState + last;
-
-				if(d.endState == builder.initialState)
-					endState = start;
-				else if(end != -1 && d.endState == builder.junctionState)
-					endState = end;
-				else
-					endState = d.endState + last;
-
-				addEdge(startState, endState, d.str, d.type);
+				b = b.copy();
 			}
 		}
-
-		// On remet la jonction de fin précédement supprimée
-		if(end != -1)
-			builder.states.add(builder.junctionState);
-
-		return end != -1 ? end : builder.junctionState + last;
 	}
 
-	public RegexAutomatonBuilder determinize()
+	private GChunk  automaton;
+	private boolean mustBeSync = false;
+
+	private int currentId = 0;
+
+	private static Graph<GCState, GCEdgeData> graphSupplier()
 	{
-		// On parcourt tous les états de l'automate possédant des transitions
-		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : edges.entrySet())
-		{
-			int state = entry.getKey();
-			List<EdgeData> stateEdges = entry.getValue();
-			/*
-			 * Gestion des epsilon transitions
-			 */
-			// On calcule la epsilon fermeture de l'état
-			// puis on supprime ses epsilon transitions
-			List<Integer> closure = new ArrayList<>();
-			epsilonClosure(state, closure);
-			stateEdges.removeIf(e -> e.startState == state && e.type == EdgeData.Type.EPSILON);
+		return new DirectedPseudograph<>(null, null, false);
+	}
 
-			// Pour chaque état de la epsilon fermeture
-			for(int s : closure)
-			{
-				// Si cet état est final
-				if(finalState.contains(s))
-					// L'état actuel devient final
-					finalState.add(state);
+	public RegexAutomatonFactory(IElement elements)// throws BuilderException
+	{
+		automaton = recursiveConstruct(elements);
+	}
 
-				// Pour chaque transition sortante de cet état
-				ArrayList<EdgeData> nextEdges = edges.get(s);
-				if(nextEdges == null)
-					continue;
-				for(EdgeData edge : nextEdges)
-				{
-					// Si ce n'est pas une epsilon transition
-					if(edge.type != EdgeData.Type.EPSILON)
-						// On ajoute la transition à l'état actuel
-						stateEdges.add(new EdgeData(state, edge.endState, edge.str, edge.type));
-				}
-			}
-
-			/*
-			 * Gestion collision entre label et label regex
-			 */
-			// Pour chaque transition sortante de l'état actuel
-			for(EdgeData edge : stateEdges)
-			{
-				// Si c'est une regex transition
-				if(edge.type == EdgeData.Type.REGEX)
-				{
-					// Pour chaque autre transition non regex
-					for(EdgeData e : stateEdges)
-					{
-						// Si il y a collision
-						if(e.type == EdgeData.Type.STRING_EQUALS && e.str.matches(edge.str))
-						{
-							// On ajoute une nouvelle transition (si elle n'existe pas déja)
-							// du noeud de départ vers le noeuds d'arrivée de la regex transition
-							// et ayant pour label celui de la collision
-							EdgeData newEdge = new EdgeData(state, edge.endState, e.str, EdgeData.Type.STRING_EQUALS);
-							if(!stateEdges.contains(newEdge))
-								stateEdges.add(newEdge);
-						}
-					}
-				}
-			}
-		}
-
-		// Suppression des noeuds innaccessibles et de leurs arcs
-		cleanInaccessible();
-
+	public RegexAutomatonFactory<E> mustBeSync(boolean val)
+	{
+		mustBeSync = val;
 		return this;
 	}
 
-	// Calcule la epsilon fermeture de l'état state, privée de ce dernier
-	private void epsilonClosure(int state, List<Integer> closure)
+	private GCState freshState()
 	{
-		List<EdgeData> stateEdges = edges.get(state);
-		if(stateEdges == null)
-			return;
-		for(EdgeData edge : stateEdges)
-		{
-			// Si l'arc est une epsilon transition
-			if(edge.type == EdgeData.Type.EPSILON)
-			{
-				// On ajoute l'état pointé par la transition dans la fermeture
-				closure.add(edge.endState);
-				epsilonClosure(edge.endState, closure);
-			}
-		}
+		return new GCState(currentId++);
 	}
 
-	private void cleanInaccessible()
+	public IFSAutomaton<E> newBuild() throws FSAException
 	{
-		ArrayList<Integer> accessibleStates = new ArrayList<>();
-		accessibleStates.add(initialState);
-		getAccessibles(initialState, accessibleStates);
-		for(int state : states)
-		{
-			if(!accessibleStates.contains(state))
-				edges.remove(state);
-		}
-		states.removeIf(state -> !accessibleStates.contains(state));
+		return new RegexAutomatonBuilder<E>(automaton).mustBeSync(mustBeSync).newBuild();
 	}
 
-	private void getAccessibles(int state, List<Integer> accessibles)
+	private GChunk oneEdge(GCEdgeData edge)
 	{
-		List<EdgeData> stateEdges = edges.get(state);
-		if(stateEdges == null)
-			return;
-		for(EdgeData edge : stateEdges)
-		{
-			int nextState = edge.endState;
-			if(!accessibles.contains(nextState))
-			{
-				accessibles.add(nextState);
-				getAccessibles(nextState, accessibles);
-			}
-		}
+		GCState a, b;
+		GChunk  ret = new GChunk(a = freshState(), b = freshState());
+		ret.addVertex(a);
+		ret.addVertex(b);
+		ret.addEdge(a, b, edge);
+		return ret;
 	}
 
-	private void recursiveConstruct(IElement element, RegexAutomatonBuilder builder) throws BuilderException
+	private GChunk recursiveConstruct(IElement element)// throws BuilderException
 	{
-		if(element instanceof Key)
+		GChunk currentAutomaton;
+
+		if (element instanceof Key)
 		{
 			Key key = (Key) element;
-			builder.addFinalState(1);
-			builder.addState(1);
-			builder.addEdge(0, 1, key.getLabel(), EdgeData.Type.STRING_EQUALS);
+			currentAutomaton = oneEdge(new GCEdgeData(key.getLabel(), GCEdgeData.Type.STRING_EQUALS));
 		}
-		else if(element instanceof Regex)
+		else if (element instanceof Regex)
 		{
 			Regex regex = (Regex) element;
-			builder.addFinalState(1);
-			builder.addState(1);
-			builder.addEdge(0, 1, regex.getRegex(), EdgeData.Type.REGEX);
+			currentAutomaton = oneEdge(new GCEdgeData(regex.getRegex(), GCEdgeData.Type.REGEX));
 		}
-		else if(element instanceof OrElement)
-		{
-			OrElement oe = (OrElement) element;
-			builder.addState(1);
-			builder.addFinalState(1);
-			for(IElement e : oe)
-			{
-				RegexAutomatonBuilder newBuilder = new RegexAutomatonBuilder();
-				recursiveConstruct(e, newBuilder);
-				int start = builder.addState();
-				builder.addEdge(0, start, null, EdgeData.Type.EPSILON);
-				builder.mergeBuilder(start, 1, newBuilder);
-			}
-		}
-		else if(element instanceof MultipleElement)
-		{
-			MultipleElement me = (MultipleElement) element;
-			int start;
-			int end = 0;
-			for(IElement e : me)
-			{
-				start = end;
-				RegexAutomatonBuilder newBuilder = new RegexAutomatonBuilder();
-				recursiveConstruct(e, newBuilder);
-				end = builder.mergeBuilder(start, -1, newBuilder);
-			}
-			builder.addFinalState(end);
-		}
-		else if(element instanceof Const)
+		else if (element instanceof Const)
 		{
 			Const c = (Const) element;
-			builder.addFinalState(1);
-			builder.addState(1);
-			if(c.isNumber())
-				builder.addEdge(0, 1, c.num);
+
+			if (c.isNumber())
+				currentAutomaton = oneEdge(new GCEdgeData(c.num, GCEdgeData.Type.NUMBER));
 			else
-				builder.addEdge(0, 1, c.str, EdgeData.Type.STRING_EQUALS);
+				currentAutomaton = oneEdge(new GCEdgeData(c.str, GCEdgeData.Type.STRING_EQUALS));
+		}
+		else if (element instanceof OrElement)
+		{
+			OrElement orElement = (OrElement) element;
+
+			List<GChunk> gcs = new ArrayList<>(orElement.size());
+
+			for (IElement ie : orElement)
+			{
+				GChunk gc = recursiveConstruct(ie);
+
+				if (gc.getGraph().inDegreeOf(gc.getStart()) > 0)
+					gc.prependEdge(gc.addVertex(), new GCEdgeData(Type.EPSILON));
+
+				if (gc.getGraph().outDegreeOf(gc.getEnd()) > 0)
+					gc.appendEdge(gc.addVertex(), new GCEdgeData(Type.EPSILON));
+
+				gcs.add(gc);
+			}
+			currentAutomaton = gcs.get(0);
+
+			for (int i = 1, c = gcs.size(); i < c; i++)
+				currentAutomaton.glue(gcs.get(i));
+		}
+		else if (element instanceof MultipleElement)
+		{
+			MultipleElement me = (MultipleElement) element;
+
+			Iterator<IElement> iterator = me.iterator();
+			currentAutomaton = recursiveConstruct(iterator.next());
+
+			while (iterator.hasNext())
+				currentAutomaton.concat(recursiveConstruct(iterator.next()));
 		}
 		else
 			throw new InvalidParameterException("Invalid type for parameter");
 
+		/*
+		 * Make the quantifier
+		 */
 		Quantifier q = element.getQuantifier();
+
 		int inf = q.getInf();
 		int sup = q.getSup();
 
-		if(inf != 1 || sup != 1)
+		if (inf != 1 || sup != 1)
 		{
-			RegexAutomatonBuilder quantifiedBuilder = new RegexAutomatonBuilder();
-			int start = 0;
-			for(int i = 0; i < inf; i++)
-				start = quantifiedBuilder.mergeBuilder(start, -1, builder);
+			GChunk base = currentAutomaton.copy();
 
-			if(sup == -1)
+			if (inf == 1)
+				;
+			else if (inf == 0)
 			{
-				quantifiedBuilder.mergeBuilder(start, start, builder);
-				int end = quantifiedBuilder.addState();
-				quantifiedBuilder.addEdge(start, end, null, EdgeData.Type.EPSILON);
-				start = end;
+				currentAutomaton.cleanGraph();
+				;
+				currentAutomaton.addVertex(currentAutomaton.getStart());
+				currentAutomaton.addVertex(currentAutomaton.getEnd());
+				currentAutomaton.addEdge(currentAutomaton.getStart(), currentAutomaton.getEnd(), new GCEdgeData(GCEdgeData.Type.EPSILON));
+			}
+			else if (inf > 1)
+				currentAutomaton.concat(base.copy(), inf - 1);
+			else
+				throw new InvalidParameterException("inf: " + inf);
+
+			// Infty repeat
+			if (sup == -1)
+			{
+				if (inf == 0)
+					currentAutomaton.glue(base);
+
+				currentAutomaton.addEdge(currentAutomaton.getEnd(), currentAutomaton.getStart(), new GCEdgeData(GCEdgeData.Type.EPSILON));
 			}
 			else
 			{
-				int end = quantifiedBuilder.addState();
-				for(int i = 0; i < sup - inf - 1; i++)
+				if (sup < inf)
+					throw new InvalidParameterException();
+				if (sup != inf)
 				{
-					quantifiedBuilder.addEdge(start, end, null, EdgeData.Type.EPSILON);
-					start = quantifiedBuilder.mergeBuilder(start, -1, builder);
-				}
-				quantifiedBuilder.addEdge(start, end, null, EdgeData.Type.EPSILON);
-				start = quantifiedBuilder.mergeBuilder(start, end, builder);
-			}
-			quantifiedBuilder.addFinalState(start);
-			builder.copy(quantifiedBuilder);
-		}
-	}
+					base.addEdge(base.getStart(), base.getEnd(), new GCEdgeData(GCEdgeData.Type.EPSILON));
+					GChunk repeat = base.copy();
+					repeat.concat(base.copy(), sup - inf - 1);
 
-	public RegexAutomaton build() throws AutomatonException
-	{
-		return new RegexAutomaton(this);
+					if (inf == 0)
+						currentAutomaton.glue(repeat);
+					else
+						currentAutomaton.concat(base, sup - inf);
+				}
+			}
+		}
+		return currentAutomaton;
 	}
 
 	@Override
 	public String toString()
 	{
-		StringBuffer s = new StringBuffer();
-
-		s.append("Initial : ").append(initialState).append("\nJunction : ").append(junctionState).append("\nNodes : {");
-		for(int state : states)
-			s.append(state).append(" ");
-		s.append("}\n");
-
-		s.append("Edges :\n");
-		for(Map.Entry<Integer, ArrayList<EdgeData>> entry : edges.entrySet())
-		{
-			for(EdgeData d : entry.getValue())
-				s.append(d).append("\n");
-		}
-
-		return s.toString();
+		return automaton.getGraph().toString();
 	}
 }
