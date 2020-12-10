@@ -1,10 +1,11 @@
-package insomnia.FSA;
+package fsa;
 
 import java.util.Collection;
 import java.util.List;
 
 /**
- * Classic graph automaton
+ * Classic graph automaton representation.
+ * 
  * E : type of tested elements
  */
 public interface IGFSAutomaton<E> extends IFSAutomaton<E>

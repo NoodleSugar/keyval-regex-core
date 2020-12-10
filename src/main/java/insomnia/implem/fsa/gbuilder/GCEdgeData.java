@@ -1,4 +1,4 @@
-package insomnia.implem.FSA;
+package insomnia.implem.fsa.gbuilder;
 
 public class GCEdgeData
 {

@@ -1,9 +1,9 @@
-package insomnia.FSA;
+package fsa;
 
 import java.util.List;
 import java.util.function.Predicate;
 
-import insomnia.FSA.algorithm.IFSAAValidation;
+import fsa.algorithm.IFSAAValidation;
 
 /**
  * View an {@link IFSAutomaton} associated with a {@lin IFSAValidationk} as a {@link Predicate}.
@@ -11,13 +11,13 @@ import insomnia.FSA.algorithm.IFSAAValidation;
  * @author zuri
  * @param <E> Type of elements to test
  */
-public class FSAAPredicate<E, A extends IFSAutomaton<E>> implements Predicate<List<E>>
+public class FSAA_as_Predicate<E, A extends IFSAutomaton<E>> implements Predicate<List<E>>
 {
 	A automaton;
 
 	IFSAAValidation<E, A> validation;
 
-	public FSAAPredicate(A automaton, IFSAAValidation<E, A> validation)
+	public FSAA_as_Predicate(A automaton, IFSAAValidation<E, A> validation)
 	{
 		this.automaton  = automaton;
 		this.validation = validation;

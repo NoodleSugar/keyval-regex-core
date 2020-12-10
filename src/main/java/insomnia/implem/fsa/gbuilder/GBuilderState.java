@@ -1,11 +1,13 @@
-package insomnia.FSA.gbuilder;
+package insomnia.implem.fsa.gbuilder;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import insomnia.FSA.IFSAEdge;
-import insomnia.FSA.IFSAState;
+import fsa.IFSAEdge;
+import fsa.gbuilder.IGBuilderState;
 
-public class GBuilderState<E> implements IFSAState<E>
+public class GBuilderState<E> implements IGBuilderState<E>
 {
 	int               id;
 	List<IFSAEdge<E>> childs;
@@ -13,6 +15,23 @@ public class GBuilderState<E> implements IFSAState<E>
 	public GBuilderState(int id)
 	{
 		this.id = id;
+	}
+
+	@Override
+	public Collection<IGBuilderState<E>> getChilds()
+	{
+		Collection<IGBuilderState<E>> ret = new ArrayList<>(childs.size());
+
+		for (IFSAEdge<E> edge : childs)
+			ret.add((IGBuilderState<E>) edge.getChild());
+
+		return ret;
+	}
+
+	@Override
+	public Collection<IFSAEdge<E>> getEdges()
+	{
+		return childs;
 	}
 
 	@SuppressWarnings("unchecked")

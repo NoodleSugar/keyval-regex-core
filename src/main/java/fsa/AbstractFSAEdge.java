@@ -1,4 +1,4 @@
-package insomnia.FSA;
+package fsa;
 
 public abstract class AbstractFSAEdge<E> implements IFSAEdge<E>
 {

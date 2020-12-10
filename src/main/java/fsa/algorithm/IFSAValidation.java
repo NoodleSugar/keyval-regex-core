@@ -1,6 +1,6 @@
-package insomnia.FSA.algorithm;
+package fsa.algorithm;
 
-import insomnia.FSA.IFSAutomaton;
+import fsa.IFSAutomaton;
 
 public interface IFSAValidation<E> extends IFSAAValidation<E, IFSAutomaton<E>>
 {

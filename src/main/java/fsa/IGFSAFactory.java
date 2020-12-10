@@ -1,9 +1,16 @@
-package insomnia.FSA;
+package fsa;
 
 import java.util.Collection;
 
-import insomnia.FSA.algorithm.IFSAAValidation;
+import fsa.algorithm.IFSAAValidation;
 
+/**
+ * Factory of Graph automaton.
+ * 
+ * @author zuri
+ *
+ * @param <E>
+ */
 public interface IGFSAFactory<E>
 {
 	IGFSAutomaton<E> get( //

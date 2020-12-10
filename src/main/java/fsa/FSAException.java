@@ -1,4 +1,4 @@
-package insomnia.FSA;
+package fsa;
 
 public class FSAException extends Exception
 {

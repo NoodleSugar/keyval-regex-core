@@ -1,11 +1,11 @@
-package insomnia.implem.FSA;
+package insomnia.implem.fsa;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
 
-import insomnia.FSA.AbstractFSAEdge;
-import insomnia.FSA.IFSALabel;
-import insomnia.FSA.IFSAState;
+import fsa.AbstractFSAEdge;
+import fsa.IFSALabel;
+import fsa.IFSAState;
 
 public class FSAEdgeNumber<E, N extends Number> extends AbstractFSAEdge<E> implements IFSALabel<E>
 {

@@ -1,4 +1,4 @@
-package insomnia.FSA.gbuilder;
+package insomnia.implem.fsa.gbuilder;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -11,22 +11,28 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import insomnia.FSA.AbstractFSAEdge;
-import insomnia.FSA.FSAException;
-import insomnia.FSA.IFSAEdge;
-import insomnia.FSA.IFSAState;
-import insomnia.FSA.IFSAutomaton;
-import insomnia.FSA.IGFSAutomaton;
-import insomnia.FSA.algorithm.GFSAValidation;
-import insomnia.implem.FSA.FSAEdgeEpsilon;
-import insomnia.implem.FSA.FSAEdgeNumber;
-import insomnia.implem.FSA.FSAEdgeRegex;
-import insomnia.implem.FSA.FSAEdgeStringEq;
-import insomnia.implem.FSA.GCEdgeData;
-import insomnia.implem.FSA.GCEdgeData.Type;
-import insomnia.implem.FSA.GCState;
-import insomnia.implem.FSA.GraphChunk;
+import fsa.AbstractFSAEdge;
+import fsa.FSAException;
+import fsa.IFSAEdge;
+import fsa.IFSAState;
+import fsa.IFSAutomaton;
+import fsa.IGFSAutomaton;
+import fsa.algorithm.GFSAValidation;
+import fsa.gbuilder.IGBuilderFSAFactory;
+import insomnia.implem.fsa.FSAEdgeEpsilon;
+import insomnia.implem.fsa.FSAEdgeNumber;
+import insomnia.implem.fsa.FSAEdgeRegex;
+import insomnia.implem.fsa.FSAEdgeStringEq;
+import insomnia.implem.fsa.gbuilder.GCEdgeData.Type;
 
+/**
+ * A specific builder for {@link IGFSAutomaton}.
+ * This class can build a {@link IGFSAutomaton} given an intermediated representation of the automaton {@link GraphChunk}.
+ * 
+ * @author zuri
+ * @param <E>
+ * @param <STATE>
+ */
 public class GBuilder<E, STATE extends GBuilderState<E>>
 {
 	Map<GCState, STATE> buildStates = new HashMap<>();
@@ -34,16 +40,17 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 	Set<IFSAEdge<E>> buildEdges      = new HashSet<>();
 	Set<GCState>     processedStates = new HashSet<>();
 
-	GBuilderFSA<E> buildAutomaton;
+	Collection<IFSAState<E>> states;
+	Collection<IFSAState<E>> finals;
+	Collection<IFSAEdge<E>>  edges;
 
 	GraphChunk automaton;
 	boolean    mustBeSync;
 
 	Function<Integer, STATE> stateSupplier;
+	IGBuilderFSAFactory<E>   builderFactory;
 
-	GBuilderFSAFactory<E> builderFactory;
-
-	public GBuilder(GraphChunk gc, Function<Integer, STATE> stateSupplier, GBuilderFSAFactory<E> builderFactory)
+	public GBuilder(GraphChunk gc, Function<Integer, STATE> stateSupplier, IGBuilderFSAFactory<E> builderFactory)
 	{
 		automaton = gc;
 
@@ -57,7 +64,7 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		return this;
 	}
 
-	public STATE makeState(GCState state)
+	private STATE makeState(GCState state)
 	{
 		STATE ret = buildStates.get(state);
 
@@ -69,7 +76,7 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		return ret;
 	}
 
-	public AbstractFSAEdge<E> makeEdge(GCEdgeData edgeData, IFSAState<E> parent, IFSAState<E> child) throws FSAException
+	private AbstractFSAEdge<E> makeEdge(GCEdgeData edgeData, IFSAState<E> parent, IFSAState<E> child) throws FSAException
 	{
 		AbstractFSAEdge<E> ret;
 
@@ -78,7 +85,7 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		case EPSILON:
 			ret = new FSAEdgeEpsilon<E>(parent, child);
 
-			if (buildAutomaton.getProperties().isSynchronous())
+			if (automaton.getProperties().isSynchronous())
 				throw new FSAException("Synchronous Automaton expected");
 			break;
 		case NUMBER:
@@ -106,20 +113,15 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		STATE initialState = makeState(automaton.getStart());
 		STATE finalState   = makeState(automaton.getEnd());
 
-		Collection<IFSAState<E>> states = new HashSet<>(automaton.getGraph().vertexSet().size());
-		Collection<IFSAState<E>> finals = new HashSet<>();
-		Collection<IFSAEdge<E>>  edges  = new ArrayList<>(automaton.getGraph().edgeSet().size());
+		states = new HashSet<>(automaton.getGraph().vertexSet().size());
+		finals = new HashSet<>();
+		edges  = new ArrayList<>(automaton.getGraph().edgeSet().size());
 		states.add(initialState);
 
 		if (finalState != initialState)
 			states.add(finalState);
 
 		finals.add(finalState);
-		buildAutomaton = builderFactory.get( //
-			states, Collections.singletonList(initialState), finals, //
-			edges, //
-			automaton.getProperties(), //
-			new GFSAValidation<E, IGFSAutomaton<E>>());
 
 		if (automaton.getProperties().isSynchronous())
 			build(automaton.getStart(), initialState);
@@ -133,7 +135,11 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 //			for(IFSAState<E> s : states)
 //				((State<E>)s).id = i++;
 
-		return buildAutomaton;
+		return builderFactory.get( //
+			states, Collections.singletonList(initialState), finals, //
+			edges, //
+			automaton.getProperties(), //
+			new GFSAValidation<E>());
 	}
 
 	private STATE build_addState(GCState fcurrent) throws FSAException
@@ -145,7 +151,7 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		else
 		{
 			newAState = makeState(fcurrent);
-			buildAutomaton.states.add(newAState);
+			states.add(newAState);
 			build(fcurrent, newAState);
 		}
 		return newAState;
@@ -158,7 +164,7 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		if (null == newAEdge)
 			return;
 
-		buildAutomaton.edges.add(newAEdge);
+		edges.add(newAEdge);
 		acurrentState.childs.add(newAEdge);
 	}
 
@@ -185,7 +191,7 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		else
 		{
 			newAState = makeState(fcurrent);
-			buildAutomaton.states.add(newAState);
+			states.add(newAState);
 			buildSync(fcurrent, newAState);
 		}
 		return newAState;
@@ -204,8 +210,8 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 				Collection<GCState> fstates = automaton.epsilonClosure(fstate);
 				Collection<STATE>   astates = fstates.stream().map(s -> makeState(s)).collect(Collectors.toList());
 
-				if (!Collections.disjoint(astates, buildAutomaton.finalStates))
-					buildAutomaton.finalStates.add(makeState(fstate));
+				if (!Collections.disjoint(astates, finals))
+					finals.add(makeState(fstate));
 
 				Collection<GCEdgeData> edges = automaton.getEdges(fstates);
 
@@ -237,4 +243,4 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		return automaton.toString();
 	}
 
-}// END of Builder
+}

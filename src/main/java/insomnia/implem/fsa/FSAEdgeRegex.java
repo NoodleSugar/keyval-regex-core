@@ -1,10 +1,10 @@
-package insomnia.implem.FSA;
+package insomnia.implem.fsa;
 
 import java.util.regex.Pattern;
 
-import insomnia.FSA.AbstractFSAEdge;
-import insomnia.FSA.IFSALabel;
-import insomnia.FSA.IFSAState;
+import fsa.AbstractFSAEdge;
+import fsa.IFSALabel;
+import fsa.IFSAState;
 
 /**
  * Edge for regex

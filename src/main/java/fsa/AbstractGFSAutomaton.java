@@ -1,4 +1,4 @@
-package insomnia.FSA;
+package fsa;
 
 import java.util.ArrayList;
 import java.util.Collection;

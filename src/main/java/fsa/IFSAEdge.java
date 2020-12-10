@@ -1,4 +1,4 @@
-package insomnia.FSA;
+package fsa;
 
 /**
  * E : type of tested elements

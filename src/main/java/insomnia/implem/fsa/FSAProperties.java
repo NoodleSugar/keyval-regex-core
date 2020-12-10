@@ -1,6 +1,6 @@
-package insomnia.implem.FSA;
+package insomnia.implem.fsa;
 
-import insomnia.FSA.IFSAProperties;
+import fsa.IFSAProperties;
 
 public class FSAProperties implements IFSAProperties
 {
@@ -18,19 +18,21 @@ public class FSAProperties implements IFSAProperties
 		this(prop.isDeterministic(), prop.isSynchronous());
 	}
 
-	static FSAProperties union(FSAProperties a, FSAProperties b)
+	public static FSAProperties union(IFSAProperties a, IFSAProperties b)
 	{
 		return new FSAProperties( //
-			a.isDeterministic && b.isDeterministic, //
-			a.isSynchronous && b.isSynchronous //
-			);
+			a.isDeterministic() && b.isDeterministic(), //
+			a.isSynchronous() && b.isSynchronous() //
+		);
 	}
 
+	@Override
 	public FSAProperties setDeterministic(boolean isDeterministic)
 	{
 		return new FSAProperties(isDeterministic, isSynchronous);
 	}
 
+	@Override
 	public FSAProperties setSynchronous(boolean isSynchronous)
 	{
 		return new FSAProperties(isDeterministic, isSynchronous);

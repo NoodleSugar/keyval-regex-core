@@ -1,8 +1,8 @@
-package insomnia.implem.FSA;
+package insomnia.implem.fsa;
 
-import insomnia.FSA.AbstractFSAEdge;
-import insomnia.FSA.IFSALabel;
-import insomnia.FSA.IFSAState;
+import fsa.AbstractFSAEdge;
+import fsa.IFSALabel;
+import fsa.IFSAState;
 
 /**
  * Edge for epsilon transition

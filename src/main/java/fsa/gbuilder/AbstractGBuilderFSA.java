@@ -1,31 +1,30 @@
-package insomnia.FSA.gbuilder;
+package fsa.gbuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import insomnia.FSA.AbstractGFSAutomaton;
-import insomnia.FSA.FSAException;
-import insomnia.FSA.IFSAEdge;
-import insomnia.FSA.IFSAProperties;
-import insomnia.FSA.IFSAState;
-import insomnia.FSA.IGFSAutomaton;
-import insomnia.FSA.algorithm.IFSAAValidation;
-import insomnia.implem.FSA.FSAProperties;
+import fsa.AbstractGFSAutomaton;
+import fsa.FSAException;
+import fsa.IFSAEdge;
+import fsa.IFSAProperties;
+import fsa.IFSAState;
+import fsa.IGFSAutomaton;
+import fsa.algorithm.IFSAAValidation;
 
-public abstract class GBuilderFSA<E> extends AbstractGFSAutomaton<E> implements IGFSAutomaton<E>
+public abstract class AbstractGBuilderFSA<E> extends AbstractGFSAutomaton<E> implements IGFSAutomaton<E>
 {
-	FSAProperties properties;
+	private IFSAProperties properties;
 
-	IFSAAValidation<E, IGFSAutomaton<E>> validator;
+	private IFSAAValidation<E, IGFSAutomaton<E>> validator;
 
-	Collection<IFSAState<E>> initialStates;
-	Collection<IFSAState<E>> finalStates;
-	Collection<IFSAState<E>> states;
-	Collection<IFSAEdge<E>>  edges;
+	private Collection<IFSAState<E>> initialStates;
+	private Collection<IFSAState<E>> finalStates;
+	private Collection<IFSAState<E>> states;
+	private Collection<IFSAEdge<E>>  edges;
 
-	protected GBuilderFSA( //
+	protected AbstractGBuilderFSA( //
 		Collection<IFSAState<E>> states, //
 		Collection<IFSAState<E>> initialStates, //
 		Collection<IFSAState<E>> finalStates, //
@@ -38,7 +37,7 @@ public abstract class GBuilderFSA<E> extends AbstractGFSAutomaton<E> implements 
 		this.states        = states;
 		this.initialStates = initialStates;
 		this.finalStates   = finalStates;
-		this.properties    = new FSAProperties(properties);
+		this.properties    = properties;
 		this.validator     = validator;
 	}
 
@@ -79,8 +78,8 @@ public abstract class GBuilderFSA<E> extends AbstractGFSAutomaton<E> implements 
 
 		for (IFSAState<E> _state : states)
 		{
-			GBuilderState<E> state = (GBuilderState<E>) _state;
-			ret.addAll(state.childs);
+			IGBuilderState<E> state = (IGBuilderState<E>) _state;
+			ret.addAll(state.getEdges());
 		}
 		return ret;
 	}

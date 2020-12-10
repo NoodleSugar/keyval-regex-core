@@ -1,18 +1,25 @@
-package insomnia.FSA.gbuilder;
+package fsa.gbuilder;
 
 import java.util.Collection;
 
-import insomnia.FSA.IFSAEdge;
-import insomnia.FSA.IFSAProperties;
-import insomnia.FSA.IFSAState;
-import insomnia.FSA.IGFSAFactory;
-import insomnia.FSA.IGFSAutomaton;
-import insomnia.FSA.algorithm.IFSAAValidation;
+import fsa.IFSAEdge;
+import fsa.IFSAProperties;
+import fsa.IFSAState;
+import fsa.IGFSAFactory;
+import fsa.IGFSAutomaton;
+import fsa.algorithm.IFSAAValidation;
 
-public interface GBuilderFSAFactory<E> extends IGFSAFactory<E>
+/**
+ * Factory of {@link AbstractGBuilderFSA}.
+ * 
+ * @author zuri
+ *
+ * @param <E> 
+ */
+public interface IGBuilderFSAFactory<E> extends IGFSAFactory<E>
 {
 	@Override
-	GBuilderFSA<E> get(Collection<IFSAState<E>> states, //
+	AbstractGBuilderFSA<E> get(Collection<IFSAState<E>> states, //
 		Collection<IFSAState<E>> initialStates, //
 		Collection<IFSAState<E>> finalStates, //
 		Collection<IFSAEdge<E>> edges, //

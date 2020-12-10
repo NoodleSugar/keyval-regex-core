@@ -1,4 +1,4 @@
-package insomnia.implem.FSA;
+package insomnia.implem.fsa.gbuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,7 +12,9 @@ import java.util.Set;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 
-import insomnia.implem.FSA.GCEdgeData.Type;
+import fsa.IFSAProperties;
+import insomnia.implem.fsa.FSAProperties;
+import insomnia.implem.fsa.gbuilder.GCEdgeData.Type;
 
 public abstract class GraphChunk
 {
@@ -21,7 +23,7 @@ public abstract class GraphChunk
 	private GCState start;
 	private GCState end;
 
-	private FSAProperties properties;
+	private IFSAProperties properties;
 
 	{
 		// By default we don't know if it is deterministic
@@ -67,12 +69,12 @@ public abstract class GraphChunk
 		return graph;
 	}
 
-	public void setProperties(FSAProperties properties)
+	public void setProperties(IFSAProperties properties)
 	{
 		this.properties = properties;
 	}
 
-	public FSAProperties getProperties()
+	public IFSAProperties getProperties()
 	{
 		return properties;
 	}
