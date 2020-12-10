@@ -1,15 +1,8 @@
-package insomnia.automaton.state;
-
-import java.util.Collection;
-
-import insomnia.automaton.edge.IEdge;
+package insomnia.FSA;
 
 /**
  * E : type of tested elements
  */
-public interface IState<E> extends Collection<IEdge<E>>
+public interface IFSAState<E>
 {
-	int getId();
-	boolean isInitial();
-	boolean isFinal();
 }

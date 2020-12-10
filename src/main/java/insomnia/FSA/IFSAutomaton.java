@@ -1,16 +1,17 @@
-package insomnia.automaton;
+package insomnia.FSA;
 
 import java.util.List;
 
 /**
  * E : type of tested elements
  */
-public interface IAutomaton<E>
+public interface IFSAutomaton<E>
 {
 	/**
 	 * @param elements to test
 	 * @return true if it succeed
-	 * @throws AutomatonException
+	 * @throws FSAException
 	 */
-	boolean run(List<E> elements) throws AutomatonException;
+	boolean test(List<E> elements) throws FSAException;
+
 }

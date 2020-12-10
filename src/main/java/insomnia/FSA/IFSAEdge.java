@@ -1,14 +1,13 @@
-package insomnia.automaton.edge;
-
-import insomnia.automaton.state.IState;
+package insomnia.FSA;
 
 /**
  * E : type of tested elements
  */
-public interface IEdge<E>
+public interface IFSAEdge<E>
 {
-	boolean isValid(E element);
+	IFSAState<E> getParent();
 
-	IState<E> getParent();
-	IState<E> getChild();
+	IFSAState<E> getChild();
+
+	IFSALabel<E> getLabel();
 }

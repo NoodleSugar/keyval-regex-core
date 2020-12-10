@@ -1,27 +1,44 @@
-package insomnia.automaton.edge;
+package insomnia.FSA;
 
-import insomnia.automaton.state.IState;
-
-public abstract class Edge implements IEdge<String>
+public abstract class AbstractFSAEdge<E> implements IFSAEdge<E>
 {
-	protected IState<String> parent;
-	protected IState<String> child;
+	protected IFSAState<E> parent;
+	protected IFSAState<E> child;
 
-	protected Edge(IState<String> parent, IState<String> child)
+	protected AbstractFSAEdge(IFSAState<E> parent, IFSAState<E> child)
 	{
 		this.parent = parent;
-		this.child = child;
+		this.child  = child;
 	}
 
 	@Override
-	public IState<String> getParent()
+	public IFSAState<E> getParent()
 	{
 		return parent;
 	}
-	
+
 	@Override
-	public IState<String> getChild()
+	public IFSAState<E> getChild()
 	{
 		return child;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (!(obj instanceof AbstractFSAEdge))
+			return false;
+
+		@SuppressWarnings("unchecked")
+		AbstractFSAEdge<E> edge = (AbstractFSAEdge<E>) obj;
+
+		return edge.getParent().equals(getParent()) //
+			&& edge.getChild().equals(getChild());
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return getParent().hashCode() + getChild().hashCode();
 	}
 }

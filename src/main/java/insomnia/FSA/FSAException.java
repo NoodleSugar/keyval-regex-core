@@ -1,20 +1,20 @@
-package insomnia.automaton;
+package insomnia.FSA;
 
-public class AutomatonException extends Exception
+public class FSAException extends Exception
 {
 	private static final long serialVersionUID = 759935166323836284L;
 	
-	public AutomatonException(String message)
+	public FSAException(String message)
 	{
 		super(message);
 	}
 	
-	public AutomatonException(Throwable cause)
+	public FSAException(Throwable cause)
 	{
 		super(cause);
 	}
 	
-	public AutomatonException(String message, Throwable cause)
+	public FSAException(String message, Throwable cause)
 	{
 		super(message, cause);
 	}

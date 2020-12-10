@@ -1,10 +1,10 @@
-package insomnia.automaton.algorithm;
+package insomnia.FSA.algorithm;
 
 import java.util.List;
 import java.util.function.BiPredicate;
 
-import insomnia.automaton.IGAutomaton;
+import insomnia.FSA.IFSAutomaton;
 
-public interface IValidation<E> extends BiPredicate<IGAutomaton<E>, List<E>>
+public interface IFSAAValidation<E, A extends IFSAutomaton<E>> extends BiPredicate<A, List<E>>
 {
 }
