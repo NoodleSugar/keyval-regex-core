@@ -1,12 +1,10 @@
-package insomnia.data.tree.edge;
+package insomnia.data;
 
-import insomnia.data.tree.node.INode;
-
-public interface IEdge<E>
+public interface IEdge<V, E>
 {
 	E getLabel();
 
-	INode<E> getParent();
+	INode<V, E> getParent();
 
-	INode<E> getChild();
+	INode<V, E> getChild();
 }

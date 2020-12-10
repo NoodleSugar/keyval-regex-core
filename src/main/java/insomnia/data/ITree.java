@@ -1,10 +1,14 @@
-package insomnia.data.tree;
+package insomnia.data;
 
-import insomnia.data.tree.node.INode;
+import java.util.List;
 
-public interface ITree<E>
+public interface ITree<V, E>
 {
-	INode<E> getRoot();
+	INode<V, E> getRoot();
 
 	boolean isRooted();
+
+	List<? extends IEdge<V, E>> getChildren(INode<V, E> node);
+
+	IEdge<V, E> getParent(INode<V, E> node);
 }

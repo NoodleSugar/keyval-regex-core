@@ -1,12 +1,8 @@
-package insomnia.data.tree.node;
+package insomnia.data;
 
-import java.util.List;
-
-import insomnia.data.tree.edge.IEdge;
-
-public interface INode<E>
+public interface INode<V, E>
 {
-	List<? extends IEdge<E>> getParents();
+	V getValue();
 
-	List<? extends IEdge<E>> getChildren();
+	void setValue(V value);
 }
