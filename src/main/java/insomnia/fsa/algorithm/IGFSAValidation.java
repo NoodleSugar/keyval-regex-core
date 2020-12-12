@@ -1,8 +1,8 @@
-package fsa.algorithm;
+package insomnia.fsa.algorithm;
 
 import java.util.List;
 
-import fsa.IGFSAutomaton;
+import insomnia.fsa.IGFSAutomaton;
 
 public interface IGFSAValidation<E> extends IFSAAValidation<E, IGFSAutomaton<E>>
 {

@@ -1,4 +1,4 @@
-package fsa;
+package insomnia.fsa;
 
 public interface IFSAProperties
 {

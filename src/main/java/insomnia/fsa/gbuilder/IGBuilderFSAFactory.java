@@ -1,13 +1,13 @@
-package fsa.gbuilder;
+package insomnia.fsa.gbuilder;
 
 import java.util.Collection;
 
-import fsa.IFSAEdge;
-import fsa.IFSAProperties;
-import fsa.IFSAState;
-import fsa.IGFSAFactory;
-import fsa.IGFSAutomaton;
-import fsa.algorithm.IFSAAValidation;
+import insomnia.fsa.IFSAEdge;
+import insomnia.fsa.IFSAProperties;
+import insomnia.fsa.IFSAState;
+import insomnia.fsa.IGFSAFactory;
+import insomnia.fsa.IGFSAutomaton;
+import insomnia.fsa.algorithm.IFSAAValidation;
 
 /**
  * Factory of {@link AbstractGBuilderFSA}.

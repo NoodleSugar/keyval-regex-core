@@ -1,8 +1,8 @@
-package fsa;
+package insomnia.fsa;
 
 import java.util.Collection;
 
-import fsa.algorithm.IFSAAValidation;
+import insomnia.fsa.algorithm.IFSAAValidation;
 
 /**
  * Factory of Graph automaton.

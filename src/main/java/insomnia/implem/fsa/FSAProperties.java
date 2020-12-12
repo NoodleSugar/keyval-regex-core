@@ -1,6 +1,6 @@
 package insomnia.implem.fsa;
 
-import fsa.IFSAProperties;
+import insomnia.fsa.IFSAProperties;
 
 public class FSAProperties implements IFSAProperties
 {

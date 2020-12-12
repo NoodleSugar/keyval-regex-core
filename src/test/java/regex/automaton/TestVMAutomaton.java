@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import fsa.FSAException;
+import insomnia.fsa.FSAException;
 import insomnia.implem.kv.regex.RegexParser;
 import insomnia.implem.kv.regex.automaton.VMRegexAutomaton;
 import insomnia.implem.kv.regex.automaton.VMRegexAutomatonBuilder;

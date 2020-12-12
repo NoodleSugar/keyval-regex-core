@@ -12,7 +12,7 @@ import java.util.Set;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 
-import fsa.IFSAProperties;
+import insomnia.fsa.IFSAProperties;
 import insomnia.implem.fsa.FSAProperties;
 import insomnia.implem.fsa.gbuilder.GCEdgeData.Type;
 

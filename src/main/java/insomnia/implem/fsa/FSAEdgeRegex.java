@@ -2,9 +2,9 @@ package insomnia.implem.fsa;
 
 import java.util.regex.Pattern;
 
-import fsa.AbstractFSAEdge;
-import fsa.IFSALabel;
-import fsa.IFSAState;
+import insomnia.fsa.AbstractFSAEdge;
+import insomnia.fsa.IFSALabel;
+import insomnia.fsa.IFSAState;
 
 /**
  * Edge for regex

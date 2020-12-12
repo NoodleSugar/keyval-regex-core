@@ -1,11 +1,11 @@
-package fsa.algorithm;
+package insomnia.fsa.algorithm;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import fsa.IFSAState;
-import fsa.IGFSAutomaton;
+import insomnia.fsa.IFSAState;
+import insomnia.fsa.IGFSAutomaton;
 
 public class GFSAValidation<E> implements IGFSAValidation<E>
 {

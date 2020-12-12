@@ -1,9 +1,9 @@
-package fsa;
+package insomnia.fsa;
 
 import java.util.List;
 import java.util.function.Predicate;
 
-import fsa.algorithm.IFSAAValidation;
+import insomnia.fsa.algorithm.IFSAAValidation;
 
 /**
  * View an {@link IFSAutomaton} associated with a {@lin IFSAValidationk} as a {@link Predicate}.

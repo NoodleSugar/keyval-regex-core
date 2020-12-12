@@ -1,9 +1,9 @@
-package fsa.gbuilder;
+package insomnia.fsa.gbuilder;
 
 import java.util.Collection;
 
-import fsa.IFSAEdge;
-import fsa.IFSAState;
+import insomnia.fsa.IFSAEdge;
+import insomnia.fsa.IFSAState;
 
 public interface IGBuilderState<E> extends IFSAState<E>
 {

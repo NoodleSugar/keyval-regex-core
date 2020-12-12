@@ -1,4 +1,4 @@
-package fsa;
+package insomnia.fsa;
 
 import java.util.List;
 

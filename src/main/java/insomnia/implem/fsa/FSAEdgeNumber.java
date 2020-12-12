@@ -3,9 +3,9 @@ package insomnia.implem.fsa;
 import java.text.NumberFormat;
 import java.text.ParseException;
 
-import fsa.AbstractFSAEdge;
-import fsa.IFSALabel;
-import fsa.IFSAState;
+import insomnia.fsa.AbstractFSAEdge;
+import insomnia.fsa.IFSALabel;
+import insomnia.fsa.IFSAState;
 
 public class FSAEdgeNumber<E, N extends Number> extends AbstractFSAEdge<E> implements IFSALabel<E>
 {

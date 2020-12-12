@@ -1,17 +1,17 @@
-package fsa.gbuilder;
+package insomnia.fsa.gbuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import fsa.AbstractGFSAutomaton;
-import fsa.FSAException;
-import fsa.IFSAEdge;
-import fsa.IFSAProperties;
-import fsa.IFSAState;
-import fsa.IGFSAutomaton;
-import fsa.algorithm.IFSAAValidation;
+import insomnia.fsa.AbstractGFSAutomaton;
+import insomnia.fsa.FSAException;
+import insomnia.fsa.IFSAEdge;
+import insomnia.fsa.IFSAProperties;
+import insomnia.fsa.IFSAState;
+import insomnia.fsa.IGFSAutomaton;
+import insomnia.fsa.algorithm.IFSAAValidation;
 
 public abstract class AbstractGBuilderFSA<E> extends AbstractGFSAutomaton<E> implements IGFSAutomaton<E>
 {

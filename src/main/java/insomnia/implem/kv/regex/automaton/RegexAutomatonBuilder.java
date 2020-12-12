@@ -3,16 +3,16 @@ package insomnia.implem.kv.regex.automaton;
 import java.util.Collection;
 import java.util.List;
 
-import insomnia.FSA.IFSAEdge;
-import insomnia.FSA.IFSAProperties;
-import insomnia.FSA.IFSAState;
-import insomnia.FSA.IGFSAutomaton;
-import insomnia.FSA.algorithm.IFSAAValidation;
-import insomnia.FSA.gbuilder.GBuilder;
-import insomnia.FSA.gbuilder.GBuilderFSA;
-import insomnia.FSA.gbuilder.GBuilderFSAFactory;
-import insomnia.FSA.gbuilder.GBuilderState;
-import insomnia.implem.FSA.GraphChunk;
+import insomnia.fsa.IFSAEdge;
+import insomnia.fsa.IFSAProperties;
+import insomnia.fsa.IFSAState;
+import insomnia.fsa.IGFSAutomaton;
+import insomnia.fsa.algorithm.IFSAAValidation;
+import insomnia.fsa.gbuilder.AbstractGBuilderFSA;
+import insomnia.fsa.gbuilder.IGBuilderFSAFactory;
+import insomnia.implem.fsa.gbuilder.GBuilder;
+import insomnia.implem.fsa.gbuilder.GBuilderState;
+import insomnia.implem.fsa.gbuilder.GraphChunk;
 
 class RegexAutomatonBuilder<E> extends GBuilder<E, GBuilderState<E>>
 {
@@ -21,10 +21,10 @@ class RegexAutomatonBuilder<E> extends GBuilder<E, GBuilderState<E>>
 		super(gc, id -> new GBuilderState<E>(id), new FSAFactory<E>());
 	}
 
-	static class FSAFactory<E> implements GBuilderFSAFactory<E>
+	static class FSAFactory<E> implements IGBuilderFSAFactory<E>
 	{
 		@Override
-		public GBuilderFSA<E> get(Collection<IFSAState<E>> states, Collection<IFSAState<E>> initialStates, Collection<IFSAState<E>> finalStates, Collection<IFSAEdge<E>> edges, IFSAProperties properties, IFSAAValidation<E, IGFSAutomaton<E>> validator)
+		public AbstractGBuilderFSA<E> get(Collection<IFSAState<E>> states, Collection<IFSAState<E>> initialStates, Collection<IFSAState<E>> finalStates, Collection<IFSAEdge<E>> edges, IFSAProperties properties, IFSAAValidation<E, IGFSAutomaton<E>> validator)
 		{
 			if (properties.isSynchronous())
 				return new FSASync<E>(states, initialStates, finalStates, edges, properties, validator);
@@ -33,7 +33,7 @@ class RegexAutomatonBuilder<E> extends GBuilder<E, GBuilderState<E>>
 		}
 	}
 
-	static class FSASync<E> extends GBuilderFSA<E>
+	static class FSASync<E> extends AbstractGBuilderFSA<E>
 	{
 		FSASync(Collection<IFSAState<E>> states, Collection<IFSAState<E>> initialStates, Collection<IFSAState<E>> finalStates, Collection<IFSAEdge<E>> edges, IFSAProperties properties, IFSAAValidation<E, IGFSAutomaton<E>> validator)
 		{
@@ -47,7 +47,7 @@ class RegexAutomatonBuilder<E> extends GBuilder<E, GBuilderState<E>>
 		}
 	}
 
-	static class FSAGeneral<E> extends GBuilderFSA<E>
+	static class FSAGeneral<E> extends AbstractGBuilderFSA<E>
 	{
 		FSAGeneral(Collection<IFSAState<E>> states, Collection<IFSAState<E>> initialStates, Collection<IFSAState<E>> finalStates, Collection<IFSAEdge<E>> edges, IFSAProperties properties, IFSAAValidation<E, IGFSAutomaton<E>> validator)
 		{

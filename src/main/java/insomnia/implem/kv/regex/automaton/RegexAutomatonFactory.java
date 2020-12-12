@@ -8,12 +8,12 @@ import java.util.List;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
 
-import insomnia.FSA.FSAException;
-import insomnia.FSA.IFSAutomaton;
-import insomnia.implem.FSA.GCEdgeData;
-import insomnia.implem.FSA.GCEdgeData.Type;
-import insomnia.implem.FSA.GCState;
-import insomnia.implem.FSA.GraphChunk;
+import insomnia.fsa.FSAException;
+import insomnia.fsa.IFSAutomaton;
+import insomnia.implem.fsa.gbuilder.GCEdgeData;
+import insomnia.implem.fsa.gbuilder.GCEdgeData.Type;
+import insomnia.implem.fsa.gbuilder.GCState;
+import insomnia.implem.fsa.gbuilder.GraphChunk;
 import insomnia.implem.kv.regex.element.Const;
 import insomnia.implem.kv.regex.element.IElement;
 import insomnia.implem.kv.regex.element.Key;
@@ -217,7 +217,6 @@ public class RegexAutomatonFactory<E>
 			else if (inf == 0)
 			{
 				currentAutomaton.cleanGraph();
-				;
 				currentAutomaton.addVertex(currentAutomaton.getStart());
 				currentAutomaton.addVertex(currentAutomaton.getEnd());
 				currentAutomaton.addEdge(currentAutomaton.getStart(), currentAutomaton.getEnd(), new GCEdgeData(GCEdgeData.Type.EPSILON));

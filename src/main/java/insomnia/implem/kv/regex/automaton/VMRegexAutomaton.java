@@ -3,8 +3,8 @@ package insomnia.implem.kv.regex.automaton;
 import java.util.ArrayList;
 import java.util.List;
 
-import insomnia.FSA.FSAException;
-import insomnia.FSA.IFSAutomaton;
+import insomnia.fsa.FSAException;
+import insomnia.fsa.IFSAutomaton;
 import insomnia.implem.kv.regex.automaton.VMRegexAutomatonBuilder.InstructionData;
 
 public class VMRegexAutomaton implements IFSAutomaton<String>
