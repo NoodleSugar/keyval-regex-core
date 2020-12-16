@@ -1,7 +1,7 @@
-package insomnia.kv.rule.ontology;
+package insomnia.rule;
 
-import insomnia.kv.rule.IRule;
+import java.util.Collection;
 
-public interface IOntology<R extends IRule<?>> extends Iterable<R>
+public interface IOntology<V, E> extends Collection<IRule<V, E>>
 {
 }

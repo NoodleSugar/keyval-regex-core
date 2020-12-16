@@ -1,42 +1,48 @@
-package insomnia.kv.rule;
+package insomnia.implem.kv.rule;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
-import insomnia.data.tree.Path;
+import insomnia.implem.kv.data.KVLabel;
+import insomnia.implem.kv.data.KVPath;
+import insomnia.implem.kv.data.KVValue;
+import insomnia.rule.IPathRule;
 
-public class PathRule implements IRule<Path>
+public class KVPathRule implements IPathRule<KVValue, KVLabel>
 {
 	public final static String separator = Pattern.quote(".");
 
-	private Path context;
-	private Path foot;
-	private Path body;
-	private Path head;
+//	private KVPath context;
+//	private KVPath foot;
+	private KVPath body;
+	private KVPath head;
 
 	private boolean isExistential;
 
-	public static PathRule create(String body, String head)
+	public static KVPathRule create(String body, String head)
 	{
 		return create(body, head, false, false);
 	}
 
-	public static PathRule create(String body, String head, boolean isRooted, boolean isTerminal)
+	public static KVPathRule create(String body, String head, boolean isRooted, boolean isTerminal)
 	{
-		return new PathRule( //
-			new Path(isRooted, isTerminal, body.split(separator)), //
-			new Path(isRooted, isTerminal, head.split(separator)), //
+		return new KVPathRule( //
+			new KVPath(isRooted, isTerminal, KVPath.string2KVLabel(Arrays.asList(body.split(separator)))), //
+			new KVPath(isRooted, isTerminal, KVPath.string2KVLabel(Arrays.asList(head.split(separator)))), //
 			false);
 	}
 
-	public static PathRule createExistential(String body, String head, boolean isRooted, boolean isBodyTerminal, boolean isHeadTerminal)
+	public static KVPathRule createExistential(String body, String head, boolean isRooted, boolean isBodyTerminal, boolean isHeadTerminal)
 	{
-		return new PathRule(//
-			new Path(isRooted, isBodyTerminal, body.split(separator)), //
-			new Path(isRooted, isHeadTerminal, head.split(separator)), //
+		return new KVPathRule( //
+			new KVPath(isRooted, isBodyTerminal, KVPath.string2KVLabel(Arrays.asList(body.split(separator)))), //
+			new KVPath(isRooted, isHeadTerminal, KVPath.string2KVLabel(Arrays.asList(head.split(separator)))), //
 			true);
 	}
 
-	public PathRule(Path body, Path head, boolean isExistential) throws IllegalArgumentException
+	public KVPathRule(KVPath body, KVPath head, boolean isExistential) throws IllegalArgumentException
 	{
 		if (body.isRooted() != head.isRooted())
 			throw new IllegalArgumentException("body and head must have the same isRooted value");
@@ -52,26 +58,26 @@ public class PathRule implements IRule<Path>
 		this.isExistential = isExistential;
 	}
 
-	@Override
-	public Path getContext()
-	{
-		return context;
-	}
+//	@Override
+//	public KVPath getContext()
+//	{
+//		return context;
+//	}
+//
+//	@Override
+//	public KVPath getFoot()
+//	{
+//		return foot;
+//	}
 
 	@Override
-	public Path getFoot()
-	{
-		return foot;
-	}
-
-	@Override
-	public Path getBody()
+	public KVPath getBody()
 	{
 		return body;
 	}
 
 	@Override
-	public Path getHead()
+	public KVPath getHead()
 	{
 		return head;
 	}
@@ -92,5 +98,27 @@ public class PathRule implements IRule<Path>
 	public boolean isExistential()
 	{
 		return isExistential;
+	}
+
+	@Override
+	public Collection<KVLabel> getVocabulary()
+	{
+		Collection<KVLabel> ret = new HashSet<>();
+		ret.addAll(body.getVocabulary());
+		ret.addAll(head.getVocabulary());
+		return ret;
+	}
+
+	@Override
+	public String toString()
+	{
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(body).append(" -> ");
+
+		if (isExistential)
+			buffer.append("∃");
+
+		buffer.append(head);
+		return buffer.toString();
 	}
 }

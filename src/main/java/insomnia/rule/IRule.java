@@ -1,16 +1,14 @@
-package insomnia.kv.rule;
+package insomnia.rule;
 
-import insomnia.data.tree.ITree;
+import java.util.Collection;
 
-public interface IRule<E extends ITree<?>>
+import insomnia.data.ITree;
+
+public interface IRule<V, E>
 {
-	E getContext();
+	ITree<V, E> getBody();
 
-	E getBody();
-
-	E getFoot();
-
-	E getHead();
+	ITree<V, E> getHead();
 
 	/**
 	 * Rooted for both body and head
@@ -18,9 +16,14 @@ public interface IRule<E extends ITree<?>>
 	boolean isRooted();
 
 	/**
-	 * Body is rooted
+	 * Body is terminal
 	 */
 	boolean isTerminal();
-	
+
+	/**
+	 * Head leaf node is existential (ie. not frontier node)
+	 */
 	boolean isExistential();
+
+	Collection<E> getVocabulary();
 }

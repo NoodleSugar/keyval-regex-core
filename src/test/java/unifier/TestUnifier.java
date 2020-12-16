@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,11 +15,12 @@ import insomnia.implem.kv.data.KVPath;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.unifier.KVPathUnifier;
 import insomnia.implem.kv.unifier.KVPathUnifiers;
+import insomnia.unifier.IPathUnifier;
 import insomnia.unifier.PathUnifiers;
 
 class TestUnifier
 {
-	PathUnifiers<KVValue, KVLabel, ? extends KVPathUnifier> UNIFIERS = KVPathUnifiers.get();
+	PathUnifiers<KVValue, KVLabel> UNIFIERS = KVPathUnifiers.get();
 
 	public static KVPath pathFromString(String p)
 	{
@@ -57,7 +59,7 @@ class TestUnifier
 	@MethodSource("computeSource")
 	void compute(KVPath head, KVPath body, KVPathUnifier ref_unifiers[])
 	{
-		List<? extends KVPathUnifier> unifiers = UNIFIERS.compute(head, body);
+		Collection<IPathUnifier<KVValue, KVLabel>> unifiers = UNIFIERS.compute(head, body);
 		assertEquals(ref_unifiers.length, unifiers.size());
 
 		for (KVPathUnifier ref : ref_unifiers)
@@ -112,7 +114,7 @@ class TestUnifier
 	@MethodSource("weakKVPathUnifiersSource")
 	void weakKVPathUnifier(KVPath head, KVPath body, KVPathUnifier ref_unifiers[])
 	{
-		List<? extends KVPathUnifier> unifiers = UNIFIERS.weakUnifiers(head, body);
+		Collection<IPathUnifier<KVValue, KVLabel>> unifiers = UNIFIERS.weakUnifiers(head, body);
 		assertEquals(ref_unifiers.length, unifiers.size());
 
 		for (KVPathUnifier ref : ref_unifiers)
@@ -156,7 +158,7 @@ class TestUnifier
 	@MethodSource("strongKVPathUnifiersSource")
 	void strongKVPathUnifier(KVPath head, KVPath body, KVPathUnifier ref_unifiers[])
 	{
-		List<? extends KVPathUnifier> unifiers = UNIFIERS.strongUnifiers(head, body);
+		Collection<IPathUnifier<KVValue, KVLabel>> unifiers = UNIFIERS.strongUnifiers(head, body);
 		assertEquals(ref_unifiers.length, unifiers.size());
 
 		for (KVPathUnifier ref : ref_unifiers)

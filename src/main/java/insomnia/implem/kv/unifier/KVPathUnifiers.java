@@ -2,18 +2,17 @@ package insomnia.implem.kv.unifier;
 
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.rule.dependency.KVPathDependency;
 import insomnia.unifier.PathUnifiers;
 
 public final class KVPathUnifiers
 {
-	static PathUnifiers<KVValue, KVLabel, KVPathDependency> unifiers;
+	static PathUnifiers<KVValue, KVLabel> unifiers;
 
 	static
 	{
 		try
 		{
-			unifiers = new PathUnifiers<KVValue, KVLabel, KVPathDependency>(KVPathDependency.class);
+			unifiers = new PathUnifiers(KVPathUnifier.class);
 		}
 		catch (NoSuchMethodException | SecurityException e)
 		{
@@ -21,7 +20,7 @@ public final class KVPathUnifiers
 		}
 	}
 
-	public static PathUnifiers<KVValue, KVLabel, KVPathDependency> get()
+	public static PathUnifiers<KVValue, KVLabel> get()
 	{
 		return unifiers;
 	}
