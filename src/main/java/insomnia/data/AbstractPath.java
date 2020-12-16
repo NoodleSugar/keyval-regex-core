@@ -1,7 +1,9 @@
 package insomnia.data;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.BooleanUtils;
@@ -124,6 +126,12 @@ public abstract class AbstractPath<V, E> implements IPath<V, E>
 	public List<E> getLabels()
 	{
 		return new ArrayList<>(labels);
+	}
+
+	@Override
+	public Collection<E> getVocabulary()
+	{
+		return new HashSet<>(labels);
 	}
 
 	@Override

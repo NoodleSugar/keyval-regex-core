@@ -1,5 +1,6 @@
 package insomnia.implem.kv.data;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.jgrapht.graph.SimpleDirectedGraph;
@@ -41,6 +42,13 @@ public class KVTree<V, E> extends SimpleDirectedGraph<V, E> implements ITree<V, 
 
 	@Override
 	public IEdge<V, E> getParent(INode<V, E> node)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Collection<E> getVocabulary()
 	{
 		// TODO Auto-generated method stub
 		return null;

@@ -1,5 +1,6 @@
 package insomnia.data;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ITree<V, E>
@@ -11,4 +12,6 @@ public interface ITree<V, E>
 	List<? extends IEdge<V, E>> getChildren(INode<V, E> node);
 
 	IEdge<V, E> getParent(INode<V, E> node);
+
+	Collection<E> getVocabulary();
 }
