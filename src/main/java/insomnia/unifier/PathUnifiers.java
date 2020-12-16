@@ -3,12 +3,14 @@ package insomnia.unifier;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import insomnia.data.IPath;
 import insomnia.data.PathOp;
+import insomnia.rule.IPathRule;
 
-public final class PathUnifiers<V, E, U extends IPathUnifier<V, E>>
+public final class PathUnifiers<V, E>
 {
 	public static <V, E> int[] findAllPrefixSuffix(IPath<V, E> p, IPath<V, E> s)
 	{
@@ -23,28 +25,28 @@ public final class PathUnifiers<V, E, U extends IPathUnifier<V, E>>
 
 	// =========================================================================
 
-	private IPathUnifierFactory<V, E, U> unifierFactory;
+	private IPathUnifierFactory<V, E, IPathUnifier<V, E>> unifierFactory;
 
-	public PathUnifiers(IPathUnifierFactory<V, E, U> ufactory)
+	public PathUnifiers(IPathUnifierFactory<V, E, IPathUnifier<V, E>> ufactory)
 	{
 		unifierFactory = ufactory;
 	}
 
-	public PathUnifiers(Class<U> unifierClass) throws NoSuchMethodException, SecurityException
+	public PathUnifiers(Class<IPathUnifier<V, E>> unifierClass) throws NoSuchMethodException, SecurityException
 	{
-		Constructor<U> constructor = unifierClass.getDeclaredConstructor(IPath.class, IPath.class, IPath.class, IPath.class, IPath.class);
+		Constructor<IPathUnifier<V, E>> constructor = unifierClass.getDeclaredConstructor(IPath.class, IPath.class, IPath.class, IPath.class, IPath.class);
 
 		/*
 		 * Create the factory with the unifier's class constructor
 		 */
-		unifierFactory = new AbstractPathUnifierFactory<V, E, U>()
+		unifierFactory = new AbstractPathUnifierFactory<V, E, IPathUnifier<V, E>>()
 		{
 			@Override
-			public U get(IPath<V, E> pb, IPath<V, E> sb, IPath<V, E> ph, IPath<V, E> sh, IPath<V, E> ref)
+			public IPathUnifier<V, E> get(IPath<V, E> pb, IPath<V, E> sb, IPath<V, E> ph, IPath<V, E> sh, IPath<V, E> ref)
 			{
 				try
 				{
-					return (U) constructor.newInstance(pb, sb, ph, sh, ref);
+					return (IPathUnifier<V, E>) constructor.newInstance(pb, sb, ph, sh, ref);
 				}
 				catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 				{
@@ -54,24 +56,44 @@ public final class PathUnifiers<V, E, U extends IPathUnifier<V, E>>
 		};
 	}
 
-	public List<? extends U> weakUnifiers(IPath<V, E> head, IPath<V, E> body, boolean existentialHead)
+	public Collection<IPathUnifier<V, E>> weakUnifiers(IPath<V, E> head, IPath<V, E> body, boolean existentialHead)
 	{
 		return weakUnifiers(head, body, false, existentialHead);
 	}
 
-	public List<? extends U> weakUnifiers(IPath<V, E> head, IPath<V, E> body)
+	public Collection<IPathUnifier<V, E>> weakUnifiers(IPath<V, E> head, IPath<V, E> body)
 	{
 		return weakUnifiers(head, body, false, false);
 	}
 
-	public List<? extends U> strongUnifiers(IPath<V, E> head, IPath<V, E> body)
+	public Collection<IPathUnifier<V, E>> strongUnifiers(IPath<V, E> head, IPath<V, E> body)
 	{
 		return strongUnifiers(head, body, false);
 	}
 
-	public List<? extends U> weakUnifiers(IPath<V, E> head, IPath<V, E> body, boolean firstFind, boolean existentialHead)
+	public Collection<IPathUnifier<V, E>> weakUnifiers(IPathRule<V, E> a, IPathRule<V, E> b)
 	{
-		List<U> ret = new ArrayList<>();
+		return weakUnifiers(a.getHead(), b.getBody(), false, a.isExistential());
+	}
+
+	public Collection<IPathUnifier<V, E>> strongUnifiers(IPathRule<V, E> a, IPathRule<V, E> b)
+	{
+		return strongUnifiers(a.getHead(), b.getBody(), false);
+	}
+
+	public Collection<IPathUnifier<V, E>> weakUnifiers(IPathRule<V, E> a, IPathRule<V, E> b, boolean firstFind)
+	{
+		return weakUnifiers(a.getHead(), b.getBody(), firstFind, a.isExistential());
+	}
+
+	public Collection<IPathUnifier<V, E>> strongUnifiers(IPathRule<V, E> a, IPathRule<V, E> b, boolean firstFind)
+	{
+		return strongUnifiers(a.getHead(), b.getBody(), firstFind);
+	}
+
+	public Collection<IPathUnifier<V, E>> weakUnifiers(IPath<V, E> head, IPath<V, E> body, boolean firstFind, boolean existentialHead)
+	{
+		List<IPathUnifier<V, E>> ret = new ArrayList<>();
 
 		final int h_size = head.size();
 		final int b_size = body.size();
@@ -81,7 +103,7 @@ public final class PathUnifiers<V, E, U extends IPathUnifier<V, E>>
 
 		/*
 		 * head : y.A
-		 * body : B.y
+		 * body : (∃)? B.y
 		 */
 		tmp = PathOp.findOverlappedPossiblePrefixes(body, head, firstFind);
 
@@ -95,7 +117,7 @@ public final class PathUnifiers<V, E, U extends IPathUnifier<V, E>>
 		}
 		/*
 		 * head : y
-		 * body : B.y
+		 * body : (∃)? B.y
 		 */
 		if (PathOp.isProperSuffix(head, body))
 		{
@@ -155,9 +177,9 @@ public final class PathUnifiers<V, E, U extends IPathUnifier<V, E>>
 		return ret;
 	}
 
-	public List<? extends U> strongUnifiers(IPath<V, E> head, IPath<V, E> body, boolean firstFind)
+	public Collection<IPathUnifier<V, E>> strongUnifiers(IPath<V, E> head, IPath<V, E> body, boolean firstFind)
 	{
-		List<U> ret = new ArrayList<>();
+		List<IPathUnifier<V, E>> ret = new ArrayList<>();
 
 		final int h_size = head.size();
 		final int b_size = body.size();
@@ -214,12 +236,35 @@ public final class PathUnifiers<V, E, U extends IPathUnifier<V, E>>
 		return ret;
 	}
 
-	// rule1 dépend de rule2
-	public List<? extends U> compute(IPath<V, E> head, IPath<V, E> body)
+	public boolean haveUnifiers(IPathRule<V, E> a, IPathRule<V, E> b)
 	{
-		List<U> ret = new ArrayList<>();
-		ret.addAll(weakUnifiers(head, body));
-		ret.addAll(strongUnifiers(head, body));
+		if (!strongUnifiers(a, b, true).isEmpty())
+			return true;
+
+		if (!weakUnifiers(a, b, true).isEmpty())
+			return true;
+
+		return false;
+	}
+
+	public Collection<IPathUnifier<V, E>> compute(IPathRule<V, E> a, IPathRule<V, E> b)
+	{
+		List<IPathUnifier<V, E>> ret = new ArrayList<>();
+		ret.addAll(weakUnifiers(a, b));
+		ret.addAll(strongUnifiers(a, b));
+		return ret;
+	}
+
+	public Collection<IPathUnifier<V, E>> compute(IPath<V, E> head, IPath<V, E> body)
+	{
+		return compute(head, body, false);
+	}
+
+	public Collection<IPathUnifier<V, E>> compute(IPath<V, E> head, IPath<V, E> body, boolean existentialHead)
+	{
+		List<IPathUnifier<V, E>> ret = new ArrayList<>();
+		ret.addAll(weakUnifiers(head, body, existentialHead));
+		ret.addAll(strongUnifiers(head, body, existentialHead));
 		return ret;
 	}
 }
