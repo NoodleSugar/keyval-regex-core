@@ -15,6 +15,7 @@ import insomnia.data.IPath;
 import insomnia.implem.fsa.gbuilder.GCEdgeData;
 import insomnia.implem.fsa.gbuilder.GCState;
 import insomnia.implem.fsa.gbuilder.GraphChunk;
+import insomnia.implem.kv.data.KVValue.Type;
 
 public class KVPath extends AbstractPath<KVValue, KVLabel>
 {
@@ -108,19 +109,28 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 	 */
 	public static KVPath pathFromString(String p)
 	{
+		return pathFromString(p, new KVValue());
+	}
+
+	public static KVPath pathFromString(String p, KVValue value)
+	{
+		boolean hasValue = value.type != Type.NULL;
+
 		if (p.isEmpty())
-			return new KVPath(Collections.emptyList());
+			return new KVPath(Collections.emptyList(), value);
 
 		if (p.equals("^"))
-			return new KVPath(true, Collections.emptyList());
+			return new KVPath(true, Collections.emptyList(), value);
 
 		if (p.equals("$"))
-			return new KVPath(false, true, Collections.emptyList());
+			return hasValue //
+				? new KVPath(false, Collections.emptyList(), value) //
+				: new KVPath(false, true, Collections.emptyList());
 
 		p = p.trim();
 
 		boolean isRooted   = p.charAt(0) == '.';
-		boolean isTerminal = p.charAt(p.length() - 1) == '.';
+		boolean isTerminal = p.charAt(p.length() - 1) == '.' || hasValue;
 
 		p = p.substring(isRooted ? 1 : 0, p.length() - (isTerminal ? 1 : 0));
 		return pathFromString(p, isRooted, isTerminal);
