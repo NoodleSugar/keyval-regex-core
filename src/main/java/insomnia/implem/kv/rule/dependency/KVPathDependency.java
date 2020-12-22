@@ -14,18 +14,6 @@ public class KVPathDependency extends KVPathUnifier implements IPathDependency<K
 	IRule<KVValue, KVLabel> source;
 	IRule<KVValue, KVLabel> target;
 
-//	public static IPathUnifierFactory<KVValue, KVLabel, KVPathDependency> getFactory()
-//	{
-//		return new AbstractPathUnifierFactory<KVValue, KVLabel, KVPathDependency>()
-//		{
-//			@Override
-//			public KVPathDependency get(IPath<KVValue, KVLabel> pb, IPath<KVValue, KVLabel> sb, IPath<KVValue, KVLabel> ph, IPath<KVValue, KVLabel> sh, IPath<KVValue, KVLabel> ref)
-//			{
-//				return new KVPathDependency(pb, sb, ph, sh, ref);
-//			}
-//		};
-//	}
-
 	public KVPathDependency(IPathUnifier<KVValue, KVLabel> unifier, IPathRule<KVValue, KVLabel> source, IPathRule<KVValue, KVLabel> target)
 	{
 		super(unifier);
@@ -53,6 +41,18 @@ public class KVPathDependency extends KVPathUnifier implements IPathDependency<K
 
 	@Override
 	public IRule<KVValue, KVLabel> getTarget()
+	{
+		return target;
+	}
+
+	@Override
+	public IRule<KVValue, KVLabel> getRuleSource()
+	{
+		return source;
+	}
+
+	@Override
+	public IRule<KVValue, KVLabel> getRuleTarget()
 	{
 		return target;
 	}
