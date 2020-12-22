@@ -10,11 +10,11 @@ import insomnia.fsa.IFSAProperties;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IGFSAutomaton;
 import insomnia.fsa.algorithm.IFSAAValidation;
-import insomnia.fsa.gbuilder.AbstractGBuilderFSA;
-import insomnia.fsa.gbuilder.IGBuilderFSAFactory;
+import insomnia.implem.fsa.gbuilder.AbstractGBuilderFSA;
 import insomnia.implem.fsa.gbuilder.GBuilder;
 import insomnia.implem.fsa.gbuilder.GBuilderState;
-import insomnia.implem.fsa.gbuilder.GraphChunk;
+import insomnia.implem.fsa.gbuilder.IGBuilderFSAFactory;
+import insomnia.implem.fsa.graphchunk.GraphChunk;
 
 /**
  * @author zuri

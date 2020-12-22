@@ -12,9 +12,9 @@ import insomnia.data.AbstractPath;
 import insomnia.data.INode;
 import insomnia.data.INodeFactory;
 import insomnia.data.IPath;
-import insomnia.implem.fsa.gbuilder.GCEdgeData;
-import insomnia.implem.fsa.gbuilder.GCState;
-import insomnia.implem.fsa.gbuilder.GraphChunk;
+import insomnia.implem.fsa.graphchunk.GCEdgeData;
+import insomnia.implem.fsa.graphchunk.GCState;
+import insomnia.implem.fsa.graphchunk.GraphChunk;
 import insomnia.implem.kv.data.KVValue.Type;
 
 public class KVPath extends AbstractPath<KVValue, KVLabel>

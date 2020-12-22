@@ -1,4 +1,4 @@
-package insomnia.fsa.gbuilder;
+package insomnia.implem.fsa.gbuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;

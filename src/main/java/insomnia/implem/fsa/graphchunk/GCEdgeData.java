@@ -1,4 +1,4 @@
-package insomnia.implem.fsa.gbuilder;
+package insomnia.implem.fsa.graphchunk;
 
 import java.util.function.Predicate;
 import java.util.regex.Pattern;

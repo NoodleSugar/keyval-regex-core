@@ -19,12 +19,14 @@ import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.fsa.IGFSAutomaton;
 import insomnia.fsa.algorithm.GFSAValidation;
-import insomnia.fsa.gbuilder.IGBuilderFSAFactory;
 import insomnia.implem.fsa.FSAEdgeEpsilon;
 import insomnia.implem.fsa.FSAEdgeNumber;
 import insomnia.implem.fsa.FSAEdgeRegex;
 import insomnia.implem.fsa.FSAEdgeStringEq;
-import insomnia.implem.fsa.gbuilder.GCEdgeData.Type;
+import insomnia.implem.fsa.graphchunk.GCEdgeData;
+import insomnia.implem.fsa.graphchunk.GCState;
+import insomnia.implem.fsa.graphchunk.GraphChunk;
+import insomnia.implem.fsa.graphchunk.GCEdgeData.Type;
 
 /**
  * A specific builder for {@link IGFSAutomaton}.

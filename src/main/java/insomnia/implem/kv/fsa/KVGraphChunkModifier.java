@@ -1,8 +1,8 @@
 package insomnia.implem.kv.fsa;
 
 import insomnia.data.IPath;
-import insomnia.implem.fsa.gbuilder.GCState;
-import insomnia.implem.fsa.gbuilder.GraphChunk;
+import insomnia.implem.fsa.graphchunk.GCState;
+import insomnia.implem.fsa.graphchunk.GraphChunk;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 

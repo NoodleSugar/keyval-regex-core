@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 
 import insomnia.fsa.IFSAEdge;
-import insomnia.fsa.gbuilder.IGBuilderState;
 
 public class GBuilderState<E> implements IGBuilderState<E>
 {

@@ -1,4 +1,4 @@
-package insomnia.implem.fsa.gbuilder;
+package insomnia.implem.fsa.graphchunk;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,7 +18,7 @@ import org.jgrapht.graph.DirectedPseudograph;
 
 import insomnia.fsa.IFSAProperties;
 import insomnia.implem.fsa.FSAProperties;
-import insomnia.implem.fsa.gbuilder.GCEdgeData.Type;
+import insomnia.implem.fsa.graphchunk.GCEdgeData.Type;
 
 /**
  * A graph representation of an automaton where node are {@link GCState} and edge are {@link GCEdgeData}.

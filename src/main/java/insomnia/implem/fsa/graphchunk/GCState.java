@@ -1,4 +1,4 @@
-package insomnia.implem.fsa.gbuilder;
+package insomnia.implem.fsa.graphchunk;
 
 public class GCState
 {
