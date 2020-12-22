@@ -22,7 +22,7 @@ public class KVGRDFactory
 
 	public KVGRD get()
 	{
-		KVGRD grd = new KVGRD();
+		KVGRD grd = new KVGRD(validation);
 		build(grd);
 		return grd;
 	}
