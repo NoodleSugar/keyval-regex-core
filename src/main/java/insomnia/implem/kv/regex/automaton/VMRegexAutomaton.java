@@ -3,11 +3,12 @@ package insomnia.implem.kv.regex.automaton;
 import java.util.ArrayList;
 import java.util.List;
 
-import insomnia.fsa.FSAException;
+import insomnia.data.IPath;
+import insomnia.data.ITree;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.implem.kv.regex.automaton.VMRegexAutomatonBuilder.InstructionData;
 
-public class VMRegexAutomaton implements IFSAutomaton<String>
+public class VMRegexAutomaton<V, E> implements IFSAutomaton<ITree<V, E>>
 {
 	protected enum Type
 	{
@@ -16,14 +17,14 @@ public class VMRegexAutomaton implements IFSAutomaton<String>
 
 	protected class Instruction
 	{
-		public Type type;
+		public Type   type;
 		public String str;
 
 		public Instruction inst1;
 		public Instruction inst2;
 
 		{
-			str = null;
+			str   = null;
 			inst1 = null;
 			inst2 = null;
 		}
@@ -36,16 +37,16 @@ public class VMRegexAutomaton implements IFSAutomaton<String>
 		int n = builder.instructions.size();
 		instructions = new ArrayList<>();
 
-		for(int i = 0; i < n; i++)
+		for (int i = 0; i < n; i++)
 			instructions.add(new Instruction());
 
-		for(int i = 0; i < n; i++)
+		for (int i = 0; i < n; i++)
 		{
-			Instruction inst = instructions.get(i);
+			Instruction     inst = instructions.get(i);
 			InstructionData data = builder.instructions.get(i);
 
 			inst.type = data.type;
-			switch(data.type)
+			switch (data.type)
 			{
 			case KEY:
 			case REGEX:
@@ -66,30 +67,30 @@ public class VMRegexAutomaton implements IFSAutomaton<String>
 	}
 
 	@Override
-	public boolean test(List<String> elements) throws FSAException
+	public boolean test(ITree<V, E> element)
 	{
-		return run(elements, instructions.get(0), 0);
+		return run(((IPath<V, E>) element).getLabels(), instructions.get(0), 0);
 	}
 
-	private boolean run(List<String> elements, Instruction inst, int index)
+	private boolean run(List<E> elements, Instruction inst, int index)
 	{
-		switch(inst.type)
+		switch (inst.type)
 		{
 		case KEY:
 			return index < elements.size() && //
-					elements.get(index).equals(inst.str) && //
-					run(elements, inst.inst1, index + 1);
+				elements.get(index).toString().equals(inst.str) && //
+				run(elements, inst.inst1, index + 1);
 		case REGEX:
 			return index < elements.size() && //
-					elements.get(index).matches(inst.str) && //
-					run(elements, inst.inst1, index + 1);
+				elements.get(index).toString().matches(inst.str) && //
+				run(elements, inst.inst1, index + 1);
 		case MATCH:
 			return index == elements.size();
 		case JUMP:
 			return run(elements, inst.inst1, index);
 		case SPLIT:
 			return run(elements, inst.inst1, index) || //
-					run(elements, inst.inst2, index);
+				run(elements, inst.inst2, index);
 		}
 		return false;
 	}
@@ -98,11 +99,11 @@ public class VMRegexAutomaton implements IFSAutomaton<String>
 	public String toString()
 	{
 		StringBuffer buf = new StringBuffer();
-		for(int i = 0; i < instructions.size(); i++)
+		for (int i = 0; i < instructions.size(); i++)
 		{
 			Instruction inst = instructions.get(i);
 			buf.append(i);
-			switch(inst.type)
+			switch (inst.type)
 			{
 			case KEY:
 				buf.append(" : KEY ");

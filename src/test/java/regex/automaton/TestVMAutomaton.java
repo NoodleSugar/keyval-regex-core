@@ -7,13 +7,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import insomnia.fsa.FSAException;
+import insomnia.implem.kv.data.KVLabel;
+import insomnia.implem.kv.data.KVPath;
+import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.regex.RegexParser;
 import insomnia.implem.kv.regex.automaton.VMRegexAutomaton;
 import insomnia.implem.kv.regex.automaton.VMRegexAutomatonBuilder;
@@ -23,7 +24,7 @@ class TestVMAutomaton
 {
 	static String regex = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
 
-	static VMRegexAutomaton automaton;
+	static VMRegexAutomaton<KVValue, KVLabel> automaton;
 
 	@BeforeAll
 	static void init()
@@ -43,17 +44,6 @@ class TestVMAutomaton
 		}
 	}
 
-	ArrayList<String> array(String path)
-	{
-		ArrayList<String> a = new ArrayList<String>();
-
-		for (String s : path.split("\\."))
-		{
-			a.add(s);
-		}
-		return a;
-	}
-
 	@ParameterizedTest
 	@ValueSource(strings = { "a.b.c", //
 			"b.c.c.c.c.c", //
@@ -65,15 +55,7 @@ class TestVMAutomaton
 			"c" })
 	void match(String s)
 	{
-		ArrayList<String> a = array(s);
-		try
-		{
-			assertTrue(automaton.test(a));
-		}
-		catch (FSAException e)
-		{
-			fail("Regex Automaton Run Error : " + e.getMessage());
-		}
+		assertTrue(automaton.test(KVPath.pathFromString(s)));
 	}
 
 	@ParameterizedTest
@@ -85,14 +67,6 @@ class TestVMAutomaton
 			"a.b.c.e" })
 	void matchNot(String s)
 	{
-		ArrayList<String> a = array(s);
-		try
-		{
-			assertFalse(automaton.test(a));
-		}
-		catch (FSAException e)
-		{
-			fail("Regex Automaton Run Error : " + e.getMessage());
-		}
+		assertFalse(automaton.test(KVPath.pathFromString(s)));
 	}
 }

@@ -4,6 +4,8 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
+import insomnia.implem.kv.data.KVLabel;
+import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.regex.automaton.VMRegexAutomaton.Type;
 import insomnia.implem.kv.regex.element.IElement;
 import insomnia.implem.kv.regex.element.Key;
@@ -138,8 +140,8 @@ public class VMRegexAutomatonBuilder
 		return current;
 	}
 
-	public VMRegexAutomaton build()
+	public VMRegexAutomaton<KVValue, KVLabel> build()
 	{
-		return new VMRegexAutomaton(this);
+		return new VMRegexAutomaton<>(this);
 	}
 }
