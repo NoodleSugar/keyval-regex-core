@@ -44,6 +44,8 @@ public class KVGRDFactory
 	{
 		for (IRule<KVValue, KVLabel> a : rules)
 		{
+			grd.addVertex(a);
+
 			for (IRule<KVValue, KVLabel> b : rules)
 			{
 				if (false == validation.test(a, b))
