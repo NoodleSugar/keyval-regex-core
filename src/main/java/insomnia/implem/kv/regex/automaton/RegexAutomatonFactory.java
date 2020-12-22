@@ -6,14 +6,20 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 import org.jgrapht.graph.DirectedPseudograph;
 
+import insomnia.data.IPath;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.implem.fsa.gbuilder.GCEdgeData;
 import insomnia.implem.fsa.gbuilder.GCEdgeData.Type;
 import insomnia.implem.fsa.gbuilder.GCState;
 import insomnia.implem.fsa.gbuilder.GraphChunk;
+import insomnia.implem.kv.data.KVLabel;
+import insomnia.implem.kv.data.KVValue;
+import insomnia.implem.kv.fsa.KVGraphChunkModifier;
+import insomnia.implem.kv.fsa.KVGraphChunkModifier.Environment;
 import insomnia.implem.kv.regex.element.Const;
 import insomnia.implem.kv.regex.element.IElement;
 import insomnia.implem.kv.regex.element.Key;
@@ -128,6 +134,54 @@ public class RegexAutomatonFactory<E>
 		modifiedAutomaton = automaton;
 	}
 
+	/**
+	 * The graph chunk modifier may change the structure of the automaton before the build.
+	 * The Consumer may be change between every build.
+	 * 
+	 * @param graphChunkModifier
+	 * @return
+	 */
+	public RegexAutomatonFactory<E> setGraphChunkModifier(KVGraphChunkModifier graphChunkModifier)
+	{
+		if (graphChunkModifier == null)
+			modifiedAutomaton = automaton;
+		else
+		{
+			Environment env = new Environment()
+			{
+
+				@SuppressWarnings("unchecked")
+				@Override
+				public GraphChunk gluePath(GraphChunk gchunk, GCState start, GCState end, IPath<KVValue, KVLabel> path)
+				{
+					GChunk        ret    = new GChunk(start, end);
+					List<KVLabel> labels = path.getLabels();
+					int           nb     = labels.size();
+					List<GCState> states = new ArrayList<GCState>(nb + 1);
+
+					states.add(start);
+
+					for (int i = 0; i < nb - 1; i++)
+					{
+						GCState state = gchunk.addState();
+						ret.addState(state);
+						states.add(state);
+					}
+					states.add(end);
+
+					for (int i = 0; i < nb; i++)
+						ret.addEdge(states.get(i), states.get(i + 1), new GCEdgeData(labels.get(i).toString(), Type.STRING_EQUALS));
+
+					Graphs.addGraph(((GChunk) gchunk).getGraph(), ret.getGraph());
+					return ret;
+				}
+			};
+			modifiedAutomaton = automaton.copy();
+			graphChunkModifier.accept(modifiedAutomaton, env);
+		}
+		return this;
+	}
+
 	public RegexAutomatonFactory<E> mustBeSync(boolean val)
 	{
 		mustBeSync = val;
@@ -141,7 +195,7 @@ public class RegexAutomatonFactory<E>
 
 	public IFSAutomaton<E> newBuild() throws FSAException
 	{
-		return new RegexAutomatonBuilder<E>(automaton).mustBeSync(mustBeSync).newBuild();
+		return new RegexAutomatonBuilder<E>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
 	}
 
 	private GChunk oneEdge(GCEdgeData edge)
