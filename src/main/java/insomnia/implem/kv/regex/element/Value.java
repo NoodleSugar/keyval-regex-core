@@ -1,26 +1,19 @@
 package insomnia.implem.kv.regex.element;
 
-public class Const implements IElement
-{
-	public String str;
-	public double num;
+import insomnia.implem.kv.data.KVValue;
 
-	public Const(String value)
+public class Value implements IElement
+{
+	KVValue value;
+
+	public Value(KVValue value)
 	{
-		try
-		{
-			str = null;
-			num = Double.parseDouble(value);
-		}
-		catch(NumberFormatException nfe)
-		{
-			str = value;
-		}
+		this.value = value;
 	}
 
-	public boolean isNumber()
+	public KVValue getValue()
 	{
-		return str == null;
+		return value;
 	}
 
 	@Override
