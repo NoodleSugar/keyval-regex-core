@@ -2,14 +2,19 @@ package insomnia.implem.kv.data;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import insomnia.data.AbstractPath;
 import insomnia.data.INode;
 import insomnia.data.INodeFactory;
 import insomnia.data.IPath;
+import insomnia.implem.fsa.gbuilder.GCEdgeData;
+import insomnia.implem.fsa.gbuilder.GCState;
+import insomnia.implem.fsa.gbuilder.GraphChunk;
 
 public class KVPath extends AbstractPath<KVValue, KVLabel>
 {
@@ -113,6 +118,40 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 
 		p = p.substring(isRooted ? 1 : 0, p.length() - (isTerminal ? 1 : 0));
 		return pathFromString(p, isRooted, isTerminal);
+	}
+
+	/**
+	 * Get the path validated by a {@link GraphChunk}.
+	 * If gchunk does not represent a single path, then return null.
+	 * 
+	 * @param gchunk
+	 * @return
+	 */
+	public static Optional<KVPath> pathFromGraphChunk(GraphChunk gchunk)
+	{
+		GCState       state  = gchunk.getStart();
+		List<KVLabel> labels = new ArrayList<>();
+
+		for (;;)
+		{
+			// TODO: rooted path
+			Collection<GCEdgeData> edges = gchunk.getEdges(state);
+			int                    size  = edges.size();
+
+			if (size > 1)
+				return Optional.empty();
+
+			if (size == 0)
+				return Optional.of(new KVPath(labels));
+
+			GCEdgeData edge = edges.iterator().next();
+
+			if (edge.getType() != GCEdgeData.Type.STRING_EQUALS)
+				return Optional.empty();
+
+			labels.add(kvlabelFactory.get((String) edge.getObj()));
+			state = gchunk.edge_getEnd(edge);
+		}
 	}
 
 	// =========================================================================
