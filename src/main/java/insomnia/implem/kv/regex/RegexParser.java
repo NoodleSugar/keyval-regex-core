@@ -5,13 +5,14 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayDeque;
 
-import insomnia.implem.kv.regex.element.Const;
+import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.regex.element.IElement;
 import insomnia.implem.kv.regex.element.Key;
 import insomnia.implem.kv.regex.element.MultipleElement;
 import insomnia.implem.kv.regex.element.OrElement;
 import insomnia.implem.kv.regex.element.Quantifier;
 import insomnia.implem.kv.regex.element.Regex;
+import insomnia.implem.kv.regex.element.Value;
 
 public class RegexParser
 {
@@ -232,12 +233,12 @@ public class RegexParser
 		COMMA, CLOSE_BRACE, CLOSE_PARENTH;
 	};
 
-	public IElement readRegexStream(InputStream regexStream, String value) throws IOException, ParseException
+	public IElement readRegexStream(InputStream regexStream, KVValue value) throws IOException, ParseException
 	{
 		IElement        elts = readRegexStream(regexStream);
 		MultipleElement e    = new MultipleElement();
 		e.add(elts);
-		e.add(new Const(value));
+		e.add(new Value(value));
 		return e;
 	}
 
