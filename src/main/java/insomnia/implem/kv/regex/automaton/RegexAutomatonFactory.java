@@ -28,12 +28,12 @@ public class RegexAutomatonFactory<E>
 	{
 		public GChunk()
 		{
-			super(null, null, graphSupplier());
+			super();
 		}
 
 		public GChunk(GCState start, GCState end)
 		{
-			super(start, end, graphSupplier());
+			super(start, end);
 		}
 
 		public GChunk copy()
@@ -47,6 +47,12 @@ public class RegexAutomatonFactory<E>
 		public GCState freshState()
 		{
 			return RegexAutomatonFactory.this.freshState();
+		}
+
+		@Override
+		public Graph<GCState, GCEdgeData> getGraph()
+		{
+			return super.getGraph();
 		}
 
 		public void cleanGraph()
@@ -63,7 +69,7 @@ public class RegexAutomatonFactory<E>
 
 		public void addVertex(GCState vertex)
 		{
-			getGraph().addVertex(vertex);
+			addState(vertex);
 		}
 
 		public void prependEdge(GCState start, GCEdgeData e)
@@ -80,7 +86,7 @@ public class RegexAutomatonFactory<E>
 
 		public void addEdge(GCState sourceVertex, GCState targetVertex, GCEdgeData e)
 		{
-			getGraph().addEdge(sourceVertex, targetVertex, e);
+			super.addEdge(sourceVertex, targetVertex, e);
 
 			if (e.getType() == Type.EPSILON)
 				setProperties(getProperties().setSynchronous(false));
@@ -98,9 +104,15 @@ public class RegexAutomatonFactory<E>
 				b = b.copy();
 			}
 		}
+
+		@Override
+		public GraphChunk create()
+		{
+			return new GChunk();
+		}
 	}
 
-	private GChunk  automaton;
+	private GChunk  automaton, modifiedAutomaton;
 	private boolean mustBeSync = false;
 
 	private int currentId = 0;
@@ -112,7 +124,8 @@ public class RegexAutomatonFactory<E>
 
 	public RegexAutomatonFactory(IElement elements)// throws BuilderException
 	{
-		automaton = recursiveConstruct(elements);
+		automaton         = recursiveConstruct(elements);
+		modifiedAutomaton = automaton;
 	}
 
 	public RegexAutomatonFactory<E> mustBeSync(boolean val)
@@ -174,10 +187,10 @@ public class RegexAutomatonFactory<E>
 			{
 				GChunk gc = recursiveConstruct(ie);
 
-				if (gc.getGraph().inDegreeOf(gc.getStart()) > 0)
+				if (gc.getNbParentEdges(gc.getStart()) > 0)
 					gc.prependEdge(gc.addVertex(), new GCEdgeData(Type.EPSILON));
 
-				if (gc.getGraph().outDegreeOf(gc.getEnd()) > 0)
+				if (gc.getNbChildEdges(gc.getEnd()) > 0)
 					gc.appendEdge(gc.addVertex(), new GCEdgeData(Type.EPSILON));
 
 				gcs.add(gc);
@@ -257,6 +270,6 @@ public class RegexAutomatonFactory<E>
 	@Override
 	public String toString()
 	{
-		return automaton.getGraph().toString();
+		return automaton.toString();
 	}
 }
