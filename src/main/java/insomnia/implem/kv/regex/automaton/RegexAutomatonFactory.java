@@ -10,6 +10,7 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DirectedPseudograph;
 
 import insomnia.data.IPath;
+import insomnia.data.ITree;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.implem.fsa.gbuilder.GCEdgeData;
@@ -20,15 +21,22 @@ import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.fsa.KVGraphChunkModifier;
 import insomnia.implem.kv.fsa.KVGraphChunkModifier.Environment;
-import insomnia.implem.kv.regex.element.Const;
 import insomnia.implem.kv.regex.element.IElement;
 import insomnia.implem.kv.regex.element.Key;
 import insomnia.implem.kv.regex.element.MultipleElement;
 import insomnia.implem.kv.regex.element.OrElement;
 import insomnia.implem.kv.regex.element.Quantifier;
 import insomnia.implem.kv.regex.element.Regex;
+import insomnia.implem.kv.regex.element.Value;
 
-public class RegexAutomatonFactory<E>
+/**
+ * The factory to create an automaton from a parsed regex.
+ * 
+ * @author zuri
+ * @param <V>
+ * @param <E>
+ */
+public class RegexAutomatonFactory<V, E>
 {
 	private class GChunk extends GraphChunk
 	{
@@ -141,7 +149,7 @@ public class RegexAutomatonFactory<E>
 	 * @param graphChunkModifier
 	 * @return
 	 */
-	public RegexAutomatonFactory<E> setGraphChunkModifier(KVGraphChunkModifier graphChunkModifier)
+	public RegexAutomatonFactory<V, E> setGraphChunkModifier(KVGraphChunkModifier graphChunkModifier)
 	{
 		if (graphChunkModifier == null)
 			modifiedAutomaton = automaton;
@@ -170,7 +178,7 @@ public class RegexAutomatonFactory<E>
 					states.add(end);
 
 					for (int i = 0; i < nb; i++)
-						ret.addEdge(states.get(i), states.get(i + 1), new GCEdgeData(labels.get(i).toString(), Type.STRING_EQUALS));
+						ret.addEdge(states.get(i), states.get(i + 1), GCEdgeData.createString(labels.get(i).toString()));
 
 					Graphs.addGraph(((GChunk) gchunk).getGraph(), ret.getGraph());
 					return ret;
@@ -182,7 +190,7 @@ public class RegexAutomatonFactory<E>
 		return this;
 	}
 
-	public RegexAutomatonFactory<E> mustBeSync(boolean val)
+	public RegexAutomatonFactory<V, E> mustBeSync(boolean val)
 	{
 		mustBeSync = val;
 		return this;
@@ -193,9 +201,9 @@ public class RegexAutomatonFactory<E>
 		return new GCState(currentId++);
 	}
 
-	public IFSAutomaton<E> newBuild() throws FSAException
+	public IFSAutomaton<ITree<V, E>> newBuild() throws FSAException
 	{
-		return new RegexAutomatonBuilder<E>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
+		return new RegexAutomatonBuilder<V, E>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
 	}
 
 	private GChunk oneEdge(GCEdgeData edge)
@@ -215,21 +223,17 @@ public class RegexAutomatonFactory<E>
 		if (element instanceof Key)
 		{
 			Key key = (Key) element;
-			currentAutomaton = oneEdge(new GCEdgeData(key.getLabel(), GCEdgeData.Type.STRING_EQUALS));
+			currentAutomaton = oneEdge(GCEdgeData.createString((key.getLabel())));
 		}
 		else if (element instanceof Regex)
 		{
 			Regex regex = (Regex) element;
-			currentAutomaton = oneEdge(new GCEdgeData(regex.getRegex(), GCEdgeData.Type.REGEX));
+			currentAutomaton = oneEdge(GCEdgeData.createRegex(regex.getRegex()));
 		}
-		else if (element instanceof Const)
+		else if (element instanceof Value)
 		{
-			Const c = (Const) element;
-
-			if (c.isNumber())
-				currentAutomaton = oneEdge(new GCEdgeData(c.num, GCEdgeData.Type.NUMBER));
-			else
-				currentAutomaton = oneEdge(new GCEdgeData(c.str, GCEdgeData.Type.STRING_EQUALS));
+			Value c = (Value) element;
+			currentAutomaton = oneEdge(GCEdgeData.createKVValue(c.getValue()));
 		}
 		else if (element instanceof OrElement)
 		{
@@ -242,10 +246,10 @@ public class RegexAutomatonFactory<E>
 				GChunk gc = recursiveConstruct(ie);
 
 				if (gc.getNbParentEdges(gc.getStart()) > 0)
-					gc.prependEdge(gc.addVertex(), new GCEdgeData(Type.EPSILON));
+					gc.prependEdge(gc.addVertex(), GCEdgeData.createEpsilon());
 
 				if (gc.getNbChildEdges(gc.getEnd()) > 0)
-					gc.appendEdge(gc.addVertex(), new GCEdgeData(Type.EPSILON));
+					gc.appendEdge(gc.addVertex(), GCEdgeData.createEpsilon());
 
 				gcs.add(gc);
 			}
@@ -286,7 +290,7 @@ public class RegexAutomatonFactory<E>
 				currentAutomaton.cleanGraph();
 				currentAutomaton.addVertex(currentAutomaton.getStart());
 				currentAutomaton.addVertex(currentAutomaton.getEnd());
-				currentAutomaton.addEdge(currentAutomaton.getStart(), currentAutomaton.getEnd(), new GCEdgeData(GCEdgeData.Type.EPSILON));
+				currentAutomaton.addEdge(currentAutomaton.getStart(), currentAutomaton.getEnd(), GCEdgeData.createEpsilon());
 			}
 			else if (inf > 1)
 				currentAutomaton.concat(base.copy(), inf - 1);
@@ -299,7 +303,7 @@ public class RegexAutomatonFactory<E>
 				if (inf == 0)
 					currentAutomaton.glue(base);
 
-				currentAutomaton.addEdge(currentAutomaton.getEnd(), currentAutomaton.getStart(), new GCEdgeData(GCEdgeData.Type.EPSILON));
+				currentAutomaton.addEdge(currentAutomaton.getEnd(), currentAutomaton.getStart(), GCEdgeData.createEpsilon());
 			}
 			else
 			{
@@ -307,7 +311,7 @@ public class RegexAutomatonFactory<E>
 					throw new InvalidParameterException();
 				if (sup != inf)
 				{
-					base.addEdge(base.getStart(), base.getEnd(), new GCEdgeData(GCEdgeData.Type.EPSILON));
+					base.addEdge(base.getStart(), base.getEnd(), GCEdgeData.createEpsilon());
 					GChunk repeat = base.copy();
 					repeat.concat(base.copy(), sup - inf - 1);
 
