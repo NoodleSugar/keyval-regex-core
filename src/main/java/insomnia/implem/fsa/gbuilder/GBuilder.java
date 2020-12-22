@@ -113,9 +113,9 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		STATE initialState = makeState(automaton.getStart());
 		STATE finalState   = makeState(automaton.getEnd());
 
-		states = new HashSet<>(automaton.getGraph().vertexSet().size());
+		states = new HashSet<>(automaton.getNbStates());
 		finals = new HashSet<>();
-		edges  = new ArrayList<>(automaton.getGraph().edgeSet().size());
+		edges  = new ArrayList<>(automaton.getNbEdges());
 		states.add(initialState);
 
 		if (finalState != initialState)
@@ -171,12 +171,12 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 	private void build(GCState fstate, STATE acurrentState) throws FSAException
 	{
 		processedStates.add(fstate);
-		Set<GCEdgeData> fedges = automaton.getGraph().outgoingEdgesOf(fstate);
+		Collection<GCEdgeData> fedges = automaton.getEdges(fstate);
 		acurrentState.childs = new ArrayList<>(fedges.size());
 
 		for (GCEdgeData edgeData : fedges)
 		{
-			GCState fcurrent  = automaton.getGraph().getEdgeTarget(edgeData);
+			GCState fcurrent  = automaton.edge_getEnd(edgeData);
 			STATE   newAState = build_addState(fcurrent);
 			build_addEdge(edgeData, acurrentState, newAState);
 		}
@@ -200,7 +200,7 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 	private void buildSync(GCState fstate, STATE acurrentState) throws FSAException
 	{
 		processedStates.add(fstate);
-		Set<GCEdgeData> fedges = automaton.getGraph().outgoingEdgesOf(fstate);
+		Collection<GCEdgeData> fedges = automaton.getEdges(fstate);
 		acurrentState.childs = new ArrayList<>(fedges.size());
 
 		for (GCEdgeData edgeData : fedges)
@@ -223,14 +223,14 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 					if (edge.getType() == Type.EPSILON)
 						continue;
 
-					GCState ftarget   = automaton.getGraph().getEdgeTarget(edge);
+					GCState ftarget   = automaton.edge_getEnd(edge);
 					STATE   newAState = build_addStateSync(ftarget);
 					build_addEdge(edge, acurrentState, newAState);
 				}
 			}
 			else
 			{
-				GCState fcurrent  = automaton.getGraph().getEdgeTarget(edgeData);
+				GCState fcurrent  = automaton.edge_getEnd(edgeData);
 				STATE   newAState = build_addStateSync(fcurrent);
 				build_addEdge(edgeData, acurrentState, newAState);
 			}
