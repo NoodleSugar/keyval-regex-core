@@ -13,17 +13,16 @@ import insomnia.fsa.algorithm.IFSAAValidation;
  * Factory of {@link AbstractGBuilderFSA}.
  * 
  * @author zuri
- *
- * @param <E> 
+ * @param <E>
  */
-public interface IGBuilderFSAFactory<E> extends IGFSAFactory<E>
+public interface IGBuilderFSAFactory<E, ELMNT> extends IGFSAFactory<E, ELMNT>
 {
 	@Override
-	AbstractGBuilderFSA<E> get(Collection<IFSAState<E>> states, //
+	AbstractGBuilderFSA<E, ELMNT> get(Collection<IFSAState<E>> states, //
 		Collection<IFSAState<E>> initialStates, //
 		Collection<IFSAState<E>> finalStates, //
 		Collection<IFSAEdge<E>> edges, //
 		IFSAProperties properties, //
-		IFSAAValidation<E, IGFSAutomaton<E>> validator //
+		IFSAAValidation<ELMNT, IGFSAutomaton<E, ELMNT>> validator //
 	);
 }

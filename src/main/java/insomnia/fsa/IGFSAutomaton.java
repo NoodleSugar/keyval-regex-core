@@ -6,13 +6,16 @@ import java.util.List;
 /**
  * Classic graph automaton representation.
  * 
- * E : type of tested elements
+ * @param <E> Type of the labels.
+ * @param <ELMNT> Type of the tested element.
  */
-public interface IGFSAutomaton<E> extends IFSAutomaton<E>
+public interface IGFSAutomaton<E, ELMNT> extends IFSAutomaton<ELMNT>
 {
 	int nbStates();
 
 	IFSAProperties getProperties();
+
+	List<E> getLabelsOf(ELMNT element);
 
 	Collection<IFSAState<E>> getInitialStates();
 
@@ -22,13 +25,9 @@ public interface IGFSAutomaton<E> extends IFSAutomaton<E>
 
 	Collection<IFSAEdge<E>> getEdges(IFSAState<E> state);
 
-	Collection<IFSAState<E>> nextValidStates(Collection<? extends IFSAState<E>> states, List<E> elements);
+	Collection<IFSAState<E>> nextValidStates(Collection<? extends IFSAState<E>> states, ELMNT element);
 
-	Collection<IFSAState<E>> nextValidStates(Collection<? extends IFSAState<E>> states, E element);
-
-	Collection<IFSAState<E>> nextValidStates(IFSAState<E> state, List<E> elements);
-
-	Collection<IFSAState<E>> nextValidStates(IFSAState<E> state, E element);
+	Collection<IFSAState<E>> nextValidStates(IFSAState<E> state, ELMNT element);
 
 	Collection<IFSAState<E>> epsilonClosure(Collection<? extends IFSAState<E>> states);
 

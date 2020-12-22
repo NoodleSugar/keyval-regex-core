@@ -6,18 +6,19 @@ import java.util.Collections;
 import java.util.List;
 
 import insomnia.fsa.AbstractGFSAutomaton;
-import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAProperties;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IGFSAutomaton;
 import insomnia.fsa.algorithm.IFSAAValidation;
 
-public abstract class AbstractGBuilderFSA<E> extends AbstractGFSAutomaton<E> implements IGFSAutomaton<E>
+public abstract class AbstractGBuilderFSA<E, ELMNT> //
+	extends AbstractGFSAutomaton<E, ELMNT> //
+	implements IGFSAutomaton<E, ELMNT>
 {
 	private IFSAProperties properties;
 
-	private IFSAAValidation<E, IGFSAutomaton<E>> validator;
+	private IFSAAValidation<ELMNT, IGFSAutomaton<E, ELMNT>> validator;
 
 	private Collection<IFSAState<E>> initialStates;
 	private Collection<IFSAState<E>> finalStates;
@@ -30,7 +31,7 @@ public abstract class AbstractGBuilderFSA<E> extends AbstractGFSAutomaton<E> imp
 		Collection<IFSAState<E>> finalStates, //
 		Collection<IFSAEdge<E>> edges, //
 		IFSAProperties properties, //
-		IFSAAValidation<E, IGFSAutomaton<E>> validator //
+		IFSAAValidation<ELMNT, IGFSAutomaton<E, ELMNT>> validator //
 	)
 	{
 		this.edges         = edges;
@@ -42,9 +43,9 @@ public abstract class AbstractGBuilderFSA<E> extends AbstractGFSAutomaton<E> imp
 	}
 
 	@Override
-	public boolean test(List<E> path) throws FSAException
+	public boolean test(ELMNT element)
 	{
-		return validator.test(this, path);
+		return validator.test(this, element);
 	}
 
 	@Override

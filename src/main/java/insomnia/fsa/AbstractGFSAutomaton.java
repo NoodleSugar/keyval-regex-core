@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class AbstractGFSAutomaton<E> implements IGFSAutomaton<E>
+public abstract class AbstractGFSAutomaton<E, ELMNT> implements IGFSAutomaton<E, ELMNT>
 {
 	protected <T> Set<T> provideSet()
 	{
@@ -25,17 +25,18 @@ public abstract class AbstractGFSAutomaton<E> implements IGFSAutomaton<E>
 		return getEdges(Collections.singletonList(state));
 	}
 
-	protected Collection<IFSAState<E>> nextValidState_sync(Collection<? extends IFSAState<E>> states, List<E> elements)
+	protected Collection<IFSAState<E>> nextValidState_sync(Collection<? extends IFSAState<E>> states, ELMNT theElement)
 	{
 		if (states.isEmpty())
 			return Collections.emptyList();
 
-		Set<IFSAState<E>>        ret = new HashSet<>(nbStates());
-		Collection<IFSAState<E>> buffStates = new ArrayList<>(nbStates());;
+		Set<IFSAState<E>>        ret        = new HashSet<>(nbStates());
+		Collection<IFSAState<E>> buffStates = new ArrayList<>(nbStates());
+		;
 
 		ret.addAll(states);
 
-		for (E element : elements)
+		for (E element : getLabelsOf(theElement))
 		{
 			if (ret.isEmpty())
 				return Collections.emptyList();
@@ -52,8 +53,8 @@ public abstract class AbstractGFSAutomaton<E> implements IGFSAutomaton<E>
 		}
 		return new ArrayList<>(ret);
 	}
-	
-	protected Collection<IFSAState<E>> nextValidStates_general(Collection<? extends IFSAState<E>> states, List<E> elements)
+
+	protected Collection<IFSAState<E>> nextValidStates_general(Collection<? extends IFSAState<E>> states, ELMNT theElement)
 	{
 		if (states.isEmpty())
 			return Collections.emptyList();
@@ -63,7 +64,7 @@ public abstract class AbstractGFSAutomaton<E> implements IGFSAutomaton<E>
 
 		ret.addAll(states);
 
-		for (E element : elements)
+		for (E element : getLabelsOf(theElement))
 		{
 			if (ret.isEmpty())
 				return Collections.emptyList();
@@ -81,21 +82,15 @@ public abstract class AbstractGFSAutomaton<E> implements IGFSAutomaton<E>
 	}
 
 	@Override
-	public Collection<IFSAState<E>> nextValidStates(Collection<? extends IFSAState<E>> states, E element)
+	public Collection<IFSAState<E>> nextValidStates(Collection<? extends IFSAState<E>> states, ELMNT element)
 	{
-		return nextValidStates(states, Collections.singletonList(element));
+		return nextValidStates(states, element);
 	}
 
 	@Override
-	public Collection<IFSAState<E>> nextValidStates(IFSAState<E> state, List<E> elements)
+	public Collection<IFSAState<E>> nextValidStates(IFSAState<E> state, ELMNT element)
 	{
-		return nextValidStates(Collections.singletonList(state), elements);
-	}
-
-	@Override
-	public Collection<IFSAState<E>> nextValidStates(IFSAState<E> state, E element)
-	{
-		return nextValidStates(Collections.singletonList(state), Collections.singletonList(element));
+		return nextValidStates(Collections.singletonList(state), element);
 	}
 
 	@Override

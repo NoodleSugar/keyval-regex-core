@@ -1,17 +1,18 @@
 package insomnia.fsa;
 
-import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * E : type of tested elements
  */
-public interface IFSAutomaton<E>
+public interface IFSAutomaton<ELMNT> extends Predicate<ELMNT>
 {
 	/**
 	 * @param elements to test
 	 * @return true if it succeed
 	 * @throws FSAException
 	 */
-	boolean test(List<E> elements) throws FSAException;
+	@Override
+	boolean test(ELMNT element);
 
 }
