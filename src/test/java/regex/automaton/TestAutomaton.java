@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -22,14 +24,19 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import insomnia.data.ITree;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.help.HelpLists;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVPath;
+import insomnia.implem.kv.data.KVValue;
+import insomnia.implem.kv.fsa.KVGraphChunkPathRuleApplierSimple;
 import insomnia.implem.kv.regex.RegexParser;
 import insomnia.implem.kv.regex.automaton.RegexAutomatonFactory;
 import insomnia.implem.kv.regex.element.IElement;
+import insomnia.implem.kv.rule.KVPathRule;
+import insomnia.rule.IRule;
 
 public class TestAutomaton
 {
@@ -42,7 +49,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return new RegexAutomatonFactory<KVLabel>((IElement) obj);
+						return new RegexAutomatonFactory<KVValue, KVLabel>((IElement) obj);
 					}
 
 				} }, //
@@ -51,9 +58,9 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return new RegexAutomatonFactory<KVLabel>((IElement) obj).mustBeSync(true);
+						return new RegexAutomatonFactory<KVValue, KVLabel>((IElement) obj).mustBeSync(true);
 					}
-				} }
+				} } //
 		};
 		return Stream.of(ret).collect(Collectors.toList());
 	}
@@ -65,7 +72,7 @@ public class TestAutomaton
 		return merged;
 	}
 
-	private static IFSAutomaton<KVLabel> parse(String regex, Function<IElement, RegexAutomatonFactory<KVLabel>> automatonFactoryProvider) throws IOException, ParseException, FSAException
+	private static IFSAutomaton<ITree<KVValue, KVLabel>> parse(String regex, Function<IElement, RegexAutomatonFactory<KVValue, KVLabel>> automatonFactoryProvider) throws IOException, ParseException, FSAException
 	{
 		IElement rparsed = new RegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
 		return automatonFactoryProvider.apply(rparsed).newBuild();
@@ -75,14 +82,14 @@ public class TestAutomaton
 	@TestInstance(Lifecycle.PER_CLASS)
 	class subTests
 	{
-		IFSAutomaton<KVLabel> automaton;
+		IFSAutomaton<ITree<KVValue, KVLabel>> automaton;
 
 		@BeforeAll
 		void setup() throws IOException, ParseException, FSAException
 		{
 			String   regex   = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
 			IElement rparsed = new RegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
-			automaton = new RegexAutomatonFactory<KVLabel>(rparsed).mustBeSync(!true).newBuild();
+			automaton = new RegexAutomatonFactory<KVValue, KVLabel>(rparsed).mustBeSync(!true).newBuild();
 		}
 
 		List<Object[]> complex()
@@ -112,14 +119,7 @@ public class TestAutomaton
 		@MethodSource
 		void complex(KVPath subject, boolean match)
 		{
-			try
-			{
-				assertEquals(match, automaton.test(subject.getLabels()));
-			}
-			catch (FSAException e)
-			{
-				fail(e.getMessage());
-			}
+			assertEquals(match, automaton.test(subject));
 		}
 	}
 
@@ -180,16 +180,96 @@ public class TestAutomaton
 
 	@ParameterizedTest
 	@MethodSource
-	void match(String fname, Function<IElement, RegexAutomatonFactory<KVLabel>> fprovider, String regex, KVPath subject, boolean match)
+	void match(String fname, Function<IElement, RegexAutomatonFactory<KVValue, KVLabel>> fprovider, String regex, KVPath subject, boolean match)
 	{
 		try
 		{
-			IFSAutomaton<KVLabel> automaton = parse(regex, fprovider);
-			assertEquals(match, automaton.test(subject.getLabels()));
+			IFSAutomaton<ITree<KVValue, KVLabel>> automaton = parse(regex, fprovider);
+			assertEquals(match, automaton.test(subject));
 		}
 		catch (IOException | ParseException | FSAException e)
 		{
 			fail(e.getMessage());
 		}
+	}
+
+	/**
+	 * Information for a test on path rewriting.
+	 * 
+	 * @author zuri
+	 */
+	private interface PathRewriting_data
+	{
+		Collection<IRule<KVValue, KVLabel>> getRules();
+
+		List<Object[]> getTestObjects();
+
+	};
+
+	static PathRewriting_data prd1()
+	{
+		return new PathRewriting_data()
+		{
+			@Override
+			public Collection<IRule<KVValue, KVLabel>> getRules()
+			{
+				return Arrays.asList(KVPathRule.create("x", "c"));
+			}
+
+			@Override
+			public List<Object[]> getTestObjects()
+			{
+				return Arrays.asList(new Object[][] { //
+						{ "a.b.c", new Object[][] { //
+								{ "a.b.c", true }, //
+								{ "a.b.x", true }, //
+								{ "a.b", false }, //
+								{ "a.b.c.c", false }, //
+								{ "a.b.d", false }, //
+						}, //
+						} });
+			}
+		};
+	}
+
+	static List<Object[]> pathRewriting()
+	{
+		PathRewriting_data datas[] = { prd1() };
+		List<Object[]>     ret     = new ArrayList<>();
+
+		for (PathRewriting_data data : Arrays.asList(datas))
+		{
+			for (Object[] dataObjects : data.getTestObjects())
+			{
+				for (Object[] expected : (Object[][]) dataObjects[1])
+				{
+					List<Object> items = new ArrayList<>();
+					items.add(data.getRules());
+
+					// The query
+					items.add(dataObjects[0]);
+
+					// Expected
+					items.addAll(Arrays.asList(expected));
+
+					ret.add(items.toArray());
+				}
+			}
+		}
+		return ret;
+	}
+
+	@ParameterizedTest
+	@MethodSource
+	void pathRewriting(Collection<IRule<KVValue, KVLabel>> rules, String regex, String query, boolean expected) throws IOException, ParseException, FSAException
+	{
+		IElement                          rparsed  = new RegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+		KVGraphChunkPathRuleApplierSimple modifier = new KVGraphChunkPathRuleApplierSimple(2);
+
+		IFSAutomaton<ITree<KVValue, KVLabel>> automaton = new RegexAutomatonFactory<KVValue, KVLabel>(rparsed) //
+			.setGraphChunkModifier(modifier.getGraphChunkModifier(rules)) //
+			.newBuild();
+
+		assertEquals(expected, automaton.test(KVPath.pathFromString(query)));
 	}
 }
