@@ -1,6 +1,9 @@
 package insomnia.implem.fsa.gbuilder;
 
-public class GCEdgeData
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+
+public class GCEdgeData implements Predicate<Object>
 {
 	private Object obj;
 	private Type   type;
@@ -36,6 +39,22 @@ public class GCEdgeData
 	public Object getObj()
 	{
 		return obj;
+	}
+
+	@Override
+	public boolean test(Object t)
+	{
+		switch (type)
+		{
+		case EPSILON:
+			return t == null;
+		case NUMBER:
+		case STRING_EQUALS:
+			return t.toString().equals(obj);
+		case REGEX:
+		default:
+			return Pattern.matches((String) obj, t.toString());
+		}
 	}
 
 	@Override
