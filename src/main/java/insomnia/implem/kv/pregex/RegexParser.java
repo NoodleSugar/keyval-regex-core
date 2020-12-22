@@ -1,4 +1,4 @@
-package insomnia.implem.kv.regex;
+package insomnia.implem.kv.pregex;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,13 +6,13 @@ import java.text.ParseException;
 import java.util.ArrayDeque;
 
 import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.regex.element.IElement;
-import insomnia.implem.kv.regex.element.Key;
-import insomnia.implem.kv.regex.element.MultipleElement;
-import insomnia.implem.kv.regex.element.OrElement;
-import insomnia.implem.kv.regex.element.Quantifier;
-import insomnia.implem.kv.regex.element.Regex;
-import insomnia.implem.kv.regex.element.Value;
+import insomnia.implem.kv.pregex.element.IElement;
+import insomnia.implem.kv.pregex.element.Key;
+import insomnia.implem.kv.pregex.element.MultipleElement;
+import insomnia.implem.kv.pregex.element.OrElement;
+import insomnia.implem.kv.pregex.element.Quantifier;
+import insomnia.implem.kv.pregex.element.Regex;
+import insomnia.implem.kv.pregex.element.Value;
 
 public class RegexParser
 {

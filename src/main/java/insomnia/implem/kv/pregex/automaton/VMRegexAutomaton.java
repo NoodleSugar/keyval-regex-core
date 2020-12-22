@@ -1,4 +1,4 @@
-package insomnia.implem.kv.regex.automaton;
+package insomnia.implem.kv.pregex.automaton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 import insomnia.data.IPath;
 import insomnia.data.ITree;
 import insomnia.fsa.IFSAutomaton;
-import insomnia.implem.kv.regex.automaton.VMRegexAutomatonBuilder.InstructionData;
+import insomnia.implem.kv.pregex.automaton.VMRegexAutomatonBuilder.InstructionData;
 
 public class VMRegexAutomaton<V, E> implements IFSAutomaton<ITree<V, E>>
 {

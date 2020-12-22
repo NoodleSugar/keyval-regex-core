@@ -1,4 +1,4 @@
-package insomnia.implem.kv.regex.automaton;
+package insomnia.implem.kv.pregex.automaton;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -21,13 +21,13 @@ import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.fsa.KVGraphChunkModifier;
 import insomnia.implem.kv.fsa.KVGraphChunkModifier.Environment;
-import insomnia.implem.kv.regex.element.IElement;
-import insomnia.implem.kv.regex.element.Key;
-import insomnia.implem.kv.regex.element.MultipleElement;
-import insomnia.implem.kv.regex.element.OrElement;
-import insomnia.implem.kv.regex.element.Quantifier;
-import insomnia.implem.kv.regex.element.Regex;
-import insomnia.implem.kv.regex.element.Value;
+import insomnia.implem.kv.pregex.element.IElement;
+import insomnia.implem.kv.pregex.element.Key;
+import insomnia.implem.kv.pregex.element.MultipleElement;
+import insomnia.implem.kv.pregex.element.OrElement;
+import insomnia.implem.kv.pregex.element.Quantifier;
+import insomnia.implem.kv.pregex.element.Regex;
+import insomnia.implem.kv.pregex.element.Value;
 
 /**
  * The factory to create an automaton from a parsed regex.

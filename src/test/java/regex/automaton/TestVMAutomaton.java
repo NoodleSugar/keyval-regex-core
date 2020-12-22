@@ -15,10 +15,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVPath;
 import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.regex.RegexParser;
-import insomnia.implem.kv.regex.automaton.VMRegexAutomaton;
-import insomnia.implem.kv.regex.automaton.VMRegexAutomatonBuilder;
-import insomnia.implem.kv.regex.element.IElement;
+import insomnia.implem.kv.pregex.RegexParser;
+import insomnia.implem.kv.pregex.automaton.VMRegexAutomaton;
+import insomnia.implem.kv.pregex.automaton.VMRegexAutomatonBuilder;
+import insomnia.implem.kv.pregex.element.IElement;
 
 class TestVMAutomaton
 {

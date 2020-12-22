@@ -1,4 +1,4 @@
-package insomnia.implem.kv.regex.automaton;
+package insomnia.implem.kv.pregex.automaton;
 
 import java.util.Collection;
 import java.util.List;

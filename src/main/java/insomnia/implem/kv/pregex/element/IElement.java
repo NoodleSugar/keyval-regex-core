@@ -1,4 +1,4 @@
-package insomnia.implem.kv.regex.element;
+package insomnia.implem.kv.pregex.element;
 
 public interface IElement
 {

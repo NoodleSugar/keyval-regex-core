@@ -32,9 +32,9 @@ import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVPath;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.fsa.KVGraphChunkPathRuleApplierSimple;
-import insomnia.implem.kv.regex.RegexParser;
-import insomnia.implem.kv.regex.automaton.RegexAutomatonFactory;
-import insomnia.implem.kv.regex.element.IElement;
+import insomnia.implem.kv.pregex.RegexParser;
+import insomnia.implem.kv.pregex.automaton.RegexAutomatonFactory;
+import insomnia.implem.kv.pregex.element.IElement;
 import insomnia.implem.kv.rule.KVPathRule;
 import insomnia.rule.IRule;
 
