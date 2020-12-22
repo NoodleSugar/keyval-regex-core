@@ -4,7 +4,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 public class KVValue
 {
-	enum Type
+	public enum Type
 	{
 		NUMBER, STRING, NULL
 	};
@@ -27,6 +27,11 @@ public class KVValue
 	public KVValue(String s)
 	{
 		obj = s;
+	}
+
+	public Type getType()
+	{
+		return type;
 	}
 
 	public Number getNumber()
