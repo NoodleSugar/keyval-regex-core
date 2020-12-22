@@ -21,10 +21,7 @@ public abstract class AbstractPath<V, E> implements IPath<V, E>
 
 	public abstract V emptyValue();
 
-	private static <V> boolean valueIsTerminal(V value)
-	{
-		return value != null;
-	}
+	abstract protected boolean valueIsTerminal(V value);
 
 	@SuppressWarnings("unchecked")
 	public AbstractPath(IPath<V, E> path, int begin, int end)

@@ -32,6 +32,12 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 		return new KVValue();
 	}
 
+	@Override
+	protected boolean valueIsTerminal(KVValue value)
+	{
+		return value.type != Type.NULL;
+	}
+
 	public static List<KVLabel> string2KVLabel(List<String> labels)
 	{
 		List<KVLabel> kvlabels = new ArrayList<>(labels.size());
