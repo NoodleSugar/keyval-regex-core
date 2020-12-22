@@ -9,7 +9,8 @@ import insomnia.fsa.gbuilder.IGBuilderState;
 
 public class GBuilderState<E> implements IGBuilderState<E>
 {
-	int               id;
+	int id;
+
 	List<IFSAEdge<E>> childs;
 
 	public GBuilderState(int id)

@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import insomnia.data.ITree;
 import insomnia.fsa.AbstractFSAEdge;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAEdge;
@@ -30,10 +31,12 @@ import insomnia.implem.fsa.gbuilder.GCEdgeData.Type;
  * This class can build a {@link IGFSAutomaton} given an intermediated representation of the automaton {@link GraphChunk}.
  * 
  * @author zuri
- * @param <E>
- * @param <STATE>
+ * @param <V> Value of a node
+ * @param <E> Label of edges.
+ * @param <STATE> State of GBuilder
+ * @param <T> Automaton type returned
  */
-public class GBuilder<E, STATE extends GBuilderState<E>>
+public class GBuilder<V, E, STATE extends GBuilderState<E>>
 {
 	Map<GCState, STATE> buildStates = new HashMap<>();
 
@@ -47,18 +50,22 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 	GraphChunk automaton;
 	boolean    mustBeSync;
 
-	Function<Integer, STATE> stateSupplier;
-	IGBuilderFSAFactory<E>   builderFactory;
+	Function<Integer, STATE>            stateSupplier;
+	IGBuilderFSAFactory<E, ITree<V, E>> builderFSAFactory;
 
-	public GBuilder(GraphChunk gc, Function<Integer, STATE> stateSupplier, IGBuilderFSAFactory<E> builderFactory)
+	// =========================================================================
+
+	public GBuilder(GraphChunk gc, Function<Integer, STATE> stateSupplier, IGBuilderFSAFactory<E, ITree<V, E>> builderFactory)
 	{
 		automaton = gc;
 
-		this.stateSupplier  = stateSupplier;
-		this.builderFactory = builderFactory;
+		this.stateSupplier     = stateSupplier;
+		this.builderFSAFactory = builderFactory;
 	}
 
-	public GBuilder<E, STATE> mustBeSync(boolean mustBeSync)
+	// =========================================================================
+
+	public GBuilder<V, E, STATE> mustBeSync(boolean mustBeSync)
 	{
 		this.mustBeSync = mustBeSync;
 		return this;
@@ -75,6 +82,9 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		buildStates.put(state, ret);
 		return ret;
 	}
+
+	// =========================================================================
+	// Build functions
 
 	private AbstractFSAEdge<E> makeEdge(GCEdgeData edgeData, IFSAState<E> parent, IFSAState<E> child) throws FSAException
 	{
@@ -108,7 +118,7 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 		return ret;
 	}
 
-	public IFSAutomaton<E> newBuild() throws FSAException
+	public IFSAutomaton<ITree<V, E>> newBuild() throws FSAException
 	{
 		STATE initialState = makeState(automaton.getStart());
 		STATE finalState   = makeState(automaton.getEnd());
@@ -135,11 +145,12 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 //			for(IFSAState<E> s : states)
 //				((State<E>)s).id = i++;
 
-		return builderFactory.get( //
+		return builderFSAFactory.get( //
 			states, Collections.singletonList(initialState), finals, //
 			edges, //
 			automaton.getProperties(), //
-			new GFSAValidation<E>());
+			new GFSAValidation<E, ITree<V, E>>() //
+		);
 	}
 
 	private STATE build_addState(GCState fcurrent) throws FSAException
@@ -236,6 +247,8 @@ public class GBuilder<E, STATE extends GBuilderState<E>>
 			}
 		}
 	}
+
+	// =========================================================================
 
 	@Override
 	public String toString()
