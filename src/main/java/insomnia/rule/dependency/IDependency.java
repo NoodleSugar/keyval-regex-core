@@ -1,5 +1,6 @@
 package insomnia.rule.dependency;
 
+import insomnia.rule.IRule;
 import insomnia.unifier.IUnifier;
 
 /**
@@ -12,4 +13,8 @@ import insomnia.unifier.IUnifier;
 public interface IDependency<V, E>
 {
 	IUnifier<V, E> getUnifier();
+
+	IRule<V, E> getRuleSource();
+
+	IRule<V, E> getRuleTarget();
 }
