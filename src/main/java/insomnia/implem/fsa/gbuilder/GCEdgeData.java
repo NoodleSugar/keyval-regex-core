@@ -3,6 +3,8 @@ package insomnia.implem.fsa.gbuilder;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import insomnia.implem.kv.data.KVValue;
+
 public class GCEdgeData implements Predicate<Object>
 {
 	private Object obj;
@@ -10,22 +12,55 @@ public class GCEdgeData implements Predicate<Object>
 
 	public enum Type
 	{
-		EPSILON, STRING_EQUALS, NUMBER, REGEX;
+		EPSILON, STRING_EQUALS, NUMBER, REGEX, //
+		VALUE_EQUALS;
 	};
 
-	public GCEdgeData(GCEdgeData data)
+	public static GCEdgeData createKVValue(KVValue value)
 	{
-		this.obj  = data.obj;
-		this.type = data.type;
+		switch (value.getType())
+		{
+		case NUMBER:
+			return createNumber(value.getNumber());
+		case STRING:
+			return createString(value.getString());
+		case NULL:
+		default:
+			return createEpsilon();
+		}
 	}
 
-	public GCEdgeData(Type type)
+	public static GCEdgeData createEpsilon()
 	{
-		this.obj  = null;
-		this.type = type;
+		return new GCEdgeData(Type.EPSILON, null);
 	}
 
-	public GCEdgeData(Object obj, Type type)
+	public static GCEdgeData createString(String s)
+	{
+		return new GCEdgeData(Type.STRING_EQUALS, s);
+	}
+
+	public static GCEdgeData createRegex(String r)
+	{
+		return new GCEdgeData(Type.REGEX, r);
+	}
+
+	public static GCEdgeData createNumber(Number nb)
+	{
+		return new GCEdgeData(Type.NUMBER, nb);
+	}
+
+	public static GCEdgeData createValue(Object val)
+	{
+		return new GCEdgeData(Type.STRING_EQUALS, val);
+	}
+
+	public static GCEdgeData copy(GCEdgeData ref)
+	{
+		return new GCEdgeData(ref.type, ref.obj);
+	}
+
+	private GCEdgeData(Type type, Object obj)
 	{
 		this.obj  = obj;
 		this.type = type;

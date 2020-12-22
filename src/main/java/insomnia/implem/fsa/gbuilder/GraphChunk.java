@@ -343,7 +343,7 @@ public abstract class GraphChunk
 		{
 			GCState source = states.get(graph.getEdgeSource(edgeData));
 			GCState target = states.get(graph.getEdgeTarget(edgeData));
-			ret.graph.addEdge(source, target, new GCEdgeData(edgeData));
+			ret.graph.addEdge(source, target, edgeData);
 		}
 		return ret;
 	}
@@ -355,7 +355,7 @@ public abstract class GraphChunk
 		for (GCEdgeData edgeData : edges)
 		{
 			GCState target = graph.getEdgeTarget(edgeData);
-			graph.addEdge(dest, target, new GCEdgeData(edgeData));
+			graph.addEdge(dest, target, edgeData);
 		}
 		// Copy to avoid concurent modification
 		edges = new ArrayList<>(graph.incomingEdgesOf(src));
@@ -363,7 +363,7 @@ public abstract class GraphChunk
 		for (GCEdgeData edgeData : edges)
 		{
 			GCState source = graph.getEdgeSource(edgeData);
-			graph.addEdge(source, dest, new GCEdgeData(edgeData));
+			graph.addEdge(source, dest, edgeData);
 		}
 		graph.removeVertex(src);
 	}
