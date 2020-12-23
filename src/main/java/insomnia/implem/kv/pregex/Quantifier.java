@@ -1,4 +1,4 @@
-package insomnia.implem.kv.pregex.element;
+package insomnia.implem.kv.pregex;
 
 import java.security.InvalidParameterException;
 import java.util.HashMap;

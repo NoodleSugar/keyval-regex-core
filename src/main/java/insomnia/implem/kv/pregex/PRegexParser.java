@@ -8,15 +8,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.pregex.element.Elements;
-import insomnia.implem.kv.pregex.element.Elements.MultipleElement;
-import insomnia.implem.kv.pregex.element.Elements.OrElement;
-import insomnia.implem.kv.pregex.element.Elements.SequenceElement;
-import insomnia.implem.kv.pregex.element.Elements.Value;
-import insomnia.implem.kv.pregex.element.IElement;
-import insomnia.implem.kv.pregex.element.Quantifier;
+import insomnia.implem.kv.pregex.PRegexElements.Disjunction;
+import insomnia.implem.kv.pregex.PRegexElements.MultipleElement;
+import insomnia.implem.kv.pregex.PRegexElements.Sequence;
+import insomnia.implem.kv.pregex.PRegexElements.Value;
 
-public class RegexParser
+public class PRegexParser
 {
 	/**
 	 * Represents the type of element that the Lexer will send to the Parser
@@ -235,27 +232,27 @@ public class RegexParser
 		COMMA, CLOSE_BRACE, CLOSE_PARENTH;
 	};
 
-	public IElement readRegexStream(InputStream regexStream, KVValue value) throws IOException, ParseException
+	public IPRegexElement readRegexStream(InputStream regexStream, KVValue value) throws IOException, ParseException
 	{
-		IElement elts = readRegexStream(regexStream);
+		IPRegexElement elts = readRegexStream(regexStream);
 
-		Collection<IElement> elements = new ArrayList<>();
+		Collection<IPRegexElement> elements = new ArrayList<>();
 		elements.add(elts);
 		elements.add(new Value(value));
-		return Elements.createSequence(elements);
+		return PRegexElements.createSequence(elements);
 	}
 
-	public IElement readRegexStream(InputStream regexStream) throws IOException, ParseException
+	public IPRegexElement readRegexStream(InputStream regexStream) throws IOException, ParseException
 	{
 		Lexer lexer = new Lexer(regexStream);
 
 		ArrayDeque<ReaderState> readerStateStack = new ArrayDeque<ReaderState>();
-		ArrayDeque<IElement>    elementStack     = new ArrayDeque<IElement>();
+		ArrayDeque<IPRegexElement>    elementStack     = new ArrayDeque<IPRegexElement>();
 
 		readerStateStack.push(ReaderState.END);
 		readerStateStack.push(ReaderState.OR_ELEMENT);
 
-		OrElement or = Elements.createDisjunction();
+		Disjunction or = PRegexElements.createDisjunction();
 		or.setQuantifier(Quantifier.from(1, 1));
 		elementStack.push(or);
 
@@ -291,9 +288,9 @@ public class RegexParser
 				break;
 
 			case MULTI_ELEMENT:
-				if (elementStack.peek() instanceof OrElement)
+				if (elementStack.peek() instanceof Disjunction)
 				{
-					SequenceElement m = Elements.createSequence();
+					Sequence m = PRegexElements.createSequence();
 					m.setQuantifier(Quantifier.from(1, 1));
 
 					elementStack.push(m);
@@ -315,7 +312,7 @@ public class RegexParser
 				}
 				else if (token == Token.OPEN_PARENTH)
 				{
-					OrElement o = Elements.createDisjunction();
+					Disjunction o = PRegexElements.createDisjunction();
 					o.setQuantifier(Quantifier.from(1, 1));
 
 					elementStack.push(o);
@@ -328,12 +325,12 @@ public class RegexParser
 			case SYMBOL:
 				if (token == Token.WORD)
 				{
-					elementStack.push(Elements.createKey(data));
+					elementStack.push(PRegexElements.createKey(data));
 					break;
 				}
 				else if (token == Token.REGEX)
 				{
-					elementStack.push(Elements.createRegex(data));
+					elementStack.push(PRegexElements.createRegex(data));
 					break;
 				}
 				throw new ParseException("Expected symbol", lexer.offset);
@@ -417,38 +414,40 @@ public class RegexParser
 				break;
 
 			case CLOSE_PARENTH:
+
 				if (token != Token.CLOSE_PARENTH)
 					throw new ParseException("Expected ')'", lexer.offset);
+
 				readerStateStack.push(ReaderState.STORE);
 				readerStateStack.push(ReaderState.QUANTIFIER);
 				break;
 
 			case STORE:
-				IElement element = elementStack.pop();
-				IElement container = elementStack.peek();
+				IPRegexElement element = elementStack.pop();
+				IPRegexElement container = elementStack.peek();
 				boolean addElt = true;
 
 				// Si le conteneur n'a qu'un élément
 				if (element instanceof MultipleElement)
 				{
-					IElement   top  = element;
+					IPRegexElement   top  = element;
 					Quantifier oldQ = top.getQuantifier();
 
 					if (top.getElements().size() == 1)
 					{
-						element = top.getElements().toArray(new IElement[] {})[0];
+						element = top.getElements().toArray(new IPRegexElement[] {})[0];
 						element.setQuantifier(Quantifier.multiplication(oldQ, element.getQuantifier()));
 					}
 				}
 
 				if (element.getQuantifier() == Quantifier.from(1, 1) && element instanceof MultipleElement)
 				{
-					IElement top = element;
+					IPRegexElement top = element;
 					if (element.getClass() == container.getClass())
 					{
 						addElt = false;
 
-						for (IElement e : top.getElements())
+						for (IPRegexElement e : top.getElements())
 							container.getElements().add(e);
 					}
 				}
@@ -462,10 +461,10 @@ public class RegexParser
 				if (token != Token.END)
 					throw new ParseException("Invalid regex", lexer.offset);
 
-				IElement elt = elementStack.pop();
+				IPRegexElement elt = elementStack.pop();
 
 				if (elt instanceof MultipleElement && elt.getElements().size() == 1)
-					return elt.getElements().toArray(new IElement[] {})[0];
+					return elt.getElements().toArray(new IPRegexElement[] {})[0];
 
 				return elt;
 

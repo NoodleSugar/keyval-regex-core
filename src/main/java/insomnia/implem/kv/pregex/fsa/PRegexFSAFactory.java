@@ -1,4 +1,4 @@
-package insomnia.implem.kv.pregex.automaton;
+package insomnia.implem.kv.pregex.fsa;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -21,13 +21,13 @@ import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.fsa.KVGraphChunkModifier;
 import insomnia.implem.kv.fsa.KVGraphChunkModifier.Environment;
-import insomnia.implem.kv.pregex.element.Elements.Key;
-import insomnia.implem.kv.pregex.element.Elements.OrElement;
-import insomnia.implem.kv.pregex.element.Elements.RegexElement;
-import insomnia.implem.kv.pregex.element.Elements.SequenceElement;
-import insomnia.implem.kv.pregex.element.Elements.Value;
-import insomnia.implem.kv.pregex.element.IElement;
-import insomnia.implem.kv.pregex.element.Quantifier;
+import insomnia.implem.kv.pregex.IPRegexElement;
+import insomnia.implem.kv.pregex.Quantifier;
+import insomnia.implem.kv.pregex.PRegexElements.Disjunction;
+import insomnia.implem.kv.pregex.PRegexElements.Key;
+import insomnia.implem.kv.pregex.PRegexElements.Regex;
+import insomnia.implem.kv.pregex.PRegexElements.Sequence;
+import insomnia.implem.kv.pregex.PRegexElements.Value;
 
 /**
  * The factory to create an automaton from a parsed regex.
@@ -36,7 +36,7 @@ import insomnia.implem.kv.pregex.element.Quantifier;
  * @param <V>
  * @param <E>
  */
-public class RegexAutomatonFactory<V, E>
+public class PRegexFSAFactory<V, E>
 {
 	private class GChunk extends GraphChunk
 	{
@@ -60,7 +60,7 @@ public class RegexAutomatonFactory<V, E>
 		@Override
 		public GCState freshState()
 		{
-			return RegexAutomatonFactory.this.freshState();
+			return PRegexFSAFactory.this.freshState();
 		}
 
 		@Override
@@ -136,7 +136,7 @@ public class RegexAutomatonFactory<V, E>
 		return new DirectedPseudograph<>(null, null, false);
 	}
 
-	public RegexAutomatonFactory(IElement elements)// throws BuilderException
+	public PRegexFSAFactory(IPRegexElement elements)// throws BuilderException
 	{
 		automaton         = recursiveConstruct(elements);
 		modifiedAutomaton = automaton;
@@ -149,7 +149,7 @@ public class RegexAutomatonFactory<V, E>
 	 * @param graphChunkModifier
 	 * @return
 	 */
-	public RegexAutomatonFactory<V, E> setGraphChunkModifier(KVGraphChunkModifier graphChunkModifier)
+	public PRegexFSAFactory<V, E> setGraphChunkModifier(KVGraphChunkModifier graphChunkModifier)
 	{
 		if (graphChunkModifier == null)
 			modifiedAutomaton = automaton;
@@ -190,7 +190,7 @@ public class RegexAutomatonFactory<V, E>
 		return this;
 	}
 
-	public RegexAutomatonFactory<V, E> mustBeSync(boolean val)
+	public PRegexFSAFactory<V, E> mustBeSync(boolean val)
 	{
 		mustBeSync = val;
 		return this;
@@ -203,7 +203,7 @@ public class RegexAutomatonFactory<V, E>
 
 	public IFSAutomaton<ITree<V, E>> newBuild() throws FSAException
 	{
-		return new RegexAutomatonBuilder<V, E>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
+		return new PRegexFSABuilder<V, E>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
 	}
 
 	private GChunk oneEdge(GCEdgeData edge)
@@ -216,7 +216,7 @@ public class RegexAutomatonFactory<V, E>
 		return ret;
 	}
 
-	private GChunk recursiveConstruct(IElement element)// throws BuilderException
+	private GChunk recursiveConstruct(IPRegexElement element)// throws BuilderException
 	{
 		GChunk currentAutomaton;
 
@@ -228,7 +228,7 @@ public class RegexAutomatonFactory<V, E>
 			break;
 
 		case REGEX:
-			RegexElement regex = (RegexElement) element;
+			Regex regex = (Regex) element;
 			currentAutomaton = oneEdge(GCEdgeData.createRegex(regex.getRegex()));
 			break;
 
@@ -238,11 +238,11 @@ public class RegexAutomatonFactory<V, E>
 			break;
 
 		case DISJUNCTION:
-			OrElement orElement = (OrElement) element;
+			Disjunction orElement = (Disjunction) element;
 
 			List<GChunk> gcs = new ArrayList<>(orElement.getElements().size());
 
-			for (IElement ie : orElement.getElements())
+			for (IPRegexElement ie : orElement.getElements())
 			{
 				GChunk gc = recursiveConstruct(ie);
 
@@ -261,9 +261,9 @@ public class RegexAutomatonFactory<V, E>
 			break;
 
 		case SEQUENCE:
-			SequenceElement me = (SequenceElement) element;
+			Sequence me = (Sequence) element;
 
-			Iterator<IElement> iterator = me.getElements().iterator();
+			Iterator<IPRegexElement> iterator = me.getElements().iterator();
 			currentAutomaton = recursiveConstruct(iterator.next());
 
 			while (iterator.hasNext())

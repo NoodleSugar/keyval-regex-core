@@ -1,8 +1,8 @@
-package insomnia.implem.kv.pregex.element;
+package insomnia.implem.kv.pregex;
 
 import java.util.Collection;
 
-public interface IElement
+public interface IPRegexElement
 {
 	public enum Type
 	{
@@ -13,7 +13,7 @@ public interface IElement
 
 	Type getType();
 
-	Collection<IElement> getElements();
+	Collection<IPRegexElement> getElements();
 
 	void setQuantifier(Quantifier q);
 }

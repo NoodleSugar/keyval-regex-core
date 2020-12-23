@@ -1,4 +1,4 @@
-package insomnia.implem.kv.pregex.automaton;
+package insomnia.implem.kv.pregex.fsa;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,9 +22,9 @@ import insomnia.implem.fsa.graphchunk.GraphChunk;
  * @param <E>
  * @param <T> Automaton type builded.
  */
-class RegexAutomatonBuilder<V, E> extends GBuilder<V, E, GBuilderState<E>>
+class PRegexFSABuilder<V, E> extends GBuilder<V, E, GBuilderState<E>>
 {
-	public RegexAutomatonBuilder(GraphChunk gc)
+	public PRegexFSABuilder(GraphChunk gc)
 	{
 		super(gc, id -> new GBuilderState<E>(id), new FSAFactory<V, E>());
 	}

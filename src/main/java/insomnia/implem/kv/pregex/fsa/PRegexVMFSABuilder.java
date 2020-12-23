@@ -1,4 +1,4 @@
-package insomnia.implem.kv.pregex.automaton;
+package insomnia.implem.kv.pregex.fsa;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -6,15 +6,15 @@ import java.util.List;
 
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.pregex.automaton.VMRegexAutomaton.Type;
-import insomnia.implem.kv.pregex.element.Elements.Key;
-import insomnia.implem.kv.pregex.element.Elements.OrElement;
-import insomnia.implem.kv.pregex.element.Elements.RegexElement;
-import insomnia.implem.kv.pregex.element.Elements.SequenceElement;
-import insomnia.implem.kv.pregex.element.IElement;
-import insomnia.implem.kv.pregex.element.Quantifier;
+import insomnia.implem.kv.pregex.IPRegexElement;
+import insomnia.implem.kv.pregex.Quantifier;
+import insomnia.implem.kv.pregex.PRegexElements.Disjunction;
+import insomnia.implem.kv.pregex.PRegexElements.Key;
+import insomnia.implem.kv.pregex.PRegexElements.Regex;
+import insomnia.implem.kv.pregex.PRegexElements.Sequence;
+import insomnia.implem.kv.pregex.fsa.PRegexVMFSA.Type;
 
-class VMRegexAutomatonBuilder
+class PRegexVMFSABuilder
 {
 	protected class InstructionData
 	{
@@ -35,13 +35,13 @@ class VMRegexAutomatonBuilder
 
 	List<InstructionData> instructions;
 
-	public VMRegexAutomatonBuilder(IElement elements)
+	public PRegexVMFSABuilder(IPRegexElement elements)
 	{
 		instructions = new ArrayList<>();
 		recursiveConstruct(elements, 0, true);
 	}
 
-	private int recursiveConstruct(IElement element, int current, boolean matching)
+	private int recursiveConstruct(IPRegexElement element, int current, boolean matching)
 	{
 		Quantifier q   = element.getQuantifier();
 		int        inf = q.getInf();
@@ -78,7 +78,7 @@ class VMRegexAutomatonBuilder
 		return current;
 	}
 
-	private int subRecursiveConstruct(IElement element, int current, boolean matching)
+	private int subRecursiveConstruct(IPRegexElement element, int current, boolean matching)
 	{
 		switch (element.getType())
 		{
@@ -94,7 +94,7 @@ class VMRegexAutomatonBuilder
 
 		case REGEX:
 		{
-			RegexElement regex = (RegexElement) element;
+			Regex regex = (Regex) element;
 			instructions.add(new InstructionData(Type.REGEX, regex.getRegex(), ++current, 0));
 			if (matching)
 				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
@@ -103,9 +103,9 @@ class VMRegexAutomatonBuilder
 
 		case DISJUNCTION:
 		{
-			OrElement  oe   = (OrElement) element;
+			Disjunction  oe   = (Disjunction) element;
 			int        n    = oe.getElements().size();
-			IElement[] elts = new IElement[n];
+			IPRegexElement[] elts = new IPRegexElement[n];
 			elts = oe.getElements().toArray(elts);
 
 			ArrayList<InstructionData> jumps = new ArrayList<>();
@@ -139,9 +139,9 @@ class VMRegexAutomatonBuilder
 
 		case SEQUENCE:
 		{
-			SequenceElement me = (SequenceElement) element;
+			Sequence me = (Sequence) element;
 
-			for (IElement e : me.getElements())
+			for (IPRegexElement e : me.getElements())
 				current = recursiveConstruct(e, current, false);
 
 			if (matching)
@@ -155,8 +155,8 @@ class VMRegexAutomatonBuilder
 		return current;
 	}
 
-	public VMRegexAutomaton<KVValue, KVLabel> build()
+	public PRegexVMFSA<KVValue, KVLabel> build()
 	{
-		return new VMRegexAutomaton<>(this);
+		return new PRegexVMFSA<>(this);
 	}
 }

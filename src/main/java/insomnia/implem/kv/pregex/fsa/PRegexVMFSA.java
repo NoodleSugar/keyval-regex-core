@@ -1,4 +1,4 @@
-package insomnia.implem.kv.pregex.automaton;
+package insomnia.implem.kv.pregex.fsa;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,9 +6,9 @@ import java.util.List;
 import insomnia.data.IPath;
 import insomnia.data.ITree;
 import insomnia.fsa.IFSAutomaton;
-import insomnia.implem.kv.pregex.automaton.VMRegexAutomatonBuilder.InstructionData;
+import insomnia.implem.kv.pregex.fsa.PRegexVMFSABuilder.InstructionData;
 
-public class VMRegexAutomaton<V, E> implements IFSAutomaton<ITree<V, E>>
+public class PRegexVMFSA<V, E> implements IFSAutomaton<ITree<V, E>>
 {
 	protected enum Type
 	{
@@ -32,7 +32,7 @@ public class VMRegexAutomaton<V, E> implements IFSAutomaton<ITree<V, E>>
 
 	List<Instruction> instructions;
 
-	protected VMRegexAutomaton(VMRegexAutomatonBuilder builder)
+	protected PRegexVMFSA(PRegexVMFSABuilder builder)
 	{
 		int n = builder.instructions.size();
 		instructions = new ArrayList<>();

@@ -1,4 +1,4 @@
-package insomnia.implem.kv.pregex.element;
+package insomnia.implem.kv.pregex;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,7 +6,7 @@ import java.util.Collections;
 
 import insomnia.implem.kv.data.KVValue;
 
-public final class Elements
+public final class PRegexElements
 {
 	public static class Key extends AbstractElement
 	{
@@ -29,7 +29,7 @@ public final class Elements
 		}
 	}
 
-	public static IElement createKey(String label)
+	public static IPRegexElement createKey(String label)
 	{
 		return new Key(label);
 	}
@@ -69,11 +69,11 @@ public final class Elements
 	 * Two different regex can have intersection area,
 	 * the user must take care of their use because of the determinization algorithm.
 	 */
-	public static class RegexElement extends AbstractElement
+	public static class Regex extends AbstractElement
 	{
 		String regex;
 
-		public RegexElement(String regex)
+		public Regex(String regex)
 		{
 			super(Type.REGEX);
 			this.regex = regex;
@@ -90,9 +90,9 @@ public final class Elements
 		}
 	}
 
-	public static RegexElement createRegex(String regex)
+	public static Regex createRegex(String regex)
 	{
-		return new RegexElement(regex);
+		return new Regex(regex);
 	}
 
 	// =========================================================================
@@ -100,9 +100,9 @@ public final class Elements
 	/**
 	 * Union element
 	 */
-	public static class OrElement extends MultipleElement
+	public static class Disjunction extends MultipleElement
 	{
-		public OrElement(Collection<IElement> elements)
+		public Disjunction(Collection<IPRegexElement> elements)
 		{
 			super(Type.DISJUNCTION, elements);
 		}
@@ -114,14 +114,14 @@ public final class Elements
 		}
 	}
 
-	public static OrElement createDisjunction()
+	public static Disjunction createDisjunction()
 	{
 		return createDisjunction(new ArrayList<>());
 	}
 
-	public static OrElement createDisjunction(Collection<IElement> elements)
+	public static Disjunction createDisjunction(Collection<IPRegexElement> elements)
 	{
-		return new OrElement(elements);
+		return new Disjunction(elements);
 	}
 
 	// =========================================================================
@@ -129,9 +129,9 @@ public final class Elements
 	/**
 	 * Union element
 	 */
-	public static class SequenceElement extends MultipleElement
+	public static class Sequence extends MultipleElement
 	{
-		public SequenceElement(Collection<IElement> elements)
+		public Sequence(Collection<IPRegexElement> elements)
 		{
 			super(Type.SEQUENCE, elements);
 		}
@@ -143,18 +143,18 @@ public final class Elements
 		}
 	}
 
-	public static SequenceElement createSequence()
+	public static Sequence createSequence()
 	{
 		return createSequence(new ArrayList<>());
 	}
 
-	public static SequenceElement createSequence(Collection<IElement> elements)
+	public static Sequence createSequence(Collection<IPRegexElement> elements)
 	{
-		return new SequenceElement(elements);
+		return new Sequence(elements);
 	}
 	// =========================================================================
 
-	static abstract class AbstractElement implements IElement
+	static abstract class AbstractElement implements IPRegexElement
 	{
 		Quantifier quantifier;
 
@@ -171,7 +171,7 @@ public final class Elements
 		}
 
 		@Override
-		public Collection<IElement> getElements()
+		public Collection<IPRegexElement> getElements()
 		{
 			return Collections.emptyList();
 		}
@@ -192,13 +192,13 @@ public final class Elements
 	/**
 	 * Sequence|disjunction element
 	 */
-	static abstract class MultipleElement extends AbstractElement
+	public static abstract class MultipleElement extends AbstractElement
 	{
-		Collection<IElement> elements;
+		Collection<IPRegexElement> elements;
 
 		abstract String toString_separator();
 
-		public MultipleElement(Type type, Collection<IElement> elements)
+		public MultipleElement(Type type, Collection<IPRegexElement> elements)
 		{
 			super(type);
 			this.elements = elements;
@@ -208,7 +208,7 @@ public final class Elements
 		 * @return The modifiable {@link ArrayList} of elements.
 		 */
 		@Override
-		public Collection<IElement> getElements()
+		public Collection<IPRegexElement> getElements()
 		{
 			return elements;
 		}
@@ -225,7 +225,7 @@ public final class Elements
 			String sep = toString_separator();
 
 			boolean first = true;
-			for (IElement e : this.elements)
+			for (IPRegexElement e : this.elements)
 			{
 				if (first)
 					first = false;
@@ -243,5 +243,4 @@ public final class Elements
 			return buffer.toString();
 		}
 	}
-
 }
