@@ -4,15 +4,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import insomnia.implem.kv.data.KVValue;
+import insomnia.implem.kv.pregex.element.Elements;
+import insomnia.implem.kv.pregex.element.Elements.MultipleElement;
+import insomnia.implem.kv.pregex.element.Elements.OrElement;
+import insomnia.implem.kv.pregex.element.Elements.SequenceElement;
+import insomnia.implem.kv.pregex.element.Elements.Value;
 import insomnia.implem.kv.pregex.element.IElement;
-import insomnia.implem.kv.pregex.element.Key;
-import insomnia.implem.kv.pregex.element.MultipleElement;
-import insomnia.implem.kv.pregex.element.OrElement;
 import insomnia.implem.kv.pregex.element.Quantifier;
-import insomnia.implem.kv.pregex.element.Regex;
-import insomnia.implem.kv.pregex.element.Value;
 
 public class RegexParser
 {
@@ -235,11 +237,12 @@ public class RegexParser
 
 	public IElement readRegexStream(InputStream regexStream, KVValue value) throws IOException, ParseException
 	{
-		IElement        elts = readRegexStream(regexStream);
-		MultipleElement e    = new MultipleElement();
-		e.add(elts);
-		e.add(new Value(value));
-		return e;
+		IElement elts = readRegexStream(regexStream);
+
+		Collection<IElement> elements = new ArrayList<>();
+		elements.add(elts);
+		elements.add(new Value(value));
+		return Elements.createSequence(elements);
 	}
 
 	public IElement readRegexStream(InputStream regexStream) throws IOException, ParseException
@@ -252,7 +255,7 @@ public class RegexParser
 		readerStateStack.push(ReaderState.END);
 		readerStateStack.push(ReaderState.OR_ELEMENT);
 
-		OrElement or = new OrElement();
+		OrElement or = Elements.createDisjunction();
 		or.setQuantifier(Quantifier.from(1, 1));
 		elementStack.push(or);
 
@@ -290,7 +293,7 @@ public class RegexParser
 			case MULTI_ELEMENT:
 				if (elementStack.peek() instanceof OrElement)
 				{
-					MultipleElement m = new MultipleElement();
+					SequenceElement m = Elements.createSequence();
 					m.setQuantifier(Quantifier.from(1, 1));
 
 					elementStack.push(m);
@@ -312,7 +315,7 @@ public class RegexParser
 				}
 				else if (token == Token.OPEN_PARENTH)
 				{
-					OrElement o = new OrElement();
+					OrElement o = Elements.createDisjunction();
 					o.setQuantifier(Quantifier.from(1, 1));
 
 					elementStack.push(o);
@@ -325,12 +328,12 @@ public class RegexParser
 			case SYMBOL:
 				if (token == Token.WORD)
 				{
-					elementStack.push(new Key(data));
+					elementStack.push(Elements.createKey(data));
 					break;
 				}
 				else if (token == Token.REGEX)
 				{
-					elementStack.push(new Regex(data));
+					elementStack.push(Elements.createRegex(data));
 					break;
 				}
 				throw new ParseException("Expected symbol", lexer.offset);
@@ -422,33 +425,35 @@ public class RegexParser
 
 			case STORE:
 				IElement element = elementStack.pop();
-				MultipleElement container = (MultipleElement) elementStack.peek();
+				IElement container = elementStack.peek();
 				boolean addElt = true;
 
 				// Si le conteneur n'a qu'un élément
 				if (element instanceof MultipleElement)
 				{
-					MultipleElement top  = (MultipleElement) element;
-					Quantifier      oldQ = top.getQuantifier();
-					if (top.size() == 1)
+					IElement   top  = element;
+					Quantifier oldQ = top.getQuantifier();
+
+					if (top.getElements().size() == 1)
 					{
-						element = top.toArray(new IElement[] {})[0];
+						element = top.getElements().toArray(new IElement[] {})[0];
 						element.setQuantifier(Quantifier.multiplication(oldQ, element.getQuantifier()));
 					}
 				}
 
 				if (element.getQuantifier() == Quantifier.from(1, 1) && element instanceof MultipleElement)
 				{
-					MultipleElement top = (MultipleElement) element;
+					IElement top = element;
 					if (element.getClass() == container.getClass())
 					{
 						addElt = false;
-						for (IElement e : top)
-							container.add(e);
+
+						for (IElement e : top.getElements())
+							container.getElements().add(e);
 					}
 				}
 				if (addElt)
-					container.add(element);
+					container.getElements().add(element);
 
 				skipLexer = true;
 				break;
@@ -458,8 +463,9 @@ public class RegexParser
 					throw new ParseException("Invalid regex", lexer.offset);
 
 				IElement elt = elementStack.pop();
-				if (elt instanceof MultipleElement && ((MultipleElement) elt).size() == 1)
-					return ((MultipleElement) elt).toArray(new IElement[] {})[0];
+
+				if (elt instanceof MultipleElement && elt.getElements().size() == 1)
+					return elt.getElements().toArray(new IElement[] {})[0];
 
 				return elt;
 

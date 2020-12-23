@@ -7,14 +7,14 @@ import java.util.List;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.pregex.automaton.VMRegexAutomaton.Type;
+import insomnia.implem.kv.pregex.element.Elements.Key;
+import insomnia.implem.kv.pregex.element.Elements.OrElement;
+import insomnia.implem.kv.pregex.element.Elements.RegexElement;
+import insomnia.implem.kv.pregex.element.Elements.SequenceElement;
 import insomnia.implem.kv.pregex.element.IElement;
-import insomnia.implem.kv.pregex.element.Key;
-import insomnia.implem.kv.pregex.element.MultipleElement;
-import insomnia.implem.kv.pregex.element.OrElement;
 import insomnia.implem.kv.pregex.element.Quantifier;
-import insomnia.implem.kv.pregex.element.Regex;
 
-public class VMRegexAutomatonBuilder
+class VMRegexAutomatonBuilder
 {
 	protected class InstructionData
 	{
@@ -80,26 +80,33 @@ public class VMRegexAutomatonBuilder
 
 	private int subRecursiveConstruct(IElement element, int current, boolean matching)
 	{
-		if (element instanceof Key)
+		switch (element.getType())
+		{
+
+		case KEY:
 		{
 			Key key = (Key) element;
 			instructions.add(new InstructionData(Type.KEY, key.getLabel(), ++current, 0));
 			if (matching)
 				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
 		}
-		else if (element instanceof Regex)
+			break;
+
+		case REGEX:
 		{
-			Regex regex = (Regex) element;
+			RegexElement regex = (RegexElement) element;
 			instructions.add(new InstructionData(Type.REGEX, regex.getRegex(), ++current, 0));
 			if (matching)
 				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
 		}
-		else if (element instanceof OrElement)
+			break;
+
+		case DISJUNCTION:
 		{
 			OrElement  oe   = (OrElement) element;
-			int        n    = oe.size();
+			int        n    = oe.getElements().size();
 			IElement[] elts = new IElement[n];
-			elts = oe.toArray(elts);
+			elts = oe.getElements().toArray(elts);
 
 			ArrayList<InstructionData> jumps = new ArrayList<>();
 			for (int i = 0; i < n - 1; i++)
@@ -121,22 +128,30 @@ public class VMRegexAutomatonBuilder
 				split.inst2 = current;
 			}
 			current = recursiveConstruct(elts[n - 1], current, false);
+
 			for (InstructionData jump : jumps)
 				jump.inst1 = current;
-			if (matching)
-				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
-		}
-		else if (element instanceof MultipleElement)
-		{
-			MultipleElement me = (MultipleElement) element;
-			for (IElement e : me)
-				current = recursiveConstruct(e, current, false);
-			if (matching)
-				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
-		}
-		else
-			throw new InvalidParameterException("Invalid type for parameter");
 
+			if (matching)
+				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
+		}
+			break;
+
+		case SEQUENCE:
+		{
+			SequenceElement me = (SequenceElement) element;
+
+			for (IElement e : me.getElements())
+				current = recursiveConstruct(e, current, false);
+
+			if (matching)
+				instructions.add(new InstructionData(Type.MATCH, null, ++current, 0));
+		}
+			break;
+
+		default:
+			throw new InvalidParameterException("Invalid type for parameter");
+		}
 		return current;
 	}
 

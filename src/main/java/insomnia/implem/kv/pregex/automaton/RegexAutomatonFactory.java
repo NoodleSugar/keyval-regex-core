@@ -14,20 +14,20 @@ import insomnia.data.ITree;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.implem.fsa.graphchunk.GCEdgeData;
+import insomnia.implem.fsa.graphchunk.GCEdgeData.Type;
 import insomnia.implem.fsa.graphchunk.GCState;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
-import insomnia.implem.fsa.graphchunk.GCEdgeData.Type;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.fsa.KVGraphChunkModifier;
 import insomnia.implem.kv.fsa.KVGraphChunkModifier.Environment;
+import insomnia.implem.kv.pregex.element.Elements.Key;
+import insomnia.implem.kv.pregex.element.Elements.OrElement;
+import insomnia.implem.kv.pregex.element.Elements.RegexElement;
+import insomnia.implem.kv.pregex.element.Elements.SequenceElement;
+import insomnia.implem.kv.pregex.element.Elements.Value;
 import insomnia.implem.kv.pregex.element.IElement;
-import insomnia.implem.kv.pregex.element.Key;
-import insomnia.implem.kv.pregex.element.MultipleElement;
-import insomnia.implem.kv.pregex.element.OrElement;
 import insomnia.implem.kv.pregex.element.Quantifier;
-import insomnia.implem.kv.pregex.element.Regex;
-import insomnia.implem.kv.pregex.element.Value;
 
 /**
  * The factory to create an automaton from a parsed regex.
@@ -220,28 +220,29 @@ public class RegexAutomatonFactory<V, E>
 	{
 		GChunk currentAutomaton;
 
-		if (element instanceof Key)
+		switch (element.getType())
 		{
+		case KEY:
 			Key key = (Key) element;
 			currentAutomaton = oneEdge(GCEdgeData.createString((key.getLabel())));
-		}
-		else if (element instanceof Regex)
-		{
-			Regex regex = (Regex) element;
+			break;
+
+		case REGEX:
+			RegexElement regex = (RegexElement) element;
 			currentAutomaton = oneEdge(GCEdgeData.createRegex(regex.getRegex()));
-		}
-		else if (element instanceof Value)
-		{
+			break;
+
+		case VALUE:
 			Value c = (Value) element;
 			currentAutomaton = oneEdge(GCEdgeData.createKVValue(c.getValue()));
-		}
-		else if (element instanceof OrElement)
-		{
+			break;
+
+		case DISJUNCTION:
 			OrElement orElement = (OrElement) element;
 
-			List<GChunk> gcs = new ArrayList<>(orElement.size());
+			List<GChunk> gcs = new ArrayList<>(orElement.getElements().size());
 
-			for (IElement ie : orElement)
+			for (IElement ie : orElement.getElements())
 			{
 				GChunk gc = recursiveConstruct(ie);
 
@@ -255,21 +256,23 @@ public class RegexAutomatonFactory<V, E>
 			}
 			currentAutomaton = gcs.get(0);
 
-			for (int i = 1, c = gcs.size(); i < c; i++)
+			for (int i = 1, c1 = gcs.size(); i < c1; i++)
 				currentAutomaton.glue(gcs.get(i));
-		}
-		else if (element instanceof MultipleElement)
-		{
-			MultipleElement me = (MultipleElement) element;
+			break;
 
-			Iterator<IElement> iterator = me.iterator();
+		case SEQUENCE:
+			SequenceElement me = (SequenceElement) element;
+
+			Iterator<IElement> iterator = me.getElements().iterator();
 			currentAutomaton = recursiveConstruct(iterator.next());
 
 			while (iterator.hasNext())
 				currentAutomaton.concat(recursiveConstruct(iterator.next()));
-		}
-		else
+			break;
+
+		default:
 			throw new InvalidParameterException("Invalid type for parameter");
+		}
 
 		/*
 		 * Make the quantifier
