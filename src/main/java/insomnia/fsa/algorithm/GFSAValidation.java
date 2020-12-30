@@ -6,12 +6,12 @@ import java.util.Collections;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IGFSAutomaton;
 
-public class GFSAValidation<E, ELMNT> implements IGFSAValidation<E, ELMNT>
+public class GFSAValidation<VAL, LBL, ELMNT> implements IGFSAValidation<VAL, LBL, ELMNT>
 {
 	@Override
-	public boolean test(IGFSAutomaton<E, ELMNT> automaton, ELMNT element)
+	public boolean test(IGFSAutomaton<VAL, LBL, ELMNT> automaton, ELMNT element)
 	{
-		Collection<IFSAState<E>> states = automaton.getInitialStates();
+		Collection<IFSAState<VAL, LBL>> states = automaton.getInitialStates();
 		states = automaton.nextValidStates(states, element);
 		return !Collections.disjoint(states, automaton.getFinalStates());
 	}

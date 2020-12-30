@@ -2,16 +2,10 @@ package insomnia.fsa;
 
 import java.util.function.Predicate;
 
-/**
- * Note: an epsilon transition evaluate test(null) = true.
- * 
- * @author zuri
- * @param <E>
- */
-public interface IFSALabel<E> extends Predicate<E>
+public interface IFSALabel<LBL> extends Predicate<LBL>
 {
 	@Override
-	boolean test(E element);
+	boolean test(LBL element);
 
 	/**
 	 * true if epsilon transition

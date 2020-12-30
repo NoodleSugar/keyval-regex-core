@@ -1,24 +1,24 @@
 package insomnia.fsa;
 
-public abstract class AbstractFSAEdge<E> implements IFSAEdge<E>
+public abstract class AbstractFSAEdge<VAL, LBL> implements IFSAEdge<VAL, LBL>
 {
-	protected IFSAState<E> parent;
-	protected IFSAState<E> child;
+	protected IFSAState<VAL, LBL> parent;
+	protected IFSAState<VAL, LBL> child;
 
-	protected AbstractFSAEdge(IFSAState<E> parent, IFSAState<E> child)
+	protected AbstractFSAEdge(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child)
 	{
 		this.parent = parent;
 		this.child  = child;
 	}
 
 	@Override
-	public IFSAState<E> getParent()
+	public IFSAState<VAL, LBL> getParent()
 	{
 		return parent;
 	}
 
 	@Override
-	public IFSAState<E> getChild()
+	public IFSAState<VAL, LBL> getChild()
 	{
 		return child;
 	}
@@ -30,7 +30,7 @@ public abstract class AbstractFSAEdge<E> implements IFSAEdge<E>
 			return false;
 
 		@SuppressWarnings("unchecked")
-		AbstractFSAEdge<E> edge = (AbstractFSAEdge<E>) obj;
+		AbstractFSAEdge<VAL, LBL> edge = (AbstractFSAEdge<VAL, LBL>) obj;
 
 		return edge.getParent().equals(getParent()) //
 			&& edge.getChild().equals(getChild());

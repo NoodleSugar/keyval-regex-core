@@ -10,14 +10,14 @@ import insomnia.fsa.algorithm.IFSAAValidation;
  * @author zuri
  * @param <E>
  */
-public interface IGFSAFactory<E, ELMNT>
+public interface IGFSAFactory<VAL, LBL, ELMNT>
 {
-	IGFSAutomaton<E, ELMNT> get( //
-		Collection<IFSAState<E>> states, //
-		Collection<IFSAState<E>> initialStates, //
-		Collection<IFSAState<E>> finalStates, //
-		Collection<IFSAEdge<E>> edges, //
+	IGFSAutomaton<VAL, LBL, ELMNT> get( //
+		Collection<IFSAState<VAL, LBL>> states, //
+		Collection<IFSAState<VAL, LBL>> initialStates, //
+		Collection<IFSAState<VAL, LBL>> finalStates, //
+		Collection<IFSAEdge<VAL, LBL>> edges, //
 		IFSAProperties properties, //
-		IFSAAValidation<ELMNT, IGFSAutomaton<E, ELMNT>> validator //
+		IFSAAValidation<ELMNT, IGFSAutomaton<VAL, LBL, ELMNT>> validator //
 	);
 }

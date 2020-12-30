@@ -6,31 +6,31 @@ import java.util.List;
 /**
  * Classic graph automaton representation.
  * 
- * @param <E> Type of the labels.
+ * @param <LBL> Type of the labels.
  * @param <ELMNT> Type of the tested element.
  */
-public interface IGFSAutomaton<E, ELMNT> extends IFSAutomaton<ELMNT>
+public interface IGFSAutomaton<VAL, LBL, ELMNT> extends IFSAutomaton<ELMNT>
 {
 	int nbStates();
 
 	IFSAProperties getProperties();
 
-	List<E> getLabelsOf(ELMNT element);
+	List<LBL> getLabelsOf(ELMNT element);
 
-	Collection<IFSAState<E>> getInitialStates();
+	Collection<IFSAState<VAL, LBL>> getInitialStates();
 
-	Collection<IFSAState<E>> getFinalStates();
+	Collection<IFSAState<VAL, LBL>> getFinalStates();
 
-	Collection<IFSAEdge<E>> getEdges(Collection<? extends IFSAState<E>> states);
+	Collection<IFSAEdge<VAL, LBL>> getEdges(Collection<? extends IFSAState<VAL, LBL>> states);
 
-	Collection<IFSAEdge<E>> getEdges(IFSAState<E> state);
+	Collection<IFSAEdge<VAL, LBL>> getEdges(IFSAState<VAL, LBL> state);
 
-	Collection<IFSAState<E>> nextValidStates(Collection<? extends IFSAState<E>> states, ELMNT element);
+	Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT element);
 
-	Collection<IFSAState<E>> nextValidStates(IFSAState<E> state, ELMNT element);
+	Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, ELMNT element);
 
-	Collection<IFSAState<E>> epsilonClosure(Collection<? extends IFSAState<E>> states);
+	Collection<IFSAState<VAL, LBL>> epsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states);
 
-	Collection<IFSAState<E>> epsilonClosure(IFSAState<E> state);
+	Collection<IFSAState<VAL, LBL>> epsilonClosure(IFSAState<VAL, LBL> state);
 
 }

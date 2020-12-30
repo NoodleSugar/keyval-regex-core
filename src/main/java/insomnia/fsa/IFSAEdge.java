@@ -1,13 +1,14 @@
 package insomnia.fsa;
 
 /**
- * E : type of tested elements
+ * @param
+ * 	   <LBL> Label type.
  */
-public interface IFSAEdge<E>
+public interface IFSAEdge<VAL, LBL>
 {
-	IFSAState<E> getParent();
+	IFSAState<VAL, LBL> getParent();
 
-	IFSAState<E> getChild();
+	IFSAState<VAL, LBL> getChild();
 
-	IFSALabel<E> getLabel();
+	IFSALabel<LBL> getLabel();
 }

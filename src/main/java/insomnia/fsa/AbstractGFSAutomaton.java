@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class AbstractGFSAutomaton<E, ELMNT> implements IGFSAutomaton<E, ELMNT>
+public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutomaton<VAL, LBL, ELMNT>
 {
 	protected <T> Set<T> provideSet()
 	{
@@ -20,23 +20,23 @@ public abstract class AbstractGFSAutomaton<E, ELMNT> implements IGFSAutomaton<E,
 	}
 
 	@Override
-	public Collection<IFSAEdge<E>> getEdges(IFSAState<E> state)
+	public Collection<IFSAEdge<VAL, LBL>> getEdges(IFSAState<VAL, LBL> state)
 	{
 		return getEdges(Collections.singletonList(state));
 	}
 
-	protected Collection<IFSAState<E>> nextValidState_sync(Collection<? extends IFSAState<E>> states, ELMNT theElement)
+	protected Collection<IFSAState<VAL, LBL>> nextValidState_sync(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT theElement)
 	{
 		if (states.isEmpty())
 			return Collections.emptyList();
 
-		Set<IFSAState<E>>        ret        = new HashSet<>(nbStates());
-		Collection<IFSAState<E>> buffStates = new ArrayList<>(nbStates());
+		Set<IFSAState<VAL, LBL>>        ret        = new HashSet<>(nbStates());
+		Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(nbStates());
 		;
 
 		ret.addAll(states);
 
-		for (E element : getLabelsOf(theElement))
+		for (LBL element : getLabelsOf(theElement))
 		{
 			if (ret.isEmpty())
 				return Collections.emptyList();
@@ -44,7 +44,7 @@ public abstract class AbstractGFSAutomaton<E, ELMNT> implements IGFSAutomaton<E,
 			buffStates.addAll(ret);
 			ret.clear();
 
-			for (IFSAEdge<E> edge : getEdges(buffStates))
+			for (IFSAEdge<VAL, LBL> edge : getEdges(buffStates))
 			{
 				if (edge.getLabel().test(element))
 					ret.add(edge.getChild());
@@ -54,17 +54,17 @@ public abstract class AbstractGFSAutomaton<E, ELMNT> implements IGFSAutomaton<E,
 		return new ArrayList<>(ret);
 	}
 
-	protected Collection<IFSAState<E>> nextValidStates_general(Collection<? extends IFSAState<E>> states, ELMNT theElement)
+	protected Collection<IFSAState<VAL, LBL>> nextValidStates_general(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT theElement)
 	{
 		if (states.isEmpty())
 			return Collections.emptyList();
 
-		Set<IFSAState<E>>        ret = new HashSet<>(nbStates());
-		Collection<IFSAState<E>> buffStates;
+		Set<IFSAState<VAL, LBL>>        ret = new HashSet<>(nbStates());
+		Collection<IFSAState<VAL, LBL>> buffStates;
 
 		ret.addAll(states);
 
-		for (E element : getLabelsOf(theElement))
+		for (LBL element : getLabelsOf(theElement))
 		{
 			if (ret.isEmpty())
 				return Collections.emptyList();
@@ -72,7 +72,7 @@ public abstract class AbstractGFSAutomaton<E, ELMNT> implements IGFSAutomaton<E,
 			buffStates = epsilonClosure(ret);
 			ret.clear();
 
-			for (IFSAEdge<E> edge : getEdges(buffStates))
+			for (IFSAEdge<VAL, LBL> edge : getEdges(buffStates))
 			{
 				if (edge.getLabel().test(element))
 					ret.add(edge.getChild());
@@ -82,33 +82,33 @@ public abstract class AbstractGFSAutomaton<E, ELMNT> implements IGFSAutomaton<E,
 	}
 
 	@Override
-	public Collection<IFSAState<E>> nextValidStates(Collection<? extends IFSAState<E>> states, ELMNT element)
+	public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT element)
 	{
 		return nextValidStates(states, element);
 	}
 
 	@Override
-	public Collection<IFSAState<E>> nextValidStates(IFSAState<E> state, ELMNT element)
+	public Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, ELMNT element)
 	{
 		return nextValidStates(Collections.singletonList(state), element);
 	}
 
 	@Override
-	public Collection<IFSAState<E>> epsilonClosure(Collection<? extends IFSAState<E>> states)
+	public Collection<IFSAState<VAL, LBL>> epsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
 		if (states.isEmpty())
 			return Collections.emptyList();
 
-		Set<IFSAState<E>>  ret         = new HashSet<>(nbStates());
-		List<IFSAState<E>> buffStates  = new ArrayList<>(nbStates());
-		List<IFSAState<E>> addedStates = new ArrayList<>(nbStates());
+		Set<IFSAState<VAL, LBL>>  ret         = new HashSet<>(nbStates());
+		List<IFSAState<VAL, LBL>> buffStates  = new ArrayList<>(nbStates());
+		List<IFSAState<VAL, LBL>> addedStates = new ArrayList<>(nbStates());
 
 		ret.addAll(states);
 		buffStates.addAll(states);
 
 		while (!buffStates.isEmpty())
 		{
-			for (IFSAEdge<E> edge : getEdges(buffStates))
+			for (IFSAEdge<VAL, LBL> edge : getEdges(buffStates))
 			{
 				if (edge.getLabel().test() && !ret.contains(edge.getChild()))
 					addedStates.add(edge.getChild());
@@ -122,7 +122,7 @@ public abstract class AbstractGFSAutomaton<E, ELMNT> implements IGFSAutomaton<E,
 	}
 
 	@Override
-	public Collection<IFSAState<E>> epsilonClosure(IFSAState<E> state)
+	public Collection<IFSAState<VAL, LBL>> epsilonClosure(IFSAState<VAL, LBL> state)
 	{
 		return epsilonClosure(Collections.singletonList(state));
 	}
