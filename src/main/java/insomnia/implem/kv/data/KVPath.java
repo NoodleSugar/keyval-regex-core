@@ -12,9 +12,9 @@ import insomnia.data.AbstractPath;
 import insomnia.data.INode;
 import insomnia.data.INodeFactory;
 import insomnia.data.IPath;
-import insomnia.implem.fsa.graphchunk.GCEdgeData;
-import insomnia.implem.fsa.graphchunk.GCState;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
+import insomnia.implem.fsa.graphchunk.IGCEdge;
+import insomnia.implem.fsa.graphchunk.IGCState;
 import insomnia.implem.kv.data.KVValue.Type;
 
 public class KVPath extends AbstractPath<KVValue, KVLabel>
@@ -143,16 +143,17 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 	 * @param gchunk
 	 * @return
 	 */
-	public static Optional<KVPath> pathFromGraphChunk(GraphChunk gchunk)
+	public static Optional<KVPath> pathFromGraphChunk(GraphChunk<KVValue, KVLabel> gchunk)
 	{
-		GCState       state  = gchunk.getStart();
-		List<KVLabel> labels = new ArrayList<>();
+		IGCState<KVValue> state  = gchunk.getStart();
+		List<KVLabel>     labels = new ArrayList<>();
 
 		for (;;)
 		{
 			// TODO: rooted path
-			Collection<GCEdgeData> edges = gchunk.getEdges(state);
-			int                    size  = edges.size();
+			Collection<IGCEdge<KVLabel>> edges = gchunk.getEdges(state);
+
+			int size = edges.size();
 
 			if (size > 1)
 				return Optional.empty();
@@ -160,12 +161,13 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 			if (size == 0)
 				return Optional.of(new KVPath(labels));
 
-			GCEdgeData edge = edges.iterator().next();
+			IGCEdge<KVLabel> edge    = edges.iterator().next();
+			Optional<String> label_s = edge.getLabelAsString();
 
-			if (edge.getType() != GCEdgeData.Type.STRING_EQUALS)
+			if (!label_s.isPresent())
 				return Optional.empty();
 
-			labels.add(kvlabelFactory.get((String) edge.getObj()));
+			labels.add(kvlabelFactory.get(label_s.get()));
 			state = gchunk.edge_getEnd(edge);
 		}
 	}
