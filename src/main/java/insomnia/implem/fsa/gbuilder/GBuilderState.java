@@ -6,11 +6,11 @@ import java.util.List;
 
 import insomnia.fsa.IFSAEdge;
 
-public class GBuilderState<E> implements IGBuilderState<E>
+public class GBuilderState<VAL, LBL> implements IGBuilderState<VAL, LBL>
 {
 	int id;
 
-	List<IFSAEdge<E>> childs;
+	List<IFSAEdge<VAL, LBL>> childs;
 
 	public GBuilderState(int id)
 	{
@@ -18,18 +18,18 @@ public class GBuilderState<E> implements IGBuilderState<E>
 	}
 
 	@Override
-	public Collection<IGBuilderState<E>> getChilds()
+	public Collection<IGBuilderState<VAL, LBL>> getChilds()
 	{
-		Collection<IGBuilderState<E>> ret = new ArrayList<>(childs.size());
+		Collection<IGBuilderState<VAL, LBL>> ret = new ArrayList<>(childs.size());
 
-		for (IFSAEdge<E> edge : childs)
-			ret.add((IGBuilderState<E>) edge.getChild());
+		for (IFSAEdge<VAL, LBL> edge : childs)
+			ret.add((IGBuilderState<VAL, LBL>) edge.getChild());
 
 		return ret;
 	}
 
 	@Override
-	public Collection<IFSAEdge<E>> getEdges()
+	public Collection<IFSAEdge<VAL, LBL>> getEdges()
 	{
 		return childs;
 	}
@@ -41,7 +41,7 @@ public class GBuilderState<E> implements IGBuilderState<E>
 		if (!(obj instanceof GBuilderState))
 			return false;
 
-		return id == ((GBuilderState<E>) obj).id;
+		return id == ((GBuilderState<VAL, LBL>) obj).id;
 	}
 
 	@Override

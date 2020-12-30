@@ -12,26 +12,26 @@ import insomnia.fsa.IFSAState;
 import insomnia.fsa.IGFSAutomaton;
 import insomnia.fsa.algorithm.IFSAAValidation;
 
-public abstract class AbstractGBuilderFSA<E, ELMNT> //
-	extends AbstractGFSAutomaton<E, ELMNT> //
-	implements IGFSAutomaton<E, ELMNT>
+public abstract class AbstractGBuilderFSA<VAL, LBL, ELMNT> //
+	extends AbstractGFSAutomaton<VAL, LBL, ELMNT> //
+	implements IGFSAutomaton<VAL, LBL, ELMNT>
 {
 	private IFSAProperties properties;
 
-	private IFSAAValidation<ELMNT, IGFSAutomaton<E, ELMNT>> validator;
+	private IFSAAValidation<ELMNT, IGFSAutomaton<VAL, LBL, ELMNT>> validator;
 
-	private Collection<IFSAState<E>> initialStates;
-	private Collection<IFSAState<E>> finalStates;
-	private Collection<IFSAState<E>> states;
-	private Collection<IFSAEdge<E>>  edges;
+	private Collection<IFSAState<VAL, LBL>> initialStates;
+	private Collection<IFSAState<VAL, LBL>> finalStates;
+	private Collection<IFSAState<VAL, LBL>> states;
+	private Collection<IFSAEdge<VAL, LBL>>  edges;
 
 	protected AbstractGBuilderFSA( //
-		Collection<IFSAState<E>> states, //
-		Collection<IFSAState<E>> initialStates, //
-		Collection<IFSAState<E>> finalStates, //
-		Collection<IFSAEdge<E>> edges, //
+		Collection<IFSAState<VAL, LBL>> states, //
+		Collection<IFSAState<VAL, LBL>> initialStates, //
+		Collection<IFSAState<VAL, LBL>> finalStates, //
+		Collection<IFSAEdge<VAL, LBL>> edges, //
 		IFSAProperties properties, //
-		IFSAAValidation<ELMNT, IGFSAutomaton<E, ELMNT>> validator //
+		IFSAAValidation<ELMNT, IGFSAutomaton<VAL, LBL, ELMNT>> validator //
 	)
 	{
 		this.edges         = edges;
@@ -49,13 +49,13 @@ public abstract class AbstractGBuilderFSA<E, ELMNT> //
 	}
 
 	@Override
-	public Collection<IFSAState<E>> getFinalStates()
+	public Collection<IFSAState<VAL, LBL>> getFinalStates()
 	{
 		return Collections.unmodifiableCollection(finalStates);
 	}
 
 	@Override
-	public Collection<IFSAState<E>> getInitialStates()
+	public Collection<IFSAState<VAL, LBL>> getInitialStates()
 	{
 		return Collections.unmodifiableCollection(initialStates);
 	}
@@ -73,13 +73,13 @@ public abstract class AbstractGBuilderFSA<E, ELMNT> //
 	}
 
 	@Override
-	public Collection<IFSAEdge<E>> getEdges(Collection<? extends IFSAState<E>> states)
+	public Collection<IFSAEdge<VAL, LBL>> getEdges(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
-		List<IFSAEdge<E>> ret = new ArrayList<>();
+		List<IFSAEdge<VAL, LBL>> ret = new ArrayList<>();
 
-		for (IFSAState<E> _state : states)
+		for (IFSAState<VAL, LBL> _state : states)
 		{
-			IGBuilderState<E> state = (IGBuilderState<E>) _state;
+			IGBuilderState<VAL, LBL> state = (IGBuilderState<VAL, LBL>) _state;
 			ret.addAll(state.getEdges());
 		}
 		return ret;
@@ -95,7 +95,7 @@ public abstract class AbstractGBuilderFSA<E, ELMNT> //
 		s1.append("Nodes: ").append(states).append("\n");
 		s1.append("Edges:\n");
 
-		for (IFSAEdge<E> edge : edges)
+		for (IFSAEdge<VAL, LBL> edge : edges)
 			s1.append(edge).append("\n");
 		return s1.toString();
 	}

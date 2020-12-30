@@ -7,15 +7,15 @@ import insomnia.fsa.IFSAState;
 /**
  * Edge for epsilon transition
  */
-public class FSAEdgeEpsilon<E> extends AbstractFSAEdge<E> implements IFSALabel<E>
+public class FSAEdgeEpsilon<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements IFSALabel<LBL>
 {
-	public FSAEdgeEpsilon(IFSAState<E> parent, IFSAState<E> child)
+	public FSAEdgeEpsilon(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child)
 	{
 		super(parent, child);
 	}
 
 	@Override
-	public boolean test(E element)
+	public boolean test(LBL element)
 	{
 		return false;
 	}
@@ -43,7 +43,7 @@ public class FSAEdgeEpsilon<E> extends AbstractFSAEdge<E> implements IFSALabel<E
 	}
 
 	@Override
-	public IFSALabel<E> getLabel()
+	public IFSALabel<LBL> getLabel()
 	{
 		return this;
 	}

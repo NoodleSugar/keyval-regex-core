@@ -7,11 +7,11 @@ import insomnia.fsa.IFSAState;
 /**
  * Edge for words
  */
-public class FSAEdgeStringEq<E> extends AbstractFSAEdge<E> implements IFSALabel<E>
+public class FSAEdgeStringEq<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements IFSALabel<LBL>
 {
 	String strCmp;
 
-	public FSAEdgeStringEq(IFSAState<E> parent, IFSAState<E> child, String strCmp)
+	public FSAEdgeStringEq(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child, String strCmp)
 	{
 		super(parent, child);
 		this.strCmp = strCmp;
@@ -23,7 +23,7 @@ public class FSAEdgeStringEq<E> extends AbstractFSAEdge<E> implements IFSALabel<
 	}
 
 	@Override
-	public boolean test(E element)
+	public boolean test(LBL element)
 	{
 		return strCmp.equals(element.toString());
 	}
@@ -49,7 +49,7 @@ public class FSAEdgeStringEq<E> extends AbstractFSAEdge<E> implements IFSALabel<
 			return false;
 
 		@SuppressWarnings("unchecked")
-		FSAEdgeStringEq<E> edge = (FSAEdgeStringEq<E>) obj;
+		FSAEdgeStringEq<VAL, LBL> edge = (FSAEdgeStringEq<VAL, LBL>) obj;
 
 		return super.equals(obj) && strCmp.equals(edge.strCmp);
 	}
@@ -61,7 +61,7 @@ public class FSAEdgeStringEq<E> extends AbstractFSAEdge<E> implements IFSALabel<
 	}
 
 	@Override
-	public IFSALabel<E> getLabel()
+	public IFSALabel<LBL> getLabel()
 	{
 		return this;
 	}

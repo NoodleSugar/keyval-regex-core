@@ -23,10 +23,10 @@ import insomnia.implem.fsa.FSAEdgeEpsilon;
 import insomnia.implem.fsa.FSAEdgeNumber;
 import insomnia.implem.fsa.FSAEdgeRegex;
 import insomnia.implem.fsa.FSAEdgeStringEq;
-import insomnia.implem.fsa.graphchunk.GCEdgeData;
-import insomnia.implem.fsa.graphchunk.GCState;
+import insomnia.implem.fsa.graphchunk.GCEdges;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
-import insomnia.implem.fsa.graphchunk.GCEdgeData.Type;
+import insomnia.implem.fsa.graphchunk.IGCEdge;
+import insomnia.implem.fsa.graphchunk.IGCState;
 
 /**
  * A specific builder for {@link IGFSAutomaton}.
@@ -34,30 +34,31 @@ import insomnia.implem.fsa.graphchunk.GCEdgeData.Type;
  * 
  * @author zuri
  * @param <V> Value of a node
- * @param <E> Label of edges.
+ * @param <LBL,VAL> Label of edges.
  * @param <STATE> State of GBuilder
  * @param <T> Automaton type returned
  */
-public class GBuilder<V, E, STATE extends GBuilderState<E>>
+public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 {
-	Map<GCState, STATE> buildStates = new HashMap<>();
+	Map<IGCState<VAL>, STATE> buildStates = new HashMap<>();
 
-	Set<IFSAEdge<E>> buildEdges      = new HashSet<>();
-	Set<GCState>     processedStates = new HashSet<>();
+	Set<IFSAEdge<VAL, LBL>> buildEdges      = new HashSet<>();
+	Set<IGCState<VAL>>      processedStates = new HashSet<>();
 
-	Collection<IFSAState<E>> states;
-	Collection<IFSAState<E>> finals;
-	Collection<IFSAEdge<E>>  edges;
+	Collection<IFSAState<VAL, LBL>> states;
+	Collection<IFSAState<VAL, LBL>> finals;
+	Collection<IFSAEdge<VAL, LBL>>  edges;
 
-	GraphChunk automaton;
-	boolean    mustBeSync;
+	GraphChunk<VAL, LBL> automaton;
+	boolean              mustBeSync;
 
-	Function<Integer, STATE>            stateSupplier;
-	IGBuilderFSAFactory<E, ITree<V, E>> builderFSAFactory;
+	Function<Integer, STATE> stateSupplier;
+
+	IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>> builderFSAFactory;
 
 	// =========================================================================
 
-	public GBuilder(GraphChunk gc, Function<Integer, STATE> stateSupplier, IGBuilderFSAFactory<E, ITree<V, E>> builderFactory)
+	public GBuilder(GraphChunk<VAL, LBL> gc, Function<Integer, STATE> stateSupplier, IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>> builderFactory)
 	{
 		automaton = gc;
 
@@ -67,13 +68,13 @@ public class GBuilder<V, E, STATE extends GBuilderState<E>>
 
 	// =========================================================================
 
-	public GBuilder<V, E, STATE> mustBeSync(boolean mustBeSync)
+	public GBuilder<VAL, LBL, STATE> mustBeSync(boolean mustBeSync)
 	{
 		this.mustBeSync = mustBeSync;
 		return this;
 	}
 
-	private STATE makeState(GCState state)
+	private STATE makeState(IGCState<VAL> state)
 	{
 		STATE ret = buildStates.get(state);
 
@@ -88,30 +89,25 @@ public class GBuilder<V, E, STATE extends GBuilderState<E>>
 	// =========================================================================
 	// Build functions
 
-	private AbstractFSAEdge<E> makeEdge(GCEdgeData edgeData, IFSAState<E> parent, IFSAState<E> child) throws FSAException
+	private AbstractFSAEdge<VAL, LBL> makeEdge(IGCEdge<LBL> edgeData, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child) throws FSAException
 	{
-		AbstractFSAEdge<E> ret;
+		AbstractFSAEdge<VAL, LBL> ret;
 
-		switch (edgeData.getType())
+		if (GCEdges.isEpsilon(edgeData))
 		{
-		case EPSILON:
-			ret = new FSAEdgeEpsilon<E>(parent, child);
+			ret = new FSAEdgeEpsilon<VAL, LBL>(parent, child);
 
 			if (automaton.getProperties().isSynchronous())
 				throw new FSAException("Synchronous Automaton expected");
-			break;
-		case NUMBER:
-			ret = new FSAEdgeNumber<E, Number>(parent, child, (Number) edgeData.getObj());
-			break;
-		case STRING_EQUALS:
-			ret = new FSAEdgeStringEq<E>(parent, child, (String) edgeData.getObj());
-			break;
-		case REGEX:
-			ret = new FSAEdgeRegex<E>(parent, child, (String) edgeData.getObj());
-			break;
-		default:
-			throw new InvalidParameterException();
 		}
+		else if (GCEdges.isNumber(edgeData))
+			ret = new FSAEdgeNumber<VAL, LBL, Number>(parent, child, (Number) edgeData.getObj());
+		else if (GCEdges.isStringEq(edgeData))
+			ret = new FSAEdgeStringEq<VAL, LBL>(parent, child, (String) edgeData.getObj());
+		else if (GCEdges.isRegex(edgeData))
+			ret = new FSAEdgeRegex<VAL, LBL>(parent, child, (String) edgeData.getObj());
+		else
+			throw new InvalidParameterException();
 
 		if (buildEdges.contains(ret))
 			return null;
@@ -120,7 +116,7 @@ public class GBuilder<V, E, STATE extends GBuilderState<E>>
 		return ret;
 	}
 
-	public IFSAutomaton<ITree<V, E>> newBuild() throws FSAException
+	public IFSAutomaton<ITree<VAL, LBL>> newBuild() throws FSAException
 	{
 		STATE initialState = makeState(automaton.getStart());
 		STATE finalState   = makeState(automaton.getEnd());
@@ -142,20 +138,20 @@ public class GBuilder<V, E, STATE extends GBuilderState<E>>
 		else
 			build(automaton.getStart(), initialState);
 
-		// Reindex states
+// Reindex states
 //			int i = 0;
-//			for(IFSAState<E> s : states)
-//				((State<E>)s).id = i++;
+//			for(IFSAState<LBL,VAL> s : states)
+//				((State<LBL,VAL>)s).id = i++;
 
 		return builderFSAFactory.get( //
 			states, Collections.singletonList(initialState), finals, //
 			edges, //
 			automaton.getProperties(), //
-			new GFSAValidation<E, ITree<V, E>>() //
+			new GFSAValidation<VAL, LBL, ITree<VAL, LBL>>() //
 		);
 	}
 
-	private STATE build_addState(GCState fcurrent) throws FSAException
+	private STATE build_addState(IGCState<VAL> fcurrent) throws FSAException
 	{
 		STATE newAState;
 
@@ -170,9 +166,9 @@ public class GBuilder<V, E, STATE extends GBuilderState<E>>
 		return newAState;
 	}
 
-	private void build_addEdge(GCEdgeData edgeData, STATE acurrentState, STATE newAState) throws FSAException
+	private void build_addEdge(IGCEdge<LBL> edgeData, STATE acurrentState, STATE newAState) throws FSAException
 	{
-		IFSAEdge<E> newAEdge = makeEdge(edgeData, acurrentState, newAState);
+		IFSAEdge<VAL, LBL> newAEdge = makeEdge(edgeData, acurrentState, newAState);
 
 		if (null == newAEdge)
 			return;
@@ -181,21 +177,21 @@ public class GBuilder<V, E, STATE extends GBuilderState<E>>
 		acurrentState.childs.add(newAEdge);
 	}
 
-	private void build(GCState fstate, STATE acurrentState) throws FSAException
+	private void build(IGCState<VAL> fstate, STATE acurrentState) throws FSAException
 	{
 		processedStates.add(fstate);
-		Collection<GCEdgeData> fedges = automaton.getEdges(fstate);
+		Collection<IGCEdge<LBL>> fedges = automaton.getEdges(fstate);
 		acurrentState.childs = new ArrayList<>(fedges.size());
 
-		for (GCEdgeData edgeData : fedges)
+		for (IGCEdge<LBL> edgeData : fedges)
 		{
-			GCState fcurrent  = automaton.edge_getEnd(edgeData);
-			STATE   newAState = build_addState(fcurrent);
+			IGCState<VAL> fcurrent  = automaton.edge_getEnd(edgeData);
+			STATE         newAState = build_addState(fcurrent);
 			build_addEdge(edgeData, acurrentState, newAState);
 		}
 	}
 
-	private STATE build_addStateSync(GCState fcurrent) throws FSAException
+	private STATE build_addStateSync(IGCState<VAL> fcurrent) throws FSAException
 	{
 		STATE newAState;
 
@@ -210,41 +206,41 @@ public class GBuilder<V, E, STATE extends GBuilderState<E>>
 		return newAState;
 	}
 
-	private void buildSync(GCState fstate, STATE acurrentState) throws FSAException
+	private void buildSync(IGCState<VAL> fstate, STATE acurrentState) throws FSAException
 	{
 		processedStates.add(fstate);
-		Collection<GCEdgeData> fedges = automaton.getEdges(fstate);
+		Collection<IGCEdge<LBL>> fedges = automaton.getEdges(fstate);
 		acurrentState.childs = new ArrayList<>(fedges.size());
 
-		for (GCEdgeData edgeData : fedges)
+		for (IGCEdge<LBL> edgeData : fedges)
 		{
-			if (edgeData.getType() == Type.EPSILON)
+			if (GCEdges.isEpsilon(edgeData))
 			{
-				Collection<GCState> fstates = automaton.epsilonClosure(fstate);
-				Collection<STATE>   astates = fstates.stream().map(s -> makeState(s)).collect(Collectors.toList());
+				Collection<IGCState<VAL>> fstates = automaton.epsilonClosure(fstate);
+				Collection<STATE>         astates = fstates.stream().map(s -> makeState(s)).collect(Collectors.toList());
 
 				if (!Collections.disjoint(astates, finals))
 					finals.add(makeState(fstate));
 
-				Collection<GCEdgeData> edges = automaton.getEdges(fstates);
+				Collection<IGCEdge<LBL>> edges = automaton.getEdges(fstates);
 
-				for (GCEdgeData edge : edges)
+				for (IGCEdge<LBL> edge : edges)
 				{
 					/*
 					 * Skip epsilon edges (not needed)
 					 */
-					if (edge.getType() == Type.EPSILON)
+					if (GCEdges.isEpsilon(edge))
 						continue;
 
-					GCState ftarget   = automaton.edge_getEnd(edge);
-					STATE   newAState = build_addStateSync(ftarget);
+					IGCState<VAL> ftarget   = automaton.edge_getEnd(edge);
+					STATE         newAState = build_addStateSync(ftarget);
 					build_addEdge(edge, acurrentState, newAState);
 				}
 			}
 			else
 			{
-				GCState fcurrent  = automaton.edge_getEnd(edgeData);
-				STATE   newAState = build_addStateSync(fcurrent);
+				IGCState<VAL> fcurrent  = automaton.edge_getEnd(edgeData);
+				STATE         newAState = build_addStateSync(fcurrent);
 				build_addEdge(edgeData, acurrentState, newAState);
 			}
 		}
@@ -257,5 +253,4 @@ public class GBuilder<V, E, STATE extends GBuilderState<E>>
 	{
 		return automaton.toString();
 	}
-
 }

@@ -7,18 +7,18 @@ import insomnia.fsa.AbstractFSAEdge;
 import insomnia.fsa.IFSALabel;
 import insomnia.fsa.IFSAState;
 
-public class FSAEdgeNumber<E, N extends Number> extends AbstractFSAEdge<E> implements IFSALabel<E>
+public class FSAEdgeNumber<VAL, LBL, N extends Number> extends AbstractFSAEdge<VAL, LBL> implements IFSALabel<LBL>
 {
 	Number n;
 
-	public FSAEdgeNumber(IFSAState<E> parent, IFSAState<E> child, N n)
+	public FSAEdgeNumber(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child, N n)
 	{
 		super(parent, child);
 		this.n = n;
 	}
 
 	@Override
-	public boolean test(E element)
+	public boolean test(LBL element)
 	{
 		try
 		{
@@ -37,7 +37,7 @@ public class FSAEdgeNumber<E, N extends Number> extends AbstractFSAEdge<E> imple
 	}
 
 	@Override
-	public IFSALabel<E> getLabel()
+	public IFSALabel<LBL> getLabel()
 	{
 		return this;
 	}
@@ -49,7 +49,7 @@ public class FSAEdgeNumber<E, N extends Number> extends AbstractFSAEdge<E> imple
 			return false;
 
 		@SuppressWarnings("unchecked")
-		FSAEdgeNumber<E, N> edge = (FSAEdgeNumber<E, N>) obj;
+		FSAEdgeNumber<VAL, LBL, N> edge = (FSAEdgeNumber<VAL, LBL, N>) obj;
 
 		return super.equals(obj) && n.equals(edge.n);
 	}

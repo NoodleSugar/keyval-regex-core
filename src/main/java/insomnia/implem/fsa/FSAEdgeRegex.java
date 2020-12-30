@@ -9,18 +9,18 @@ import insomnia.fsa.IFSAState;
 /**
  * Edge for regex
  */
-public class FSAEdgeRegex<E> extends AbstractFSAEdge<E> implements IFSALabel<E>
+public class FSAEdgeRegex<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements IFSALabel<LBL>
 {
 	Pattern pattern;
 
-	public FSAEdgeRegex(IFSAState<E> parent, IFSAState<E> child, String regex)
+	public FSAEdgeRegex(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child, String regex)
 	{
 		super(parent, child);
 		pattern = Pattern.compile(regex);
 	}
 
 	@Override
-	public boolean test(E element)
+	public boolean test(LBL element)
 	{
 		return pattern.matcher(element.toString()).matches();
 	}
@@ -46,7 +46,7 @@ public class FSAEdgeRegex<E> extends AbstractFSAEdge<E> implements IFSALabel<E>
 			return false;
 
 		@SuppressWarnings("unchecked")
-		FSAEdgeRegex<E> edge = (FSAEdgeRegex<E>) obj;
+		FSAEdgeRegex<VAL, LBL> edge = (FSAEdgeRegex<VAL, LBL>) obj;
 
 		return pattern.toString().equals(edge.pattern.toString());
 	}
@@ -58,7 +58,7 @@ public class FSAEdgeRegex<E> extends AbstractFSAEdge<E> implements IFSALabel<E>
 	}
 
 	@Override
-	public IFSALabel<E> getLabel()
+	public IFSALabel<LBL> getLabel()
 	{
 		return this;
 	}

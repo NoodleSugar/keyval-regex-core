@@ -18,10 +18,9 @@ import org.jgrapht.graph.DirectedPseudograph;
 
 import insomnia.fsa.IFSAProperties;
 import insomnia.implem.fsa.FSAProperties;
-import insomnia.implem.fsa.graphchunk.GCEdgeData.Type;
 
 /**
- * A graph representation of an automaton where node are {@link GCState} and edge are {@link GCEdgeData}.
+ * A graph representation of an automaton where node are {@link IGCState<VAL>} and edge are {@link IGCEdge<LBL>}.
  * This is a particular implementation for Automaton construction purposes.
  * A {@link GraphChunk} have identified and unique {@link GraphChunk#start} State and {@link GraphChunk#end} State.
  * <br>
@@ -30,26 +29,26 @@ import insomnia.implem.fsa.graphchunk.GCEdgeData.Type;
  * 
  * @author zuri
  */
-public abstract class GraphChunk
+public abstract class GraphChunk<VAL, LBL>
 {
-	private Graph<GCState, GCEdgeData> graph;
+	private Graph<IGCState<VAL>, IGCEdge<LBL>> graph;
 
-	private GCState start;
-	private GCState end;
+	private IGCState<VAL> start;
+	private IGCState<VAL> end;
 
 	private IFSAProperties properties;
 
 	{
 		// By default we don't know if it is deterministic
 		properties = new FSAProperties(false, true);
-		this.graph = new DirectedPseudograph<GCState, GCEdgeData>(null, null, false);
+		this.graph = new DirectedPseudograph<IGCState<VAL>, IGCEdge<LBL>>(null, null, false);
 	}
 
-	public abstract GCState freshState();
+	public abstract IGCState<VAL> freshState();
 
-	public abstract GraphChunk create();
+	public abstract GraphChunk<VAL, LBL> create();
 
-	protected GraphChunk(GCState start, GCState end)
+	protected GraphChunk(IGCState<VAL> start, IGCState<VAL> end)
 	{
 		this.start = start;
 		this.end   = end;
@@ -61,33 +60,33 @@ public abstract class GraphChunk
 	{
 	}
 
-	protected void setGraph(Graph<GCState, GCEdgeData> graph)
+	protected void setGraph(Graph<IGCState<VAL>, IGCEdge<LBL>> graph)
 	{
 		this.graph = graph;
 	}
 
-	protected Graph<GCState, GCEdgeData> getGraph()
+	protected Graph<IGCState<VAL>, IGCEdge<LBL>> getGraph()
 	{
 		return graph;
 	}
 
-	public GCState getStart()
+	public IGCState<VAL> getStart()
 	{
 		return start;
 	}
 
-	public GCState getEnd()
+	public IGCState<VAL> getEnd()
 	{
 		return end;
 	}
 
-	protected void setStart(GCState start)
+	protected void setStart(IGCState<VAL> start)
 	{
 		this.start = start;
 		graph.addVertex(start);
 	}
 
-	protected void setEnd(GCState end)
+	protected void setEnd(IGCState<VAL> end)
 	{
 		this.end = end;
 		graph.addVertex(end);
@@ -113,54 +112,54 @@ public abstract class GraphChunk
 		return graph.edgeSet().size();
 	}
 
-	public int getNbChildEdges(GCState state)
+	public int getNbChildEdges(IGCState<VAL> state)
 	{
 		return graph.outDegreeOf(state);
 	}
 
-	public int getNbParentEdges(GCState state)
+	public int getNbParentEdges(IGCState<VAL> state)
 	{
 		return graph.inDegreeOf(state);
 	}
 
-	public GCState edge_getStart(GCEdgeData edge)
+	public IGCState<VAL> edge_getStart(IGCEdge<LBL> edge)
 	{
 		return graph.getEdgeSource(edge);
 	}
 
-	public GCState edge_getEnd(GCEdgeData edge)
+	public IGCState<VAL> edge_getEnd(IGCEdge<LBL> edge)
 	{
 		return graph.getEdgeTarget(edge);
 	}
 
-	public Collection<GCEdgeData> getEdges(GCState state)
+	public Collection<IGCEdge<LBL>> getEdges(IGCState<VAL> state)
 	{
 		return getEdges(Collections.singleton(state));
 	}
 
-	public Collection<GCEdgeData> getEdges(Collection<GCState> states)
+	public Collection<IGCEdge<LBL>> getEdges(Collection<IGCState<VAL>> states)
 	{
-		Collection<GCEdgeData> ret = new HashSet<GCEdgeData>();
+		Collection<IGCEdge<LBL>> ret = new HashSet<IGCEdge<LBL>>();
 
-		for (GCState state : states)
+		for (IGCState<VAL> state : states)
 			ret.addAll(graph.outgoingEdgesOf(state));
 
 		return new ArrayList<>(ret);
 	}
 
-	public GCState addState()
+	public IGCState<VAL> addState()
 	{
-		GCState ret = freshState();
+		IGCState<VAL> ret = freshState();
 		graph.addVertex(ret);
 		return ret;
 	}
 
-	public void addState(GCState state)
+	public void addState(IGCState<VAL> state)
 	{
 		graph.addVertex(state);
 	}
 
-	public void addEdge(GCState parent, GCState child, GCEdgeData data)
+	public void addEdge(IGCState<VAL> parent, IGCState<VAL> child, IGCEdge<LBL> data)
 	{
 		graph.addEdge(parent, child, data);
 	}
@@ -171,36 +170,36 @@ public abstract class GraphChunk
 	 * @param state
 	 * @return
 	 */
-	public Collection<GraphChunk> validStates(GCState state, List<? extends Object> labels)
+	public Collection<GraphChunk<VAL, LBL>> validStates(IGCState<VAL> state, List<? extends LBL> labels)
 	{
-		Collection<GraphChunk> nextChunks = new ArrayList<>();
-		Collection<GraphChunk> lastChunks = new ArrayList<>();
+		Collection<GraphChunk<VAL, LBL>> nextChunks = new ArrayList<>();
+		Collection<GraphChunk<VAL, LBL>> lastChunks = new ArrayList<>();
 		{
-			GraphChunk tmpchunk = create();
+			GraphChunk<VAL, LBL> tmpchunk = create();
 			tmpchunk.setStart(state);
 			tmpchunk.setEnd(state);
 			nextChunks.add(tmpchunk);
 		}
 
-		for (Object label : labels)
+		for (LBL label : labels)
 		{
 			lastChunks.clear();
 			lastChunks.addAll(nextChunks);
 			nextChunks.clear();
 
-			for (GCState lstate : lastChunks.stream().map((gc) -> gc.getEnd()).collect(Collectors.toList()))
+			for (IGCState<VAL> lstate : lastChunks.stream().map((gc) -> gc.getEnd()).collect(Collectors.toList()))
 			{
-				for (GCEdgeData edge : graph.outgoingEdgesOf(lstate))
+				for (IGCEdge<LBL> edge : graph.outgoingEdgesOf(lstate))
 				{
 					if (edge.test(label))
 					{
 						// Add the edge
-						for (GraphChunk chunk : lastChunks)
+						for (GraphChunk<VAL, LBL> chunk : lastChunks)
 						{
-							GraphChunk cpy = chunk.copyClone();
+							GraphChunk<VAL, LBL> cpy = chunk.copyClone();
 
-							GCState lastEnd = cpy.getEnd();
-							GCState end     = graph.getEdgeTarget(edge);
+							IGCState<VAL> lastEnd = cpy.getEnd();
+							IGCState<VAL> end     = graph.getEdgeTarget(edge);
 							cpy.setEnd(end);
 							cpy.addEdge(lastEnd, end, edge);
 
@@ -215,36 +214,36 @@ public abstract class GraphChunk
 		return nextChunks;
 	}
 
-	public Collection<GraphChunk> validStates_reverse(GCState state, List<? extends Object> labels)
+	public Collection<GraphChunk<VAL, LBL>> validStates_reverse(IGCState<VAL> state, List<? extends LBL> labels)
 	{
-		Collection<GraphChunk> nextChunks = new ArrayList<>();
-		Collection<GraphChunk> lastChunks = new ArrayList<>();
+		Collection<GraphChunk<VAL, LBL>> nextChunks = new ArrayList<>();
+		Collection<GraphChunk<VAL, LBL>> lastChunks = new ArrayList<>();
 		{
-			GraphChunk tmpchunk = create();
+			GraphChunk<VAL, LBL> tmpchunk = create();
 			tmpchunk.setStart(state);
 			tmpchunk.setEnd(state);
 			nextChunks.add(tmpchunk);
 		}
 
-		for (Object label : new IteratorIterable<>(new ReverseListIterator<>(labels)))
+		for (LBL label : new IteratorIterable<>(new ReverseListIterator<>(labels)))
 		{
 			lastChunks.clear();
 			lastChunks.addAll(nextChunks);
 			nextChunks.clear();
 
-			for (GCState lstate : lastChunks.stream().map((gc) -> gc.getStart()).collect(Collectors.toList()))
+			for (IGCState<VAL> lstate : lastChunks.stream().map((gc) -> gc.getStart()).collect(Collectors.toList()))
 			{
-				for (GCEdgeData edge : graph.incomingEdgesOf(lstate))
+				for (IGCEdge<LBL> edge : graph.incomingEdgesOf(lstate))
 				{
 					if (edge.test(label))
 					{
 						// Add the edge
-						for (GraphChunk chunk : lastChunks)
+						for (GraphChunk<VAL, LBL> chunk : lastChunks)
 						{
-							GraphChunk cpy = chunk.copyClone();
+							GraphChunk<VAL, LBL> cpy = chunk.copyClone();
 
-							GCState lastStart = cpy.getStart();
-							GCState start     = graph.getEdgeSource(edge);
+							IGCState<VAL> lastStart = cpy.getStart();
+							IGCState<VAL> start     = graph.getEdgeSource(edge);
 							cpy.setStart(start);
 							cpy.addEdge(start, lastStart, edge);
 
@@ -259,30 +258,30 @@ public abstract class GraphChunk
 		return nextChunks;
 	}
 
-	public Collection<GCState> epsilonClosure(GCState state)
+	public Collection<IGCState<VAL>> epsilonClosure(IGCState<VAL> state)
 	{
 		return epsilonClosure(Collections.singleton(state));
 	}
 
-	public Collection<GCState> epsilonClosure(Collection<GCState> states)
+	public Collection<IGCState<VAL>> epsilonClosure(Collection<IGCState<VAL>> states)
 	{
 		if (states.isEmpty())
 			return Collections.emptyList();
 
-		Set<GCState>  ret         = new HashSet<>(getNbStates());
-		List<GCState> buffStates  = new ArrayList<>(getNbStates());
-		List<GCState> addedStates = new ArrayList<>(getNbStates());
+		Set<IGCState<VAL>>  ret         = new HashSet<>(getNbStates());
+		List<IGCState<VAL>> buffStates  = new ArrayList<>(getNbStates());
+		List<IGCState<VAL>> addedStates = new ArrayList<>(getNbStates());
 
 		ret.addAll(states);
 		buffStates.addAll(states);
 
 		while (!buffStates.isEmpty())
 		{
-			for (GCEdgeData edge : getEdges(buffStates))
+			for (IGCEdge<LBL> edge : getEdges(buffStates))
 			{
-				GCState target = graph.getEdgeTarget(edge);
+				IGCState<VAL> target = graph.getEdgeTarget(edge);
 
-				if (edge.getType() == Type.EPSILON && !ret.contains(target))
+				if (GCEdges.isEpsilon(edge) && !ret.contains(target))
 					addedStates.add(target);
 			}
 			buffStates.clear();
@@ -293,19 +292,19 @@ public abstract class GraphChunk
 		return new ArrayList<>(ret);
 	}
 
-	protected GraphChunk copyClone()
+	protected GraphChunk<VAL, LBL> copyClone()
 	{
 		return copyClone(create());
 	}
 
 	/**
 	 * Copy this into 'ret'.<br>
-	 * The copy copy exactly the same {@link GCState}s.
+	 * The copy copy exactly the same {@link IGCState<VAL>}s.
 	 * 
 	 * @param ret
 	 * @return
 	 */
-	protected GraphChunk copyClone(GraphChunk ret)
+	protected GraphChunk<VAL, LBL> copyClone(GraphChunk<VAL, LBL> ret)
 	{
 		ret.start = start;
 		ret.end   = end;
@@ -315,23 +314,23 @@ public abstract class GraphChunk
 
 	/**
 	 * Copy this into ret.<br>
-	 * The copy create fresh {@link GCState}s.
+	 * The copy create fresh {@link IGCState<VAL>}s.
 	 * 
-	 * @param ret The {@link GraphChunk} which become the copy.
+	 * @param ret The {@link GraphChunk<LBL,VAL>} which become the copy.
 	 * @return A reference to ret.
 	 */
-	public GraphChunk copy(GraphChunk ret)
+	public GraphChunk<VAL, LBL> copy(GraphChunk<VAL, LBL> ret)
 	{
-		Set<GCState> graphNodes = graph.vertexSet();
+		Set<IGCState<VAL>> graphNodes = graph.vertexSet();
 		/**
 		 * key: state of graph
 		 * val: state of ret
 		 */
-		Map<GCState, GCState> states = new HashMap<>(graphNodes.size() * 2);
+		Map<IGCState<VAL>, IGCState<VAL>> states = new HashMap<>(graphNodes.size() * 2);
 
-		for (GCState graphNode : graphNodes)
+		for (IGCState<VAL> graphNode : graphNodes)
 		{
-			GCState newState = freshState();
+			IGCState<VAL> newState = freshState();
 			states.put(graphNode, newState);
 			ret.graph.addVertex(newState);
 		}
@@ -339,54 +338,54 @@ public abstract class GraphChunk
 		ret.end        = states.get(end);
 		ret.properties = properties;
 
-		for (GCEdgeData edgeData : graph.edgeSet())
+		for (IGCEdge<LBL> edgeData : graph.edgeSet())
 		{
-			GCState source = states.get(graph.getEdgeSource(edgeData));
-			GCState target = states.get(graph.getEdgeTarget(edgeData));
-			ret.graph.addEdge(source, target, GCEdgeData.copy(edgeData));
+			IGCState<VAL> source = states.get(graph.getEdgeSource(edgeData));
+			IGCState<VAL> target = states.get(graph.getEdgeTarget(edgeData));
+			ret.graph.addEdge(source, target, edgeData.copy());
 		}
 		return ret;
 	}
 
-	public void replaceState(GCState dest, GCState src)
+	public void replaceState(IGCState<VAL> dest, IGCState<VAL> src)
 	{
-		List<GCEdgeData> edges = new ArrayList<>(graph.outgoingEdgesOf(src));
+		List<IGCEdge<LBL>> edges = new ArrayList<>(graph.outgoingEdgesOf(src));
 
-		for (GCEdgeData edgeData : edges)
+		for (IGCEdge<LBL> edgeData : edges)
 		{
-			GCState target = graph.getEdgeTarget(edgeData);
-			graph.addEdge(dest, target, GCEdgeData.copy(edgeData));
+			IGCState<VAL> target = graph.getEdgeTarget(edgeData);
+			graph.addEdge(dest, target, edgeData.copy());
 		}
 		// Copy to avoid concurent modification
 		edges = new ArrayList<>(graph.incomingEdgesOf(src));
 
-		for (GCEdgeData edgeData : edges)
+		for (IGCEdge<LBL> edgeData : edges)
 		{
-			GCState source = graph.getEdgeSource(edgeData);
-			graph.addEdge(source, dest, GCEdgeData.copy(edgeData));
+			IGCState<VAL> source = graph.getEdgeSource(edgeData);
+			graph.addEdge(source, dest, edgeData.copy());
 		}
 		graph.removeVertex(src);
 	}
 
-	public void glue(GCState glue, GraphChunk b)
+	public void glue(IGCState<VAL> glue, GraphChunk<VAL, LBL> b)
 	{
 		Graphs.addGraph(graph, b.graph);
 		replaceState(glue, b.start);
 		properties = FSAProperties.union(properties, b.properties);
 	}
 
-	public void concat(GraphChunk b)
+	public void concat(GraphChunk<VAL, LBL> b)
 	{
 		glue(end, b);
 		end = b.end;
 	}
 
-	public void glue(GraphChunk b)
+	public void glue(GraphChunk<VAL, LBL> b)
 	{
 		glue(start, end, b);
 	}
 
-	public void glue(GCState gluea, GCState glueb, GraphChunk b)
+	public void glue(IGCState<VAL> gluea, IGCState<VAL> glueb, GraphChunk<VAL, LBL> b)
 	{
 		glue(gluea, b);
 		replaceState(end, b.end);
