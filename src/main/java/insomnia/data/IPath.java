@@ -2,15 +2,32 @@ package insomnia.data;
 
 import java.util.List;
 
-public interface IPath<V, E> extends ITree<V, E>
+/**
+ * Path where the leaf may have a value.
+ * 
+ * @author zuri
+ * @param <VAL>
+ * @param <LBL>
+ */
+public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 {
-	IPath<V, E> subPath(int begin, int end);
+	/**
+	 * Such as {@link String#substring(int, int)} get a subpath from the current one.
+	 * 
+	 * @param begin Inclusive offset.
+	 * @param end   Exclusive end index.
+	 * @return
+	 */
+	IPath<VAL, LBL> subPath(int begin, int end);
 
-	IPath<V, E> setValue(V value);
+	IPath<VAL, LBL> setValue(VAL value);
 
-	List<E> getLabels();
+	/**
+	 * Get the labels of the path conserving the path order.
+	 */
+	List<LBL> getLabels();
 
-	V getValue();
+	VAL getValue();
 
 	int nbLabels();
 
@@ -18,11 +35,24 @@ public interface IPath<V, E> extends ITree<V, E>
 
 	boolean isEmpty();
 
+	/**
+	 * The leaf must be a true leaf.
+	 * The value must not be necessary set.
+	 */
 	boolean isTerminal();
 
+	/**
+	 * Rooted and Terminal.
+	 */
 	boolean isComplete();
 
+	/**
+	 * Nor rooted nor terminal.
+	 */
 	boolean isFree();
 
+	/**
+	 * Rooted or Terminal.
+	 */
 	boolean isFixed();
 }

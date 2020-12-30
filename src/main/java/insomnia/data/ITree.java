@@ -3,15 +3,18 @@ package insomnia.data;
 import java.util.Collection;
 import java.util.List;
 
-public interface ITree<V, E>
+public interface ITree<VAL, LBL>
 {
-	INode<V, E> getRoot();
+	INode<VAL, LBL> getRoot();
 
+	/**
+	 * The root must be a true root.
+	 */
 	boolean isRooted();
 
-	List<? extends IEdge<V, E>> getChildren(INode<V, E> node);
+	List<? extends IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node);
 
-	IEdge<V, E> getParent(INode<V, E> node);
+	IEdge<VAL, LBL> getParent(INode<VAL, LBL> node);
 
-	Collection<E> getVocabulary();
+	Collection<LBL> getVocabulary();
 }

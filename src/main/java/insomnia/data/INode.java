@@ -1,8 +1,15 @@
 package insomnia.data;
 
-public interface INode<V, E>
+/**
+ * A node in a data.
+ * 
+ * @author zuri
+ * @param <VAL> Type of the value (store in a node)
+ * @param <LBL> Type of the label (store in an edge)
+ */
+public interface INode<VAL, LBL>
 {
-	V getValue();
+	VAL getValue();
 
-	void setValue(V value);
+	void setValue(VAL value);
 }

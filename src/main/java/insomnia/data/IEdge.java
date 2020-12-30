@@ -1,10 +1,17 @@
 package insomnia.data;
 
-public interface IEdge<V, E>
+/**
+ * An edge in a data.
+ * 
+ * @author zuri
+ * @param <VAL> Type of the value (store in a node)
+ * @param <LBL> Type of the label (store in an edge)
+ */
+public interface IEdge<VAL, LBL>
 {
-	E getLabel();
+	LBL getLabel();
 
-	INode<V, E> getParent();
+	INode<VAL, LBL> getParent();
 
-	INode<V, E> getChild();
+	INode<VAL, LBL> getChild();
 }

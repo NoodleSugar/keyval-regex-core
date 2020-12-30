@@ -1,12 +1,12 @@
 package insomnia.data;
 
-public interface INodeFactory<V, E>
+public interface INodeFactory<VAL, LBL>
 {
-	INode<V, E> get();
+	INode<VAL, LBL> get();
 
-	INode<V, E> get(V value);
+	INode<VAL, LBL> get(VAL value);
 
-	INode<V, E> get(INode<V, E> parent);
+	INode<VAL, LBL> get(INode<VAL, LBL> parent);
 
-	INode<V, E> get(INode<V, E> parent, V value);
+	INode<VAL, LBL> get(INode<VAL, LBL> parent, VAL value);
 }
