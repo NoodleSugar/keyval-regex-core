@@ -22,62 +22,83 @@ import insomnia.implem.fsa.graphchunk.GraphChunk;
  * @param <E>
  * @param <T> Automaton type builded.
  */
-class PRegexFSABuilder<V, E> extends GBuilder<V, E, GBuilderState<E>>
+class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, LBL>>
 {
-	public PRegexFSABuilder(GraphChunk gc)
+	public PRegexFSABuilder(GraphChunk<VAL, LBL> gc)
 	{
-		super(gc, id -> new GBuilderState<E>(id), new FSAFactory<V, E>());
+		super(gc, id -> new GBuilderState<VAL, LBL>(id), new FSAFactory<VAL, LBL>());
 	}
 
-	static class FSAFactory<V, E> implements IGBuilderFSAFactory<E, ITree<V, E>>
+	static class FSAFactory<VAL, LBL> implements IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>>
 	{
 		@Override
-		public AbstractGBuilderFSA<E, ITree<V, E>> get(Collection<IFSAState<E>> states, Collection<IFSAState<E>> initialStates, Collection<IFSAState<E>> finalStates, Collection<IFSAEdge<E>> edges, IFSAProperties properties, IFSAAValidation<ITree<V, E>, IGFSAutomaton<E, ITree<V, E>>> validator)
+		public AbstractGBuilderFSA<VAL, LBL, ITree<VAL, LBL>> get( //
+			Collection<IFSAState<VAL, LBL>> states, //
+			Collection<IFSAState<VAL, LBL>> initialStates, //
+			Collection<IFSAState<VAL, LBL>> finalStates, //
+			Collection<IFSAEdge<VAL, LBL>> edges, //
+			IFSAProperties properties, //
+			IFSAAValidation<ITree<VAL, LBL>, IGFSAutomaton<VAL, LBL, ITree<VAL, LBL>>> validator //
+		)
 		{
 			if (properties.isSynchronous())
-				return new FSASync<V, E>(states, initialStates, finalStates, edges, properties, validator);
+				return new FSASync<VAL, LBL>(states, initialStates, finalStates, edges, properties, validator);
 			else
-				return new FSAGeneral<V, E>(states, initialStates, finalStates, edges, properties, validator);
+				return new FSAGeneral<VAL, LBL>(states, initialStates, finalStates, edges, properties, validator);
 		}
 	}
 
-	static class FSASync<V, E> extends AbstractGBuilderFSA<E, ITree<V, E>>
+	static class FSASync<VAL, LBL> extends AbstractGBuilderFSA<VAL, LBL, ITree<VAL, LBL>>
 	{
-		FSASync(Collection<IFSAState<E>> states, Collection<IFSAState<E>> initialStates, Collection<IFSAState<E>> finalStates, Collection<IFSAEdge<E>> edges, IFSAProperties properties, IFSAAValidation<ITree<V, E>, IGFSAutomaton<E, ITree<V, E>>> validator)
+		FSASync( //
+			Collection<IFSAState<VAL, LBL>> states, //
+			Collection<IFSAState<VAL, LBL>> initialStates, //
+			Collection<IFSAState<VAL, LBL>> finalStates, //
+			Collection<IFSAEdge<VAL, LBL>> edges, //
+			IFSAProperties properties, //
+			IFSAAValidation<ITree<VAL, LBL>, IGFSAutomaton<VAL, LBL, ITree<VAL, LBL>>> validator //
+		)
 		{
 			super(states, initialStates, finalStates, edges, properties, validator);
 		}
 
 		@Override
-		public Collection<IFSAState<E>> nextValidStates(Collection<? extends IFSAState<E>> states, ITree<V, E> element)
+		public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, ITree<VAL, LBL> element)
 		{
 			return nextValidState_sync(states, element);
 		}
 
 		@Override
-		public List<E> getLabelsOf(ITree<V, E> element)
+		public List<LBL> getLabelsOf(ITree<VAL, LBL> element)
 		{
-			return ((IPath<V, E>) element).getLabels();
+			return ((IPath<VAL, LBL>) element).getLabels();
 		}
 	}
 
-	static class FSAGeneral<V, E> extends AbstractGBuilderFSA<E, ITree<V, E>>
+	static class FSAGeneral<VAL, LBL> extends AbstractGBuilderFSA<VAL, LBL, ITree<VAL, LBL>>
 	{
-		FSAGeneral(Collection<IFSAState<E>> states, Collection<IFSAState<E>> initialStates, Collection<IFSAState<E>> finalStates, Collection<IFSAEdge<E>> edges, IFSAProperties properties, IFSAAValidation<ITree<V, E>, IGFSAutomaton<E, ITree<V, E>>> validator)
+		FSAGeneral( //
+			Collection<IFSAState<VAL, LBL>> states, //
+			Collection<IFSAState<VAL, LBL>> initialStates, //
+			Collection<IFSAState<VAL, LBL>> finalStates, //
+			Collection<IFSAEdge<VAL, LBL>> edges, //
+			IFSAProperties properties, //
+			IFSAAValidation<ITree<VAL, LBL>, IGFSAutomaton<VAL, LBL, ITree<VAL, LBL>>> validator //
+		)
 		{
 			super(states, initialStates, finalStates, edges, properties, validator);
 		}
 
 		@Override
-		public Collection<IFSAState<E>> nextValidStates(Collection<? extends IFSAState<E>> states, ITree<V, E> element)
+		public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, ITree<VAL, LBL> element)
 		{
 			return nextValidStates_general(states, element);
 		}
 
 		@Override
-		public List<E> getLabelsOf(ITree<V, E> element)
+		public List<LBL> getLabelsOf(ITree<VAL, LBL> element)
 		{
-			return ((IPath<V, E>) element).getLabels();
+			return ((IPath<VAL, LBL>) element).getLabels();
 		}
 	}
 

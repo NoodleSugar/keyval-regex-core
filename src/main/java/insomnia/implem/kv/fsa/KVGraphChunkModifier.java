@@ -1,12 +1,10 @@
 package insomnia.implem.kv.fsa;
 
 import insomnia.data.IPath;
-import insomnia.implem.fsa.graphchunk.GCState;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
-import insomnia.implem.kv.data.KVLabel;
-import insomnia.implem.kv.data.KVValue;
+import insomnia.implem.fsa.graphchunk.IGCState;
 
-public interface KVGraphChunkModifier
+public interface KVGraphChunkModifier<VAL, LBL>
 {
 
 	/**
@@ -14,10 +12,10 @@ public interface KVGraphChunkModifier
 	 * 
 	 * @author zuri
 	 */
-	public interface Environment
+	public interface Environment<VAL, LBL>
 	{
-		GraphChunk gluePath(GraphChunk gchunk, GCState start, GCState end, IPath<KVValue, KVLabel> path);
+		GraphChunk<VAL, LBL> gluePath(GraphChunk<VAL, LBL> gchunk, IGCState<VAL> start, IGCState<VAL> end, IPath<VAL, LBL> path);
 	};
 
-	void accept(GraphChunk gchunk, Environment env);
+	void accept(GraphChunk<VAL, LBL> gchunk, Environment<VAL, LBL> env);
 }
