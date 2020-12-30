@@ -32,9 +32,9 @@ import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVPath;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.fsa.KVGraphChunkPathRuleApplierSimple;
-import insomnia.implem.kv.pregex.RegexParser;
-import insomnia.implem.kv.pregex.automaton.RegexAutomatonFactory;
-import insomnia.implem.kv.pregex.element.IElement;
+import insomnia.implem.kv.pregex.IPRegexElement;
+import insomnia.implem.kv.pregex.PRegexParser;
+import insomnia.implem.kv.pregex.fsa.PRegexFSAFactory;
 import insomnia.implem.kv.rule.KVPathRule;
 import insomnia.rule.IRule;
 
@@ -49,7 +49,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return new RegexAutomatonFactory<KVValue, KVLabel>((IElement) obj);
+						return new PRegexFSAFactory<KVValue, KVLabel>((IPRegexElement) obj);
 					}
 
 				} }, //
@@ -58,7 +58,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return new RegexAutomatonFactory<KVValue, KVLabel>((IElement) obj).mustBeSync(true);
+						return new PRegexFSAFactory<KVValue, KVLabel>((IPRegexElement) obj).mustBeSync(true);
 					}
 				} } //
 		};
@@ -72,9 +72,9 @@ public class TestAutomaton
 		return merged;
 	}
 
-	private static IFSAutomaton<ITree<KVValue, KVLabel>> parse(String regex, Function<IElement, RegexAutomatonFactory<KVValue, KVLabel>> automatonFactoryProvider) throws IOException, ParseException, FSAException
+	private static IFSAutomaton<ITree<KVValue, KVLabel>> parse(String regex, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> automatonFactoryProvider) throws IOException, ParseException, FSAException
 	{
-		IElement rparsed = new RegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+		IPRegexElement rparsed = new PRegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
 		return automatonFactoryProvider.apply(rparsed).newBuild();
 	}
 
@@ -88,8 +88,8 @@ public class TestAutomaton
 		void setup() throws IOException, ParseException, FSAException
 		{
 			String   regex   = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
-			IElement rparsed = new RegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
-			automaton = new RegexAutomatonFactory<KVValue, KVLabel>(rparsed).mustBeSync(!true).newBuild();
+			IPRegexElement rparsed = new PRegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+			automaton = new PRegexFSAFactory<KVValue, KVLabel>(rparsed).mustBeSync(!true).newBuild();
 		}
 
 		List<Object[]> complex()
@@ -180,7 +180,7 @@ public class TestAutomaton
 
 	@ParameterizedTest
 	@MethodSource
-	void match(String fname, Function<IElement, RegexAutomatonFactory<KVValue, KVLabel>> fprovider, String regex, KVPath subject, boolean match)
+	void match(String fname, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> fprovider, String regex, KVPath subject, boolean match)
 	{
 		try
 		{
@@ -263,10 +263,10 @@ public class TestAutomaton
 	@MethodSource
 	void pathRewriting(Collection<IRule<KVValue, KVLabel>> rules, String regex, String query, boolean expected) throws IOException, ParseException, FSAException
 	{
-		IElement                          rparsed  = new RegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+		IPRegexElement                          rparsed  = new PRegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
 		KVGraphChunkPathRuleApplierSimple modifier = new KVGraphChunkPathRuleApplierSimple(2);
 
-		IFSAutomaton<ITree<KVValue, KVLabel>> automaton = new RegexAutomatonFactory<KVValue, KVLabel>(rparsed) //
+		IFSAutomaton<ITree<KVValue, KVLabel>> automaton = new PRegexFSAFactory<KVValue, KVLabel>(rparsed) //
 			.setGraphChunkModifier(modifier.getGraphChunkModifier(rules)) //
 			.newBuild();
 
