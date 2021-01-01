@@ -4,15 +4,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import insomnia.implem.kv.data.KVValue;
-
 public final class PRegexElements
 {
 	public static class Key extends AbstractElement
 	{
 		String label;
 
-		public Key(String label)
+		private Key(String label)
 		{
 			super(Type.KEY);
 			this.label = label;
@@ -36,30 +34,32 @@ public final class PRegexElements
 
 	// =========================================================================
 
-	public static class Value extends AbstractElement
+	public static class Value<VAL> extends AbstractElement
 	{
-		KVValue value;
+		VAL value;
 
-		public Value(KVValue value)
+		private Value(VAL value)
 		{
 			super(Type.VALUE);
 			this.value = value;
 		}
 
-		public KVValue getValue()
+		public VAL getValue()
 		{
 			return value;
 		}
 
 		public String toString()
 		{
-			return value.toString() + quantifier;
+			return value.toString();
 		}
 	}
 
-	public static Value createValue(KVValue value)
+	public static <VAL> Value<VAL> createValue(VAL value)
 	{
-		return new Value(value);
+		Value<VAL> ret = new Value<>(value);
+		ret.quantifier = Quantifier.from(1, 1);
+		return ret;
 	}
 
 	// =========================================================================
@@ -73,7 +73,7 @@ public final class PRegexElements
 	{
 		String regex;
 
-		public Regex(String regex)
+		private Regex(String regex)
 		{
 			super(Type.REGEX);
 			this.regex = regex;
@@ -162,7 +162,8 @@ public final class PRegexElements
 
 		public AbstractElement(Type type)
 		{
-			this.type = type;
+			this.type       = type;
+			this.quantifier = Quantifier.from(1, 1);
 		}
 
 		public void setQuantifier(Quantifier quantifier)

@@ -21,8 +21,6 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 
 	public abstract VAL emptyValue();
 
-	abstract protected boolean valueIsTerminal(VAL value);
-
 	@SuppressWarnings("unchecked")
 	public AbstractPath(IPath<VAL, LBL> path, int begin, int end)
 	{
@@ -71,14 +69,19 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 		initPath(this, default_isRoot, default_isTerminal, labels, emptyValue());
 	}
 
+	public AbstractPath(List<? extends LBL> labels, VAL value)
+	{
+		initPath(this, default_isRoot, default_isTerminal, labels, value);
+	}
+
 	public AbstractPath(boolean isRooted, List<? extends LBL> labels)
 	{
 		initPath(this, isRooted, default_isTerminal, labels, emptyValue());
 	}
 
-	public AbstractPath(List<? extends LBL> labels, VAL value)
+	public AbstractPath(boolean isRooted, List<? extends LBL> labels, VAL value)
 	{
-		initPath(this, default_isRoot, valueIsTerminal(value), labels, value);
+		initPath(this, isRooted, default_isTerminal, labels, value);
 	}
 
 	public AbstractPath(boolean isRooted, boolean isTerminal, List<? extends LBL> labels)
@@ -86,9 +89,9 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 		initPath(this, isRooted, isTerminal, labels, emptyValue());
 	}
 
-	public AbstractPath(boolean isRooted, List<? extends LBL> labels, VAL value)
+	public AbstractPath(boolean isRooted, boolean isTerminal, List<? extends LBL> labels, VAL value)
 	{
-		initPath(this, isRooted, valueIsTerminal(value), labels, value);
+		initPath(this, isRooted, isTerminal, labels, value);
 	}
 
 	private static <VAL, LBL> void initPath(AbstractPath<VAL, LBL> path, boolean isRooted, boolean isTerminal, List<? extends LBL> labels, VAL value)

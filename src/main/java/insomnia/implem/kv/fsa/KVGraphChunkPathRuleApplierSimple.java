@@ -44,11 +44,12 @@ public class KVGraphChunkPathRuleApplierSimple
 		return grdFactory.get();
 	}
 
-	int        currentDepth = 0;
-	GraphChunk mainChunk;
+	int currentDepth = 0;
 
-	IGRD<KVValue, KVLabel> grd;
-	Environment            env;
+	GraphChunk<KVValue, KVLabel> mainChunk;
+
+	IGRD<KVValue, KVLabel>        grd;
+	Environment<KVValue, KVLabel> env;
 
 	/**
 	 * gChunk must represent a simple path.
@@ -57,9 +58,9 @@ public class KVGraphChunkPathRuleApplierSimple
 	 * @param grd
 	 */
 	public void apply(//
-		GraphChunk gChunk, //
+		GraphChunk<KVValue, KVLabel> gChunk, //
 		IGRD<KVValue, KVLabel> grd, //
-		Environment env //
+		Environment<KVValue, KVLabel> env //
 	)
 	{
 		KVPath queryPath;
@@ -81,23 +82,23 @@ public class KVGraphChunkPathRuleApplierSimple
 		build(gChunk, dependencies);
 	}
 
-	private void build(GraphChunk gchunk, Collection<IDependency<KVValue, KVLabel>> dependencies)
+	private void build(GraphChunk<KVValue, KVLabel> gchunk, Collection<IDependency<KVValue, KVLabel>> dependencies)
 	{
 		currentDepth++;
-		List<GraphChunk>                                newChunks = new ArrayList<>();
+		List<GraphChunk<KVValue, KVLabel>>              newChunks = new ArrayList<>();
 		List<Collection<IDependency<KVValue, KVLabel>>> newDeps   = new ArrayList<>();
 
 		for (IDependency<KVValue, KVLabel> dependency : dependencies)
 		{
-			Collection<GraphChunk> unifiables = getUnifiables(gchunk, dependency);
+			Collection<GraphChunk<KVValue, KVLabel>> unifiables = getUnifiables(gchunk, dependency);
 
-			for (GraphChunk unifiable : unifiables)
+			for (GraphChunk<KVValue, KVLabel> unifiable : unifiables)
 			{
 				IPathRule<KVValue, KVLabel> rule = (IPathRule<KVValue, KVLabel>) dependency.getRuleTarget();
 
 				Collection<IDependency<KVValue, KVLabel>> deps = grd.getDependencies(rule);
 
-				GraphChunk modGC = apply(unifiable, (IPathUnifier<KVValue, KVLabel>) dependency.getUnifier(), rule.getBody());
+				GraphChunk<KVValue, KVLabel> modGC = apply(unifiable, (IPathUnifier<KVValue, KVLabel>) dependency.getUnifier(), rule.getBody());
 
 				if (deps.isEmpty())
 					continue;
@@ -115,14 +116,14 @@ public class KVGraphChunkPathRuleApplierSimple
 		currentDepth--;
 	}
 
-	private GraphChunk apply(GraphChunk gchunk, IPathUnifier<KVValue, KVLabel> unifier, IPath<KVValue, KVLabel> body)
+	private GraphChunk<KVValue, KVLabel> apply(GraphChunk<KVValue, KVLabel> gchunk, IPathUnifier<KVValue, KVLabel> unifier, IPath<KVValue, KVLabel> body)
 	{
-		Collection<GraphChunk> start = gchunk.validStates(gchunk.getStart(), unifier.getPrefixBody().getLabels());
-		Collection<GraphChunk> end   = gchunk.validStates_reverse(gchunk.getEnd(), unifier.getSuffixBody().getLabels());
+		Collection<GraphChunk<KVValue, KVLabel>> start = gchunk.validStates(gchunk.getStart(), unifier.getPrefixBody().getLabels());
+		Collection<GraphChunk<KVValue, KVLabel>> end   = gchunk.validStates_reverse(gchunk.getEnd(), unifier.getSuffixBody().getLabels());
 		assert (start.size() == 1);
 		assert (end.size() == 1);
 
-		GraphChunk ret = env.gluePath(mainChunk, //
+		GraphChunk<KVValue, KVLabel> ret = env.gluePath(mainChunk, //
 			start.iterator().next().getEnd(), //
 			end.iterator().next().getStart(), //
 			body);
@@ -130,7 +131,7 @@ public class KVGraphChunkPathRuleApplierSimple
 		return ret;
 	}
 
-	private Collection<GraphChunk> getUnifiables(GraphChunk gchunk, IDependency<KVValue, KVLabel> dep)
+	private Collection<GraphChunk<KVValue, KVLabel>> getUnifiables(GraphChunk<KVValue, KVLabel> gchunk, IDependency<KVValue, KVLabel> dep)
 	{
 //		Collection<GraphChunk> ret = new ArrayList<>();
 //		Collection<GCState>    start;
@@ -158,12 +159,12 @@ public class KVGraphChunkPathRuleApplierSimple
 //		return ret;
 	}
 
-	public KVGraphChunkModifier getGraphChunkModifier(Collection<IRule<KVValue, KVLabel>> rules)
+	public KVGraphChunkModifier<KVValue, KVLabel> getGraphChunkModifier(Collection<IRule<KVValue, KVLabel>> rules)
 	{
 		return getGraphChunkModifier(rules2grd(rules));
 	}
 
-	public KVGraphChunkModifier getGraphChunkModifier(IGRD<KVValue, KVLabel> grd)
+	public KVGraphChunkModifier<KVValue, KVLabel> getGraphChunkModifier(IGRD<KVValue, KVLabel> grd)
 	{
 		return (gchunk, env) -> {
 			apply(gchunk, grd, env);

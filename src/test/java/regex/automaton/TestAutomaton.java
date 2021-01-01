@@ -74,7 +74,12 @@ public class TestAutomaton
 
 	private static IFSAutomaton<ITree<KVValue, KVLabel>> parse(String regex, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> automatonFactoryProvider) throws IOException, ParseException, FSAException
 	{
-		IPRegexElement rparsed = new PRegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+		return parse(regex, automatonFactoryProvider, null);
+	}
+
+	private static IFSAutomaton<ITree<KVValue, KVLabel>> parse(String regex, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> automatonFactoryProvider, KVValue value) throws IOException, ParseException, FSAException
+	{
+		IPRegexElement rparsed = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()), value);
 		return automatonFactoryProvider.apply(rparsed).newBuild();
 	}
 
@@ -193,6 +198,31 @@ public class TestAutomaton
 		}
 	}
 
+	static List<Object[]> matchValue()
+	{
+		List<Object[]> a = Arrays.asList(new Object[][] { //
+				{ "a.b", new KVValue(15), KVPath.pathFromString("a.b", new KVValue(15)), true }, //
+				{ "a.b", new KVValue(15), KVPath.pathFromString("a.b", new KVValue(16)), false }, //
+				{ "a.b", new KVValue(15), KVPath.pathFromString("a.b"), false }, //
+		});
+		return mergeParameters(factories(), a);
+	}
+
+	@ParameterizedTest
+	@MethodSource
+	void matchValue(String fname, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> fprovider, String regex, KVValue rvalue, KVPath subject, boolean match)
+	{
+		try
+		{
+			IFSAutomaton<ITree<KVValue, KVLabel>> automaton = parse(regex, fprovider, rvalue);
+			assertEquals(match, automaton.test(subject));
+		}
+		catch (IOException | ParseException | FSAException e)
+		{
+			fail(e.getMessage());
+		}
+	}
+
 	/**
 	 * Information for a test on path rewriting.
 	 * 
@@ -263,7 +293,7 @@ public class TestAutomaton
 	@MethodSource
 	void pathRewriting(Collection<IRule<KVValue, KVLabel>> rules, String regex, String query, boolean expected) throws IOException, ParseException, FSAException
 	{
-		IPRegexElement                          rparsed  = new PRegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+		IPRegexElement                    rparsed  = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
 		KVGraphChunkPathRuleApplierSimple modifier = new KVGraphChunkPathRuleApplierSimple(2);
 
 		IFSAutomaton<ITree<KVValue, KVLabel>> automaton = new PRegexFSAFactory<KVValue, KVLabel>(rparsed) //

@@ -17,6 +17,8 @@ public interface IGFSAutomaton<VAL, LBL, ELMNT> extends IFSAutomaton<ELMNT>
 
 	List<LBL> getLabelsOf(ELMNT element);
 
+	VAL getValueOf(ELMNT element);
+
 	Collection<IFSAState<VAL, LBL>> getInitialStates();
 
 	Collection<IFSAState<VAL, LBL>> getFinalStates();

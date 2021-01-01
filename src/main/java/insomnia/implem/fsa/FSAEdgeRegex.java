@@ -3,13 +3,13 @@ package insomnia.implem.fsa;
 import java.util.regex.Pattern;
 
 import insomnia.fsa.AbstractFSAEdge;
-import insomnia.fsa.IFSALabel;
+import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
 
 /**
  * Edge for regex
  */
-public class FSAEdgeRegex<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements IFSALabel<LBL>
+public class FSAEdgeRegex<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements IFSALabelCondition<LBL>
 {
 	Pattern pattern;
 
@@ -58,7 +58,7 @@ public class FSAEdgeRegex<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements
 	}
 
 	@Override
-	public IFSALabel<LBL> getLabel()
+	public IFSALabelCondition<LBL> getLabelCondition()
 	{
 		return this;
 	}

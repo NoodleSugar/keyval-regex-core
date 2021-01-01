@@ -1,13 +1,13 @@
 package insomnia.implem.fsa;
 
 import insomnia.fsa.AbstractFSAEdge;
-import insomnia.fsa.IFSALabel;
+import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
 
 /**
  * Edge for words
  */
-public class FSAEdgeStringEq<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements IFSALabel<LBL>
+public class FSAEdgeStringEq<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements IFSALabelCondition<LBL>
 {
 	String strCmp;
 
@@ -61,7 +61,7 @@ public class FSAEdgeStringEq<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> impleme
 	}
 
 	@Override
-	public IFSALabel<LBL> getLabel()
+	public IFSALabelCondition<LBL> getLabelCondition()
 	{
 		return this;
 	}

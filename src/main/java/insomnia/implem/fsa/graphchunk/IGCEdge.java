@@ -14,11 +14,6 @@ import java.util.function.Predicate;
 public interface IGCEdge<LBL> extends Predicate<LBL>
 {
 	/**
-	 * @return A copy of the original edge wich is a new object in memory.
-	 */
-	IGCEdge<LBL> copy();
-
-	/**
 	 * If the edge is a classic one, get its label as a {@link String}.
 	 */
 	Optional<String> getLabelAsString();

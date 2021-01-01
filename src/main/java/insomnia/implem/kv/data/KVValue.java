@@ -58,7 +58,7 @@ public class KVValue
 		if (!(object instanceof KVValue))
 			return false;
 
-		KVValue kvv = (KVValue) obj;
+		KVValue kvv = (KVValue) object;
 		return type.equals(kvv.type) && obj.equals(kvv.obj);
 	}
 

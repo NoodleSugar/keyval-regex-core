@@ -2,16 +2,18 @@ package insomnia.implem.kv.pregex;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.commons.io.IOUtils;
+
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.pregex.PRegexElements.Disjunction;
 import insomnia.implem.kv.pregex.PRegexElements.MultipleElement;
 import insomnia.implem.kv.pregex.PRegexElements.Sequence;
-import insomnia.implem.kv.pregex.PRegexElements.Value;
 
 public class PRegexParser
 {
@@ -232,22 +234,40 @@ public class PRegexParser
 		COMMA, CLOSE_BRACE, CLOSE_PARENTH;
 	};
 
-	public IPRegexElement readRegexStream(InputStream regexStream, KVValue value) throws IOException, ParseException
+	public IPRegexElement parse(String regex, KVValue value) throws IOException, ParseException
 	{
-		IPRegexElement elts = readRegexStream(regexStream);
+		return parse(IOUtils.toInputStream(regex, Charset.defaultCharset()), value);
+	}
+
+	public IPRegexElement parse(String regex) throws IOException, ParseException
+	{
+		return parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+	}
+
+	/**
+	 * Parse a pregex with a final value.
+	 * 
+	 * @param value If null, no information for the value is added to the {@link IPRegexElement}.
+	 */
+	public <VAL> IPRegexElement parse(InputStream regexStream, VAL value) throws IOException, ParseException
+	{
+		IPRegexElement elts = parse(regexStream);
+
+		if (value == null)
+			return elts;
 
 		Collection<IPRegexElement> elements = new ArrayList<>();
 		elements.add(elts);
-		elements.add(new Value(value));
+		elements.add(PRegexElements.createValue(value));
 		return PRegexElements.createSequence(elements);
 	}
 
-	public IPRegexElement readRegexStream(InputStream regexStream) throws IOException, ParseException
+	public IPRegexElement parse(InputStream regexStream) throws IOException, ParseException
 	{
 		Lexer lexer = new Lexer(regexStream);
 
-		ArrayDeque<ReaderState> readerStateStack = new ArrayDeque<ReaderState>();
-		ArrayDeque<IPRegexElement>    elementStack     = new ArrayDeque<IPRegexElement>();
+		ArrayDeque<ReaderState>    readerStateStack = new ArrayDeque<ReaderState>();
+		ArrayDeque<IPRegexElement> elementStack     = new ArrayDeque<IPRegexElement>();
 
 		readerStateStack.push(ReaderState.END);
 		readerStateStack.push(ReaderState.OR_ELEMENT);
@@ -430,8 +450,8 @@ public class PRegexParser
 				// Si le conteneur n'a qu'un élément
 				if (element instanceof MultipleElement)
 				{
-					IPRegexElement   top  = element;
-					Quantifier oldQ = top.getQuantifier();
+					IPRegexElement top  = element;
+					Quantifier     oldQ = top.getQuantifier();
 
 					if (top.getElements().size() == 1)
 					{
@@ -440,7 +460,7 @@ public class PRegexParser
 					}
 				}
 
-				if (element.getQuantifier() == Quantifier.from(1, 1) && element instanceof MultipleElement)
+				if (element.getQuantifier().equals(Quantifier.from(1, 1)) && element instanceof MultipleElement)
 				{
 					IPRegexElement top = element;
 					if (element.getClass() == container.getClass())

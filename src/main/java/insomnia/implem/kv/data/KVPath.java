@@ -15,7 +15,6 @@ import insomnia.data.IPath;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.graphchunk.IGCEdge;
 import insomnia.implem.fsa.graphchunk.IGCState;
-import insomnia.implem.kv.data.KVValue.Type;
 
 public class KVPath extends AbstractPath<KVValue, KVLabel>
 {
@@ -31,12 +30,6 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 	public KVValue emptyValue()
 	{
 		return new KVValue();
-	}
-
-	@Override
-	protected boolean valueIsTerminal(KVValue value)
-	{
-		return value.type != Type.NULL;
 	}
 
 	public static List<KVLabel> string2KVLabel(List<String> labels)
@@ -67,27 +60,31 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 		super(labels);
 	}
 
-	// path doit contenir au moins une clé
-	public KVPath(boolean isRooted, List<KVLabel> labels)
-	{
-		super(isRooted, labels);
-	}
-
 	public KVPath(List<KVLabel> labels, KVValue value)
 	{
 		super(labels, value);
 	}
 
 	// path doit contenir au moins une clé
+	public KVPath(boolean isRooted, List<KVLabel> labels)
+	{
+		super(isRooted, labels);
+	}
+
 	public KVPath(boolean isRooted, List<KVLabel> labels, KVValue value)
 	{
 		super(isRooted, labels, value);
 	}
 
-	// path doit contenir au moins une clé
 	public KVPath(boolean isRooted, boolean isTerminal, List<KVLabel> labels)
 	{
 		super(isRooted, isTerminal, labels);
+	}
+
+	// path doit contenir au moins une clé
+	public KVPath(boolean isRooted, boolean isTerminal, List<KVLabel> labels, KVValue value)
+	{
+		super(isRooted, isTerminal, labels, value);
 	}
 
 	@Override
@@ -98,9 +95,9 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 
 	// =========================================================================
 
-	public static KVPath pathFromString(String p, boolean isRooted, boolean isTerminal)
+	public static KVPath pathFromString(String p, boolean isRooted, boolean isTerminal, KVValue value)
 	{
-		return new KVPath(isRooted, isTerminal, string2KVLabel(Arrays.asList(p.trim().split(Pattern.quote(".")))));
+		return new KVPath(isRooted, isTerminal, string2KVLabel(Arrays.asList(p.trim().split(Pattern.quote(".")))), value);
 	}
 
 	/*
@@ -114,26 +111,22 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 
 	public static KVPath pathFromString(String p, KVValue value)
 	{
-		boolean hasValue = value.type != Type.NULL;
-
 		if (p.isEmpty())
-			return new KVPath(Collections.emptyList(), value);
+			return new KVPath(false, false, Collections.emptyList(), value);
 
 		if (p.equals("^"))
 			return new KVPath(true, Collections.emptyList(), value);
 
 		if (p.equals("$"))
-			return hasValue //
-				? new KVPath(false, Collections.emptyList(), value) //
-				: new KVPath(false, true, Collections.emptyList());
+			new KVPath(false, true, Collections.emptyList(), value);
 
 		p = p.trim();
 
 		boolean isRooted   = p.charAt(0) == '.';
-		boolean isTerminal = p.charAt(p.length() - 1) == '.' || hasValue;
+		boolean isTerminal = p.charAt(p.length() - 1) == '.';
 
 		p = p.substring(isRooted ? 1 : 0, p.length() - (isTerminal ? 1 : 0));
-		return pathFromString(p, isRooted, isTerminal);
+		return pathFromString(p, isRooted, isTerminal, value);
 	}
 
 	/**

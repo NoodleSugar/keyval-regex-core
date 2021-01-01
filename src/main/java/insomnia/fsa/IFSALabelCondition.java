@@ -2,7 +2,7 @@ package insomnia.fsa;
 
 import java.util.function.Predicate;
 
-public interface IFSALabel<LBL> extends Predicate<LBL>
+public interface IFSALabelCondition<LBL> extends Predicate<LBL>
 {
 	@Override
 	boolean test(LBL element);

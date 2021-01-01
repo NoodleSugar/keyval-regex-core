@@ -1,13 +1,13 @@
 package insomnia.implem.fsa;
 
 import insomnia.fsa.AbstractFSAEdge;
-import insomnia.fsa.IFSALabel;
+import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
 
 /**
  * Edge for epsilon transition
  */
-public class FSAEdgeEpsilon<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements IFSALabel<LBL>
+public class FSAEdgeEpsilon<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implements IFSALabelCondition<LBL>
 {
 	public FSAEdgeEpsilon(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child)
 	{
@@ -43,7 +43,7 @@ public class FSAEdgeEpsilon<VAL, LBL> extends AbstractFSAEdge<VAL, LBL> implemen
 	}
 
 	@Override
-	public IFSALabel<LBL> getLabel()
+	public IFSALabelCondition<LBL> getLabelCondition()
 	{
 		return this;
 	}

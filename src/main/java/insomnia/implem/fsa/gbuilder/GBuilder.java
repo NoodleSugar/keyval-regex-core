@@ -52,13 +52,13 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 	GraphChunk<VAL, LBL> automaton;
 	boolean              mustBeSync;
 
-	Function<Integer, STATE> stateSupplier;
+	Function<IGCState<VAL>, STATE> stateSupplier;
 
 	IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>> builderFSAFactory;
 
 	// =========================================================================
 
-	public GBuilder(GraphChunk<VAL, LBL> gc, Function<Integer, STATE> stateSupplier, IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>> builderFactory)
+	public GBuilder(GraphChunk<VAL, LBL> gc, Function<IGCState<VAL>, STATE> stateSupplier, IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>> builderFactory)
 	{
 		automaton = gc;
 
@@ -81,7 +81,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		if (null != ret)
 			return ret;
 
-		ret = stateSupplier.apply(state.getId());
+		ret = stateSupplier.apply(state);
 		buildStates.put(state, ret);
 		return ret;
 	}
@@ -126,10 +126,17 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		edges  = new ArrayList<>(automaton.getNbEdges());
 		states.add(initialState);
 
+		// Avoid a redundant add
 		if (finalState != initialState)
 			states.add(finalState);
 
 		finals.add(finalState);
+
+		for (IGCState<VAL> state : automaton.getStates())
+		{
+			if (state.isTerminal())
+				finals.add(makeState(state));
+		}
 
 		if (automaton.getProperties().isSynchronous())
 			build(automaton.getStart(), initialState);

@@ -4,10 +4,10 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 
 import insomnia.fsa.AbstractFSAEdge;
-import insomnia.fsa.IFSALabel;
+import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
 
-public class FSAEdgeNumber<VAL, LBL, N extends Number> extends AbstractFSAEdge<VAL, LBL> implements IFSALabel<LBL>
+public class FSAEdgeNumber<VAL, LBL, N extends Number> extends AbstractFSAEdge<VAL, LBL> implements IFSALabelCondition<LBL>
 {
 	Number n;
 
@@ -37,7 +37,7 @@ public class FSAEdgeNumber<VAL, LBL, N extends Number> extends AbstractFSAEdge<V
 	}
 
 	@Override
-	public IFSALabel<LBL> getLabel()
+	public IFSALabelCondition<LBL> getLabelCondition()
 	{
 		return this;
 	}

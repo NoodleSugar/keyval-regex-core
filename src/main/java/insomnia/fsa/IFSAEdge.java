@@ -10,5 +10,5 @@ public interface IFSAEdge<VAL, LBL>
 
 	IFSAState<VAL, LBL> getChild();
 
-	IFSALabel<LBL> getLabel();
+	IFSALabelCondition<LBL> getLabelCondition();
 }

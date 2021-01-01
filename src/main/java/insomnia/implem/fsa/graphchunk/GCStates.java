@@ -1,5 +1,10 @@
 package insomnia.implem.fsa.graphchunk;
 
+import java.security.InvalidParameterException;
+
+import insomnia.fsa.IFSAValueCondition;
+import insomnia.implem.fsa.FSAValues;
+
 public final class GCStates
 {
 	private GCStates()
@@ -8,18 +13,47 @@ public final class GCStates
 
 	// =========================================================================
 
-	static abstract class AbstractGCState<VAL> implements IGCState<VAL>
+	public static abstract class AbstractGCState<VAL> implements IGCState<VAL>
 	{
-		private int id;
+		private int     id;
+		private boolean isTerminal;
 
-		public AbstractGCState(int id)
+		private IFSAValueCondition<VAL> valueCondition;
+
+		public AbstractGCState(int id, boolean isTerminal, IFSAValueCondition<VAL> valueCondition)
 		{
-			this.id = id;
+			this.id             = id;
+			this.isTerminal     = isTerminal;
+			this.valueCondition = valueCondition;
 		}
 
+		@Override
 		public int getId()
 		{
 			return id;
+		}
+
+		@Override
+		public IFSAValueCondition<VAL> getValueCondition()
+		{
+			return valueCondition;
+		}
+
+		void setTerminal(boolean isTerminal)
+		{
+			this.isTerminal = isTerminal;
+		}
+
+		@Override
+		public boolean isTerminal()
+		{
+			return isTerminal;
+		}
+
+		@Override
+		public boolean test(VAL element)
+		{
+			return getValueCondition().test(element);
 		}
 
 		@SuppressWarnings("unchecked")
@@ -41,7 +75,7 @@ public final class GCStates
 		@Override
 		public String toString()
 		{
-			return "<:" + id + ":>";
+			return "<:" + id + valueCondition + ":>";
 		}
 	}
 
@@ -49,75 +83,55 @@ public final class GCStates
 
 	static class StateSimple<VAL> extends AbstractGCState<VAL>
 	{
-		public StateSimple(int id)
+		public StateSimple(int id, boolean isTerminal, IFSAValueCondition<VAL> valueCondition)
 		{
-			super(id);
+			super(id, isTerminal, valueCondition);
 		}
+	}
 
-		@Override
-		public boolean isTerminal()
-		{
-			return false;
-		}
-
-		@Override
-		public boolean test(VAL t)
-		{
-			return t == null;
-		}
+	public static <VAL> IGCState<VAL> create(int id, boolean isTerminal, IFSAValueCondition<VAL> valueCondition)
+	{
+		return new StateSimple<VAL>(id, false, valueCondition);
 	}
 
 	public static <VAL> IGCState<VAL> createSimple(int id)
 	{
-		return new StateSimple<VAL>(id);
-	}
-	// =========================================================================
-
-	static class StateTerminal<VAL> extends StateSimple<VAL>
-	{
-		public StateTerminal(int id)
-		{
-			super(id);
-		}
-
-		@Override
-		public boolean isTerminal()
-		{
-			return true;
-		}
+		return new StateSimple<VAL>(id, false, FSAValues.createAny());
 	}
 
 	public static <VAL> IGCState<VAL> createTerminal(int id)
 	{
-		return new StateSimple<VAL>(id);
+		return new StateSimple<VAL>(id, true, FSAValues.createAny());
+	}
+
+	public static <VAL> IGCState<VAL> createTerminalValueEq(int id, VAL value)
+	{
+		return new StateSimple<VAL>(id, true, FSAValues.createEq(value));
 	}
 
 	// =========================================================================
 
-	static class StateValueEq<VAL> extends AbstractGCState<VAL>
+//	public static <VAL> void setTerminal(IGCState<VAL> state)
+//	{
+//		if (!(state instanceof AbstractGCState))
+//			throw new InvalidParameterException();
+//
+//		((AbstractGCState<VAL>) state).isTerminal = true;
+//	}
+
+	public static <VAL> void copy(IGCState<VAL> dest, IGCState<VAL> src, int newId)
 	{
-		VAL value;
+		if (!(src instanceof AbstractGCState))
+			throw new InvalidParameterException();
 
-		public StateValueEq(int id, VAL value)
-		{
-			super(id);
-		}
-
-		@Override
-		public boolean isTerminal()
-		{
-			return true;
-		}
-
-		@Override
-		public boolean test(VAL t)
-		{
-			return t.equals(value);
-		}
+		AbstractGCState<VAL> gcDest = (AbstractGCState<VAL>) dest;
+		gcDest.id             = newId;
+		gcDest.isTerminal     = src.isTerminal();
+		gcDest.valueCondition = src.getValueCondition();
 	}
 
-	public static <VAL> IGCState<VAL> createValueEq(int id, VAL value)
+	public static <VAL> IGCState<VAL> copy(IGCState<VAL> src, int newId)
 	{
-		return new StateValueEq<VAL>(id, value);
+		return new StateSimple<>(newId, src.isTerminal(), src.getValueCondition());
 	}
 }

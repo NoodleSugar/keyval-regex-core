@@ -26,7 +26,7 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 {
 	public PRegexFSABuilder(GraphChunk<VAL, LBL> gc)
 	{
-		super(gc, id -> new GBuilderState<VAL, LBL>(id), new FSAFactory<VAL, LBL>());
+		super(gc, state -> new GBuilderState<VAL, LBL>(state.getId(), state.getValueCondition()), new FSAFactory<VAL, LBL>());
 	}
 
 	static class FSAFactory<VAL, LBL> implements IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>>
@@ -73,6 +73,12 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		{
 			return ((IPath<VAL, LBL>) element).getLabels();
 		}
+
+		@Override
+		public VAL getValueOf(ITree<VAL, LBL> element)
+		{
+			return ((IPath<VAL, LBL>) element).getValue();
+		}
 	}
 
 	static class FSAGeneral<VAL, LBL> extends AbstractGBuilderFSA<VAL, LBL, ITree<VAL, LBL>>
@@ -99,6 +105,12 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		public List<LBL> getLabelsOf(ITree<VAL, LBL> element)
 		{
 			return ((IPath<VAL, LBL>) element).getLabels();
+		}
+
+		@Override
+		public VAL getValueOf(ITree<VAL, LBL> element)
+		{
+			return ((IPath<VAL, LBL>) element).getValue();
 		}
 	}
 

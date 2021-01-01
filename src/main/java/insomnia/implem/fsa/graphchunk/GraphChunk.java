@@ -33,20 +33,37 @@ public abstract class GraphChunk<VAL, LBL>
 {
 	private Graph<IGCState<VAL>, IGCEdge<LBL>> graph;
 
+	private Collection<IGCState<VAL>> terminals;
+
 	private IGCState<VAL> start;
 	private IGCState<VAL> end;
 
 	private IFSAProperties properties;
 
+	// =========================================================================
+
 	{
 		// By default we don't know if it is deterministic
 		properties = new FSAProperties(false, true);
 		this.graph = new DirectedPseudograph<IGCState<VAL>, IGCEdge<LBL>>(null, null, false);
+		terminals  = new HashSet<>();
 	}
 
-	public abstract IGCState<VAL> freshState();
+	// =========================================================================
+
+	/**
+	 * Return a state with a new id that is a copy of 'src'.
+	 * 
+	 * @param src
+	 * @return
+	 */
+	public abstract IGCState<VAL> copyState(IGCState<VAL> src);
+
+	public abstract IGCEdge<LBL> copyEdge(IGCEdge<LBL> src);
 
 	public abstract GraphChunk<VAL, LBL> create();
+
+	// =========================================================================
 
 	protected GraphChunk(IGCState<VAL> start, IGCState<VAL> end)
 	{
@@ -60,6 +77,8 @@ public abstract class GraphChunk<VAL, LBL>
 	{
 	}
 
+	// =========================================================================
+
 	protected void setGraph(Graph<IGCState<VAL>, IGCEdge<LBL>> graph)
 	{
 		this.graph = graph;
@@ -70,6 +89,11 @@ public abstract class GraphChunk<VAL, LBL>
 		return graph;
 	}
 
+	public Collection<IGCState<VAL>> getStates()
+	{
+		return graph.vertexSet();
+	}
+
 	public IGCState<VAL> getStart()
 	{
 		return start;
@@ -78,6 +102,16 @@ public abstract class GraphChunk<VAL, LBL>
 	public IGCState<VAL> getEnd()
 	{
 		return end;
+	}
+
+	public Collection<IGCState<VAL>> getTerminals()
+	{
+		return Collections.unmodifiableCollection(terminals);
+	}
+
+	public void setStateTerminal(IGCState<VAL> state)
+	{
+		terminals.add(state);
 	}
 
 	protected void setStart(IGCState<VAL> start)
@@ -145,13 +179,6 @@ public abstract class GraphChunk<VAL, LBL>
 			ret.addAll(graph.outgoingEdgesOf(state));
 
 		return new ArrayList<>(ret);
-	}
-
-	public IGCState<VAL> addState()
-	{
-		IGCState<VAL> ret = freshState();
-		graph.addVertex(ret);
-		return ret;
 	}
 
 	public void addState(IGCState<VAL> state)
@@ -330,7 +357,7 @@ public abstract class GraphChunk<VAL, LBL>
 
 		for (IGCState<VAL> graphNode : graphNodes)
 		{
-			IGCState<VAL> newState = freshState();
+			IGCState<VAL> newState = copyState(graphNode);
 			states.put(graphNode, newState);
 			ret.graph.addVertex(newState);
 		}
@@ -342,19 +369,27 @@ public abstract class GraphChunk<VAL, LBL>
 		{
 			IGCState<VAL> source = states.get(graph.getEdgeSource(edgeData));
 			IGCState<VAL> target = states.get(graph.getEdgeTarget(edgeData));
-			ret.graph.addEdge(source, target, edgeData.copy());
+			ret.graph.addEdge(source, target, copyEdge(edgeData));
 		}
 		return ret;
 	}
 
-	public void replaceState(IGCState<VAL> dest, IGCState<VAL> src)
+	/**
+	 * Replace the state src by dest.
+	 * All the incoming/Outgoing edges of src are copied to dest.
+	 * The state src is deleted at the end of the process.
+	 * 
+	 * @param dest
+	 * @param src
+	 */
+	private void replaceState(IGCState<VAL> dest, IGCState<VAL> src)
 	{
 		List<IGCEdge<LBL>> edges = new ArrayList<>(graph.outgoingEdgesOf(src));
 
 		for (IGCEdge<LBL> edgeData : edges)
 		{
 			IGCState<VAL> target = graph.getEdgeTarget(edgeData);
-			graph.addEdge(dest, target, edgeData.copy());
+			graph.addEdge(dest, target, copyEdge(edgeData));
 		}
 		// Copy to avoid concurent modification
 		edges = new ArrayList<>(graph.incomingEdgesOf(src));
@@ -362,8 +397,9 @@ public abstract class GraphChunk<VAL, LBL>
 		for (IGCEdge<LBL> edgeData : edges)
 		{
 			IGCState<VAL> source = graph.getEdgeSource(edgeData);
-			graph.addEdge(source, dest, edgeData.copy());
+			graph.addEdge(source, dest, copyEdge(edgeData));
 		}
+		GCStates.copy(dest, src, dest.getId());
 		graph.removeVertex(src);
 	}
 
@@ -374,17 +410,37 @@ public abstract class GraphChunk<VAL, LBL>
 		properties = FSAProperties.union(properties, b.properties);
 	}
 
+	/**
+	 * Glue b to the end of this and set this.end to b.end.
+	 * 
+	 * @param b
+	 */
 	public void concat(GraphChunk<VAL, LBL> b)
 	{
 		glue(end, b);
-		end = b.end;
+
+		// b is not only a one state graph
+		if (b.start != b.end)
+			end = b.end;
 	}
 
+	/**
+	 * Glue the chunk b to this at its start and end states.
+	 * 
+	 * @param b
+	 */
 	public void glue(GraphChunk<VAL, LBL> b)
 	{
 		glue(start, end, b);
 	}
 
+	/**
+	 * Glue the chunk b to this with b.start glue to gluea and b.end glue to glueb.
+	 * 
+	 * @param gluea
+	 * @param glueb
+	 * @param b
+	 */
 	public void glue(IGCState<VAL> gluea, IGCState<VAL> glueb, GraphChunk<VAL, LBL> b)
 	{
 		glue(gluea, b);

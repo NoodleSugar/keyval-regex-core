@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DirectedPseudograph;
@@ -26,6 +25,7 @@ import insomnia.implem.kv.pregex.PRegexElements.Disjunction;
 import insomnia.implem.kv.pregex.PRegexElements.Key;
 import insomnia.implem.kv.pregex.PRegexElements.Regex;
 import insomnia.implem.kv.pregex.PRegexElements.Sequence;
+import insomnia.implem.kv.pregex.PRegexElements.Value;
 import insomnia.implem.kv.pregex.Quantifier;
 
 /**
@@ -54,12 +54,6 @@ public class PRegexFSAFactory<VAL, LBL>
 			GChunk cpy = new GChunk();
 			copy(cpy);
 			return cpy;
-		}
-
-		@Override
-		public IGCState<VAL> freshState()
-		{
-			return PRegexFSAFactory.this.freshState();
 		}
 
 		@Override
@@ -123,7 +117,21 @@ public class PRegexFSAFactory<VAL, LBL>
 		{
 			return new GChunk();
 		}
+
+		@Override
+		public IGCState<VAL> copyState(IGCState<VAL> src)
+		{
+			return GCStates.copy(src, nextStateId());
+		}
+
+		@Override
+		public IGCEdge<LBL> copyEdge(IGCEdge<LBL> src)
+		{
+			return GCEdges.copy(src);
+		}
 	}
+
+	// =========================================================================
 
 	private GChunk  automaton, modifiedAutomaton;
 	private boolean mustBeSync = false;
@@ -156,7 +164,6 @@ public class PRegexFSAFactory<VAL, LBL>
 		{
 			Environment<VAL, LBL> env = new Environment<VAL, LBL>()
 			{
-
 				@Override
 				public GraphChunk<VAL, LBL> gluePath(GraphChunk<VAL, LBL> gchunk, IGCState<VAL> start, IGCState<VAL> end, IPath<VAL, LBL> path)
 				{
@@ -167,14 +174,17 @@ public class PRegexFSAFactory<VAL, LBL>
 
 					states.add(start);
 
+					// Add the states
 					for (int i = 0; i < nb - 1; i++)
 					{
-						IGCState<VAL> state = gchunk.addState();
+						IGCState<VAL> state = GCStates.createSimple(nextStateId());
+						gchunk.addState(state);
 						ret.addState(state);
 						states.add(state);
 					}
 					states.add(end);
 
+					// Add the edges
 					for (int i = 0; i < nb; i++)
 						ret.addEdge(states.get(i), states.get(i + 1), GCEdges.createStringEq(labels.get(i).toString()));
 
@@ -194,9 +204,14 @@ public class PRegexFSAFactory<VAL, LBL>
 		return this;
 	}
 
+	private int nextStateId()
+	{
+		return currentId++;
+	}
+
 	private IGCState<VAL> freshState()
 	{
-		return GCStates.createSimple(currentId++);
+		return GCStates.createSimple(nextStateId());
 	}
 
 	public IFSAutomaton<ITree<VAL, LBL>> newBuild() throws FSAException
@@ -211,6 +226,13 @@ public class PRegexFSAFactory<VAL, LBL>
 		ret.addVertex(a);
 		ret.addVertex(b);
 		ret.addEdge(a, b, edge);
+		return ret;
+	}
+
+	private GChunk terminalState(VAL value)
+	{
+		IGCState<VAL> a   = GCStates.createTerminalValueEq(nextStateId(), value);
+		GChunk        ret = new GChunk(a, a);
 		return ret;
 	}
 
@@ -231,11 +253,10 @@ public class PRegexFSAFactory<VAL, LBL>
 			break;
 
 		case VALUE:
-			//TODO
-			throw new NotImplementedException("");
-//			Value c = (Value) element;
-//			currentAutomaton = oneEdge(GCEdges.createKVValue(c.getValue()));
-//			break;
+			@SuppressWarnings("unchecked")
+			Value<VAL> c = (Value<VAL>) element;
+			currentAutomaton = terminalState(c.getValue());
+			break;
 
 		case DISJUNCTION:
 			Disjunction orElement = (Disjunction) element;

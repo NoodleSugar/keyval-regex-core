@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import insomnia.fsa.IFSAEdge;
+import insomnia.fsa.IFSAValueCondition;
 
 public class GBuilderState<VAL, LBL> implements IGBuilderState<VAL, LBL>
 {
@@ -12,9 +13,12 @@ public class GBuilderState<VAL, LBL> implements IGBuilderState<VAL, LBL>
 
 	List<IFSAEdge<VAL, LBL>> childs;
 
-	public GBuilderState(int id)
+	IFSAValueCondition<VAL> valueCond;
+
+	public GBuilderState(int id, IFSAValueCondition<VAL> valueCondition)
 	{
-		this.id = id;
+		this.id        = id;
+		this.valueCond = valueCondition;
 	}
 
 	@Override
@@ -32,6 +36,12 @@ public class GBuilderState<VAL, LBL> implements IGBuilderState<VAL, LBL>
 	public Collection<IFSAEdge<VAL, LBL>> getEdges()
 	{
 		return childs;
+	}
+
+	@Override
+	public IFSAValueCondition<VAL> getValueCondition()
+	{
+		return valueCond;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -53,6 +63,6 @@ public class GBuilderState<VAL, LBL> implements IGBuilderState<VAL, LBL>
 	@Override
 	public String toString()
 	{
-		return "<" + id + ">";
+		return "<" + id + valueCond + ">";
 	}
 }

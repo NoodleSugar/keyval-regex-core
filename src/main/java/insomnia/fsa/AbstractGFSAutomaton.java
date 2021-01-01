@@ -25,6 +25,11 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 		return getEdges(Collections.singletonList(state));
 	}
 
+	private void cleanBadStates(Collection<IFSAState<VAL, LBL>> states, VAL value)
+	{
+		states.removeIf(state -> false == state.getValueCondition().test(value));
+	}
+
 	protected Collection<IFSAState<VAL, LBL>> nextValidState_sync(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT theElement)
 	{
 		if (states.isEmpty())
@@ -32,7 +37,6 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 
 		Set<IFSAState<VAL, LBL>>        ret        = new HashSet<>(nbStates());
 		Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(nbStates());
-		;
 
 		ret.addAll(states);
 
@@ -46,11 +50,12 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 
 			for (IFSAEdge<VAL, LBL> edge : getEdges(buffStates))
 			{
-				if (edge.getLabel().test(element))
+				if (edge.getLabelCondition().test(element))
 					ret.add(edge.getChild());
 			}
 			buffStates.clear();
 		}
+		cleanBadStates(ret, getValueOf(theElement));
 		return new ArrayList<>(ret);
 	}
 
@@ -59,7 +64,7 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 		if (states.isEmpty())
 			return Collections.emptyList();
 
-		Set<IFSAState<VAL, LBL>>        ret = new HashSet<>(nbStates());
+		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(nbStates());
 		Collection<IFSAState<VAL, LBL>> buffStates;
 
 		ret.addAll(states);
@@ -74,11 +79,13 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 
 			for (IFSAEdge<VAL, LBL> edge : getEdges(buffStates))
 			{
-				if (edge.getLabel().test(element))
+				if (edge.getLabelCondition().test(element))
 					ret.add(edge.getChild());
 			}
 		}
-		return epsilonClosure(new ArrayList<>(ret));
+		ret = epsilonClosure(ret);
+		cleanBadStates(ret, getValueOf(theElement));
+		return ret;
 	}
 
 	@Override
@@ -110,7 +117,7 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 		{
 			for (IFSAEdge<VAL, LBL> edge : getEdges(buffStates))
 			{
-				if (edge.getLabel().test() && !ret.contains(edge.getChild()))
+				if (edge.getLabelCondition().test() && !ret.contains(edge.getChild()))
 					addedStates.add(edge.getChild());
 			}
 			buffStates.clear();
@@ -126,5 +133,4 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 	{
 		return epsilonClosure(Collections.singletonList(state));
 	}
-
 }

@@ -1,5 +1,6 @@
 package insomnia.implem.fsa.graphchunk;
 
+import java.security.InvalidParameterException;
 import java.util.Optional;
 
 import insomnia.implem.kv.data.KVValue;
@@ -21,6 +22,8 @@ public final class GCEdges
 		{
 			this.obj = obj;
 		}
+
+		abstract public IGCEdge<LBL> copy();
 
 		public Object getObj()
 		{
@@ -155,6 +158,14 @@ public final class GCEdges
 	}
 
 	// =========================================================================
+
+	public static <LBL> IGCEdge<LBL> copy(IGCEdge<LBL> src)
+	{
+		if (!(src instanceof AbstractGCEdge))
+			throw new InvalidParameterException();
+
+		return ((AbstractGCEdge<LBL>) src).copy();
+	}
 
 	public static <LBL> IGCEdge<LBL> createFromKVValue(KVValue value)
 	{
