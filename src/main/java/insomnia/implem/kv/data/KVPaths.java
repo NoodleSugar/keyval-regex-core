@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import insomnia.data.INodeFactory;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.graphchunk.IGCEdge;
 import insomnia.implem.fsa.graphchunk.IGCState;
@@ -17,14 +16,6 @@ public final class KVPaths
 {
 	private KVPaths()
 	{
-	}
-
-	static INodeFactory<KVValue, KVLabel> nodeFactory;
-	static KVLabelFactory                 kvlabelFactory;
-
-	static
-	{
-		kvlabelFactory = new KVLabelFactory();
 	}
 
 	public static List<KVLabel> string2KVLabel(List<String> labels)
@@ -133,7 +124,7 @@ public final class KVPaths
 			if (!label_s.isPresent())
 				return Optional.empty();
 
-			labels.add(kvlabelFactory.get(label_s.get()));
+			labels.add(KVLabels.create(label_s.get()));
 			state = gchunk.edge_getEnd(edge);
 		}
 	}
