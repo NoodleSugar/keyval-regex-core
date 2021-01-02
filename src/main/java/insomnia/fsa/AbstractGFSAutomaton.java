@@ -5,10 +5,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutomaton<VAL, LBL, ELMNT>
 {
+
+	abstract protected boolean isRooted();
+
+	abstract protected boolean isTerminal();
+
+	abstract protected boolean isRooted(ELMNT element);
+
+	abstract protected boolean isTerminal(ELMNT element);
+
 	protected <T> Set<T> provideSet()
 	{
 		return new HashSet<T>();
@@ -25,14 +35,27 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 		return getEdges(Collections.singletonList(state));
 	}
 
-	private void cleanBadStates(Collection<IFSAState<VAL, LBL>> states, VAL value)
+	private void cleanBadStates(Collection<IFSAState<VAL, LBL>> states, Optional<VAL> optValue)
 	{
-		states.removeIf(state -> false == state.getValueCondition().test(value));
+		states.removeIf(state -> false == state.getValueCondition().test(optValue.orElse(null)));
+	}
+
+	private boolean checkPreConditions(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT theElement)
+	{
+		if (states.isEmpty())
+			return false;
+
+		// Automaton waited for a rooted/terminal element
+		if (isRooted() && !isRooted(theElement) //
+			|| isTerminal() && !isTerminal(theElement))
+			return false;
+
+		return true;
 	}
 
 	protected Collection<IFSAState<VAL, LBL>> nextValidState_sync(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT theElement)
 	{
-		if (states.isEmpty())
+		if (!checkPreConditions(states, theElement))
 			return Collections.emptyList();
 
 		Set<IFSAState<VAL, LBL>>        ret        = new HashSet<>(nbStates());
@@ -61,7 +84,7 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 
 	protected Collection<IFSAState<VAL, LBL>> nextValidStates_general(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT theElement)
 	{
-		if (states.isEmpty())
+		if (!checkPreConditions(states, theElement))
 			return Collections.emptyList();
 
 		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(nbStates());

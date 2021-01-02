@@ -1,20 +1,24 @@
 package insomnia.implem.kv.data;
 
+import java.util.Optional;
+
 import insomnia.data.INode;
 
 class KVPathNode implements INode<KVValue, KVLabel>
 {
-	int pos;
+	int     pos;
+	KVValue value;
 
-	KVPathNode(int pos)
+	KVPathNode(int pos, KVValue value)
 	{
-		this.pos = pos;
+		this.pos   = pos;
+		this.value = value;
 	}
 
 	@Override
-	public KVValue getValue()
+	public Optional<KVValue> getValue()
 	{
-		return null;
+		return Optional.ofNullable(value);
 	}
 
 	@Override

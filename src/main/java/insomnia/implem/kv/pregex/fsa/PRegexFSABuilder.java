@@ -2,6 +2,7 @@ package insomnia.implem.kv.pregex.fsa;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import insomnia.data.IPath;
 import insomnia.data.ITree;
@@ -48,7 +49,39 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		}
 	}
 
-	static class FSASync<VAL, LBL> extends AbstractGBuilderFSA<VAL, LBL, ITree<VAL, LBL>>
+	static abstract class AbstractFSA<VAL, LBL> extends AbstractGBuilderFSA<VAL, LBL, ITree<VAL, LBL>>
+	{
+		public AbstractFSA(Collection<IFSAState<VAL, LBL>> states, Collection<IFSAState<VAL, LBL>> initialStates, Collection<IFSAState<VAL, LBL>> finalStates, Collection<IFSAEdge<VAL, LBL>> edges, IFSAProperties properties, IFSAAValidation<ITree<VAL, LBL>, IGFSAutomaton<VAL, LBL, ITree<VAL, LBL>>> validator)
+		{
+			super(states, initialStates, finalStates, edges, properties, validator);
+		}
+
+		@Override
+		public List<LBL> getLabelsOf(ITree<VAL, LBL> element)
+		{
+			return ((IPath<VAL, LBL>) element).getLabels();
+		}
+
+		@Override
+		public Optional<VAL> getValueOf(ITree<VAL, LBL> element)
+		{
+			return ((IPath<VAL, LBL>) element).getValue();
+		}
+
+		@Override
+		protected boolean isRooted(ITree<VAL, LBL> element)
+		{
+			return element.isRooted();
+		}
+
+		@Override
+		protected boolean isTerminal(ITree<VAL, LBL> element)
+		{
+			return ((IPath<VAL, LBL>) element).isTerminal();
+		}
+	}
+
+	private static class FSASync<VAL, LBL> extends AbstractFSA<VAL, LBL>
 	{
 		FSASync( //
 			Collection<IFSAState<VAL, LBL>> states, //
@@ -67,21 +100,9 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		{
 			return nextValidState_sync(states, element);
 		}
-
-		@Override
-		public List<LBL> getLabelsOf(ITree<VAL, LBL> element)
-		{
-			return ((IPath<VAL, LBL>) element).getLabels();
-		}
-
-		@Override
-		public VAL getValueOf(ITree<VAL, LBL> element)
-		{
-			return ((IPath<VAL, LBL>) element).getValue();
-		}
 	}
 
-	static class FSAGeneral<VAL, LBL> extends AbstractGBuilderFSA<VAL, LBL, ITree<VAL, LBL>>
+	private static class FSAGeneral<VAL, LBL> extends AbstractFSA<VAL, LBL>
 	{
 		FSAGeneral( //
 			Collection<IFSAState<VAL, LBL>> states, //
@@ -99,18 +120,6 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, ITree<VAL, LBL> element)
 		{
 			return nextValidStates_general(states, element);
-		}
-
-		@Override
-		public List<LBL> getLabelsOf(ITree<VAL, LBL> element)
-		{
-			return ((IPath<VAL, LBL>) element).getLabels();
-		}
-
-		@Override
-		public VAL getValueOf(ITree<VAL, LBL> element)
-		{
-			return ((IPath<VAL, LBL>) element).getValue();
 		}
 	}
 

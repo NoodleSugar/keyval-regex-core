@@ -109,6 +109,23 @@ public final class GCStates
 		return new StateSimple<VAL>(id, true, FSAValues.createEq(value));
 	}
 
+	/**
+	 * Create a ValueEq node if null != value.
+	 * Else create a simple node (accept any value).
+	 * 
+	 * @param id
+	 * @param isTerminal
+	 * @param value
+	 * @return
+	 */
+	public static <VAL> IGCState<VAL> createNullableValueEq(int id, boolean isTerminal, VAL value)
+	{
+		if (null == value)
+			return create(id, isTerminal, FSAValues.createAny());
+
+		return create(id, isTerminal, FSAValues.createEq(value));
+	}
+
 	// =========================================================================
 
 //	public static <VAL> void setTerminal(IGCState<VAL> state)

@@ -1,6 +1,7 @@
 package insomnia.data;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Path where the leaf may have a value.
@@ -27,7 +28,9 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	 */
 	List<LBL> getLabels();
 
-	VAL getValue();
+	Optional<IEdge<VAL, LBL>> getChild(INode<VAL, LBL> node);
+
+	Optional<VAL> getValue();
 
 	int nbLabels();
 

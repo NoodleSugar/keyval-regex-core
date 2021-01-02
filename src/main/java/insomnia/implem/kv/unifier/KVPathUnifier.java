@@ -2,7 +2,7 @@ package insomnia.implem.kv.unifier;
 
 import insomnia.data.IPath;
 import insomnia.implem.kv.data.KVLabel;
-import insomnia.implem.kv.data.KVPath;
+import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.unifier.AbstractPathUnifier;
 import insomnia.unifier.IPathUnifier;
@@ -27,7 +27,7 @@ public class KVPathUnifier extends AbstractPathUnifier<KVValue, KVLabel>
 	@Override
 	protected IPath<KVValue, KVLabel> emptyPath()
 	{
-		return new KVPath();
+		return KVPaths.create();
 	}
 
 	@Override

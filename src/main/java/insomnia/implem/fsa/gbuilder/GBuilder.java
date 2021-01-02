@@ -19,6 +19,7 @@ import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.fsa.IGFSAutomaton;
 import insomnia.fsa.algorithm.GFSAValidation;
+import insomnia.implem.fsa.FSAEdgeAny;
 import insomnia.implem.fsa.FSAEdgeEpsilon;
 import insomnia.implem.fsa.FSAEdgeNumber;
 import insomnia.implem.fsa.FSAEdgeRegex;
@@ -106,6 +107,8 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 			ret = new FSAEdgeStringEq<VAL, LBL>(parent, child, (String) edgeData.getObj());
 		else if (GCEdges.isRegex(edgeData))
 			ret = new FSAEdgeRegex<VAL, LBL>(parent, child, (String) edgeData.getObj());
+		else if (GCEdges.isAny(edgeData))
+			ret = new FSAEdgeAny<VAL, LBL>(parent, child);
 		else
 			throw new InvalidParameterException();
 

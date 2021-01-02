@@ -1,5 +1,7 @@
 package insomnia.data;
 
+import java.util.Optional;
+
 /**
  * A node in a data.
  * 
@@ -9,7 +11,7 @@ package insomnia.data;
  */
 public interface INode<VAL, LBL>
 {
-	VAL getValue();
+	Optional<VAL> getValue();
 
 	void setValue(VAL value);
 }

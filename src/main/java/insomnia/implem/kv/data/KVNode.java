@@ -1,6 +1,7 @@
 package insomnia.implem.kv.data;
 
 import java.util.List;
+import java.util.Optional;
 
 import insomnia.data.INode;
 
@@ -23,9 +24,9 @@ public class KVNode implements INode<KVValue, KVLabel>
 	}
 
 	@Override
-	public KVValue getValue()
+	public Optional<KVValue> getValue()
 	{
-		return value;
+		return Optional.ofNullable(value);
 	}
 
 	@Override
@@ -33,17 +34,5 @@ public class KVNode implements INode<KVValue, KVLabel>
 	{
 		this.value = value;
 	}
-
-//	@Override
-//	public List<KVEdge> getParents()
-//	{
-//		return null;
-//	}
-//
-//	@Override
-//	public List<KVEdge> getChildren()
-//	{
-//		return null;
-//	}
 
 }

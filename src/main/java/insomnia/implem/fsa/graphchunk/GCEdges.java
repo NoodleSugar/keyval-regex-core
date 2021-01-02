@@ -63,6 +63,26 @@ public final class GCEdges
 		}
 	}
 
+	static class GCEdgeAny<LBL> extends AbstractGCEdge<LBL>
+	{
+		public GCEdgeAny()
+		{
+			super(null);
+		}
+
+		@Override
+		public boolean test(LBL t)
+		{
+			return true;
+		}
+
+		@Override
+		public IGCEdge<LBL> copy()
+		{
+			return new GCEdgeAny<>();
+		}
+	}
+
 	static class GCEdgeStringEq<LBL> extends AbstractGCEdge<LBL>
 	{
 		public GCEdgeStringEq(String s)
@@ -157,6 +177,11 @@ public final class GCEdges
 		return edge instanceof GCEdgeRegex;
 	}
 
+	public static <LBL> boolean isAny(IGCEdge<LBL> edge)
+	{
+		return edge instanceof GCEdgeAny;
+	}
+
 	// =========================================================================
 
 	public static <LBL> IGCEdge<LBL> copy(IGCEdge<LBL> src)
@@ -199,5 +224,10 @@ public final class GCEdges
 	public static <LBL> IGCEdge<LBL> createNumber(Number nb)
 	{
 		return new GCEdgeNumberEq<>(nb);
+	}
+
+	public static <LBL> IGCEdge<LBL> createAny()
+	{
+		return new GCEdgeAny<>();
 	}
 }

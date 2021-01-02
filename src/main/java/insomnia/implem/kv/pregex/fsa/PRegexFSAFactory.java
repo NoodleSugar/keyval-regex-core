@@ -4,11 +4,14 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DirectedPseudograph;
 
+import insomnia.data.IEdge;
+import insomnia.data.INode;
 import insomnia.data.IPath;
 import insomnia.data.ITree;
 import insomnia.fsa.FSAException;
@@ -27,6 +30,7 @@ import insomnia.implem.kv.pregex.PRegexElements.Regex;
 import insomnia.implem.kv.pregex.PRegexElements.Sequence;
 import insomnia.implem.kv.pregex.PRegexElements.Value;
 import insomnia.implem.kv.pregex.Quantifier;
+import insomnia.implem.kv.pregex.fsa.PRegexFSABuilder.AbstractFSA;
 
 /**
  * The factory to create an automaton from a parsed regex.
@@ -129,10 +133,23 @@ public class PRegexFSAFactory<VAL, LBL>
 		{
 			return GCEdges.copy(src);
 		}
+
+		@Override
+		protected void setStart(IGCState<VAL> start)
+		{
+			super.setStart(start);
+		}
+
+		@Override
+		protected void setEnd(IGCState<VAL> end)
+		{
+			super.setEnd(end);
+		}
 	}
 
 	// =========================================================================
 
+	private boolean isTerminal, isRooted;
 	private GChunk  automaton, modifiedAutomaton;
 	private boolean mustBeSync = false;
 
@@ -147,6 +164,21 @@ public class PRegexFSAFactory<VAL, LBL>
 	{
 		automaton         = recursiveConstruct(elements);
 		modifiedAutomaton = automaton;
+		isRooted          = false;
+		isTerminal        = false;
+	}
+
+	/**
+	 * Construct the factory from a path.
+	 * 
+	 * @param path
+	 */
+	public PRegexFSAFactory(IPath<VAL, LBL> path)
+	{
+		automaton         = constructFromPath(path);
+		modifiedAutomaton = automaton;
+		isRooted          = path.isRooted();
+		isTerminal        = path.isTerminal();
 	}
 
 	/**
@@ -216,7 +248,12 @@ public class PRegexFSAFactory<VAL, LBL>
 
 	public IFSAutomaton<ITree<VAL, LBL>> newBuild() throws FSAException
 	{
-		return new PRegexFSABuilder<VAL, LBL>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
+		@SuppressWarnings("unchecked")
+		AbstractFSA<VAL, LBL> fsa = (AbstractFSA<VAL, LBL>) new PRegexFSABuilder<VAL, LBL>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
+
+		fsa.setRooted(isRooted);
+		fsa.setTerminal(isTerminal);
+		return fsa;
 	}
 
 	private GChunk oneEdge(IGCEdge<LBL> edge)
@@ -234,6 +271,55 @@ public class PRegexFSAFactory<VAL, LBL>
 		IGCState<VAL> a   = GCStates.createTerminalValueEq(nextStateId(), value);
 		GChunk        ret = new GChunk(a, a);
 		return ret;
+	}
+
+	private GChunk constructFromPath(IPath<VAL, LBL> path)
+	{
+		GChunk currentAutomaton = new GChunk();
+
+		if (path.isEmpty())
+			return currentAutomaton;
+
+		INode<VAL, LBL> state = path.getRoot();
+		IGCState<VAL>   lastGCState;
+
+		Optional<IEdge<VAL, LBL>> optChild       = path.getChild(state);
+		boolean                   pathIsTerminal = path.isTerminal();
+
+		{
+			boolean       isTerminal = pathIsTerminal && !optChild.isPresent();
+			IGCState<VAL> newGCState = GCStates.createNullableValueEq(0, isTerminal, state.getValue().orElse(null));
+			currentAutomaton.setStart(newGCState);
+			lastGCState = newGCState;
+		}
+		for (int id = 1;; id++)
+		{
+			state = optChild.get().getChild();
+			Optional<VAL> value = state.getValue();
+
+			Optional<IEdge<VAL, LBL>> nextOptChild = path.getChild(state);
+
+			boolean isTerminal = pathIsTerminal && !nextOptChild.isPresent();
+
+			IGCState<VAL> newGCState = GCStates.createNullableValueEq(id, isTerminal, value.orElse(null));
+			currentAutomaton.addState(newGCState);
+			currentAutomaton.addEdge(lastGCState, newGCState, GCEdges.createStringEq(optChild.get().getLabel().toString()));
+			lastGCState = newGCState;
+
+			if (!nextOptChild.isPresent())
+				break;
+
+			optChild = nextOptChild;
+		}
+		currentAutomaton.setEnd(lastGCState);
+
+		// Loop the first state
+		if (!path.isRooted())
+			currentAutomaton.addEdge(currentAutomaton.getStart(), currentAutomaton.getStart(), GCEdges.createAny());
+		if (!path.isTerminal())
+			currentAutomaton.addEdge(currentAutomaton.getEnd(), currentAutomaton.getEnd(), GCEdges.createAny());
+
+		return currentAutomaton;
 	}
 
 	private GChunk recursiveConstruct(IPRegexElement element)// throws BuilderException

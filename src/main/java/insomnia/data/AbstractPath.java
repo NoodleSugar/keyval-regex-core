@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.BooleanUtils;
 
@@ -19,14 +20,17 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	private boolean isRooted;
 	private boolean isTerminal;
 
-	public abstract VAL emptyValue();
+	private VAL nullValue()
+	{
+		return null;
+	}
 
 	@SuppressWarnings("unchecked")
 	public AbstractPath(IPath<VAL, LBL> path, int begin, int end)
 	{
 		if (begin == end)
 		{
-			initPath(this, default_isRoot, default_isTerminal, Collections.EMPTY_LIST, emptyValue());
+			initPath(this, default_isRoot, default_isTerminal, Collections.EMPTY_LIST, nullValue());
 			return;
 		}
 		boolean isRooted   = false;
@@ -57,16 +61,16 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 		}
 
 		if (isTerminal)
-			value = path.getValue();
+			value = path.getValue().orElse(null);
 		else
-			value = emptyValue();
+			value = nullValue();
 
 		initPath(this, isRooted, isTerminal, path.getLabels().subList(begin, end), value);
 	}
 
 	public AbstractPath(List<? extends LBL> labels)
 	{
-		initPath(this, default_isRoot, default_isTerminal, labels, emptyValue());
+		initPath(this, default_isRoot, default_isTerminal, labels, nullValue());
 	}
 
 	public AbstractPath(List<? extends LBL> labels, VAL value)
@@ -76,7 +80,7 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 
 	public AbstractPath(boolean isRooted, List<? extends LBL> labels)
 	{
-		initPath(this, isRooted, default_isTerminal, labels, emptyValue());
+		initPath(this, isRooted, default_isTerminal, labels, nullValue());
 	}
 
 	public AbstractPath(boolean isRooted, List<? extends LBL> labels, VAL value)
@@ -86,7 +90,7 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 
 	public AbstractPath(boolean isRooted, boolean isTerminal, List<? extends LBL> labels)
 	{
-		initPath(this, isRooted, isTerminal, labels, emptyValue());
+		initPath(this, isRooted, isTerminal, labels, nullValue());
 	}
 
 	public AbstractPath(boolean isRooted, boolean isTerminal, List<? extends LBL> labels, VAL value)
@@ -94,9 +98,19 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 		initPath(this, isRooted, isTerminal, labels, value);
 	}
 
+	@Override
+	public Optional<IEdge<VAL, LBL>> getChild(INode<VAL, LBL> node)
+	{
+		List<? extends IEdge<VAL, LBL>> childs = getChildren(node);
+
+		if (childs.isEmpty())
+			return Optional.empty();
+
+		return Optional.of(childs.get(0));
+	}
+
 	private static <VAL, LBL> void initPath(AbstractPath<VAL, LBL> path, boolean isRooted, boolean isTerminal, List<? extends LBL> labels, VAL value)
 	{
-		assert (value != null);
 		path.isRooted   = isRooted;
 		path.isTerminal = isTerminal;
 		path.value      = value;
@@ -125,7 +139,7 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	@Override
 	public List<LBL> getLabels()
 	{
-		return new ArrayList<>(labels);
+		return Collections.unmodifiableList(labels);
 	}
 
 	@Override
@@ -135,9 +149,9 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	}
 
 	@Override
-	public VAL getValue()
+	public Optional<VAL> getValue()
 	{
-		return value;
+		return Optional.ofNullable(value);
 	}
 
 	@Override
@@ -212,7 +226,8 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 		if (isTerminal)
 			buf.append("$");
 
-		buf.append(getValue());
+		if (getValue().isPresent())
+			buf.append(getValue().get());
 
 		return buf.toString();
 	}

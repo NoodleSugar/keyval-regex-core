@@ -13,6 +13,7 @@ import insomnia.data.IPath;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVPath;
+import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.fsa.KVGraphChunkModifier.Environment;
 import insomnia.implem.kv.rule.KVPathRule;
@@ -65,14 +66,14 @@ public class KVGraphChunkPathRuleApplierSimple
 	{
 		KVPath queryPath;
 		{
-			Optional<KVPath> opt = KVPath.pathFromGraphChunk(gChunk);
+			Optional<KVPath> opt = KVPaths.pathFromGraphChunk(gChunk);
 
 			if (!opt.isPresent())
 				throw new InvalidParameterException("graph chunk does not represent a path");
 
 			queryPath = opt.get();
 		}
-		KVPathRule queryRule = new KVPathRule(queryPath, new KVPath(), false);
+		KVPathRule queryRule = new KVPathRule(queryPath, KVPaths.create(), false);
 
 		Collection<IDependency<KVValue, KVLabel>> dependencies = grd.getDependencies(queryRule);
 

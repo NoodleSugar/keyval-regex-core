@@ -25,6 +25,8 @@ public abstract class AbstractGBuilderFSA<VAL, LBL, ELMNT> //
 	private Collection<IFSAState<VAL, LBL>> states;
 	private Collection<IFSAEdge<VAL, LBL>>  edges;
 
+	private boolean isRooted, isTerminal;
+
 	protected AbstractGBuilderFSA( //
 		Collection<IFSAState<VAL, LBL>> states, //
 		Collection<IFSAState<VAL, LBL>> initialStates, //
@@ -40,12 +42,36 @@ public abstract class AbstractGBuilderFSA<VAL, LBL, ELMNT> //
 		this.finalStates   = finalStates;
 		this.properties    = properties;
 		this.validator     = validator;
+		this.isRooted      = false;
+		this.isTerminal    = false;
 	}
 
 	@Override
 	public boolean test(ELMNT element)
 	{
 		return validator.test(this, element);
+	}
+
+	public void setRooted(boolean isRooted)
+	{
+		this.isRooted = isRooted;
+	}
+
+	public void setTerminal(boolean isTerminal)
+	{
+		this.isTerminal = isTerminal;
+	}
+
+	@Override
+	protected boolean isRooted()
+	{
+		return isRooted;
+	}
+
+	@Override
+	protected boolean isTerminal()
+	{
+		return isTerminal;
 	}
 
 	@Override
@@ -90,6 +116,8 @@ public abstract class AbstractGBuilderFSA<VAL, LBL, ELMNT> //
 	{
 		StringBuffer s1 = new StringBuffer();
 
+		s1.append("Rooted: ").append(isRooted).append("\n");
+		s1.append("Terminal: ").append(isTerminal).append("\n");
 		s1.append("Initials: ").append(initialStates).append("\n");
 		s1.append("Finals: ").append(finalStates).append("\n");
 		s1.append("Nodes: ").append(states).append("\n");

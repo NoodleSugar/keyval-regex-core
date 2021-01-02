@@ -30,6 +30,7 @@ import insomnia.fsa.IFSAutomaton;
 import insomnia.help.HelpLists;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVPath;
+import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.fsa.KVGraphChunkPathRuleApplierSimple;
 import insomnia.implem.kv.pregex.IPRegexElement;
@@ -83,6 +84,13 @@ public class TestAutomaton
 		return automatonFactoryProvider.apply(rparsed).newBuild();
 	}
 
+	private static IFSAutomaton<ITree<KVValue, KVLabel>> automatonFromPath(KVPath path) throws FSAException
+	{
+		return new PRegexFSAFactory<>(path).newBuild();
+	}
+
+	// =========================================================================
+
 	@Nested
 	@TestInstance(Lifecycle.PER_CLASS)
 	class subTests
@@ -92,8 +100,8 @@ public class TestAutomaton
 		@BeforeAll
 		void setup() throws IOException, ParseException, FSAException
 		{
-			String   regex   = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
-			IPRegexElement rparsed = new PRegexParser().readRegexStream(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+			String         regex   = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
+			IPRegexElement rparsed = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
 			automaton = new PRegexFSAFactory<KVValue, KVLabel>(rparsed).mustBeSync(!true).newBuild();
 		}
 
@@ -122,11 +130,12 @@ public class TestAutomaton
 
 		@ParameterizedTest
 		@MethodSource
-		void complex(KVPath subject, boolean match)
+		void complex(String subject, boolean match)
 		{
-			assertEquals(match, automaton.test(subject));
+			assertEquals(match, automaton.test(KVPaths.pathFromString(subject)));
 		}
 	}
+	// =========================================================================
 
 	static List<Object[]> match()
 	{
@@ -179,18 +188,20 @@ public class TestAutomaton
 
 				{ "a*.b|x", "a.x", false }, //
 				{ "x.a+|y.b+", "x.a.b", false }, //
+
+//				{ "a.b.c.", "a.b.c", false }, //
 		});
 		return mergeParameters(factories(), a);
 	}
 
 	@ParameterizedTest
 	@MethodSource
-	void match(String fname, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> fprovider, String regex, KVPath subject, boolean match)
+	void match(String fname, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> fprovider, String regex, String pathSubject, boolean match)
 	{
 		try
 		{
 			IFSAutomaton<ITree<KVValue, KVLabel>> automaton = parse(regex, fprovider);
-			assertEquals(match, automaton.test(subject));
+			assertEquals(match, automaton.test(KVPaths.pathFromString(pathSubject)));
 		}
 		catch (IOException | ParseException | FSAException e)
 		{
@@ -198,12 +209,14 @@ public class TestAutomaton
 		}
 	}
 
+	// =========================================================================
+
 	static List<Object[]> matchValue()
 	{
 		List<Object[]> a = Arrays.asList(new Object[][] { //
-				{ "a.b", new KVValue(15), KVPath.pathFromString("a.b", new KVValue(15)), true }, //
-				{ "a.b", new KVValue(15), KVPath.pathFromString("a.b", new KVValue(16)), false }, //
-				{ "a.b", new KVValue(15), KVPath.pathFromString("a.b"), false }, //
+				{ "a.b", new KVValue(15), KVPaths.pathFromString("a.b", new KVValue(15)), true }, //
+				{ "a.b", new KVValue(15), KVPaths.pathFromString("a.b", new KVValue(16)), false }, //
+				{ "a.b", new KVValue(15), KVPaths.pathFromString("a.b"), false }, //
 		});
 		return mergeParameters(factories(), a);
 	}
@@ -222,6 +235,63 @@ public class TestAutomaton
 			fail(e.getMessage());
 		}
 	}
+
+	// =========================================================================
+
+	static List<Object[]> matchPath()
+	{
+		List<Object[]> a = Arrays.asList(new Object[][] { //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.b", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.b"), true }, //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.a.b"), true }, //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.b.c"), true }, //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.a.b.c"), true }, //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a"), false }, //
+
+				// Prefix
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b.c", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b"), true }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b.c"), true }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.a.b"), false }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a"), false }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString("a.b"), false }, //
+
+				// Suffix
+				{ KVPaths.pathFromString("a.b", new KVValue(15)), KVPaths.pathFromString("a.b", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString("a.b", new KVValue(15)), KVPaths.pathFromString("a.b"), false }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b.", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b."), true }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.a.b."), true }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.a.b.", new KVValue(15)), true }, //
+
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b.c."), false }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a"), false }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b"), false }, //
+
+				// Complete
+				{ KVPaths.pathFromString(".a.b", new KVValue(15)), KVPaths.pathFromString(".a.b", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString(".a.b", new KVValue(15)), KVPaths.pathFromString(".a.b"), false }, //
+		});
+		return a;
+	}
+
+	@ParameterizedTest
+	@MethodSource
+	void matchPath(KVPath path, KVPath query, boolean match)
+	{
+		try
+		{
+			IFSAutomaton<ITree<KVValue, KVLabel>> automaton = automatonFromPath(path);
+			assertEquals(match, automaton.test(query));
+		}
+		catch (FSAException e)
+		{
+			fail(e.getMessage());
+		}
+	}
+
+	// =========================================================================
 
 	/**
 	 * Information for a test on path rewriting.
@@ -300,6 +370,6 @@ public class TestAutomaton
 			.setGraphChunkModifier(modifier.getGraphChunkModifier(rules)) //
 			.newBuild();
 
-		assertEquals(expected, automaton.test(KVPath.pathFromString(query)));
+		assertEquals(expected, automaton.test(KVPaths.pathFromString(query)));
 	}
 }
