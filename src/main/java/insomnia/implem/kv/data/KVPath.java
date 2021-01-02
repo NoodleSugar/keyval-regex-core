@@ -2,8 +2,10 @@ package insomnia.implem.kv.data;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import insomnia.data.AbstractPath;
+import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.IPath;
 
@@ -75,16 +77,16 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 	}
 
 	@Override
-	public KVEdge getParent(INode<KVValue, KVLabel> node)
+	public Optional<IEdge<KVValue, KVLabel>> getParent(INode<KVValue, KVLabel> node)
 	{
 		assert (node instanceof KVPathNode);
 		KVPathNode kvnode = (KVPathNode) node;
 
 		if (kvnode.pos == 0)
-			return null;
+			return Optional.empty();
 
 		int pos = kvnode.pos - 1;
-		return new KVEdge(new KVPathNode(pos, null), kvnode, getLabels().get(pos));
+		return Optional.of(new KVEdge(new KVPathNode(pos, null), kvnode, getLabels().get(pos)));
 	}
 
 	@Override
