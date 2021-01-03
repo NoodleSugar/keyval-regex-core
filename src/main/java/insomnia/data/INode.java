@@ -12,6 +12,4 @@ import java.util.Optional;
 public interface INode<VAL, LBL>
 {
 	Optional<VAL> getValue();
-
-	void setValue(VAL value);
 }

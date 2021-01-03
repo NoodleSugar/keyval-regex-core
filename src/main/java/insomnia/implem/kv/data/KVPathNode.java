@@ -20,13 +20,6 @@ class KVPathNode implements INode<KVValue, KVLabel>
 	{
 		return Optional.ofNullable(value);
 	}
-
-	@Override
-	public void setValue(KVValue value)
-	{
-		throw new UnsupportedOperationException();
-	}
-
 //	@Override
 //	public List<KVEdge> getParents()
 //	{
