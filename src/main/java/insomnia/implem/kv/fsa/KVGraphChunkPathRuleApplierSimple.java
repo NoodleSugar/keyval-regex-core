@@ -64,9 +64,11 @@ public class KVGraphChunkPathRuleApplierSimple
 		Environment<KVValue, KVLabel> env //
 	)
 	{
+		GraphChunk<KVValue, KVLabel> gclean = gChunk.cleanLimits();
+
 		KVPath queryPath;
 		{
-			Optional<KVPath> opt = KVPaths.pathFromGraphChunk(gChunk);
+			Optional<KVPath> opt = KVPaths.pathFromGraphChunk(gclean);
 
 			if (!opt.isPresent())
 				throw new InvalidParameterException("graph chunk does not represent a path");
@@ -80,7 +82,7 @@ public class KVGraphChunkPathRuleApplierSimple
 		this.env       = env;
 		this.mainChunk = gChunk;
 		this.grd       = grd;
-		build(gChunk, dependencies);
+		build(gclean, dependencies);
 	}
 
 	private void build(GraphChunk<KVValue, KVLabel> gchunk, Collection<IDependency<KVValue, KVLabel>> dependencies)

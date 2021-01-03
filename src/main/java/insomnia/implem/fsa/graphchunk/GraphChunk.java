@@ -1,6 +1,7 @@
 package insomnia.implem.fsa.graphchunk;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -75,6 +76,21 @@ public abstract class GraphChunk<VAL, LBL>
 
 	public GraphChunk()
 	{
+	}
+
+	public GraphChunk<VAL, LBL> cleanLimits()
+	{
+		GraphChunk<VAL, LBL> gchunk = copyClone();
+
+		for (IGCState<VAL> state : Arrays.asList(getStart(), getEnd()))
+		{
+			for (IGCEdge<LBL> edge : getEdges(state))
+			{
+				if (GCEdges.isAny(edge) && this.edge_getEnd(edge).equals(state))
+					gchunk.graph.removeEdge(edge);
+			}
+		}
+		return gchunk;
 	}
 
 	// =========================================================================
@@ -169,6 +185,17 @@ public abstract class GraphChunk<VAL, LBL>
 	public Collection<IGCEdge<LBL>> getEdges(IGCState<VAL> state)
 	{
 		return getEdges(Collections.singleton(state));
+	}
+
+	public Collection<IGCEdge<LBL>> getLimitEdgesWithoutLoop(IGCState<VAL> state)
+	{
+		IGCState<VAL>            fstate = state;
+		Collection<IGCEdge<LBL>> ret    = getEdges(state);
+
+		if (state == getStart() || state == getEnd())
+			ret.removeIf(edge -> this.edge_getEnd(edge).equals(fstate));
+
+		return ret;
 	}
 
 	public Collection<IGCEdge<LBL>> getEdges(Collection<IGCState<VAL>> states)

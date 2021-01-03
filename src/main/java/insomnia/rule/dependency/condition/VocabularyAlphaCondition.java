@@ -5,7 +5,7 @@ import java.util.Collections;
 import insomnia.rule.IRule;
 import insomnia.rule.dependency.IDependencyCondition;
 
-public class VocabularyCondition<V, E> implements IDependencyCondition<V, E>
+public class VocabularyAlphaCondition<V, E> implements IDependencyCondition<V, E>
 {
 
 	@Override

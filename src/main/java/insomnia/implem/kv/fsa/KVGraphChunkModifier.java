@@ -4,6 +4,7 @@ import insomnia.data.IPath;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.graphchunk.IGCState;
 
+@FunctionalInterface
 public interface KVGraphChunkModifier<VAL, LBL>
 {
 
@@ -14,6 +15,15 @@ public interface KVGraphChunkModifier<VAL, LBL>
 	 */
 	public interface Environment<VAL, LBL>
 	{
+		/**
+		 * Glue path to 'gchunk' between 'start' and 'end'.
+		 * 
+		 * @param gchunk
+		 * @param start
+		 * @param end
+		 * @param path
+		 * @return The subGraphChunk just added to gchunk from start to end.
+		 */
 		GraphChunk<VAL, LBL> gluePath(GraphChunk<VAL, LBL> gchunk, IGCState<VAL> start, IGCState<VAL> end, IPath<VAL, LBL> path);
 	};
 

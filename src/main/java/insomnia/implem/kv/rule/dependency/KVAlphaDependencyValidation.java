@@ -10,7 +10,7 @@ import insomnia.rule.IPathRule;
 import insomnia.rule.dependency.AbstractAlphaDependencyValidation;
 import insomnia.rule.dependency.IDependency;
 import insomnia.rule.dependency.IDependencyCondition;
-import insomnia.rule.dependency.condition.VocabularyCondition;
+import insomnia.rule.dependency.condition.VocabularyAlphaCondition;
 import insomnia.unifier.IPathUnifier;
 import insomnia.unifier.PathUnifiers;
 
@@ -20,7 +20,7 @@ public class KVAlphaDependencyValidation extends AbstractAlphaDependencyValidati
 	public KVAlphaDependencyValidation()
 	{
 		super(Arrays.asList( //
-			new VocabularyCondition<KVValue, KVLabel>() //
+			new VocabularyAlphaCondition<KVValue, KVLabel>() //
 		));
 	}
 
