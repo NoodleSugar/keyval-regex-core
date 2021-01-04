@@ -5,19 +5,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
-public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutomaton<VAL, LBL, ELMNT>
+public abstract class AbstractGFSAutomaton<VAL, LBL> implements IGFSAutomaton<VAL, LBL>
 {
+	abstract protected boolean isRooted(IFSAState<VAL, LBL> state);
 
-	abstract protected boolean isRooted();
-
-	abstract protected boolean isTerminal();
-
-	abstract protected boolean isRooted(ELMNT element);
-
-	abstract protected boolean isTerminal(ELMNT element);
+	abstract protected boolean isTerminal(IFSAState<VAL, LBL> state);
 
 	protected <T> Set<T> provideSet()
 	{
@@ -35,35 +29,36 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 		return getEdges(Collections.singletonList(state));
 	}
 
-	private void cleanBadStates(Collection<IFSAState<VAL, LBL>> states, Optional<VAL> optValue)
+	private void cleanBadStates(Collection<IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> theElement)
 	{
-		states.removeIf(state -> false == state.getValueCondition().test(optValue.orElse(null)));
+		if (!theElement.isTerminal())
+			states.removeIf(state -> isTerminal(state));
+
+		states.removeIf(state -> false == state.getValueCondition().test(theElement.getValue().orElse(null)));
 	}
 
-	private boolean checkPreConditions(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT theElement)
+	private boolean checkPreConditions(Collection<? extends IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> theElement)
 	{
 		if (states.isEmpty())
 			return false;
 
-		// Automaton waited for a rooted/terminal element
-		if (isRooted() && !isRooted(theElement) //
-			|| isTerminal() && !isTerminal(theElement))
-			return false;
+		if (!theElement.isRooted())
+			states.removeIf((state) -> isRooted(state));
 
 		return true;
 	}
 
-	protected Collection<IFSAState<VAL, LBL>> nextValidState_sync(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT theElement)
+	protected Collection<IFSAState<VAL, LBL>> nextValidState_sync(Collection<? extends IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> theElement)
 	{
-		if (!checkPreConditions(states, theElement))
-			return Collections.emptyList();
-
 		Set<IFSAState<VAL, LBL>>        ret        = new HashSet<>(nbStates());
 		Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(nbStates());
 
 		ret.addAll(states);
 
-		for (LBL element : getLabelsOf(theElement))
+		if (!checkPreConditions(ret, theElement))
+			return Collections.emptyList();
+
+		for (LBL element : theElement.getLabels())
 		{
 			if (ret.isEmpty())
 				return Collections.emptyList();
@@ -78,21 +73,21 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 			}
 			buffStates.clear();
 		}
-		cleanBadStates(ret, getValueOf(theElement));
+		cleanBadStates(ret, theElement);
 		return new ArrayList<>(ret);
 	}
 
-	protected Collection<IFSAState<VAL, LBL>> nextValidStates_general(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT theElement)
+	protected Collection<IFSAState<VAL, LBL>> nextValidStates_general(Collection<? extends IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> theElement)
 	{
-		if (!checkPreConditions(states, theElement))
-			return Collections.emptyList();
-
 		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(nbStates());
 		Collection<IFSAState<VAL, LBL>> buffStates;
 
 		ret.addAll(states);
 
-		for (LBL element : getLabelsOf(theElement))
+		if (!checkPreConditions(ret, theElement))
+			return Collections.emptyList();
+
+		for (LBL element : theElement.getLabels())
 		{
 			if (ret.isEmpty())
 				return Collections.emptyList();
@@ -107,18 +102,18 @@ public abstract class AbstractGFSAutomaton<VAL, LBL, ELMNT> implements IGFSAutom
 			}
 		}
 		ret = epsilonClosure(ret);
-		cleanBadStates(ret, getValueOf(theElement));
+		cleanBadStates(ret, theElement);
 		return ret;
 	}
 
 	@Override
-	public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT element)
+	public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> element)
 	{
 		return nextValidStates(states, element);
 	}
 
 	@Override
-	public Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, ELMNT element)
+	public Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, IFSAElement<VAL, LBL> element)
 	{
 		return nextValidStates(Collections.singletonList(state), element);
 	}

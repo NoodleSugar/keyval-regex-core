@@ -2,7 +2,7 @@ package insomnia.fsa;
 
 import java.util.Collection;
 
-import insomnia.fsa.algorithm.IFSAAValidation;
+import insomnia.fsa.algorithm.IGFSAValidation;
 
 /**
  * Factory of Graph automaton.
@@ -10,14 +10,15 @@ import insomnia.fsa.algorithm.IFSAAValidation;
  * @author zuri
  * @param <E>
  */
-public interface IGFSAFactory<VAL, LBL, ELMNT>
+public interface IGFSAFactory<VAL, LBL>
 {
-	IGFSAutomaton<VAL, LBL, ELMNT> get( //
+	IGFSAutomaton<VAL, LBL> get( //
 		Collection<IFSAState<VAL, LBL>> states, //
+		Collection<IFSAState<VAL, LBL>> rootedStates, //
+		Collection<IFSAState<VAL, LBL>> terminalStates, //
 		Collection<IFSAState<VAL, LBL>> initialStates, //
 		Collection<IFSAState<VAL, LBL>> finalStates, //
 		Collection<IFSAEdge<VAL, LBL>> edges, //
 		IFSAProperties properties, //
-		IFSAAValidation<ELMNT, IGFSAutomaton<VAL, LBL, ELMNT>> validator //
-	);
+		IGFSAValidation<VAL, LBL> validation);
 }

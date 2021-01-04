@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import insomnia.data.ITree;
 import insomnia.fsa.AbstractFSAEdge;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAEdge;
@@ -41,25 +40,28 @@ import insomnia.implem.fsa.graphchunk.IGCState;
  */
 public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 {
-	Map<IGCState<VAL>, STATE> buildStates = new HashMap<>();
+	private Map<IGCState<VAL>, STATE> buildStates = new HashMap<>();
 
-	Set<IFSAEdge<VAL, LBL>> buildEdges      = new HashSet<>();
-	Set<IGCState<VAL>>      processedStates = new HashSet<>();
+	private Set<IFSAEdge<VAL, LBL>> buildEdges      = new HashSet<>();
+	private Set<IGCState<VAL>>      processedStates = new HashSet<>();
 
-	Collection<IFSAState<VAL, LBL>> states;
-	Collection<IFSAState<VAL, LBL>> finals;
-	Collection<IFSAEdge<VAL, LBL>>  edges;
+	private Collection<IFSAState<VAL, LBL>> rooted;
+	private Collection<IFSAState<VAL, LBL>> terminals;
+	private Collection<IFSAState<VAL, LBL>> states;
+	private Collection<IFSAState<VAL, LBL>> initials;
+	private Collection<IFSAState<VAL, LBL>> finals;
+	private Collection<IFSAEdge<VAL, LBL>>  edges;
 
-	GraphChunk<VAL, LBL> automaton;
-	boolean              mustBeSync;
+	private GraphChunk<VAL, LBL> automaton;
+	private boolean              mustBeSync;
 
-	Function<IGCState<VAL>, STATE> stateSupplier;
+	private Function<IGCState<VAL>, STATE> stateSupplier;
 
-	IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>> builderFSAFactory;
+	private IGBuilderFSAFactory<VAL, LBL> builderFSAFactory;
 
 	// =========================================================================
 
-	public GBuilder(GraphChunk<VAL, LBL> gc, Function<IGCState<VAL>, STATE> stateSupplier, IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>> builderFactory)
+	public GBuilder(GraphChunk<VAL, LBL> gc, Function<IGCState<VAL>, STATE> stateSupplier, IGBuilderFSAFactory<VAL, LBL> builderFactory)
 	{
 		automaton = gc;
 
@@ -75,6 +77,26 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		return this;
 	}
 
+	private void setRooted(STATE state)
+	{
+		rooted.add(state);
+	}
+
+	private void setTerminal(STATE state)
+	{
+		terminals.add(state);
+	}
+
+	private void setInitial(STATE state)
+	{
+		initials.add(state);
+	}
+
+	private void setFinal(STATE state)
+	{
+		finals.add(state);
+	}
+
 	private STATE makeState(IGCState<VAL> state)
 	{
 		STATE ret = buildStates.get(state);
@@ -84,6 +106,16 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 
 		ret = stateSupplier.apply(state);
 		buildStates.put(state, ret);
+		states.add(ret);
+
+		if (state.isRooted())
+			setRooted(ret);
+		if (state.isTerminal())
+			setTerminal(ret);
+		if (state.isInitial())
+			setInitial(ret);
+		if (state.isFinal())
+			setFinal(ret);
 		return ret;
 	}
 
@@ -119,27 +151,17 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		return ret;
 	}
 
-	public IFSAutomaton<ITree<VAL, LBL>> newBuild() throws FSAException
+	public IFSAutomaton<VAL, LBL> newBuild() throws FSAException
 	{
+		states    = new HashSet<>(automaton.getNbStates());
+		initials  = new HashSet<>();
+		finals    = new HashSet<>();
+		rooted    = new HashSet<>();
+		terminals = new HashSet<>();
+
 		STATE initialState = makeState(automaton.getStart());
-		STATE finalState   = makeState(automaton.getEnd());
 
-		states = new HashSet<>(automaton.getNbStates());
-		finals = new HashSet<>();
-		edges  = new ArrayList<>(automaton.getNbEdges());
-		states.add(initialState);
-
-		// Avoid a redundant add
-		if (finalState != initialState)
-			states.add(finalState);
-
-		finals.add(finalState);
-
-		for (IGCState<VAL> state : automaton.getStates())
-		{
-			if (state.isTerminal())
-				finals.add(makeState(state));
-		}
+		edges = new ArrayList<>(automaton.getNbEdges());
 
 		if (automaton.getProperties().isSynchronous())
 			build(automaton.getStart(), initialState);
@@ -154,10 +176,10 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 //				((State<LBL,VAL>)s).id = i++;
 
 		return builderFSAFactory.get( //
-			states, Collections.singletonList(initialState), finals, //
+			states, rooted, terminals, initials, finals, //
 			edges, //
 			automaton.getProperties(), //
-			new GFSAValidation<VAL, LBL, ITree<VAL, LBL>>() //
+			new GFSAValidation<VAL, LBL>() //
 		);
 	}
 

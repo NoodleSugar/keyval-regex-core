@@ -2,10 +2,13 @@ package insomnia.fsa;
 
 import java.util.function.Predicate;
 
+import insomnia.data.IPath;
+
 /**
  * E : type of tested elements
  */
-public interface IFSAutomaton<ELMNT> extends Predicate<ELMNT>
+@FunctionalInterface
+public interface IFSAutomaton<VAL, LBL> extends Predicate<IFSAElement<VAL, LBL>>
 {
 	/**
 	 * @param elements to test
@@ -13,6 +16,10 @@ public interface IFSAutomaton<ELMNT> extends Predicate<ELMNT>
 	 * @throws FSAException
 	 */
 	@Override
-	boolean test(ELMNT element);
+	boolean test(IFSAElement<VAL, LBL> element);
 
+	default boolean test(IPath<VAL, LBL> path)
+	{
+		return test(IPath_as_IFSAElement.get(path));
+	}
 }

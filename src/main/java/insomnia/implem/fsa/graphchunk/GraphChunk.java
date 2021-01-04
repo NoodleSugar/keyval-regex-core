@@ -34,7 +34,7 @@ public abstract class GraphChunk<VAL, LBL>
 {
 	private Graph<IGCState<VAL>, IGCEdge<LBL>> graph;
 
-	private Collection<IGCState<VAL>> terminals;
+	private Collection<IGCState<VAL>> finalStates;
 
 	private IGCState<VAL> start;
 	private IGCState<VAL> end;
@@ -45,9 +45,9 @@ public abstract class GraphChunk<VAL, LBL>
 
 	{
 		// By default we don't know if it is deterministic
-		properties = new FSAProperties(false, true);
-		this.graph = new DirectedPseudograph<IGCState<VAL>, IGCEdge<LBL>>(null, null, false);
-		terminals  = new HashSet<>();
+		properties  = new FSAProperties(false, true);
+		this.graph  = new DirectedPseudograph<IGCState<VAL>, IGCEdge<LBL>>(null, null, false);
+		finalStates = new HashSet<>();
 	}
 
 	// =========================================================================
@@ -120,14 +120,14 @@ public abstract class GraphChunk<VAL, LBL>
 		return end;
 	}
 
-	public Collection<IGCState<VAL>> getTerminals()
+	public Collection<IGCState<VAL>> getFinalStates()
 	{
-		return Collections.unmodifiableCollection(terminals);
+		return Collections.unmodifiableCollection(finalStates);
 	}
 
-	public void setStateTerminal(IGCState<VAL> state)
+	public void setStateFinal(IGCState<VAL> state)
 	{
-		terminals.add(state);
+		finalStates.add(state);
 	}
 
 	protected void setStart(IGCState<VAL> start)
@@ -477,6 +477,19 @@ public abstract class GraphChunk<VAL, LBL>
 	@Override
 	public String toString()
 	{
-		return graph.toString();
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("GChunk: ").append(start).append(" ").append(end).append("\n");
+		sb.append("Nodes: ").append(graph.vertexSet()).append("\n");
+		sb.append("Edges: \n");
+
+		graph.edgeSet().forEach((e) -> //
+		sb.append(graph.getEdgeSource(e)) //
+			.append(" ") //
+			.append(e.toString()).append(" ") //
+			.append(graph.getEdgeTarget(e)) //
+			.append("\n"));
+
+		return sb.toString();
 	}
 }

@@ -47,7 +47,7 @@ public final class GCEdges
 	{
 		public GCEdgeEpsilon()
 		{
-			super(null);
+			super("");
 		}
 
 		@Override
@@ -67,7 +67,7 @@ public final class GCEdges
 	{
 		public GCEdgeAny()
 		{
-			super(null);
+			super("*");
 		}
 
 		@Override

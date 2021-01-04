@@ -14,9 +14,15 @@ public interface IGCState<VAL> extends Predicate<VAL>
 {
 	int getId();
 
+	boolean isInitial();
+
 	/*
-	 * Is the state an end state of the represented automaton ?
+	 * Is the state a final state of the represented automaton ?
 	 */
+	boolean isFinal();
+
+	boolean isRooted();
+
 	boolean isTerminal();
 
 	IFSAValueCondition<VAL> getValueCondition();

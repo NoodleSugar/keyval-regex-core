@@ -1,16 +1,12 @@
 package insomnia.implem.kv.pregex.fsa;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 
-import insomnia.data.IPath;
-import insomnia.data.ITree;
 import insomnia.fsa.IFSAEdge;
+import insomnia.fsa.IFSAElement;
 import insomnia.fsa.IFSAProperties;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.IGFSAutomaton;
-import insomnia.fsa.algorithm.IFSAAValidation;
+import insomnia.fsa.algorithm.IGFSAValidation;
 import insomnia.implem.fsa.gbuilder.AbstractGBuilderFSA;
 import insomnia.implem.fsa.gbuilder.GBuilder;
 import insomnia.implem.fsa.gbuilder.GBuilderState;
@@ -30,54 +26,41 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		super(gc, state -> new GBuilderState<VAL, LBL>(state.getId(), state.getValueCondition()), new FSAFactory<VAL, LBL>());
 	}
 
-	static class FSAFactory<VAL, LBL> implements IGBuilderFSAFactory<VAL, LBL, ITree<VAL, LBL>>
+	static class FSAFactory<VAL, LBL> implements IGBuilderFSAFactory<VAL, LBL>
 	{
 		@Override
-		public AbstractGBuilderFSA<VAL, LBL, ITree<VAL, LBL>> get( //
+		public AbstractGBuilderFSA<VAL, LBL> get( //
 			Collection<IFSAState<VAL, LBL>> states, //
+			Collection<IFSAState<VAL, LBL>> rootedStates, //
+			Collection<IFSAState<VAL, LBL>> terminalStates, //
 			Collection<IFSAState<VAL, LBL>> initialStates, //
 			Collection<IFSAState<VAL, LBL>> finalStates, //
 			Collection<IFSAEdge<VAL, LBL>> edges, //
 			IFSAProperties properties, //
-			IFSAAValidation<ITree<VAL, LBL>, IGFSAutomaton<VAL, LBL, ITree<VAL, LBL>>> validator //
+			IGFSAValidation<VAL, LBL> validator //
 		)
 		{
 			if (properties.isSynchronous())
-				return new FSASync<VAL, LBL>(states, initialStates, finalStates, edges, properties, validator);
+				return new FSASync<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
 			else
-				return new FSAGeneral<VAL, LBL>(states, initialStates, finalStates, edges, properties, validator);
+				return new FSAGeneral<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
 		}
 	}
 
-	static abstract class AbstractFSA<VAL, LBL> extends AbstractGBuilderFSA<VAL, LBL, ITree<VAL, LBL>>
+	static abstract class AbstractFSA<VAL, LBL> extends AbstractGBuilderFSA<VAL, LBL>
 	{
-		public AbstractFSA(Collection<IFSAState<VAL, LBL>> states, Collection<IFSAState<VAL, LBL>> initialStates, Collection<IFSAState<VAL, LBL>> finalStates, Collection<IFSAEdge<VAL, LBL>> edges, IFSAProperties properties, IFSAAValidation<ITree<VAL, LBL>, IGFSAutomaton<VAL, LBL, ITree<VAL, LBL>>> validator)
+		public AbstractFSA( //
+			Collection<IFSAState<VAL, LBL>> states, //
+			Collection<IFSAState<VAL, LBL>> rootedStates, //
+			Collection<IFSAState<VAL, LBL>> terminalStates, //
+			Collection<IFSAState<VAL, LBL>> initialStates, //
+			Collection<IFSAState<VAL, LBL>> finalStates, //
+			Collection<IFSAEdge<VAL, LBL>> edges, //
+			IFSAProperties properties, //
+			IGFSAValidation<VAL, LBL> validator //
+		)
 		{
-			super(states, initialStates, finalStates, edges, properties, validator);
-		}
-
-		@Override
-		public List<LBL> getLabelsOf(ITree<VAL, LBL> element)
-		{
-			return ((IPath<VAL, LBL>) element).getLabels();
-		}
-
-		@Override
-		public Optional<VAL> getValueOf(ITree<VAL, LBL> element)
-		{
-			return ((IPath<VAL, LBL>) element).getValue();
-		}
-
-		@Override
-		protected boolean isRooted(ITree<VAL, LBL> element)
-		{
-			return element.isRooted();
-		}
-
-		@Override
-		protected boolean isTerminal(ITree<VAL, LBL> element)
-		{
-			return ((IPath<VAL, LBL>) element).isTerminal();
+			super(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
 		}
 	}
 
@@ -85,18 +68,20 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 	{
 		FSASync( //
 			Collection<IFSAState<VAL, LBL>> states, //
+			Collection<IFSAState<VAL, LBL>> rootedStates, //
+			Collection<IFSAState<VAL, LBL>> terminalStates, //
 			Collection<IFSAState<VAL, LBL>> initialStates, //
 			Collection<IFSAState<VAL, LBL>> finalStates, //
 			Collection<IFSAEdge<VAL, LBL>> edges, //
 			IFSAProperties properties, //
-			IFSAAValidation<ITree<VAL, LBL>, IGFSAutomaton<VAL, LBL, ITree<VAL, LBL>>> validator //
+			IGFSAValidation<VAL, LBL> validator //
 		)
 		{
-			super(states, initialStates, finalStates, edges, properties, validator);
+			super(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
 		}
 
 		@Override
-		public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, ITree<VAL, LBL> element)
+		public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> element)
 		{
 			return nextValidState_sync(states, element);
 		}
@@ -106,21 +91,22 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 	{
 		FSAGeneral( //
 			Collection<IFSAState<VAL, LBL>> states, //
+			Collection<IFSAState<VAL, LBL>> rootedStates, //
+			Collection<IFSAState<VAL, LBL>> terminalStates, //
 			Collection<IFSAState<VAL, LBL>> initialStates, //
 			Collection<IFSAState<VAL, LBL>> finalStates, //
 			Collection<IFSAEdge<VAL, LBL>> edges, //
 			IFSAProperties properties, //
-			IFSAAValidation<ITree<VAL, LBL>, IGFSAutomaton<VAL, LBL, ITree<VAL, LBL>>> validator //
+			IGFSAValidation<VAL, LBL> validator //
 		)
 		{
-			super(states, initialStates, finalStates, edges, properties, validator);
+			super(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
 		}
 
 		@Override
-		public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, ITree<VAL, LBL> element)
+		public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> element)
 		{
 			return nextValidStates_general(states, element);
 		}
 	}
-
 }

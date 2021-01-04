@@ -7,33 +7,37 @@ import java.util.List;
 
 import insomnia.fsa.AbstractGFSAutomaton;
 import insomnia.fsa.IFSAEdge;
+import insomnia.fsa.IFSAElement;
 import insomnia.fsa.IFSAProperties;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IGFSAutomaton;
-import insomnia.fsa.algorithm.IFSAAValidation;
+import insomnia.fsa.algorithm.IGFSAValidation;
 
-public abstract class AbstractGBuilderFSA<VAL, LBL, ELMNT> //
-	extends AbstractGFSAutomaton<VAL, LBL, ELMNT> //
-	implements IGFSAutomaton<VAL, LBL, ELMNT>
+public abstract class AbstractGBuilderFSA<VAL, LBL> //
+	extends AbstractGFSAutomaton<VAL, LBL> //
+	implements IGFSAutomaton<VAL, LBL>
 {
 	private IFSAProperties properties;
 
-	private IFSAAValidation<ELMNT, IGFSAutomaton<VAL, LBL, ELMNT>> validator;
+	private IGFSAValidation<VAL, LBL> validator;
+
+	private Collection<IFSAState<VAL, LBL>> rootedStates;
+	private Collection<IFSAState<VAL, LBL>> terminalStates;
 
 	private Collection<IFSAState<VAL, LBL>> initialStates;
 	private Collection<IFSAState<VAL, LBL>> finalStates;
 	private Collection<IFSAState<VAL, LBL>> states;
 	private Collection<IFSAEdge<VAL, LBL>>  edges;
 
-	private boolean isRooted, isTerminal;
-
 	protected AbstractGBuilderFSA( //
 		Collection<IFSAState<VAL, LBL>> states, //
+		Collection<IFSAState<VAL, LBL>> rootedStates, //
+		Collection<IFSAState<VAL, LBL>> terminalStates, //
 		Collection<IFSAState<VAL, LBL>> initialStates, //
 		Collection<IFSAState<VAL, LBL>> finalStates, //
 		Collection<IFSAEdge<VAL, LBL>> edges, //
 		IFSAProperties properties, //
-		IFSAAValidation<ELMNT, IGFSAutomaton<VAL, LBL, ELMNT>> validator //
+		IGFSAValidation<VAL, LBL> validator //
 	)
 	{
 		this.edges         = edges;
@@ -42,36 +46,27 @@ public abstract class AbstractGBuilderFSA<VAL, LBL, ELMNT> //
 		this.finalStates   = finalStates;
 		this.properties    = properties;
 		this.validator     = validator;
-		this.isRooted      = false;
-		this.isTerminal    = false;
+
+		this.rootedStates   = rootedStates;
+		this.terminalStates = terminalStates;
 	}
 
 	@Override
-	public boolean test(ELMNT element)
+	protected boolean isRooted(IFSAState<VAL, LBL> state)
+	{
+		return rootedStates.contains(state);
+	}
+
+	@Override
+	protected boolean isTerminal(IFSAState<VAL, LBL> state)
+	{
+		return terminalStates.contains(state);
+	}
+
+	@Override
+	public boolean test(IFSAElement<VAL, LBL> element)
 	{
 		return validator.test(this, element);
-	}
-
-	public void setRooted(boolean isRooted)
-	{
-		this.isRooted = isRooted;
-	}
-
-	public void setTerminal(boolean isTerminal)
-	{
-		this.isTerminal = isTerminal;
-	}
-
-	@Override
-	protected boolean isRooted()
-	{
-		return isRooted;
-	}
-
-	@Override
-	protected boolean isTerminal()
-	{
-		return isTerminal;
 	}
 
 	@Override
@@ -116,8 +111,6 @@ public abstract class AbstractGBuilderFSA<VAL, LBL, ELMNT> //
 	{
 		StringBuffer s1 = new StringBuffer();
 
-		s1.append("Rooted: ").append(isRooted).append("\n");
-		s1.append("Terminal: ").append(isTerminal).append("\n");
 		s1.append("Initials: ").append(initialStates).append("\n");
 		s1.append("Finals: ").append(finalStates).append("\n");
 		s1.append("Nodes: ").append(states).append("\n");
@@ -125,6 +118,7 @@ public abstract class AbstractGBuilderFSA<VAL, LBL, ELMNT> //
 
 		for (IFSAEdge<VAL, LBL> edge : edges)
 			s1.append(edge).append("\n");
+
 		return s1.toString();
 	}
 }

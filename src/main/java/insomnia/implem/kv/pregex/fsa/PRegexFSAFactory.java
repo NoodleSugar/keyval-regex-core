@@ -13,7 +13,6 @@ import org.jgrapht.graph.DirectedPseudograph;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.IPath;
-import insomnia.data.ITree;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.implem.fsa.graphchunk.GCEdges;
@@ -149,7 +148,6 @@ public class PRegexFSAFactory<VAL, LBL>
 
 	// =========================================================================
 
-	private boolean isTerminal, isRooted;
 	private GChunk  automaton, modifiedAutomaton;
 	private boolean mustBeSync = false;
 
@@ -164,8 +162,10 @@ public class PRegexFSAFactory<VAL, LBL>
 	{
 		automaton         = recursiveConstruct(elements);
 		modifiedAutomaton = automaton;
-		isRooted          = false;
-		isTerminal        = false;
+
+		// Not set in recursiveConstruct()
+		GCStates.setInitial(automaton.getStart(), true);
+		GCStates.setFinal(automaton.getEnd(), true);
 	}
 
 	/**
@@ -177,8 +177,6 @@ public class PRegexFSAFactory<VAL, LBL>
 	{
 		automaton         = constructFromPath(path);
 		modifiedAutomaton = automaton;
-		isRooted          = path.isRooted();
-		isTerminal        = path.isTerminal();
 	}
 
 	/**
@@ -209,7 +207,7 @@ public class PRegexFSAFactory<VAL, LBL>
 					// Add the states
 					for (int i = 0; i < nb - 1; i++)
 					{
-						IGCState<VAL> state = GCStates.createSimple(nextStateId());
+						IGCState<VAL> state = GCStates.create(nextStateId());
 						gchunk.addState(state);
 						ret.addState(state);
 						states.add(state);
@@ -243,16 +241,13 @@ public class PRegexFSAFactory<VAL, LBL>
 
 	private IGCState<VAL> freshState()
 	{
-		return GCStates.createSimple(nextStateId());
+		return GCStates.create(nextStateId());
 	}
 
-	public IFSAutomaton<ITree<VAL, LBL>> newBuild() throws FSAException
+	public IFSAutomaton<VAL, LBL> newBuild() throws FSAException
 	{
-		@SuppressWarnings("unchecked")
 		AbstractFSA<VAL, LBL> fsa = (AbstractFSA<VAL, LBL>) new PRegexFSABuilder<VAL, LBL>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
 
-		fsa.setRooted(isRooted);
-		fsa.setTerminal(isTerminal);
 		return fsa;
 	}
 
@@ -268,8 +263,11 @@ public class PRegexFSAFactory<VAL, LBL>
 
 	private GChunk terminalState(VAL value)
 	{
-		IGCState<VAL> a   = GCStates.createTerminalValueEq(nextStateId(), value);
-		GChunk        ret = new GChunk(a, a);
+		IGCState<VAL> a = GCStates.create(nextStateId(), Optional.ofNullable(value));
+		GCStates.setTerminal(a, true);
+		GCStates.setFinal(a, true);
+
+		GChunk ret = new GChunk(a, a);
 		return ret;
 	}
 
@@ -283,35 +281,40 @@ public class PRegexFSAFactory<VAL, LBL>
 		INode<VAL, LBL> state = path.getRoot();
 		IGCState<VAL>   lastGCState;
 
-		Optional<IEdge<VAL, LBL>> optChild       = path.getChild(state);
-		boolean                   pathIsTerminal = path.isTerminal();
+		Optional<IEdge<VAL, LBL>> optChild = path.getChild(state);
 
 		{
-			boolean       isTerminal = pathIsTerminal && !optChild.isPresent();
-			IGCState<VAL> newGCState = GCStates.createNullableValueEq(0, isTerminal, state.getValue().orElse(null));
+			IGCState<VAL> newGCState = GCStates.create(0, state.getValue());
+			GCStates.setRooted(newGCState, path.isRooted());
+			GCStates.setInitial(newGCState, true);
+
 			currentAutomaton.setStart(newGCState);
 			lastGCState = newGCState;
 		}
-		for (int id = 1;; id++)
+
+		if (optChild.isPresent())
 		{
-			state = optChild.get().getChild();
-			Optional<VAL> value = state.getValue();
+			for (int id = 1;; id++)
+			{
+				state = optChild.get().getChild();
+				Optional<VAL> value = state.getValue();
 
-			Optional<IEdge<VAL, LBL>> nextOptChild = path.getChild(state);
+				Optional<IEdge<VAL, LBL>> nextOptChild = path.getChild(state);
 
-			boolean isTerminal = pathIsTerminal && !nextOptChild.isPresent();
+				IGCState<VAL> newGCState = GCStates.create(id, value);
+				currentAutomaton.addState(newGCState);
+				currentAutomaton.addEdge(lastGCState, newGCState, GCEdges.createStringEq(optChild.get().getLabel().toString()));
+				lastGCState = newGCState;
 
-			IGCState<VAL> newGCState = GCStates.createNullableValueEq(id, isTerminal, value.orElse(null));
-			currentAutomaton.addState(newGCState);
-			currentAutomaton.addEdge(lastGCState, newGCState, GCEdges.createStringEq(optChild.get().getLabel().toString()));
-			lastGCState = newGCState;
+				if (!nextOptChild.isPresent())
+					break;
 
-			if (!nextOptChild.isPresent())
-				break;
-
-			optChild = nextOptChild;
+				optChild = nextOptChild;
+			}
 		}
 		currentAutomaton.setEnd(lastGCState);
+		GCStates.setFinal(lastGCState, true);
+		GCStates.setTerminal(lastGCState, path.isTerminal());
 
 		// Loop the first state
 		if (!path.isRooted())

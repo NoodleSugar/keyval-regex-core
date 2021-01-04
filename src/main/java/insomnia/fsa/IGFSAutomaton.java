@@ -1,24 +1,17 @@
 package insomnia.fsa;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Classic graph automaton representation.
  * 
  * @param <LBL> Type of the labels.
- * @param <ELMNT> Type of the tested element.
  */
-public interface IGFSAutomaton<VAL, LBL, ELMNT> extends IFSAutomaton<ELMNT>
+public interface IGFSAutomaton<VAL, LBL> extends IFSAutomaton<VAL, LBL>
 {
 	int nbStates();
 
 	IFSAProperties getProperties();
-
-	List<LBL> getLabelsOf(ELMNT element);
-
-	Optional<VAL> getValueOf(ELMNT element);
 
 	Collection<IFSAState<VAL, LBL>> getInitialStates();
 
@@ -28,9 +21,9 @@ public interface IGFSAutomaton<VAL, LBL, ELMNT> extends IFSAutomaton<ELMNT>
 
 	Collection<IFSAEdge<VAL, LBL>> getEdges(IFSAState<VAL, LBL> state);
 
-	Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, ELMNT element);
+	Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> element);
 
-	Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, ELMNT element);
+	Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, IFSAElement<VAL, LBL> element);
 
 	Collection<IFSAState<VAL, LBL>> epsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states);
 

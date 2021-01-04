@@ -6,8 +6,7 @@ import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAProperties;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IGFSAFactory;
-import insomnia.fsa.IGFSAutomaton;
-import insomnia.fsa.algorithm.IFSAAValidation;
+import insomnia.fsa.algorithm.IGFSAValidation;
 
 /**
  * Factory of {@link AbstractGBuilderFSA}.
@@ -15,14 +14,16 @@ import insomnia.fsa.algorithm.IFSAAValidation;
  * @author zuri
  * @param <E>
  */
-public interface IGBuilderFSAFactory<VAL, LBL, ELMNT> extends IGFSAFactory<VAL, LBL, ELMNT>
+public interface IGBuilderFSAFactory<VAL, LBL> extends IGFSAFactory<VAL, LBL>
 {
 	@Override
-	AbstractGBuilderFSA<VAL, LBL, ELMNT> get(Collection<IFSAState<VAL, LBL>> states, //
+	AbstractGBuilderFSA<VAL, LBL> get(Collection<IFSAState<VAL, LBL>> states, //
+		Collection<IFSAState<VAL, LBL>> rootedStates, //
+		Collection<IFSAState<VAL, LBL>> terminalStates, //
 		Collection<IFSAState<VAL, LBL>> initialStates, //
 		Collection<IFSAState<VAL, LBL>> finalStates, //
 		Collection<IFSAEdge<VAL, LBL>> edges, //
 		IFSAProperties properties, //
-		IFSAAValidation<ELMNT, IGFSAutomaton<VAL, LBL, ELMNT>> validator //
+		IGFSAValidation<VAL, LBL> validator //
 	);
 }

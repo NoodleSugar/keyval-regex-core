@@ -1,9 +1,12 @@
 package insomnia.fsa.algorithm;
 
+import insomnia.fsa.IFSAElement;
 import insomnia.fsa.IGFSAutomaton;
 
-public interface IGFSAValidation<VAL, LBL, ELMNT> extends IFSAAValidation<ELMNT, IGFSAutomaton<VAL, LBL, ELMNT>>
+public interface IGFSAValidation<VAL, LBL> //
+	extends IFSAValidation<VAL, LBL, IGFSAutomaton<VAL, LBL>, IFSAElement<VAL, LBL>>
 {
+
 	@Override
-	public boolean test(IGFSAutomaton<VAL, LBL, ELMNT> automaton, ELMNT element);
+	boolean test(IGFSAutomaton<VAL, LBL> automaton, IFSAElement<VAL, LBL> element);
 }
