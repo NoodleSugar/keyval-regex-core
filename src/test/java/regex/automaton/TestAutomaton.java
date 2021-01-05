@@ -24,7 +24,6 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.data.ITree;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.help.HelpLists;
@@ -56,11 +55,13 @@ public class TestAutomaton
 				} }, //
 				{ "Sync", new Function()
 				{
+
 					@Override
 					public Object apply(Object obj)
 					{
 						return new PRegexFSAFactory<KVValue, KVLabel>((IPRegexElement) obj).mustBeSync(true);
 					}
+
 				} } //
 		};
 		return Stream.of(ret).collect(Collectors.toList());
@@ -73,18 +74,18 @@ public class TestAutomaton
 		return merged;
 	}
 
-	private static IFSAutomaton<ITree<KVValue, KVLabel>> parse(String regex, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> automatonFactoryProvider) throws IOException, ParseException, FSAException
+	private static IFSAutomaton<KVValue, KVLabel> parse(String regex, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> automatonFactoryProvider) throws IOException, ParseException, FSAException
 	{
 		return parse(regex, automatonFactoryProvider, null);
 	}
 
-	private static IFSAutomaton<ITree<KVValue, KVLabel>> parse(String regex, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> automatonFactoryProvider, KVValue value) throws IOException, ParseException, FSAException
+	private static IFSAutomaton<KVValue, KVLabel> parse(String regex, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> automatonFactoryProvider, KVValue value) throws IOException, ParseException, FSAException
 	{
 		IPRegexElement rparsed = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()), value);
 		return automatonFactoryProvider.apply(rparsed).newBuild();
 	}
 
-	private static IFSAutomaton<ITree<KVValue, KVLabel>> automatonFromPath(KVPath path) throws FSAException
+	private static IFSAutomaton<KVValue, KVLabel> automatonFromPath(KVPath path) throws FSAException
 	{
 		return new PRegexFSAFactory<>(path).newBuild();
 	}
@@ -95,7 +96,7 @@ public class TestAutomaton
 	@TestInstance(Lifecycle.PER_CLASS)
 	class subTests
 	{
-		IFSAutomaton<ITree<KVValue, KVLabel>> automaton;
+		IFSAutomaton<KVValue, KVLabel> automaton;
 
 		@BeforeAll
 		void setup() throws IOException, ParseException, FSAException
@@ -200,7 +201,7 @@ public class TestAutomaton
 	{
 		try
 		{
-			IFSAutomaton<ITree<KVValue, KVLabel>> automaton = parse(regex, fprovider);
+			IFSAutomaton<KVValue, KVLabel> automaton = parse(regex, fprovider);
 			assertEquals(match, automaton.test(KVPaths.pathFromString(pathSubject)));
 		}
 		catch (IOException | ParseException | FSAException e)
@@ -227,7 +228,7 @@ public class TestAutomaton
 	{
 		try
 		{
-			IFSAutomaton<ITree<KVValue, KVLabel>> automaton = parse(regex, fprovider, rvalue);
+			IFSAutomaton<KVValue, KVLabel> automaton = parse(regex, fprovider, rvalue);
 			assertEquals(match, automaton.test(subject));
 		}
 		catch (IOException | ParseException | FSAException e)
@@ -282,7 +283,7 @@ public class TestAutomaton
 	{
 		try
 		{
-			IFSAutomaton<ITree<KVValue, KVLabel>> automaton = automatonFromPath(path);
+			IFSAutomaton<KVValue, KVLabel> automaton = automatonFromPath(path);
 			assertEquals(match, automaton.test(query));
 		}
 		catch (FSAException e)
@@ -313,21 +314,49 @@ public class TestAutomaton
 			@Override
 			public Collection<IRule<KVValue, KVLabel>> getRules()
 			{
-				return Arrays.asList(KVPathRule.create("x", "c"));
+				return Arrays.asList( //
+					KVPathRule.create("x", "c"), //
+					KVPathRule.create("c.h", "h"), //
+					KVPathRule.create("z.", "x", true), //
+					KVPathRule.create("y", "b.x", true) //
+				);
 			}
 
 			@Override
 			public List<Object[]> getTestObjects()
 			{
 				return Arrays.asList(new Object[][] { //
-						{ "a.b.c", new Object[][] { //
+						{ 3, "a.b.c", new Object[][] { //
 								{ "a.b.c", true }, //
 								{ "a.b.x", true }, //
+
+								{ "a.y", true }, //
+								{ "a.y.", true }, //
+								{ "a.y.b.b.b", true }, //
+
+								{ "a.b.z.", true }, //
+								{ "a.b.z", false }, //
+								{ "a.b.z.a", false }, //
+
 								{ "a.b", false }, //
-								{ "a.b.c.c", false }, //
+								{ "a.b.c.c", true }, //
 								{ "a.b.d", false }, //
-						}, //
-						} });
+						} }, //
+						{ 3, ".h.", new Object[][] { //
+								{ ".h.", true }, //
+								{ ".c.h.", true }, //
+								{ ".x.h.", true }, //
+								{ ".c.c.h.", true }, //
+								{ ".x.c.h.", true }, //
+								{ ".x.x.h.", true }, //
+
+								{ ".z.", true }, //
+								{ ".x.z.", true }, //
+
+								{ ".a.", false }, //
+								{ ".x.x.a.", false }, //
+						} }, //
+				});
 			}
 		};
 	}
@@ -341,13 +370,15 @@ public class TestAutomaton
 		{
 			for (Object[] dataObjects : data.getTestObjects())
 			{
-				for (Object[] expected : (Object[][]) dataObjects[1])
+				for (Object[] expected : (Object[][]) dataObjects[2])
 				{
 					List<Object> items = new ArrayList<>();
 					items.add(data.getRules());
 
-					// The query
+					// Max depth
 					items.add(dataObjects[0]);
+					// The query
+					items.add(dataObjects[1]);
 
 					// Expected
 					items.addAll(Arrays.asList(expected));
@@ -361,12 +392,11 @@ public class TestAutomaton
 
 	@ParameterizedTest
 	@MethodSource
-	void pathRewriting(Collection<IRule<KVValue, KVLabel>> rules, String regex, String query, boolean expected) throws IOException, ParseException, FSAException
+	void pathRewriting(Collection<IRule<KVValue, KVLabel>> rules, int maxDepth, String regex, String query, boolean expected) throws IOException, ParseException, FSAException
 	{
-		IPRegexElement                    rparsed  = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
-		KVGraphChunkPathRuleApplierSimple modifier = new KVGraphChunkPathRuleApplierSimple(2);
+		KVGraphChunkPathRuleApplierSimple modifier = new KVGraphChunkPathRuleApplierSimple(maxDepth);
 
-		IFSAutomaton<ITree<KVValue, KVLabel>> automaton = new PRegexFSAFactory<KVValue, KVLabel>(rparsed) //
+		IFSAutomaton<KVValue, KVLabel> automaton = new PRegexFSAFactory<KVValue, KVLabel>(KVPaths.pathFromString(regex)) //
 			.setGraphChunkModifier(modifier.getGraphChunkModifier(rules)) //
 			.newBuild();
 

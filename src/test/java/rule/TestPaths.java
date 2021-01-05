@@ -11,12 +11,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.data.PathOp;
 import insomnia.implem.kv.data.KVPath;
+import insomnia.implem.kv.data.KVPaths;
 
 class TestPaths
 {
 	public static KVPath pathFromString(String p)
 	{
-		return KVPath.pathFromString(p);
+		return KVPaths.pathFromString(p);
 	}
 
 	static List<Object[]> isSimplePrefixSource()
@@ -220,7 +221,7 @@ class TestPaths
 				{ !true, pathFromString(".a "), pathFromString(".b.a "), false }, //
 				{ !true, pathFromString(".a "), pathFromString(".b.a."), false }, //
 				{ !true, pathFromString(".a."), pathFromString(".b.a."), false }, //
-				{ !true, pathFromString(".a."), pathFromString(".b.a "), false },//
+				{ !true, pathFromString(".a."), pathFromString(".b.a "), false }, //
 				// 44
 				{ !true, pathFromString(" a.b "), pathFromString(".a.b."), false }, //
 				{ !true, pathFromString(" a.b."), pathFromString(".a.b."), true }, //

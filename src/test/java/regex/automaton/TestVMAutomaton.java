@@ -13,29 +13,29 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import insomnia.implem.kv.data.KVLabel;
-import insomnia.implem.kv.data.KVPath;
+import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.pregex.RegexParser;
-import insomnia.implem.kv.pregex.automaton.VMRegexAutomaton;
-import insomnia.implem.kv.pregex.automaton.VMRegexAutomatonBuilder;
-import insomnia.implem.kv.pregex.element.IElement;
+import insomnia.implem.kv.pregex.IPRegexElement;
+import insomnia.implem.kv.pregex.PRegexParser;
+import insomnia.implem.kv.pregex.fsa.PRegexVMFSA;
+import insomnia.implem.kv.pregex.fsa.PRegexVMFSABuilder;
 
 class TestVMAutomaton
 {
 	static String regex = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
 
-	static VMRegexAutomaton<KVValue, KVLabel> automaton;
+	static PRegexVMFSA<KVValue, KVLabel> automaton;
 
 	@BeforeAll
 	static void init()
 	{
-		RegexParser             parser = new RegexParser();
-		IElement                elements;
-		VMRegexAutomatonBuilder builder;
+		PRegexParser       parser = new PRegexParser();
+		IPRegexElement     elements;
+		PRegexVMFSABuilder builder;
 		try
 		{
-			elements  = parser.readRegexStream(new ByteArrayInputStream(regex.getBytes()));
-			builder   = new VMRegexAutomatonBuilder(elements);
+			elements  = parser.parse(new ByteArrayInputStream(regex.getBytes()));
+			builder   = new PRegexVMFSABuilder(elements);
 			automaton = builder.build();
 		}
 		catch (IOException | ParseException e)
@@ -55,7 +55,7 @@ class TestVMAutomaton
 			"c" })
 	void match(String s)
 	{
-		assertTrue(automaton.test(KVPath.pathFromString(s)));
+		assertTrue(automaton.test(KVPaths.pathFromString(s)));
 	}
 
 	@ParameterizedTest
@@ -67,6 +67,6 @@ class TestVMAutomaton
 			"a.b.c.e" })
 	void matchNot(String s)
 	{
-		assertFalse(automaton.test(KVPath.pathFromString(s)));
+		assertFalse(automaton.test(KVPaths.pathFromString(s)));
 	}
 }

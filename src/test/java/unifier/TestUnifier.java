@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVPath;
+import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.unifier.KVPathUnifier;
 import insomnia.implem.kv.unifier.KVPathUnifiers;
@@ -24,7 +25,7 @@ class TestUnifier
 
 	public static KVPath pathFromString(String p)
 	{
-		return KVPath.pathFromString(p);
+		return KVPaths.pathFromString(p);
 	}
 
 	public static KVPathUnifier unifierFromStrings(String pb, String sb, String ph, String sh)
