@@ -7,10 +7,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.NotImplementedException;
-
-import insomnia.data.IPath;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
+import insomnia.implem.fsa.graphchunk.IGCState;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVPath;
 import insomnia.implem.kv.data.KVPaths;
@@ -75,7 +73,7 @@ public class KVGraphChunkPathRuleApplierSimple
 
 			queryPath = opt.get();
 		}
-		KVPathRule queryRule = new KVPathRule(queryPath, KVPaths.create(), false);
+		KVPathRule queryRule = KVPathRule.create(queryPath, KVPaths.create(), false);
 
 		Collection<IDependency<KVValue, KVLabel>> dependencies = grd.getDependencies(queryRule);
 
@@ -93,15 +91,14 @@ public class KVGraphChunkPathRuleApplierSimple
 
 		for (IDependency<KVValue, KVLabel> dependency : dependencies)
 		{
-			Collection<GraphChunk<KVValue, KVLabel>> unifiables = getUnifiables(gchunk, dependency);
+			IPathRule<KVValue, KVLabel>               rule       = (IPathRule<KVValue, KVLabel>) dependency.getRuleTarget();
+			IPathUnifier<KVValue, KVLabel>            unifier    = (IPathUnifier<KVValue, KVLabel>) dependency.getUnifier();
+			Collection<GraphChunk<KVValue, KVLabel>>  unifiables = getUnifiables(gchunk, dependency);
+			Collection<IDependency<KVValue, KVLabel>> deps       = grd.getDependencies(rule);
 
 			for (GraphChunk<KVValue, KVLabel> unifiable : unifiables)
 			{
-				IPathRule<KVValue, KVLabel> rule = (IPathRule<KVValue, KVLabel>) dependency.getRuleTarget();
-
-				Collection<IDependency<KVValue, KVLabel>> deps = grd.getDependencies(rule);
-
-				GraphChunk<KVValue, KVLabel> modGC = apply(unifiable, (IPathUnifier<KVValue, KVLabel>) dependency.getUnifier(), rule.getBody());
+				GraphChunk<KVValue, KVLabel> modGC = apply(unifiable, unifier, rule);
 
 				if (deps.isEmpty())
 					continue;
@@ -119,47 +116,92 @@ public class KVGraphChunkPathRuleApplierSimple
 		currentDepth--;
 	}
 
-	private GraphChunk<KVValue, KVLabel> apply(GraphChunk<KVValue, KVLabel> gchunk, IPathUnifier<KVValue, KVLabel> unifier, IPath<KVValue, KVLabel> body)
+	private GraphChunk<KVValue, KVLabel> apply(GraphChunk<KVValue, KVLabel> gchunk, IPathUnifier<KVValue, KVLabel> unifier, IPathRule<KVValue, KVLabel> rule)
 	{
-		Collection<GraphChunk<KVValue, KVLabel>> start = gchunk.validStates(gchunk.getStart(), unifier.getPrefixBody().getLabels());
-		Collection<GraphChunk<KVValue, KVLabel>> end   = gchunk.validStates_reverse(gchunk.getEnd(), unifier.getSuffixBody().getLabels());
-		assert (start.size() == 1);
-		assert (end.size() == 1);
+		Collection<GraphChunk<KVValue, KVLabel>> gcstart = gchunk.getValidChunks(gchunk.getStart(), unifier.getPrefixBody().getLabels());
+		Collection<GraphChunk<KVValue, KVLabel>> gcend   = gchunk.getValidChunks_reverse(gchunk.getEnd(), unifier.getSuffixBody().getLabels());
+		assert (gcstart.size() == 1);
+		assert (gcend.size() == 1);
 
-		GraphChunk<KVValue, KVLabel> ret = env.gluePath(mainChunk, //
-			start.iterator().next().getEnd(), //
-			end.iterator().next().getStart(), //
-			body);
+		IGCState<KVValue> start = gcstart.iterator().next().getEnd();
+		IGCState<KVValue> end   = gcend.iterator().next().getStart();
 
-		return ret;
+		if (rule.isExistential())
+		{
+			Collection<GraphChunk<KVValue, KVLabel>> bodyChunks = mainChunk.getValidChunks(start, rule.getBody().getLabels());
+
+			bodyChunks.stream().filter((gc) -> {
+				IGCState<KVValue> endState = gc.getEnd();
+				return endState.isFinal() && endState.isTerminal() == rule.getBody().isTerminal() && endState.test(rule.getBody().getValue().orElse(null));
+			}).findFirst();
+
+			if (!bodyChunks.isEmpty())
+				return bodyChunks.iterator().next();
+
+			return env.gluePath(mainChunk, start, rule.getBody());
+		}
+		else
+		{
+			Optional<GraphChunk<KVValue, KVLabel>> bodyChunk = mainChunk.getFirstValidChunk(start, end, rule.getBody().getLabels());
+
+			if (bodyChunk.isPresent())
+				return bodyChunk.get();
+
+			return env.gluePath(mainChunk, start, end, rule.getBody());
+		}
 	}
 
 	private Collection<GraphChunk<KVValue, KVLabel>> getUnifiables(GraphChunk<KVValue, KVLabel> gchunk, IDependency<KVValue, KVLabel> dep)
 	{
-//		Collection<GraphChunk> ret = new ArrayList<>();
-//		Collection<GCState>    start;
-//		Collection<GCState>    end;
-
 		IPathUnifier<KVValue, KVLabel> unifier = (IPathUnifier<KVValue, KVLabel>) dep.getUnifier();
 
 		if (unifier.getHead().isEmpty())
 			return Collections.singleton(gchunk);
 
-		throw new NotImplementedException("");
+		Collection<GraphChunk<KVValue, KVLabel>> startChunks, endChunks;
+		boolean                                  prefixEmpty = unifier.getPrefixHead().isEmpty();
+		boolean                                  suffixEmpty = unifier.getSuffixHead().isEmpty();
 
-//		// Unread head prefix
-//		if (unifier.getPrefixHead().isEmpty())
-//			start = Collections.singleton(gchunk.getStart());
-//		else
-//			throw new NotImplementedException("");
-////			start = gchunk.validStates_reverse(gchunk.getStart(), unifier.getPrefixHead().getLabels());
-//
-//		if (unifier.getSuffixHead().isEmpty())
-//			end = Collections.singleton(gchunk.getEnd());
-//		else
-//			throw new NotImplementedException("");
-//
-//		return ret;
+		// Unread head prefix
+		if (prefixEmpty)
+			startChunks = Collections.emptyList();
+		else
+			startChunks = mainChunk.getValidChunks_reverse(gchunk.getStart(), unifier.getPrefixHead().getLabels());
+
+		if (suffixEmpty)
+			endChunks = Collections.emptyList();
+		else
+			endChunks = mainChunk.getValidChunks(gchunk.getEnd(), unifier.getSuffixHead().getLabels());
+
+		// Not able to read: no chunk presents
+		if ((!prefixEmpty && startChunks.isEmpty()) || (!suffixEmpty && endChunks.isEmpty()))
+			return Collections.emptyList();
+
+		if (!startChunks.isEmpty() && !endChunks.isEmpty())
+		{
+			Collection<GraphChunk<KVValue, KVLabel>> ret = new ArrayList<>();
+
+			for (GraphChunk<KVValue, KVLabel> start : startChunks)
+			{
+				for (GraphChunk<KVValue, KVLabel> end : endChunks)
+				{
+					GraphChunk<KVValue, KVLabel> gc = start.copy();
+					gc.union(end);
+					ret.add(gc);
+				}
+			}
+			return ret;
+		}
+		else if (!startChunks.isEmpty())
+		{
+			startChunks.forEach((gc) -> gc.union(gchunk));
+			return startChunks;
+		}
+		else
+		{
+			endChunks.forEach((gc) -> gc.union(gchunk));
+			return endChunks;
+		}
 	}
 
 	public KVGraphChunkModifier<KVValue, KVLabel> getGraphChunkModifier(Collection<IRule<KVValue, KVLabel>> rules)

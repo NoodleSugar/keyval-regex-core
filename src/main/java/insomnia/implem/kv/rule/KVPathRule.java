@@ -1,6 +1,5 @@
 package insomnia.implem.kv.rule;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.regex.Pattern;
@@ -22,28 +21,27 @@ public class KVPathRule implements IPathRule<KVValue, KVLabel>
 
 	private boolean isExistential;
 
+	public static KVPathRule create(KVPath body, KVPath head)
+	{
+		return create(body, head, false);
+	}
+
+	public static KVPathRule create(KVPath body, KVPath head, boolean isExistential)
+	{
+		return new KVPathRule(body, head, isExistential);
+	}
+
 	public static KVPathRule create(String body, String head)
 	{
-		return create(body, head, false, false);
+		return create(body, head, false);
 	}
 
-	public static KVPathRule create(String body, String head, boolean isRooted, boolean isTerminal)
+	public static KVPathRule create(String body, String head, boolean isExistential)
 	{
-		return new KVPathRule( //
-			KVPaths.create(isRooted, isTerminal, KVPaths.string2KVLabel(Arrays.asList(body.split(separator)))), //
-			KVPaths.create(isRooted, isTerminal, KVPaths.string2KVLabel(Arrays.asList(head.split(separator)))), //
-			false);
+		return create(KVPaths.pathFromString(body), KVPaths.pathFromString(head), isExistential);
 	}
 
-	public static KVPathRule createExistential(String body, String head, boolean isRooted, boolean isBodyTerminal, boolean isHeadTerminal)
-	{
-		return new KVPathRule( //
-			KVPaths.create(isRooted, isBodyTerminal, KVPaths.string2KVLabel(Arrays.asList(body.split(separator)))), //
-			KVPaths.create(isRooted, isHeadTerminal, KVPaths.string2KVLabel(Arrays.asList(head.split(separator)))), //
-			true);
-	}
-
-	public KVPathRule(KVPath body, KVPath head, boolean isExistential) throws IllegalArgumentException
+	private KVPathRule(KVPath body, KVPath head, boolean isExistential) throws IllegalArgumentException
 	{
 		if (body.isRooted() != head.isRooted())
 			throw new IllegalArgumentException("body and head must have the same isRooted value");

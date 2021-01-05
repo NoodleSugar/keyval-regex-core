@@ -33,12 +33,18 @@ public class KVPathUnifier extends AbstractPathUnifier<KVValue, KVLabel>
 	@Override
 	public IPath<KVValue, KVLabel> getBody()
 	{
-		return getPrefixBody();
+		if (getPrefixBody().isEmpty() && getSuffixBody().isEmpty())
+			return KVPaths.create();
+
+		return KVPaths.concat(getPrefixBody(), KVPaths.pathFromString("_"), getSuffixBody());
 	}
 
 	@Override
 	public IPath<KVValue, KVLabel> getHead()
 	{
-		return getSuffixHead();
+		if (getPrefixHead().isEmpty() && getSuffixHead().isEmpty())
+			return KVPaths.create();
+
+		return KVPaths.concat(getPrefixHead(), KVPaths.pathFromString("_"), getSuffixHead());
 	}
 }

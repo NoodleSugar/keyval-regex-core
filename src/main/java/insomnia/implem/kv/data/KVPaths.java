@@ -1,5 +1,6 @@
 package insomnia.implem.kv.data;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import insomnia.data.IPath;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.graphchunk.IGCEdge;
 import insomnia.implem.fsa.graphchunk.IGCState;
@@ -53,8 +55,32 @@ public final class KVPaths
 		return create(isRooted, null != value, labels, null);
 	}
 
-	// =========================================================================
+	public static KVPath concat(IPath<KVValue, KVLabel>... paths) throws InvalidParameterException
+	{
+		if (paths.length == 0)
+			return KVPaths.create();
+		if (paths.length == 1)
+			return KVPaths.create(paths[0].isRooted(), paths[0].isTerminal(), paths[0].getLabels());
 
+		if (paths[0].isTerminal() || paths[paths.length - 1].isRooted())
+			throw new InvalidParameterException();
+
+		for (int i = 1, c = paths.length - 1; i < c; i++)
+		{
+			if (paths[i].isRooted() || paths[i].isTerminal())
+				throw new InvalidParameterException();
+		}
+		List<KVLabel> labels     = new ArrayList<>();
+		boolean       isRooted   = paths[0].isRooted();
+		boolean       isTerminal = paths[paths.length - 1].isTerminal();
+
+		for (IPath<KVValue, KVLabel> path : Arrays.asList(paths))
+			labels.addAll(path.getLabels());
+
+		return create(isRooted, isTerminal, labels);
+	}
+
+	// =========================================================================
 
 	private static KVPath pathFromString(String p, boolean isRooted, boolean isTerminal, KVValue value)
 	{
@@ -96,6 +122,7 @@ public final class KVPaths
 	/**
 	 * Get the path validated by a {@link GraphChunk}.
 	 * If gchunk does not represent a single path, then return null.
+	 * The loop edges are avoided.
 	 * 
 	 * @param gchunk
 	 * @return

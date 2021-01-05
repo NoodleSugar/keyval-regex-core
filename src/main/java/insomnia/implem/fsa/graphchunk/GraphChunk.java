@@ -1,5 +1,6 @@
 package insomnia.implem.fsa.graphchunk;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -46,8 +48,8 @@ public abstract class GraphChunk<VAL, LBL>
 	{
 		// By default we don't know if it is deterministic
 		properties  = new FSAProperties(false, true);
-		this.graph  = new DirectedPseudograph<IGCState<VAL>, IGCEdge<LBL>>(null, null, false);
 		finalStates = new HashSet<>();
+		cleanGraph();
 	}
 
 	// =========================================================================
@@ -95,14 +97,14 @@ public abstract class GraphChunk<VAL, LBL>
 
 	// =========================================================================
 
-	protected void setGraph(Graph<IGCState<VAL>, IGCEdge<LBL>> graph)
-	{
-		this.graph = graph;
-	}
-
 	protected Graph<IGCState<VAL>, IGCEdge<LBL>> getGraph()
 	{
 		return graph;
+	}
+
+	public void cleanGraph()
+	{
+		graph = new DirectedPseudograph<IGCState<VAL>, IGCEdge<LBL>>(null, null, false);
 	}
 
 	public Collection<IGCState<VAL>> getStates()
@@ -224,7 +226,7 @@ public abstract class GraphChunk<VAL, LBL>
 	 * @param state
 	 * @return
 	 */
-	public Collection<GraphChunk<VAL, LBL>> validStates(IGCState<VAL> state, List<? extends LBL> labels)
+	public Collection<GraphChunk<VAL, LBL>> getValidChunks(IGCState<VAL> state, List<? extends LBL> labels)
 	{
 		Collection<GraphChunk<VAL, LBL>> nextChunks = new ArrayList<>();
 		Collection<GraphChunk<VAL, LBL>> lastChunks = new ArrayList<>();
@@ -268,7 +270,7 @@ public abstract class GraphChunk<VAL, LBL>
 		return nextChunks;
 	}
 
-	public Collection<GraphChunk<VAL, LBL>> validStates_reverse(IGCState<VAL> state, List<? extends LBL> labels)
+	public Collection<GraphChunk<VAL, LBL>> getValidChunks_reverse(IGCState<VAL> state, List<? extends LBL> labels)
 	{
 		Collection<GraphChunk<VAL, LBL>> nextChunks = new ArrayList<>();
 		Collection<GraphChunk<VAL, LBL>> lastChunks = new ArrayList<>();
@@ -310,6 +312,15 @@ public abstract class GraphChunk<VAL, LBL>
 				return Collections.emptyList();
 		}
 		return nextChunks;
+	}
+
+	/**
+	 * Get the first path chunck validating a sequence of labels between two states.
+	 */
+	public Optional<GraphChunk<VAL, LBL>> getFirstValidChunk(IGCState<VAL> start, IGCState<VAL> end, List<? extends LBL> labels)
+	{
+		Collection<GraphChunk<VAL, LBL>> chunks = getValidChunks(start, labels);
+		return chunks.stream().filter((chunk) -> chunk.getEnd().equals(end)).findFirst();
 	}
 
 	public Collection<IGCState<VAL>> epsilonClosure(IGCState<VAL> state)
@@ -364,6 +375,11 @@ public abstract class GraphChunk<VAL, LBL>
 		ret.end   = end;
 		Graphs.addGraph(ret.graph, graph);
 		return ret;
+	}
+
+	public GraphChunk<VAL, LBL> copy()
+	{
+		return copy(create());
 	}
 
 	/**
@@ -452,6 +468,39 @@ public abstract class GraphChunk<VAL, LBL>
 	}
 
 	/**
+	 * Try to get a union with a pivot.
+	 * A pivot is a common state between this and b.
+	 * 
+	 * @param b
+	 */
+	public void union(GraphChunk<VAL, LBL> b)
+	{
+		IGCState<VAL> start, end;
+
+		if (b.end == this.start)
+		{
+			start = b.start;
+			end   = this.end;
+		}
+		else if (b.start == this.end)
+		{
+			start = this.start;
+			end   = b.end;
+		}
+		else
+			throw new InvalidParameterException();
+
+		union(b, start, end);
+	}
+
+	public void union(GraphChunk<VAL, LBL> b, IGCState<VAL> start, IGCState<VAL> end)
+	{
+		Graphs.addGraph(graph, b.graph);
+		this.start = start;
+		this.end   = end;
+	}
+
+	/**
 	 * Glue the chunk b to this at its start and end states.
 	 * 
 	 * @param b
@@ -472,6 +521,26 @@ public abstract class GraphChunk<VAL, LBL>
 	{
 		glue(gluea, b);
 		replaceState(end, b.end);
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (!(obj instanceof GraphChunk))
+			return false;
+
+		@SuppressWarnings("unchecked")
+		GraphChunk<VAL, LBL> b = (GraphChunk<VAL, LBL>) obj;
+
+		return start.equals(b.start) && end.equals(b.end) //
+			&& graph.equals(b.graph) //
+			&& finalStates.equals(b.finalStates);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return start.hashCode() + end.hashCode() + graph.hashCode() + finalStates.hashCode();
 	}
 
 	@Override

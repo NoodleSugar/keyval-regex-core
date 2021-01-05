@@ -113,6 +113,8 @@ public abstract class AbstractGBuilderFSA<VAL, LBL> //
 
 		s1.append("Initials: ").append(initialStates).append("\n");
 		s1.append("Finals: ").append(finalStates).append("\n");
+		s1.append("Rooted: ").append(rootedStates).append("\n");
+		s1.append("Terminals: ").append(terminalStates).append("\n");
 		s1.append("Nodes: ").append(states).append("\n");
 		s1.append("Edges:\n");
 

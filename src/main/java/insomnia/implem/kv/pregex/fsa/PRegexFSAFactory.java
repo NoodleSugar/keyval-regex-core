@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
-import org.jgrapht.graph.DirectedPseudograph;
 
 import insomnia.data.IEdge;
 import insomnia.data.INode;
@@ -63,11 +62,6 @@ public class PRegexFSAFactory<VAL, LBL>
 		public Graph<IGCState<VAL>, IGCEdge<LBL>> getGraph()
 		{
 			return super.getGraph();
-		}
-
-		public void cleanGraph()
-		{
-			setGraph(graphSupplier());
 		}
 
 		public IGCState<VAL> addVertex()
@@ -153,11 +147,6 @@ public class PRegexFSAFactory<VAL, LBL>
 
 	private int currentId = 0;
 
-	private static <VAL, LBL> Graph<IGCState<VAL>, IGCEdge<LBL>> graphSupplier()
-	{
-		return new DirectedPseudograph<>(null, null, false);
-	}
-
 	public PRegexFSAFactory(IPRegexElement elements)// throws BuilderException
 	{
 		automaton         = recursiveConstruct(elements);
@@ -221,6 +210,21 @@ public class PRegexFSAFactory<VAL, LBL>
 					Graphs.addGraph(((GChunk) gchunk).getGraph(), ret.getGraph());
 					return ret;
 				}
+
+				@Override
+				public GraphChunk<VAL, LBL> gluePath(GraphChunk<VAL, LBL> gchunk, IGCState<VAL> start, IPath<VAL, LBL> path)
+				{
+					IGCState<VAL> end = GCStates.create(nextStateId(), path.getValue());
+					gchunk.addState(end);
+
+					GCStates.setFinal(end);
+					GCStates.setTerminal(end, path.isTerminal());
+
+					if (!path.isTerminal())
+						gchunk.addEdge(end, end, GCEdges.createAny());
+
+					return gluePath(gchunk, start, end, path);
+				}
 			};
 			modifiedAutomaton = automaton.copy();
 			graphChunkModifier.accept(modifiedAutomaton, env);
@@ -247,7 +251,6 @@ public class PRegexFSAFactory<VAL, LBL>
 	public IFSAutomaton<VAL, LBL> newBuild() throws FSAException
 	{
 		AbstractFSA<VAL, LBL> fsa = (AbstractFSA<VAL, LBL>) new PRegexFSABuilder<VAL, LBL>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
-
 		return fsa;
 	}
 
