@@ -1,6 +1,5 @@
 package insomnia.implem.fsa.gbuilder;
 
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,18 +10,13 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import insomnia.fsa.AbstractFSAEdge;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.fsa.IGFSAutomaton;
 import insomnia.fsa.algorithm.GFSAValidation;
-import insomnia.implem.fsa.FSAEdgeAny;
-import insomnia.implem.fsa.FSAEdgeEpsilon;
-import insomnia.implem.fsa.FSAEdgeNumber;
-import insomnia.implem.fsa.FSAEdgeRegex;
-import insomnia.implem.fsa.FSAEdgeStringEq;
+import insomnia.fsa.edge.FSAEdge;
 import insomnia.implem.fsa.graphchunk.GCEdges;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.graphchunk.IGCEdge;
@@ -122,27 +116,10 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 	// =========================================================================
 	// Build functions
 
-	private AbstractFSAEdge<VAL, LBL> makeEdge(IGCEdge<LBL> edgeData, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child) throws FSAException
+	private FSAEdge<VAL, LBL> makeEdge(IGCEdge<LBL> edgeData, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child) throws FSAException
 	{
-		AbstractFSAEdge<VAL, LBL> ret;
-
-		if (GCEdges.isEpsilon(edgeData))
-		{
-			ret = new FSAEdgeEpsilon<VAL, LBL>(parent, child);
-
-			if (automaton.getProperties().isSynchronous())
-				throw new FSAException("Synchronous Automaton expected");
-		}
-		else if (GCEdges.isNumber(edgeData))
-			ret = new FSAEdgeNumber<VAL, LBL, Number>(parent, child, (Number) edgeData.getObj());
-		else if (GCEdges.isStringEq(edgeData))
-			ret = new FSAEdgeStringEq<VAL, LBL>(parent, child, (String) edgeData.getObj());
-		else if (GCEdges.isRegex(edgeData))
-			ret = new FSAEdgeRegex<VAL, LBL>(parent, child, (String) edgeData.getObj());
-		else if (GCEdges.isAny(edgeData))
-			ret = new FSAEdgeAny<VAL, LBL>(parent, child);
-		else
-			throw new InvalidParameterException();
+		FSAEdge<VAL, LBL> ret;
+		ret = new FSAEdge<VAL, LBL>(parent, child, edgeData.getLabelCondition());
 
 		if (buildEdges.contains(ret))
 			return null;

@@ -1,7 +1,8 @@
 package insomnia.implem.fsa.graphchunk;
 
 import java.util.Optional;
-import java.util.function.Predicate;
+
+import insomnia.fsa.IFSALabelCondition;
 
 /**
  * Represent an edge of a {@link GraphChunk}.
@@ -11,18 +12,12 @@ import java.util.function.Predicate;
  * @param <LBL> Label type to test.
  * @param <ELMNT>
  */
-public interface IGCEdge<LBL> extends Predicate<LBL>
+public interface IGCEdge<LBL> // extends Predicate<LBL>
 {
 	/**
 	 * If the edge is a classic one, get its label as a {@link String}.
 	 */
 	Optional<String> getLabelAsString();
 
-	/**
-	 * Get the internal object serving for equality test (ie. label).
-	 */
-	Object getObj();
-
-	@Override
-	boolean test(LBL t);
+	IFSALabelCondition<LBL> getLabelCondition();
 }

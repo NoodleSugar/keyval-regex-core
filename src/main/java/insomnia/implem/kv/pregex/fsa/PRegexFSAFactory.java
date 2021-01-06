@@ -205,7 +205,7 @@ public class PRegexFSAFactory<VAL, LBL>
 
 					// Add the edges
 					for (int i = 0; i < nb; i++)
-						ret.addEdge(states.get(i), states.get(i + 1), GCEdges.createStringEq(labels.get(i).toString()));
+						ret.addEdge(states.get(i), states.get(i + 1), GCEdges.createEq(labels.get(i)));
 
 					Graphs.addGraph(((GChunk) gchunk).getGraph(), ret.getGraph());
 					return ret;
@@ -306,7 +306,7 @@ public class PRegexFSAFactory<VAL, LBL>
 
 				IGCState<VAL> newGCState = GCStates.create(id, value);
 				currentAutomaton.addState(newGCState);
-				currentAutomaton.addEdge(lastGCState, newGCState, GCEdges.createStringEq(optChild.get().getLabel().toString()));
+				currentAutomaton.addEdge(lastGCState, newGCState, GCEdges.createEq(optChild.get().getLabel()));
 				lastGCState = newGCState;
 
 				if (!nextOptChild.isPresent())

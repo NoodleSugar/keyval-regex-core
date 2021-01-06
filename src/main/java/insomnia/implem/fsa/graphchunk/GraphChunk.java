@@ -247,7 +247,7 @@ public abstract class GraphChunk<VAL, LBL>
 			{
 				for (IGCEdge<LBL> edge : graph.outgoingEdgesOf(lstate))
 				{
-					if (edge.test(label))
+					if (edge.getLabelCondition().test(label))
 					{
 						// Add the edge
 						for (GraphChunk<VAL, LBL> chunk : lastChunks)
@@ -291,7 +291,7 @@ public abstract class GraphChunk<VAL, LBL>
 			{
 				for (IGCEdge<LBL> edge : graph.incomingEdgesOf(lstate))
 				{
-					if (edge.test(label))
+					if (edge.getLabelCondition().test(label))
 					{
 						// Add the edge
 						for (GraphChunk<VAL, LBL> chunk : lastChunks)
