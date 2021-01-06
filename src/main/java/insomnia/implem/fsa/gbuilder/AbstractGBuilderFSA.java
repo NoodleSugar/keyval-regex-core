@@ -52,13 +52,13 @@ public abstract class AbstractGBuilderFSA<VAL, LBL> //
 	}
 
 	@Override
-	protected boolean isRooted(IFSAState<VAL, LBL> state)
+	public boolean isRooted(IFSAState<VAL, LBL> state)
 	{
 		return rootedStates.contains(state);
 	}
 
 	@Override
-	protected boolean isTerminal(IFSAState<VAL, LBL> state)
+	public boolean isTerminal(IFSAState<VAL, LBL> state)
 	{
 		return terminalStates.contains(state);
 	}

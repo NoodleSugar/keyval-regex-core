@@ -6,12 +6,17 @@ import java.util.Collection;
  * Classic graph automaton representation.
  * 
  * @param <LBL> Type of the labels.
+ * @param <IGFSAElement<VAL,LBL>> Type of the tested element.
  */
 public interface IGFSAutomaton<VAL, LBL> extends IFSAutomaton<VAL, LBL>
 {
 	int nbStates();
 
 	IFSAProperties getProperties();
+
+	boolean isRooted(IFSAState<VAL, LBL> state);
+
+	boolean isTerminal(IFSAState<VAL, LBL> state);
 
 	Collection<IFSAState<VAL, LBL>> getInitialStates();
 

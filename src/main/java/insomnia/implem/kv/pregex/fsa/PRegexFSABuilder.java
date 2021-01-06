@@ -2,6 +2,7 @@ package insomnia.implem.kv.pregex.fsa;
 
 import java.util.Collection;
 
+import insomnia.fsa.GFSAOp;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAElement;
 import insomnia.fsa.IFSAProperties;
@@ -83,7 +84,7 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		@Override
 		public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> element)
 		{
-			return nextValidState_sync(states, element);
+			return GFSAOp.nextValidState_sync(this, states, element);
 		}
 	}
 
@@ -106,7 +107,7 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		@Override
 		public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IFSAElement<VAL, LBL> element)
 		{
-			return nextValidStates_general(states, element);
+			return GFSAOp.nextValidStates_general(this, states, element);
 		}
 	}
 }
