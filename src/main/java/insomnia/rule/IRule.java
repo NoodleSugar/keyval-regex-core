@@ -1,20 +1,27 @@
 package insomnia.rule;
 
-import insomnia.rule.tree.ITree;
+import java.util.Collection;
 
-public interface IRule<E extends ITree<?>>
+import insomnia.data.ITree;
+
+/**
+ * A general rule composed of a tree body and head (body -> head).
+ * The body and the share conceptually the root node, so the rooted nature of the trees must be the same.
+ * 
+ * @author zuri
+ * @param <VAL>
+ * @param <LBL>
+ */
+public interface IRule<VAL, LBL>
 {
-	E getContext();
+	ITree<VAL, LBL> getBody();
 
-	E getBody();
+	ITree<VAL, LBL> getHead();
 
-	E getFoot();
-
-	E getHead();
-
-	boolean isRooted();
-
-	boolean isValued();
-	
+	/**
+	 * The head have some existential nodes (ie. not frontier node).
+	 */
 	boolean isExistential();
+
+	Collection<LBL> getVocabulary();
 }
