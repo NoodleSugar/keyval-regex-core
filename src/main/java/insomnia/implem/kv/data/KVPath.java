@@ -94,10 +94,4 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 	{
 		return new KVPathNode(0, null);
 	}
-
-	@Override
-	public IPath<KVValue, KVLabel> setValue(KVValue value)
-	{
-		return new KVPath(isRooted(), getLabels(), value);
-	}
 }

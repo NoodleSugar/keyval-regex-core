@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Path where the leaf may have a value.
+ * Immutable Path where the leaf may have a value.
  * 
  * @author zuri
  * @param <VAL>
@@ -13,29 +13,48 @@ import java.util.Optional;
 public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 {
 	/**
-	 * Such as {@link String#substring(int, int)} get a subpath from the current one.
+	 * Such as {@link String#substring(int, int)} get a sub-path from the current one.
+	 * The isRooted/isTerminal nature count as a part of the path (like in {@link IPath#size()}.
 	 * 
 	 * @param begin Inclusive offset.
 	 * @param end   Exclusive end index.
-	 * @return
+	 * @return The sub path.
 	 */
 	IPath<VAL, LBL> subPath(int begin, int end);
 
-	IPath<VAL, LBL> setValue(VAL value);
-
 	/**
-	 * Get the labels of the path conserving the path order.
+	 * @return the labels of the path conserving the path order.
 	 */
 	List<LBL> getLabels();
 
+	/**
+	 * @return the child edge of 'node' if exists.
+	 */
 	Optional<IEdge<VAL, LBL>> getChild(INode<VAL, LBL> node);
 
+	/**
+	 * @return the value of the leaf node if set.
+	 */
 	Optional<VAL> getValue();
 
+	/**
+	 * @return the number of labels.
+	 */
 	int nbLabels();
 
+	/**
+	 * The size of a path is the number of labels plus the isRooted or/and isTerminal natures.
+	 * 
+	 * @return the size of the path.
+	 */
 	int size();
 
+	/**
+	 * No edges are present.
+	 * It may have the root.
+	 * 
+	 * @return
+	 */
 	boolean isEmpty();
 
 	/**
