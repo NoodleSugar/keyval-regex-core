@@ -11,8 +11,8 @@ import org.apache.commons.lang3.BooleanUtils;
 
 public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 {
-	public final static boolean default_isRoot     = false;
-	public final static boolean default_isTerminal = false;
+	private final static boolean default_isRoot     = false;
+	private final static boolean default_isTerminal = false;
 
 	private List<LBL> labels;
 	private VAL       value;

@@ -4,6 +4,7 @@ import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.unifier.PathUnifiers;
 
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public final class KVPathUnifiers
 {
 	static PathUnifiers<KVValue, KVLabel> unifiers;

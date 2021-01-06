@@ -7,14 +7,14 @@ import java.util.List;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.pregex.IPRegexElement;
-import insomnia.implem.kv.pregex.Quantifier;
 import insomnia.implem.kv.pregex.PRegexElements.Disjunction;
 import insomnia.implem.kv.pregex.PRegexElements.Key;
 import insomnia.implem.kv.pregex.PRegexElements.Regex;
 import insomnia.implem.kv.pregex.PRegexElements.Sequence;
+import insomnia.implem.kv.pregex.Quantifier;
 import insomnia.implem.kv.pregex.fsa.PRegexVMFSA.Type;
 
-class PRegexVMFSABuilder
+public class PRegexVMFSABuilder
 {
 	protected class InstructionData
 	{
@@ -103,8 +103,8 @@ class PRegexVMFSABuilder
 
 		case DISJUNCTION:
 		{
-			Disjunction  oe   = (Disjunction) element;
-			int        n    = oe.getElements().size();
+			Disjunction      oe   = (Disjunction) element;
+			int              n    = oe.getElements().size();
 			IPRegexElement[] elts = new IPRegexElement[n];
 			elts = oe.getElements().toArray(elts);
 
