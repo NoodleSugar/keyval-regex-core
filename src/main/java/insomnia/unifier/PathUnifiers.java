@@ -42,7 +42,7 @@ public final class PathUnifiers<V, E>
 		unifierFactory = new AbstractPathUnifierFactory<V, E, IPathUnifier<V, E>>()
 		{
 			@Override
-			public IPathUnifier<V, E> get(IPath<V, E> pb, IPath<V, E> sb, IPath<V, E> ph, IPath<V, E> sh, IPath<V, E> ref)
+			public IPathUnifier<V, E> create(IPath<V, E> pb, IPath<V, E> sb, IPath<V, E> ph, IPath<V, E> sh, IPath<V, E> ref)
 			{
 				try
 				{
@@ -110,7 +110,7 @@ public final class PathUnifiers<V, E>
 		for (i = 0; i < tmp.length; i++)
 		{
 			int size = tmp[i];
-			ret.add(unifierFactory.get( //
+			ret.add(unifierFactory.create( //
 				body.subPath(0, b_size - size), null, //
 				null, head.subPath(size, h_size), //
 				head.subPath(0, size)));
@@ -121,7 +121,7 @@ public final class PathUnifiers<V, E>
 		 */
 		if (PathOp.isProperSuffix(head, body))
 		{
-			ret.add(unifierFactory.get( //
+			ret.add(unifierFactory.create( //
 				body.subPath(0, b_size - h_size), null, //
 				null, null, //
 				head));
@@ -138,7 +138,7 @@ public final class PathUnifiers<V, E>
 			for (i = 0; i < tmp.length; i++)
 			{
 				int size = tmp[i];
-				ret.add(unifierFactory.get( //
+				ret.add(unifierFactory.create( //
 					null, body.subPath(size, b_size), //
 					head.subPath(0, h_size - size), null, //
 					body.subPath(0, size)));
@@ -149,7 +149,7 @@ public final class PathUnifiers<V, E>
 			 */
 			if (PathOp.isProperPrefix(head, body))
 			{
-				ret.add(unifierFactory.get( //
+				ret.add(unifierFactory.create( //
 					null, body.subPath(h_size, b_size), //
 					null, null, //
 					head));
@@ -164,7 +164,7 @@ public final class PathUnifiers<V, E>
 			{
 				int pos = tmp[i];
 
-				ret.add(unifierFactory.get( //
+				ret.add(unifierFactory.create( //
 					body.subPath(0, pos), body.subPath(pos + h_size, b_size), //
 					null, null, //
 					head));
@@ -196,7 +196,7 @@ public final class PathUnifiers<V, E>
 		 */
 		if (PathOp.isSuffix(body, head, false))
 		{
-			ret.add(unifierFactory.get( //
+			ret.add(unifierFactory.create( //
 				null, null, //
 				head.subPath(0, h_size - b_size), null, //
 				body));
@@ -207,7 +207,7 @@ public final class PathUnifiers<V, E>
 		 */
 		if (PathOp.isPrefix(body, head, true))
 		{
-			ret.add(unifierFactory.get( //
+			ret.add(unifierFactory.create( //
 				null, null, //
 				null, head.subPath(b_size, h_size), //
 				body));
@@ -223,7 +223,7 @@ public final class PathUnifiers<V, E>
 			{
 				int pos = tmp[i];
 
-				ret.add(unifierFactory.get( //
+				ret.add(unifierFactory.create( //
 					null, null, //
 					head.subPath(0, pos), head.subPath(pos + b_size, h_size), //
 					body));
