@@ -20,7 +20,7 @@ public class KVGRDFactory
 		this.validation = validation;
 	}
 
-	public KVGRD get()
+	public KVGRD create()
 	{
 		KVGRD grd = new KVGRD(validation);
 		build(grd);

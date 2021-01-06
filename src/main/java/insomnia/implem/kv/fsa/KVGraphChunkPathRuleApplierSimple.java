@@ -40,7 +40,7 @@ public class KVGraphChunkPathRuleApplierSimple
 	static private IGRD<KVValue, KVLabel> rules2grd(Collection<IRule<KVValue, KVLabel>> rules)
 	{
 		KVGRDFactory grdFactory = new KVGRDFactory(rules, new KVBetaDependencyValidation());
-		return grdFactory.get();
+		return grdFactory.create();
 	}
 
 	int currentDepth = 0;

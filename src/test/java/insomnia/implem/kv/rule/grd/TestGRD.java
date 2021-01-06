@@ -106,7 +106,7 @@ public class TestGRD<E, V>
 			expected.add(elist);
 		}
 
-		IGRD<KVValue, KVLabel> grd = new KVGRDFactory(rules, validation).get();
+		IGRD<KVValue, KVLabel> grd = new KVGRDFactory(rules, validation).create();
 
 		for (IDependency<KVValue, KVLabel> edge : grd.edgeSet())
 		{
