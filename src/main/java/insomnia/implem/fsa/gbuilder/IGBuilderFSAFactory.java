@@ -17,7 +17,7 @@ import insomnia.fsa.factory.IGFSAFactory;
 public interface IGBuilderFSAFactory<VAL, LBL> extends IGFSAFactory<VAL, LBL>
 {
 	@Override
-	AbstractGBuilderFSA<VAL, LBL> get(Collection<IFSAState<VAL, LBL>> states, //
+	AbstractGBuilderFSA<VAL, LBL> create(Collection<IFSAState<VAL, LBL>> states, //
 		Collection<IFSAState<VAL, LBL>> rootedStates, //
 		Collection<IFSAState<VAL, LBL>> terminalStates, //
 		Collection<IFSAState<VAL, LBL>> initialStates, //

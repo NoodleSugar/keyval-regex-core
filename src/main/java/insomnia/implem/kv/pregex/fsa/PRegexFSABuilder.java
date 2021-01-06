@@ -30,7 +30,7 @@ class PRegexFSABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 	static class FSAFactory<VAL, LBL> implements IGBuilderFSAFactory<VAL, LBL>
 	{
 		@Override
-		public AbstractGBuilderFSA<VAL, LBL> get( //
+		public AbstractGBuilderFSA<VAL, LBL> create( //
 			Collection<IFSAState<VAL, LBL>> states, //
 			Collection<IFSAState<VAL, LBL>> rootedStates, //
 			Collection<IFSAState<VAL, LBL>> terminalStates, //

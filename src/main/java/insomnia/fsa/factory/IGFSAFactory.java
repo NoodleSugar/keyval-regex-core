@@ -16,7 +16,7 @@ import insomnia.fsa.algorithm.IGFSAValidation;
  */
 public interface IGFSAFactory<VAL, LBL>
 {
-	IGFSAutomaton<VAL, LBL> get( //
+	IGFSAutomaton<VAL, LBL> create( //
 		Collection<IFSAState<VAL, LBL>> states, //
 		Collection<IFSAState<VAL, LBL>> rootedStates, //
 		Collection<IFSAState<VAL, LBL>> terminalStates, //
