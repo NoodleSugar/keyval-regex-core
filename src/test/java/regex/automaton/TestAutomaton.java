@@ -26,7 +26,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.fsa.IFSAutomaton;
 import insomnia.fsa.exception.FSAException;
-import insomnia.help.HelpLists;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVLabels;
 import insomnia.implem.kv.data.KVPath;
@@ -37,6 +36,7 @@ import insomnia.implem.kv.pregex.IPRegexElement;
 import insomnia.implem.kv.pregex.PRegexParser;
 import insomnia.implem.kv.pregex.fsa.PRegexFSAFactory;
 import insomnia.implem.kv.rule.KVPathRule;
+import insomnia.lib.help.HelpLists;
 import insomnia.rule.IRule;
 
 public class TestAutomaton
