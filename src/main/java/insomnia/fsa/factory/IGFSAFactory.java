@@ -1,7 +1,11 @@
-package insomnia.fsa;
+package insomnia.fsa.factory;
 
 import java.util.Collection;
 
+import insomnia.fsa.IFSAEdge;
+import insomnia.fsa.IFSAProperties;
+import insomnia.fsa.IFSAState;
+import insomnia.fsa.IGFSAutomaton;
 import insomnia.fsa.algorithm.IGFSAValidation;
 
 /**

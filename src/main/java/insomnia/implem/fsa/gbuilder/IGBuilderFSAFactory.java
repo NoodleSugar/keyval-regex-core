@@ -5,8 +5,8 @@ import java.util.Collection;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAProperties;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.IGFSAFactory;
 import insomnia.fsa.algorithm.IGFSAValidation;
+import insomnia.fsa.factory.IGFSAFactory;
 
 /**
  * Factory of {@link AbstractGBuilderFSA}.
