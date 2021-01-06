@@ -10,13 +10,13 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.fsa.IGFSAutomaton;
 import insomnia.fsa.algorithm.GFSAValidation;
 import insomnia.fsa.edge.FSAEdge;
+import insomnia.fsa.exception.FSAException;
 import insomnia.implem.fsa.graphchunk.GCEdges;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.graphchunk.IGCEdge;

@@ -13,7 +13,6 @@ public interface IFSAutomaton<VAL, LBL> extends Predicate<IFSAElement<VAL, LBL>>
 	/**
 	 * @param elements to test
 	 * @return true if it succeed
-	 * @throws FSAException
 	 */
 	@Override
 	boolean test(IFSAElement<VAL, LBL> element);
