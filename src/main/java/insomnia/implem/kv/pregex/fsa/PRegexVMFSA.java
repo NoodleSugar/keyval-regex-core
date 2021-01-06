@@ -3,12 +3,11 @@ package insomnia.implem.kv.pregex.fsa;
 import java.util.ArrayList;
 import java.util.List;
 
-import insomnia.data.IPath;
-import insomnia.data.ITree;
+import insomnia.fsa.IFSAElement;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.implem.kv.pregex.fsa.PRegexVMFSABuilder.InstructionData;
 
-public class PRegexVMFSA<V, E> implements IFSAutomaton<ITree<V, E>>
+public class PRegexVMFSA<V, E> implements IFSAutomaton<V, E>
 {
 	protected enum Type
 	{
@@ -67,9 +66,9 @@ public class PRegexVMFSA<V, E> implements IFSAutomaton<ITree<V, E>>
 	}
 
 	@Override
-	public boolean test(ITree<V, E> element)
+	public boolean test(IFSAElement<V, E> element)
 	{
-		return run(((IPath<V, E>) element).getLabels(), instructions.get(0), 0);
+		return run(element.getLabels(), instructions.get(0), 0);
 	}
 
 	private boolean run(List<E> elements, Instruction inst, int index)

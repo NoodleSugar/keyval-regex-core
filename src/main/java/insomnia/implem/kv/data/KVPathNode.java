@@ -20,16 +20,4 @@ class KVPathNode implements INode<KVValue, KVLabel>
 	{
 		return Optional.ofNullable(value);
 	}
-//	@Override
-//	public List<KVEdge> getParents()
-//	{
-//		return null;
-//	}
-//
-//	@Override
-//	public List<KVEdge> getChildren()
-//	{
-//		return null;
-//	}
-
 }

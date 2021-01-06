@@ -2,11 +2,11 @@ package insomnia.rule;
 
 import insomnia.data.IPath;
 
-public interface IPathRule<V, E> extends IRule<V, E>
+public interface IPathRule<VAL, LBL> extends IRule<VAL, LBL>
 {
 	@Override
-	IPath<V, E> getBody();
+	IPath<VAL, LBL> getBody();
 
 	@Override
-	IPath<V, E> getHead();
+	IPath<VAL, LBL> getHead();
 }
