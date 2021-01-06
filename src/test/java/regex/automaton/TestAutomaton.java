@@ -24,8 +24,8 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAutomaton;
+import insomnia.fsa.exception.FSAException;
 import insomnia.help.HelpLists;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVLabels;
