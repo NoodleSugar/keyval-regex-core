@@ -8,24 +8,10 @@ import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import insomnia.lib.numeric.Base;
+
 public final class HelpLists
 {
-	private static void baseInc(int num[], int base[])
-	{
-		assert (num.length == base.length);
-
-		for (int i = num.length - 1; i >= 0; i--)
-		{
-			assert (base[i] != 0);
-			num[i]++;
-
-			if (num[i] % base[i] == 0)
-				num[i] = 0;
-			else
-				break;
-		}
-	}
-
 	public static <A, B> List<Object[]> mergePairsArrays(Collection<Pair<A[], B[]>> pairs)
 	{
 		if (pairs.size() == 0)
@@ -62,9 +48,9 @@ public final class HelpLists
 
 	public static <A, B> List<Pair<A, B>> product(List<A> a, List<B> b)
 	{
-		int nb     = a.size() * b.size();
-		int base[] = { a.size(), b.size() };
-		int num[]  = new int[base.length];
+		int  nb    = a.size() * b.size();
+		Base base  = new Base(a.size(), b.size());
+		int  num[] = new int[2];
 		Arrays.fill(num, 0);
 
 		List<Pair<A, B>> ret = new ArrayList<>(nb);
@@ -72,7 +58,7 @@ public final class HelpLists
 		for (int i = 0; i < nb; i++)
 		{
 			ret.add(Pair.of(a.get(num[0]), b.get(num[1])));
-			baseInc(num, base);
+			base.increment(num);
 		}
 		return ret;
 	}
