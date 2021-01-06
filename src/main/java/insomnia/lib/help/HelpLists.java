@@ -1,4 +1,4 @@
-package insomnia.help;
+package insomnia.lib.help;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -14,12 +14,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.aggregator.ArgumentsAccessor;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.help.HelpLists;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.rule.KVPathRule;
 import insomnia.implem.kv.rule.dependency.KVAlphaDependencyValidation;
 import insomnia.implem.kv.rule.grd.KVGRDFactory;
+import insomnia.lib.help.HelpLists;
 import insomnia.rule.IRule;
 import insomnia.rule.dependency.IDependency;
 import insomnia.rule.dependency.IDependencyValidation;
