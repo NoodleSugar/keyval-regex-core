@@ -28,6 +28,7 @@ import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAutomaton;
 import insomnia.help.HelpLists;
 import insomnia.implem.kv.data.KVLabel;
+import insomnia.implem.kv.data.KVLabels;
 import insomnia.implem.kv.data.KVPath;
 import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
@@ -49,7 +50,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return new PRegexFSAFactory<KVValue, KVLabel>((IPRegexElement) obj);
+						return new PRegexFSAFactory<KVValue, KVLabel>((IPRegexElement) obj, KVLabels.getFactory());
 					}
 
 				} }, //
@@ -59,7 +60,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return new PRegexFSAFactory<KVValue, KVLabel>((IPRegexElement) obj).mustBeSync(true);
+						return new PRegexFSAFactory<KVValue, KVLabel>((IPRegexElement) obj, KVLabels.getFactory()).mustBeSync(true);
 					}
 
 				} } //
@@ -103,7 +104,7 @@ public class TestAutomaton
 		{
 			String         regex   = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
 			IPRegexElement rparsed = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
-			automaton = new PRegexFSAFactory<KVValue, KVLabel>(rparsed).mustBeSync(!true).newBuild();
+			automaton = new PRegexFSAFactory<KVValue, KVLabel>(rparsed, KVLabels.getFactory()).mustBeSync(!true).newBuild();
 		}
 
 		List<Object[]> complex()

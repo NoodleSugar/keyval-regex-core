@@ -14,6 +14,7 @@ import insomnia.data.INode;
 import insomnia.data.IPath;
 import insomnia.fsa.FSAException;
 import insomnia.fsa.IFSAutomaton;
+import insomnia.fsa.factory.IFSALabelFactory;
 import insomnia.implem.fsa.graphchunk.GCEdges;
 import insomnia.implem.fsa.graphchunk.GCStates;
 import insomnia.implem.fsa.graphchunk.GraphChunk;
@@ -147,9 +148,9 @@ public class PRegexFSAFactory<VAL, LBL>
 
 	private int currentId = 0;
 
-	public PRegexFSAFactory(IPRegexElement elements)// throws BuilderException
+	public PRegexFSAFactory(IPRegexElement elements, IFSALabelFactory<LBL> labelFactory)// throws BuilderException
 	{
-		automaton         = recursiveConstruct(elements);
+		automaton         = recursiveConstruct(elements, labelFactory);
 		modifiedAutomaton = automaton;
 
 		// Not set in recursiveConstruct()
@@ -328,7 +329,7 @@ public class PRegexFSAFactory<VAL, LBL>
 		return currentAutomaton;
 	}
 
-	private GChunk recursiveConstruct(IPRegexElement element)// throws BuilderException
+	private GChunk recursiveConstruct(IPRegexElement element, IFSALabelFactory<LBL> labelFactory)// throws BuilderException
 	{
 		GChunk currentAutomaton;
 
@@ -336,7 +337,7 @@ public class PRegexFSAFactory<VAL, LBL>
 		{
 		case KEY:
 			Key key = (Key) element;
-			currentAutomaton = oneEdge(GCEdges.createStringEq((key.getLabel())));
+			currentAutomaton = oneEdge(GCEdges.createEq(labelFactory.create(key.getLabel())));
 			break;
 
 		case REGEX:
@@ -357,7 +358,7 @@ public class PRegexFSAFactory<VAL, LBL>
 
 			for (IPRegexElement ie : orElement.getElements())
 			{
-				GChunk gc = recursiveConstruct(ie);
+				GChunk gc = recursiveConstruct(ie, labelFactory);
 
 				if (gc.getNbParentEdges(gc.getStart()) > 0)
 					gc.prependEdge(gc.addVertex(), GCEdges.createEpsilon());
@@ -377,10 +378,10 @@ public class PRegexFSAFactory<VAL, LBL>
 			Sequence me = (Sequence) element;
 
 			Iterator<IPRegexElement> iterator = me.getElements().iterator();
-			currentAutomaton = recursiveConstruct(iterator.next());
+			currentAutomaton = recursiveConstruct(iterator.next(), labelFactory);
 
 			while (iterator.hasNext())
-				currentAutomaton.concat(recursiveConstruct(iterator.next()));
+				currentAutomaton.concat(recursiveConstruct(iterator.next(), labelFactory));
 			break;
 
 		default:
