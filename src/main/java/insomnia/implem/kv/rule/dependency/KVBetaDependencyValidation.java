@@ -12,7 +12,6 @@ import insomnia.rule.dependency.IDependency;
 import insomnia.rule.dependency.IDependencyCondition;
 import insomnia.rule.dependency.condition.VocabularyBetaCondition;
 import insomnia.unifier.IPathUnifier;
-import insomnia.unifier.PathUnifiers;
 
 public class KVBetaDependencyValidation extends AbstractBetaDependencyValidation<KVValue, KVLabel>
 {
@@ -21,24 +20,18 @@ public class KVBetaDependencyValidation extends AbstractBetaDependencyValidation
 	{
 		super(Arrays.asList( //
 			new VocabularyBetaCondition<KVValue, KVLabel>() //
-		));
+		), KVPathUnifiers.get());
 	}
 
 	public KVBetaDependencyValidation(Collection<IDependencyCondition<KVValue, KVLabel>> conditions)
 	{
-		super(conditions);
+		super(conditions, KVPathUnifiers.get());
 	}
 
 	@Override
 	public void setConditions(Collection<IDependencyCondition<KVValue, KVLabel>> conditions)
 	{
 		super.setConditions(conditions);
-	}
-
-	@Override
-	protected PathUnifiers<KVValue, KVLabel> getPathUnifiers()
-	{
-		return KVPathUnifiers.get();
 	}
 
 	@Override

@@ -12,13 +12,18 @@ import insomnia.unifier.PathUnifiers;
 
 public abstract class AbstractAlphaDependencyValidation<V, E> extends AbstractDependencyValidation<V, E>
 {
+	private PathUnifiers<V, E> pathUnifiers;
 
-	public AbstractAlphaDependencyValidation(Collection<IDependencyCondition<V, E>> conditions)
+	public AbstractAlphaDependencyValidation(Collection<IDependencyCondition<V, E>> conditions, PathUnifiers<V, E> pathUnifiers)
 	{
 		super(conditions);
+		this.pathUnifiers = pathUnifiers;
 	}
 
-	abstract protected PathUnifiers<V, E> getPathUnifiers();
+	private PathUnifiers<V, E> getPathUnifiers()
+	{
+		return pathUnifiers;
+	}
 
 	abstract protected IDependency<V, E> newPathDependency(IPathUnifier<V, E> unifier, IPathRule<V, E> a, IPathRule<V, E> b);
 
