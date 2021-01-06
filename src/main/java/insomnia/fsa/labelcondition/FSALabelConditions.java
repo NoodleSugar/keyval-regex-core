@@ -137,18 +137,6 @@ public final class FSALabelConditions
 		};
 	}
 
-	public static <LBL> IFSALabelCondition<LBL> createStrEq(String str)
-	{
-		return new AbstractLabelCondition<LBL>(str)
-		{
-			@Override
-			public boolean test(LBL element)
-			{
-				return element.toString().equals(str);
-			}
-		};
-	}
-
 	public static <LBL> IFSALabelCondition<LBL> createRegex(String regex)
 	{
 		Pattern pattern = Pattern.compile(regex);

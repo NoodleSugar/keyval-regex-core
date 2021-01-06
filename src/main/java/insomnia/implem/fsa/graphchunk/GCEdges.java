@@ -5,9 +5,6 @@ import java.util.Optional;
 
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.labelcondition.FSALabelConditions;
-import insomnia.implem.kv.data.KVLabel;
-import insomnia.implem.kv.data.KVLabels;
-import insomnia.implem.kv.data.KVValue;
 
 public final class GCEdges
 {
@@ -73,20 +70,6 @@ public final class GCEdges
 		return ((GCEdge<LBL>) src).copy();
 	}
 
-	public static IGCEdge<KVLabel> createFromKVValue(KVValue value)
-	{
-		switch (value.getType())
-		{
-		case NUMBER:
-			return createNumber(value.getNumber());
-		case STRING:
-			return createEq(KVLabels.create(value.getString()));
-		case NULL:
-		default:
-			return createEpsilon();
-		}
-	}
-
 	public static <LBL> IGCEdge<LBL> createEpsilon()
 	{
 		return new GCEdge<>(FSALabelConditions.epsilonCondition());
@@ -110,32 +93,9 @@ public final class GCEdges
 		};
 	}
 
-	public static <LBL> IGCEdge<LBL> createStringEq(String str)
-	{
-		return new GCEdge<LBL>(FSALabelConditions.createStrEq(str))
-		{
-			@Override
-			public Optional<String> getLabelAsString()
-			{
-				return Optional.of(str);
-			}
-
-			@Override
-			public IGCEdge<LBL> copy()
-			{
-				return createStringEq(str);
-			}
-		};
-	}
-
 	public static <LBL> IGCEdge<LBL> createRegex(String regex)
 	{
 		return new GCEdge<>(FSALabelConditions.createRegex(regex));
-	}
-
-	public static <LBL> IGCEdge<LBL> createNumber(Number nb)
-	{
-		return new GCEdge<>(FSALabelConditions.createStrEq(nb.toString()));
 	}
 
 	public static <LBL> IGCEdge<LBL> createAny()
