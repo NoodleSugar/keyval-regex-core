@@ -1,4 +1,4 @@
-package regex.automaton;
+package insomnia.implem.kv.pregex.fsa;
 
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;

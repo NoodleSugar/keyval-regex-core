@@ -1,4 +1,4 @@
-package json;
+package insomnia.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 

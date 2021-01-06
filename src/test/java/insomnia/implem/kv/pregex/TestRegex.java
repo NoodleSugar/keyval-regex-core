@@ -1,4 +1,4 @@
-package regex;
+package insomnia.implem.kv.pregex;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 

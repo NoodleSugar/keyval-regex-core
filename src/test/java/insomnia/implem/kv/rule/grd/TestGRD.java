@@ -1,4 +1,4 @@
-package rule.grd;
+package insomnia.implem.kv.rule.grd;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;

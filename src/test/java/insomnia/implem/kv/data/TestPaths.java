@@ -1,4 +1,4 @@
-package rule;
+package insomnia.implem.kv.data;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
