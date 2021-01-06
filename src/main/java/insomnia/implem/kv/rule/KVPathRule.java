@@ -82,18 +82,6 @@ public class KVPathRule implements IPathRule<KVValue, KVLabel>
 	}
 
 	@Override
-	public boolean isRooted()
-	{
-		return body.isRooted();
-	}
-
-	@Override
-	public boolean isTerminal()
-	{
-		return body.isTerminal();
-	}
-
-	@Override
 	public boolean isExistential()
 	{
 		return isExistential;
