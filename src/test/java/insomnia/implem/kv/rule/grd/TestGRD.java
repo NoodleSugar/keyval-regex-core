@@ -18,7 +18,6 @@ import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.rule.KVPathRule;
 import insomnia.implem.kv.rule.dependency.KVAlphaDependencyValidation;
-import insomnia.implem.kv.rule.grd.KVGRDFactory;
 import insomnia.lib.help.HelpLists;
 import insomnia.rule.IRule;
 import insomnia.rule.dependency.IDependency;
@@ -58,7 +57,7 @@ public class TestGRD<E, V>
 		// =====================================================================
 
 		// =====================================================================
-		a = KVPathRule.create(".a", "b.a");
+		a = KVPathRule.create(".a", ".b.a");
 		ret.add(new Object[] { //
 				new Object[] { a }, //
 				new Object[][] {}, //
@@ -70,7 +69,7 @@ public class TestGRD<E, V>
 				new Object[][] { { a, a } }, //
 		});
 		// =====================================================================
-		a = KVPathRule.create(".a", "a.b");
+		a = KVPathRule.create(".a", ".a.b");
 		ret.add(new Object[] { //
 				new Object[] { a }, //
 				new Object[][] { { a, a } }, //
