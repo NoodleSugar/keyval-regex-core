@@ -152,7 +152,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 //			for(IFSAState<LBL,VAL> s : states)
 //				((State<LBL,VAL>)s).id = i++;
 
-		return builderFSAFactory.get( //
+		return builderFSAFactory.create( //
 			states, rooted, terminals, initials, finals, //
 			edges, //
 			automaton.getProperties(), //
