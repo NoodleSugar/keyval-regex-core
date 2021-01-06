@@ -249,7 +249,7 @@ public class PRegexFSAFactory<VAL, LBL>
 		return GCStates.create(nextStateId());
 	}
 
-	public IFSAutomaton<VAL, LBL> newBuild() throws FSAException
+	public IFSAutomaton<VAL, LBL> create() throws FSAException
 	{
 		AbstractFSA<VAL, LBL> fsa = (AbstractFSA<VAL, LBL>) new PRegexFSABuilder<VAL, LBL>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
 		return fsa;

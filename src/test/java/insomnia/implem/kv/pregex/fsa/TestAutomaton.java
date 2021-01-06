@@ -83,12 +83,12 @@ public class TestAutomaton
 	private static IFSAutomaton<KVValue, KVLabel> parse(String regex, Function<IPRegexElement, PRegexFSAFactory<KVValue, KVLabel>> automatonFactoryProvider, KVValue value) throws IOException, ParseException, FSAException
 	{
 		IPRegexElement rparsed = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()), value);
-		return automatonFactoryProvider.apply(rparsed).newBuild();
+		return automatonFactoryProvider.apply(rparsed).create();
 	}
 
 	private static IFSAutomaton<KVValue, KVLabel> automatonFromPath(KVPath path) throws FSAException
 	{
-		return new PRegexFSAFactory<>(path).newBuild();
+		return new PRegexFSAFactory<>(path).create();
 	}
 
 	// =========================================================================
@@ -104,7 +104,7 @@ public class TestAutomaton
 		{
 			String         regex   = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
 			IPRegexElement rparsed = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
-			automaton = new PRegexFSAFactory<KVValue, KVLabel>(rparsed, KVLabels.getFactory()).mustBeSync(!true).newBuild();
+			automaton = new PRegexFSAFactory<KVValue, KVLabel>(rparsed, KVLabels.getFactory()).mustBeSync(!true).create();
 		}
 
 		List<Object[]> complex()
@@ -399,7 +399,7 @@ public class TestAutomaton
 
 		IFSAutomaton<KVValue, KVLabel> automaton = new PRegexFSAFactory<KVValue, KVLabel>(KVPaths.pathFromString(regex)) //
 			.setGraphChunkModifier(modifier.getGraphChunkModifier(rules)) //
-			.newBuild();
+			.create();
 
 		assertEquals(expected, automaton.test(KVPaths.pathFromString(query)));
 	}
