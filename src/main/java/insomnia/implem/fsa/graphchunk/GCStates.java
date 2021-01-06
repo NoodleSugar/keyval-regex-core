@@ -92,12 +92,6 @@ public final class GCStates
 			return isTerminal;
 		}
 
-		@Override
-		public boolean test(VAL element)
-		{
-			return getValueCondition().test(element);
-		}
-
 		@SuppressWarnings("unchecked")
 		@Override
 		public boolean equals(Object obj)

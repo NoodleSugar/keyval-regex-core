@@ -1,7 +1,5 @@
 package insomnia.implem.fsa.graphchunk;
 
-import java.util.function.Predicate;
-
 import insomnia.fsa.IFSAValueCondition;
 
 /**
@@ -10,7 +8,7 @@ import insomnia.fsa.IFSAValueCondition;
  * 
  * @author zuri
  */
-public interface IGCState<VAL> extends Predicate<VAL>
+public interface IGCState<VAL>
 {
 	int getId();
 
@@ -26,7 +24,4 @@ public interface IGCState<VAL> extends Predicate<VAL>
 	boolean isTerminal();
 
 	IFSAValueCondition<VAL> getValueCondition();
-
-	@Override
-	boolean test(VAL t);
 }

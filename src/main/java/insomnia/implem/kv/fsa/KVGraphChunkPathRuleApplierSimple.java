@@ -132,7 +132,7 @@ public class KVGraphChunkPathRuleApplierSimple
 
 			bodyChunks.stream().filter((gc) -> {
 				IGCState<KVValue> endState = gc.getEnd();
-				return endState.isFinal() && endState.isTerminal() == rule.getBody().isTerminal() && endState.test(rule.getBody().getValue().orElse(null));
+				return endState.isFinal() && endState.isTerminal() == rule.getBody().isTerminal() && endState.getValueCondition().test(rule.getBody().getValue().orElse(null));
 			}).findFirst();
 
 			if (!bodyChunks.isEmpty())
