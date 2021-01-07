@@ -8,6 +8,7 @@ import insomnia.data.AbstractPath;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.IPath;
+import insomnia.implem.kv.data.KVNodes.KVNode;
 
 public class KVPath extends AbstractPath<KVValue, KVLabel>
 {
@@ -65,33 +66,38 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 	@Override
 	public List<KVEdge> getChildren(INode<KVValue, KVLabel> node)
 	{
-		assert (node instanceof KVPathNode);
-		KVPathNode kvnode = (KVPathNode) node;
+		assert (node instanceof KVNode);
+		KVNode kvnode = (KVNode) node;
 
-		if (kvnode.pos == nbLabels())
+		if (kvnode.getPos() == nbLabels())
 			return Collections.emptyList();
 
-		int     pos   = kvnode.pos;
-		KVValue value = (pos == nbLabels() - 1) ? getValue().orElse(null) : null;
-		return Collections.singletonList(new KVEdge(kvnode, new KVPathNode(pos + 1, value), getLabels().get(pos)));
+		int     pos        = kvnode.getPos();
+		boolean lastPos    = pos == nbLabels() - 1;
+		boolean isTerminal = lastPos && isTerminal();
+
+		Optional<KVValue> value = lastPos ? getValue() : Optional.empty();
+		return Collections.singletonList(new KVEdge(kvnode, KVNodes.create(pos + 1, false, isTerminal, value), getLabels().get(pos)));
 	}
 
 	@Override
 	public Optional<IEdge<KVValue, KVLabel>> getParent(INode<KVValue, KVLabel> node)
 	{
-		assert (node instanceof KVPathNode);
-		KVPathNode kvnode = (KVPathNode) node;
+		assert (node instanceof KVNode);
+		KVNode kvnode = (KVNode) node;
 
-		if (kvnode.pos == 0)
+		if (kvnode.getPos() == 0)
 			return Optional.empty();
 
-		int pos = kvnode.pos - 1;
-		return Optional.of(new KVEdge(new KVPathNode(pos, null), kvnode, getLabels().get(pos)));
+		int     pos      = kvnode.getPos() - 1;
+		boolean isRooted = pos == 0 && isRooted();
+		return Optional.of(new KVEdge(KVNodes.create(pos, isRooted, false, Optional.empty()), kvnode, getLabels().get(pos)));
 	}
 
 	@Override
 	public INode<KVValue, KVLabel> getRoot()
 	{
-		return new KVPathNode(0, null);
+		boolean isTerminal = isEmpty() && isTerminal();
+		return KVNodes.create(0, isRooted(), isTerminal, Optional.empty());
 	}
 }
