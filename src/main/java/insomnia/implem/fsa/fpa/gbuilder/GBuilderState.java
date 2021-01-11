@@ -1,6 +1,5 @@
 package insomnia.implem.fsa.fpa.gbuilder;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,17 +18,6 @@ public class GBuilderState<VAL, LBL> implements IGBuilderState<VAL, LBL>
 	{
 		this.id        = id;
 		this.valueCond = valueCondition;
-	}
-
-	@Override
-	public Collection<IGBuilderState<VAL, LBL>> getChilds()
-	{
-		Collection<IGBuilderState<VAL, LBL>> ret = new ArrayList<>(childs.size());
-
-		for (IFSAEdge<VAL, LBL> edge : childs)
-			ret.add((IGBuilderState<VAL, LBL>) edge.getChild());
-
-		return ret;
 	}
 
 	@Override
