@@ -134,6 +134,12 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	}
 
 	@Override
+	public boolean isEmpty()
+	{
+		return root.children.isEmpty();
+	}
+
+	@Override
 	public void setRooted(boolean isRooted)
 	{
 		root.isRooted = isRooted;

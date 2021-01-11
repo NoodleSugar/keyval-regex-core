@@ -54,4 +54,11 @@ public class KVTree<V, E> extends SimpleDirectedGraph<V, E> implements ITree<V, 
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public boolean isEmpty()
+	{
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

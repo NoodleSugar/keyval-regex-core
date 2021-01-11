@@ -50,14 +50,6 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	int size();
 
 	/**
-	 * No edges are present.
-	 * It may have the root.
-	 * 
-	 * @return
-	 */
-	boolean isEmpty();
-
-	/**
 	 * The leaf must be a true leaf.
 	 * The value must not be necessary set.
 	 */

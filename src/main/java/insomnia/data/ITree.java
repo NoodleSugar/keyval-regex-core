@@ -6,6 +6,10 @@ import java.util.Optional;
 
 /**
  * Representation of an immutable Tree.
+ * A tree possesses nodes and edges that may be shared between some other trees.
+ * Thus, that is the tree that is in charged of obtaining informations about nodes (eg. getChildren()) in its context.
+ * <br>
+ * <em>A tree must have at least a root node.</em>
  * 
  * @author zuri
  * @param <VAL> Type of the values from nodes.
@@ -14,9 +18,14 @@ import java.util.Optional;
 public interface ITree<VAL, LBL>
 {
 	/**
-	 * @return The root of the tree or null if absent.
+	 * @return The root of the tree.
 	 */
 	INode<VAL, LBL> getRoot();
+
+	/**
+	 * No edges are present.
+	 */
+	boolean isEmpty();
 
 	/**
 	 * The root must be a true root.

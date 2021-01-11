@@ -63,6 +63,12 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 	}
 
 	@Override
+	public boolean isEmpty()
+	{
+		return childrenOf.isEmpty();
+	}
+
+	@Override
 	public boolean isRooted()
 	{
 		return root.isRooted();
