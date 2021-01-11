@@ -1,10 +1,10 @@
-package insomnia.implem.fsa;
+package insomnia.implem.fsa.valuecondition;
 
 import insomnia.fsa.IFSAValueCondition;
 
-public final class FSAValues
+public final class FSAValueConditions
 {
-	private FSAValues()
+	private FSAValueConditions()
 	{
 		throw new UnsupportedOperationException();
 	}
