@@ -10,9 +10,9 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import insomnia.data.IPath;
-import insomnia.implem.fsa.graphchunk.GraphChunk;
-import insomnia.implem.fsa.graphchunk.IGCEdge;
-import insomnia.implem.fsa.graphchunk.IGCState;
+import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
+import insomnia.implem.fsa.fpa.graphchunk.IGCEdge;
+import insomnia.implem.fsa.fpa.graphchunk.IGCState;
 
 public final class KVPaths
 {
