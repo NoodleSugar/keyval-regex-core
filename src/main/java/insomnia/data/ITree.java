@@ -23,7 +23,7 @@ public interface ITree<VAL, LBL>
 	 */
 	boolean isRooted();
 
-	List<? extends IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node);
+	List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node);
 
 	Optional<IEdge<VAL, LBL>> getParent(INode<VAL, LBL> node);
 

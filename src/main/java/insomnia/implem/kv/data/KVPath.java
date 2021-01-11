@@ -64,7 +64,7 @@ public class KVPath extends AbstractPath<KVValue, KVLabel>
 	// =========================================================================
 
 	@Override
-	public List<KVEdge> getChildren(INode<KVValue, KVLabel> node)
+	public List<IEdge<KVValue, KVLabel>> getChildren(INode<KVValue, KVLabel> node)
 	{
 		assert (node instanceof KVNode);
 		KVNode kvnode = (KVNode) node;

@@ -69,7 +69,7 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 	}
 
 	@Override
-	public List<? extends IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
+	public List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
 	{
 		return childrenOf.getOrDefault(node, Collections.emptyList());
 	}

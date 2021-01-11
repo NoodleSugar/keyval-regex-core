@@ -27,8 +27,8 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	{
 		private Optional<VAL> value;
 
-		Edge       parent   = null;
-		List<Edge> children = new ArrayList<>();
+		Edge                  parent   = null;
+		List<IEdge<VAL, LBL>> children = new ArrayList<>();
 
 		boolean isRooted   = false;
 		boolean isTerminal = false;
@@ -152,7 +152,7 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	}
 
 	@Override
-	public List<? extends IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
+	public List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
 	{
 		return ((Node) node).children;
 	}

@@ -35,7 +35,7 @@ public class KVTree<V, E> extends SimpleDirectedGraph<V, E> implements ITree<V, 
 	}
 
 	@Override
-	public List<? extends IEdge<V, E>> getChildren(INode<V, E> node)
+	public List<IEdge<V, E>> getChildren(INode<V, E> node)
 	{
 		// TODO Auto-generated method stub
 		return null;
