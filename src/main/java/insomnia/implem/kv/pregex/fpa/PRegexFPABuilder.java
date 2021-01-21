@@ -7,7 +7,6 @@ import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IFPAPath;
 import insomnia.fsa.fpa.IFPAProperties;
-import insomnia.fsa.fpa.algorithm.IGFPAValidation;
 import insomnia.fsa.fpa.factory.AbstractGFPABuilder;
 import insomnia.implem.fsa.fpa.gbuilder.AbstractGBuilderFPA;
 import insomnia.implem.fsa.fpa.gbuilder.GBuilder;
@@ -33,9 +32,9 @@ class PRegexFPABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		public AbstractGBuilderFPA<VAL, LBL> create()
 		{
 			if (properties.isSynchronous())
-				return new FSASync<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validation);
+				return new FSASync<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties);
 			else
-				return new FSAGeneral<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validation);
+				return new FSAGeneral<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties);
 		}
 	}
 
@@ -48,11 +47,10 @@ class PRegexFPABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 			Collection<IFSAState<VAL, LBL>> initialStates, //
 			Collection<IFSAState<VAL, LBL>> finalStates, //
 			Collection<IFSAEdge<VAL, LBL>> edges, //
-			IFPAProperties properties, //
-			IGFPAValidation<VAL, LBL> validator //
+			IFPAProperties properties //
 		)
 		{
-			super(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
+			super(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties);
 		}
 	}
 
@@ -65,11 +63,10 @@ class PRegexFPABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 			Collection<IFSAState<VAL, LBL>> initialStates, //
 			Collection<IFSAState<VAL, LBL>> finalStates, //
 			Collection<IFSAEdge<VAL, LBL>> edges, //
-			IFPAProperties properties, //
-			IGFPAValidation<VAL, LBL> validator //
+			IFPAProperties properties //
 		)
 		{
-			super(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
+			super(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties);
 		}
 
 		@Override
@@ -88,11 +85,10 @@ class PRegexFPABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 			Collection<IFSAState<VAL, LBL>> initialStates, //
 			Collection<IFSAState<VAL, LBL>> finalStates, //
 			Collection<IFSAEdge<VAL, LBL>> edges, //
-			IFPAProperties properties, //
-			IGFPAValidation<VAL, LBL> validator //
+			IFPAProperties properties //
 		)
 		{
-			super(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
+			super(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties);
 		}
 
 		@Override

@@ -7,8 +7,6 @@ import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.IGFPA;
-import insomnia.fsa.fpa.algorithm.GFPAValidation;
-import insomnia.fsa.fpa.algorithm.IGFPAValidation;
 import insomnia.implem.fsa.fpa.FPAProperties;
 
 /**
@@ -25,8 +23,6 @@ public abstract class AbstractGFPABuilder<VAL, LBL, RET extends IGFPA<VAL, LBL>>
 
 	protected IFPAProperties properties;
 
-	protected IGFPAValidation<VAL, LBL> validation;
-
 	// ========================================================================
 
 	public AbstractGFPABuilder()
@@ -41,7 +37,6 @@ public abstract class AbstractGFPABuilder<VAL, LBL, RET extends IGFPA<VAL, LBL>>
 		states     = initialStates = finalStates = rootedStates = terminalStates = Collections.emptyList();
 		edges      = Collections.emptyList();
 		properties = new FPAProperties(false, false);
-		validation = new GFPAValidation<>();
 		return this;
 	}
 
@@ -76,13 +71,6 @@ public abstract class AbstractGFPABuilder<VAL, LBL, RET extends IGFPA<VAL, LBL>>
 		return this;
 	}
 
-	@Override
-	public AbstractGFPABuilder<VAL, LBL, RET> setValidation(IGFPAValidation<VAL, LBL> validation)
-	{
-		this.validation = validation;
-		return this;
-	}
-
 	// ========================================================================
 
 	@Override
@@ -96,14 +84,13 @@ public abstract class AbstractGFPABuilder<VAL, LBL, RET extends IGFPA<VAL, LBL>>
 		Collection<IFSAState<VAL, LBL>> initialStates, //
 		Collection<IFSAState<VAL, LBL>> finalStates, //
 		Collection<IFSAEdge<VAL, LBL>> edges, //
-		IFPAProperties properties, //
-		IGFPAValidation<VAL, LBL> validation)
+		IFPAProperties properties //
+	)
 	{
 		return clear() //
 			.set(terminalStates, initialStates, finalStates, edges) //
 			.setProperties(properties) //
 			.setRootedStates(rootedStates).setTerminalStates(terminalStates) //
-			.setValidation(validation) //
 			.create();
 	}
 }

@@ -8,18 +8,14 @@ import java.util.List;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.AbstractGFPA;
-import insomnia.fsa.fpa.IFPAPath;
 import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.IGFPA;
-import insomnia.fsa.fpa.algorithm.IGFPAValidation;
 
 public abstract class AbstractGBuilderFPA<VAL, LBL> //
 	extends AbstractGFPA<VAL, LBL> //
 	implements IGFPA<VAL, LBL>
 {
 	private IFPAProperties properties;
-
-	private IGFPAValidation<VAL, LBL> validator;
 
 	private Collection<IFSAState<VAL, LBL>> rootedStates;
 	private Collection<IFSAState<VAL, LBL>> terminalStates;
@@ -36,8 +32,7 @@ public abstract class AbstractGBuilderFPA<VAL, LBL> //
 		Collection<IFSAState<VAL, LBL>> initialStates, //
 		Collection<IFSAState<VAL, LBL>> finalStates, //
 		Collection<IFSAEdge<VAL, LBL>> edges, //
-		IFPAProperties properties, //
-		IGFPAValidation<VAL, LBL> validator //
+		IFPAProperties properties //
 	)
 	{
 		this.edges         = edges;
@@ -45,7 +40,6 @@ public abstract class AbstractGBuilderFPA<VAL, LBL> //
 		this.initialStates = initialStates;
 		this.finalStates   = finalStates;
 		this.properties    = properties;
-		this.validator     = validator;
 
 		this.rootedStates   = rootedStates;
 		this.terminalStates = terminalStates;
@@ -61,12 +55,6 @@ public abstract class AbstractGBuilderFPA<VAL, LBL> //
 	public boolean isTerminal(IFSAState<VAL, LBL> state)
 	{
 		return terminalStates.contains(state);
-	}
-
-	@Override
-	public boolean test(IFPAPath<VAL, LBL> element)
-	{
-		return validator.test(this, element);
 	}
 
 	@Override

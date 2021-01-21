@@ -19,6 +19,15 @@ public final class GFPAOp
 
 	// =========================================================================
 
+	public static <VAL, LBL> boolean test(IGFPA<VAL, LBL> automaton, IFPAPath<VAL, LBL> element)
+	{
+		Collection<IFSAState<VAL, LBL>> states = automaton.getInitialStates();
+		states = automaton.nextValidStates(states, element);
+		return !Collections.disjoint(states, automaton.getFinalStates());
+	}
+
+	// =========================================================================
+
 	private static <VAL, LBL> void cleanBadStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, IFPAPath<VAL, LBL> theElement)
 	{
 		if (!theElement.isTerminal())

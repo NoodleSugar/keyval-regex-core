@@ -31,4 +31,10 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	{
 		return epsilonClosure(Collections.singletonList(state));
 	}
+
+	@Override
+	public boolean test(IFPAPath<VAL, LBL> element)
+	{
+		return GFPAOp.test(this, element);
+	}
 }

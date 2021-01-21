@@ -6,7 +6,6 @@ import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.IGFPA;
-import insomnia.fsa.fpa.algorithm.IGFPAValidation;
 
 /**
  * Builder/Factory of Graph automaton.
@@ -32,8 +31,6 @@ public interface IGFPABuilder<VAL, LBL>
 
 	IGFPABuilder<VAL, LBL> setTerminalStates(Collection<IFSAState<VAL, LBL>> terminalStates);
 
-	IGFPABuilder<VAL, LBL> setValidation(IGFPAValidation<VAL, LBL> validation);
-
 	// ========================================================================
 
 	IGFPA<VAL, LBL> create();
@@ -45,6 +42,6 @@ public interface IGFPABuilder<VAL, LBL>
 		Collection<IFSAState<VAL, LBL>> initialStates, //
 		Collection<IFSAState<VAL, LBL>> finalStates, //
 		Collection<IFSAEdge<VAL, LBL>> edges, //
-		IFPAProperties properties, //
-		IGFPAValidation<VAL, LBL> validation);
+		IFPAProperties properties //
+	);
 }

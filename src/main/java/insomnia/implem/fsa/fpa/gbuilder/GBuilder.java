@@ -15,7 +15,6 @@ import insomnia.fsa.IFSAState;
 import insomnia.fsa.exception.FSAException;
 import insomnia.fsa.fpa.IFPA;
 import insomnia.fsa.fpa.IGFPA;
-import insomnia.fsa.fpa.algorithm.GFPAValidation;
 import insomnia.fsa.fpa.factory.IGFPABuilder;
 import insomnia.implem.fsa.edge.FSAEdge;
 import insomnia.implem.fsa.fpa.graphchunk.GCEdges;
@@ -156,8 +155,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		return builderFSAFactory.create( //
 			states, rooted, terminals, initials, finals, //
 			edges, //
-			automaton.getProperties(), //
-			new GFPAValidation<VAL, LBL>() //
+			automaton.getProperties() //
 		);
 	}
 
