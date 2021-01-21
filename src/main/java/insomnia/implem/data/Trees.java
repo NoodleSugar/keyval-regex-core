@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
+import insomnia.implem.data.factory.TreeBuilder;
 
 public final class Trees
 {
@@ -17,7 +18,12 @@ public final class Trees
 
 	// =========================================================================
 
-	public static <VAL, LBL> ITree<VAL, LBL> construct(ITree<VAL, LBL> src)
+	/**
+	 * Create a new tree copying informations from 'src'.
+	 * 
+	 * @see TreeBuilder
+	 */
+	public static <VAL, LBL> ITree<VAL, LBL> create(ITree<VAL, LBL> src)
 	{
 		return new Tree<VAL, LBL>(src);
 	}
