@@ -1,5 +1,6 @@
 package insomnia.implem.data;
 
+import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -11,7 +12,7 @@ public final class Trees
 {
 	private Trees()
 	{
-
+		throw new AssertionError();
 	}
 
 	// =========================================================================
@@ -19,6 +20,13 @@ public final class Trees
 	public static <VAL, LBL> ITree<VAL, LBL> construct(ITree<VAL, LBL> src)
 	{
 		return new Tree<VAL, LBL>(src);
+	}
+
+	// =========================================================================
+
+	public static <RVAL, RLBL, VAL, LBL> ITree<RVAL, RLBL> map(ITree<VAL, LBL> src, Function<VAL, RVAL> fmapVal, Function<LBL, RLBL> fmapLabel)
+	{
+		return Tree.map(src, fmapVal, fmapLabel);
 	}
 
 	// =========================================================================
