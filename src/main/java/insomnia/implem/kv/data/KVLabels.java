@@ -6,7 +6,10 @@ public final class KVLabels
 {
 	private KVLabels()
 	{
+		throw new AssertionError();
 	}
+
+	// =========================================================================
 
 	public static IFSALabelFactory<KVLabel> getFactory()
 	{

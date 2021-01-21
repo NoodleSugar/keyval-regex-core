@@ -1,10 +1,10 @@
 package insomnia.implem.kv.data;
 
-public class KVLabel
+public final class KVLabel
 {
 	private String label;
 
-	public KVLabel(String string)
+	KVLabel(String string)
 	{
 		label = string;
 	}
