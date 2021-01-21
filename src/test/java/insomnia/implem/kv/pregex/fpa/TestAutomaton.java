@@ -24,7 +24,6 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.fsa.exception.FSAException;
 import insomnia.fsa.fpa.IFPA;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVLabels;
@@ -75,18 +74,18 @@ public class TestAutomaton
 		return merged;
 	}
 
-	private static IFPA<KVValue, KVLabel> parse(String regex, Function<IPRegexElement, PRegexFPAFactory<KVValue, KVLabel>> automatonFactoryProvider) throws IOException, ParseException, FSAException
+	private static IFPA<KVValue, KVLabel> parse(String regex, Function<IPRegexElement, PRegexFPAFactory<KVValue, KVLabel>> automatonFactoryProvider) throws IOException, ParseException
 	{
 		return parse(regex, automatonFactoryProvider, null);
 	}
 
-	private static IFPA<KVValue, KVLabel> parse(String regex, Function<IPRegexElement, PRegexFPAFactory<KVValue, KVLabel>> automatonFactoryProvider, KVValue value) throws IOException, ParseException, FSAException
+	private static IFPA<KVValue, KVLabel> parse(String regex, Function<IPRegexElement, PRegexFPAFactory<KVValue, KVLabel>> automatonFactoryProvider, KVValue value) throws IOException, ParseException
 	{
 		IPRegexElement rparsed = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()), value);
 		return automatonFactoryProvider.apply(rparsed).create();
 	}
 
-	private static IFPA<KVValue, KVLabel> automatonFromPath(KVPath path) throws FSAException
+	private static IFPA<KVValue, KVLabel> automatonFromPath(KVPath path)
 	{
 		return new PRegexFPAFactory<>(path).create();
 	}
@@ -100,7 +99,7 @@ public class TestAutomaton
 		IFPA<KVValue, KVLabel> automaton;
 
 		@BeforeAll
-		void setup() throws IOException, ParseException, FSAException
+		void setup() throws IOException, ParseException
 		{
 			String         regex   = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
 			IPRegexElement rparsed = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
@@ -205,7 +204,7 @@ public class TestAutomaton
 			IFPA<KVValue, KVLabel> automaton = parse(regex, fprovider);
 			assertEquals(match, automaton.test(KVPaths.pathFromString(pathSubject)));
 		}
-		catch (IOException | ParseException | FSAException e)
+		catch (IOException | ParseException e)
 		{
 			fail(e.getMessage());
 		}
@@ -232,7 +231,7 @@ public class TestAutomaton
 			IFPA<KVValue, KVLabel> automaton = parse(regex, fprovider, rvalue);
 			assertEquals(match, automaton.test(subject));
 		}
-		catch (IOException | ParseException | FSAException e)
+		catch (IOException | ParseException e)
 		{
 			fail(e.getMessage());
 		}
@@ -282,15 +281,8 @@ public class TestAutomaton
 	@MethodSource
 	void matchPath(KVPath path, KVPath query, boolean match)
 	{
-		try
-		{
-			IFPA<KVValue, KVLabel> automaton = automatonFromPath(path);
-			assertEquals(match, automaton.test(query));
-		}
-		catch (FSAException e)
-		{
-			fail(e.getMessage());
-		}
+		IFPA<KVValue, KVLabel> automaton = automatonFromPath(path);
+		assertEquals(match, automaton.test(query));
 	}
 
 	// =========================================================================
@@ -393,7 +385,7 @@ public class TestAutomaton
 
 	@ParameterizedTest
 	@MethodSource
-	void pathRewriting(Collection<IRule<KVValue, KVLabel>> rules, int maxDepth, String regex, String query, boolean expected) throws IOException, ParseException, FSAException
+	void pathRewriting(Collection<IRule<KVValue, KVLabel>> rules, int maxDepth, String regex, String query, boolean expected) throws IOException, ParseException
 	{
 		KVGraphChunkPathRuleApplierSimple modifier = new KVGraphChunkPathRuleApplierSimple(maxDepth);
 

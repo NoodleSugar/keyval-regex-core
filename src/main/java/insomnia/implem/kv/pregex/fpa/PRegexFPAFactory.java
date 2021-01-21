@@ -12,7 +12,6 @@ import org.jgrapht.Graphs;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.IPath;
-import insomnia.fsa.exception.FSAException;
 import insomnia.fsa.factory.IFSALabelFactory;
 import insomnia.fsa.fpa.IFPA;
 import insomnia.implem.fsa.fpa.graphchunk.GCEdges;
@@ -28,8 +27,8 @@ import insomnia.implem.kv.pregex.PRegexElements.Key;
 import insomnia.implem.kv.pregex.PRegexElements.Regex;
 import insomnia.implem.kv.pregex.PRegexElements.Sequence;
 import insomnia.implem.kv.pregex.PRegexElements.Value;
-import insomnia.implem.kv.pregex.fpa.PRegexFPABuilder.AbstractFSA;
 import insomnia.implem.kv.pregex.Quantifier;
+import insomnia.implem.kv.pregex.fpa.PRegexFPABuilder.AbstractFSA;
 
 /**
  * The factory to create an automaton from a parsed regex.
@@ -249,7 +248,7 @@ public class PRegexFPAFactory<VAL, LBL>
 		return GCStates.create(nextStateId());
 	}
 
-	public IFPA<VAL, LBL> create() throws FSAException
+	public IFPA<VAL, LBL> create()
 	{
 		AbstractFSA<VAL, LBL> fsa = (AbstractFSA<VAL, LBL>) new PRegexFPABuilder<VAL, LBL>(modifiedAutomaton).mustBeSync(mustBeSync).newBuild();
 		return fsa;

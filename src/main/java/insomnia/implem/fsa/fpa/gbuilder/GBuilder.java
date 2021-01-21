@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.exception.FSAException;
 import insomnia.fsa.fpa.IFPA;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fpa.factory.IGFPABuilder;
@@ -116,7 +115,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 	// =========================================================================
 	// Build functions
 
-	private FSAEdge<VAL, LBL> makeEdge(IGCEdge<LBL> edgeData, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child) throws FSAException
+	private FSAEdge<VAL, LBL> makeEdge(IGCEdge<LBL> edgeData, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child)
 	{
 		FSAEdge<VAL, LBL> ret;
 		ret = new FSAEdge<VAL, LBL>(parent, child, edgeData.getLabelCondition());
@@ -128,7 +127,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		return ret;
 	}
 
-	public IFPA<VAL, LBL> newBuild() throws FSAException
+	public IFPA<VAL, LBL> newBuild()
 	{
 		states    = new HashSet<>(automaton.getNbStates());
 		initials  = new HashSet<>();
@@ -159,7 +158,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		);
 	}
 
-	private STATE build_addState(IGCState<VAL> fcurrent) throws FSAException
+	private STATE build_addState(IGCState<VAL> fcurrent)
 	{
 		STATE newAState;
 
@@ -174,7 +173,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		return newAState;
 	}
 
-	private void build_addEdge(IGCEdge<LBL> edgeData, STATE acurrentState, STATE newAState) throws FSAException
+	private void build_addEdge(IGCEdge<LBL> edgeData, STATE acurrentState, STATE newAState)
 	{
 		IFSAEdge<VAL, LBL> newAEdge = makeEdge(edgeData, acurrentState, newAState);
 
@@ -185,7 +184,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		acurrentState.childs.add(newAEdge);
 	}
 
-	private void build(IGCState<VAL> fstate, STATE acurrentState) throws FSAException
+	private void build(IGCState<VAL> fstate, STATE acurrentState)
 	{
 		processedStates.add(fstate);
 		Collection<IGCEdge<LBL>> fedges = automaton.getEdges(fstate);
@@ -199,7 +198,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		}
 	}
 
-	private STATE build_addStateSync(IGCState<VAL> fcurrent) throws FSAException
+	private STATE build_addStateSync(IGCState<VAL> fcurrent)
 	{
 		STATE newAState;
 
@@ -214,7 +213,7 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 		return newAState;
 	}
 
-	private void buildSync(IGCState<VAL> fstate, STATE acurrentState) throws FSAException
+	private void buildSync(IGCState<VAL> fstate, STATE acurrentState)
 	{
 		processedStates.add(fstate);
 		Collection<IGCEdge<LBL>> fedges = automaton.getEdges(fstate);
