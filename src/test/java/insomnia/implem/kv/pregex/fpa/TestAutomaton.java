@@ -49,7 +49,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return new PRegexFPAFactory<KVValue, KVLabel>((IPRegexElement) obj, KVLabels.getFactory());
+						return new PRegexFPAFactory<KVValue, KVLabel>((IPRegexElement) obj, KVLabels.getFSALabelFactory());
 					}
 
 				} }, //
@@ -59,7 +59,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return new PRegexFPAFactory<KVValue, KVLabel>((IPRegexElement) obj, KVLabels.getFactory()).mustBeSync(true);
+						return new PRegexFPAFactory<KVValue, KVLabel>((IPRegexElement) obj, KVLabels.getFSALabelFactory()).mustBeSync(true);
 					}
 
 				} } //
@@ -103,7 +103,7 @@ public class TestAutomaton
 		{
 			String         regex   = "a*.b?.c+|(d.(e|f){2,5}).~r*e?g+~";
 			IPRegexElement rparsed = new PRegexParser().parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
-			automaton = new PRegexFPAFactory<KVValue, KVLabel>(rparsed, KVLabels.getFactory()).mustBeSync(!true).create();
+			automaton = new PRegexFPAFactory<KVValue, KVLabel>(rparsed, KVLabels.getFSALabelFactory()).mustBeSync(!true).create();
 		}
 
 		List<Object[]> complex()

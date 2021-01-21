@@ -11,7 +11,7 @@ public final class KVLabels
 
 	// =========================================================================
 
-	public static IFSALabelFactory<KVLabel> getFactory()
+	public static IFSALabelFactory<KVLabel> getFSALabelFactory()
 	{
 		return new IFSALabelFactory<KVLabel>()
 		{
