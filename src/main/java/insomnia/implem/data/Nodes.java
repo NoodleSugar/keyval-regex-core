@@ -27,6 +27,18 @@ public final class Nodes
 		{
 			return value;
 		}
+
+		@Override
+		public String toString()
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.append(Integer.toHexString(System.identityHashCode(this)));
+
+			if (value.isPresent())
+				sb.append("(").append(value.get()).append(")");
+
+			return sb.toString();
+		}
 	}
 
 	// =========================================================================
