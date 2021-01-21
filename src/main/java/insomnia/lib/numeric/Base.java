@@ -33,4 +33,25 @@ public final class Base
 				break;
 		}
 	}
+
+	int max = -1;
+
+	public int max()
+	{
+		if (max != -1)
+			return max;
+		if (base.length == 0)
+		{
+			max = 0;
+			return max;
+		}
+
+		int pos = base.length - 1;
+		max = base[pos];
+
+		while (pos-- != 0)
+			max *= base[pos];
+
+		return max;
+	}
 }
