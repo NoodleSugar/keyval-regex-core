@@ -4,7 +4,7 @@ import java.security.InvalidParameterException;
 import java.util.Optional;
 
 import insomnia.fsa.IFSAValueCondition;
-import insomnia.implem.fsa.FSAValues;
+import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 
 public final class GCStates
 {
@@ -166,9 +166,9 @@ public final class GCStates
 	private static <VAL> IGCState<VAL> createNullableValueEq(int id, boolean isRooted, boolean isTerminal, boolean isInitial, boolean isFinal, VAL value)
 	{
 		if (null == value)
-			return create(id, isRooted, isTerminal, isInitial, isFinal, FSAValues.createAny());
+			return create(id, isRooted, isTerminal, isInitial, isFinal, FSAValueConditions.createAny());
 
-		return create(id, isRooted, isTerminal, isInitial, isFinal, FSAValues.createEq(value));
+		return create(id, isRooted, isTerminal, isInitial, isFinal, FSAValueConditions.createEq(value));
 
 	}
 
