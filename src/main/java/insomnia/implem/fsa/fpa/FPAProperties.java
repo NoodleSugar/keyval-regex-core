@@ -2,7 +2,7 @@ package insomnia.implem.fsa.fpa;
 
 import insomnia.fsa.fpa.IFPAProperties;
 
-public class FPAProperties implements IFPAProperties
+public final class FPAProperties implements IFPAProperties
 {
 	boolean isDeterministic = true;
 	boolean isSynchronous   = true;
