@@ -4,7 +4,7 @@ import insomnia.data.ITree;
 
 public interface ITreeBuilder<VAL, LBL> extends ITree<VAL, LBL>
 {
-	void setRooted(boolean rooted);
+	ITreeBuilder<VAL, LBL> setRooted(boolean rooted);
 
 	@Override
 	boolean isRooted();

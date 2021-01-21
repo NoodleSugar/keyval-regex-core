@@ -140,9 +140,10 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	}
 
 	@Override
-	public void setRooted(boolean isRooted)
+	public ITreeBuilder<VAL, LBL> setRooted(boolean isRooted)
 	{
 		root.isRooted = isRooted;
+		return this;
 	}
 
 	@Override
