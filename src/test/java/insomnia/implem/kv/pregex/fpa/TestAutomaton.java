@@ -31,10 +31,10 @@ import insomnia.implem.kv.data.KVLabels;
 import insomnia.implem.kv.data.KVPath;
 import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
+import insomnia.implem.kv.data.KVValues;
 import insomnia.implem.kv.fsa.fpa.KVGraphChunkPathRuleApplierSimple;
 import insomnia.implem.kv.pregex.IPRegexElement;
 import insomnia.implem.kv.pregex.PRegexParser;
-import insomnia.implem.kv.pregex.fpa.PRegexFPAFactory;
 import insomnia.implem.kv.rule.KVPathRule;
 import insomnia.lib.help.HelpLists;
 import insomnia.rule.IRule;
@@ -216,9 +216,9 @@ public class TestAutomaton
 	static List<Object[]> matchValue()
 	{
 		List<Object[]> a = Arrays.asList(new Object[][] { //
-				{ "a.b", new KVValue(15), KVPaths.pathFromString("a.b", new KVValue(15)), true }, //
-				{ "a.b", new KVValue(15), KVPaths.pathFromString("a.b", new KVValue(16)), false }, //
-				{ "a.b", new KVValue(15), KVPaths.pathFromString("a.b"), false }, //
+				{ "a.b", KVValues.create(15), KVPaths.pathFromString("a.b", KVValues.create(15)), true }, //
+				{ "a.b", KVValues.create(15), KVPaths.pathFromString("a.b", KVValues.create(16)), false }, //
+				{ "a.b", KVValues.create(15), KVPaths.pathFromString("a.b"), false }, //
 		});
 		return mergeParameters(factories(), a);
 	}
@@ -243,7 +243,7 @@ public class TestAutomaton
 	static List<Object[]> matchPath()
 	{
 		List<Object[]> a = Arrays.asList(new Object[][] { //
-				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.b", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.b", KVValues.create(15)), true }, //
 				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.b"), true }, //
 				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.a.b"), true }, //
 				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.b.c"), true }, //
@@ -251,8 +251,8 @@ public class TestAutomaton
 				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a"), false }, //
 
 				// Prefix
-				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b", new KVValue(15)), true }, //
-				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b.c", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b", KVValues.create(15)), true }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b.c", KVValues.create(15)), true }, //
 				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b"), true }, //
 				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b.c"), true }, //
 				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.a.b"), false }, //
@@ -260,20 +260,20 @@ public class TestAutomaton
 				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString("a.b"), false }, //
 
 				// Suffix
-				{ KVPaths.pathFromString("a.b", new KVValue(15)), KVPaths.pathFromString("a.b", new KVValue(15)), true }, //
-				{ KVPaths.pathFromString("a.b", new KVValue(15)), KVPaths.pathFromString("a.b"), false }, //
-				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b.", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString("a.b", KVValues.create(15)), KVPaths.pathFromString("a.b", KVValues.create(15)), true }, //
+				{ KVPaths.pathFromString("a.b", KVValues.create(15)), KVPaths.pathFromString("a.b"), false }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b.", KVValues.create(15)), true }, //
 				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b."), true }, //
 				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.a.b."), true }, //
-				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.a.b.", new KVValue(15)), true }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.a.b.", KVValues.create(15)), true }, //
 
 				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b.c."), false }, //
 				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a"), false }, //
 				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b"), false }, //
 
 				// Complete
-				{ KVPaths.pathFromString(".a.b", new KVValue(15)), KVPaths.pathFromString(".a.b", new KVValue(15)), true }, //
-				{ KVPaths.pathFromString(".a.b", new KVValue(15)), KVPaths.pathFromString(".a.b"), false }, //
+				{ KVPaths.pathFromString(".a.b", KVValues.create(15)), KVPaths.pathFromString(".a.b", KVValues.create(15)), true }, //
+				{ KVPaths.pathFromString(".a.b", KVValues.create(15)), KVPaths.pathFromString(".a.b"), false }, //
 		});
 		return a;
 	}
