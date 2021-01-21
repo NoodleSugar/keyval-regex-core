@@ -8,10 +8,10 @@ import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IFPAPath;
 import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.algorithm.IGFPAValidation;
+import insomnia.fsa.fpa.factory.AbstractGFPABuilder;
 import insomnia.implem.fsa.fpa.gbuilder.AbstractGBuilderFPA;
 import insomnia.implem.fsa.fpa.gbuilder.GBuilder;
 import insomnia.implem.fsa.fpa.gbuilder.GBuilderState;
-import insomnia.implem.fsa.fpa.gbuilder.IGBuilderFPAFactory;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 
 /**
@@ -27,24 +27,15 @@ class PRegexFPABuilder<VAL, LBL> extends GBuilder<VAL, LBL, GBuilderState<VAL, L
 		super(gc, state -> new GBuilderState<VAL, LBL>(state.getId(), state.getValueCondition()), new FSAFactory<VAL, LBL>());
 	}
 
-	static class FSAFactory<VAL, LBL> implements IGBuilderFPAFactory<VAL, LBL>
+	static class FSAFactory<VAL, LBL> extends AbstractGFPABuilder<VAL, LBL, AbstractGBuilderFPA<VAL, LBL>>
 	{
 		@Override
-		public AbstractGBuilderFPA<VAL, LBL> create( //
-			Collection<IFSAState<VAL, LBL>> states, //
-			Collection<IFSAState<VAL, LBL>> rootedStates, //
-			Collection<IFSAState<VAL, LBL>> terminalStates, //
-			Collection<IFSAState<VAL, LBL>> initialStates, //
-			Collection<IFSAState<VAL, LBL>> finalStates, //
-			Collection<IFSAEdge<VAL, LBL>> edges, //
-			IFPAProperties properties, //
-			IGFPAValidation<VAL, LBL> validator //
-		)
+		public AbstractGBuilderFPA<VAL, LBL> create()
 		{
 			if (properties.isSynchronous())
-				return new FSASync<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
+				return new FSASync<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validation);
 			else
-				return new FSAGeneral<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validator);
+				return new FSAGeneral<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties, validation);
 		}
 	}
 

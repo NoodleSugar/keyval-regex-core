@@ -16,6 +16,7 @@ import insomnia.fsa.exception.FSAException;
 import insomnia.fsa.fpa.IFPA;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fpa.algorithm.GFPAValidation;
+import insomnia.fsa.fpa.factory.IGFPABuilder;
 import insomnia.implem.fsa.edge.FSAEdge;
 import insomnia.implem.fsa.fpa.graphchunk.GCEdges;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
@@ -51,11 +52,11 @@ public class GBuilder<VAL, LBL, STATE extends GBuilderState<VAL, LBL>>
 
 	private Function<IGCState<VAL>, STATE> stateSupplier;
 
-	private IGBuilderFPAFactory<VAL, LBL> builderFSAFactory;
+	private IGFPABuilder<VAL, LBL> builderFSAFactory;
 
 	// =========================================================================
 
-	public GBuilder(GraphChunk<VAL, LBL> gc, Function<IGCState<VAL>, STATE> stateSupplier, IGBuilderFPAFactory<VAL, LBL> builderFactory)
+	public GBuilder(GraphChunk<VAL, LBL> gc, Function<IGCState<VAL>, STATE> stateSupplier, IGFPABuilder<VAL, LBL> builderFactory)
 	{
 		automaton = gc;
 
