@@ -196,7 +196,7 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	}
 
 	@Override
-	public ITreeBuilder<VAL, LBL> end(VAL value)
+	public ITreeBuilder<VAL, LBL> endTerminal(VAL value)
 	{
 		currentNode.setValue(value);
 		end();

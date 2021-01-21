@@ -25,7 +25,7 @@ public class TestAutomaton
 		tree.setRooted(true) //
 			.add(KVLabels.create("a")) //
 			.add(KVLabels.create("aa")) //
-			.end(KVValues.create(5)) //
+			.endTerminal(KVValues.create(5)) //
 			.add(KVLabels.create("ab")) //
 			.end().end() //
 			.add(KVLabels.create("b")) //
@@ -44,7 +44,7 @@ public class TestAutomaton
 		tree.clear().setRooted(true) //
 			.add(KVLabels.create("a")) //
 			.add(KVLabels.create("aa")) //
-			.end(KVValues.create(5)) //
+			.endTerminal(KVValues.create(5)) //
 			.add(KVLabels.create("ab")) //
 			.end().end() //
 			.add(KVLabels.create("b")) //
@@ -54,11 +54,11 @@ public class TestAutomaton
 		tree.clear().setRooted(true) //
 			.add(KVLabels.create("a")) //
 			.add(KVLabels.create("aa")) //
-			.end(KVValues.create(5)) //
+			.endTerminal(KVValues.create(5)) //
 			.add(KVLabels.create("ab")) //
 			.end().end() //
 			.add(KVLabels.create("b")) //
-			.end(KVValues.create(50));
+			.endTerminal(KVValues.create(50));
 		assertEquals(true, bufta.test(tree));
 	}
 }

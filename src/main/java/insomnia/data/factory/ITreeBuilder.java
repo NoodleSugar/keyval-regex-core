@@ -19,7 +19,7 @@ public interface ITreeBuilder<VAL, LBL> extends ITree<VAL, LBL>
 	/**
 	 * End on a terminal valued leaf.
 	 */
-	ITreeBuilder<VAL, LBL> end(VAL value);
+	ITreeBuilder<VAL, LBL> endTerminal(VAL value);
 
 	/**
 	 * End on a terminal leaf.
