@@ -1,5 +1,7 @@
 package insomnia.implem.fsa.labelcondition;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 import insomnia.fsa.IFSALabelCondition;
@@ -8,7 +10,7 @@ public final class FSALabelConditions
 {
 	private FSALabelConditions()
 	{
-
+		throw new AssertionError();
 	}
 
 	// =========================================================================
@@ -29,6 +31,12 @@ public final class FSALabelConditions
 		public boolean test()
 		{
 			return false;
+		}
+
+		@Override
+		public Collection<LBL> getLabels()
+		{
+			return Collections.emptyList();
 		}
 
 		@SuppressWarnings("unchecked")
@@ -73,6 +81,12 @@ public final class FSALabelConditions
 			}
 
 			@Override
+			public Collection<Object> getLabels()
+			{
+				return Collections.emptyList();
+			}
+
+			@Override
 			public String toString()
 			{
 				return "*";
@@ -97,6 +111,12 @@ public final class FSALabelConditions
 			public boolean test()
 			{
 				return true;
+			}
+
+			@Override
+			public Collection<Object> getLabels()
+			{
+				return Collections.emptyList();
 			}
 
 			@Override
@@ -134,6 +154,12 @@ public final class FSALabelConditions
 			{
 				return element.equals(label);
 			}
+
+			@Override
+			public Collection<LBL> getLabels()
+			{
+				return Collections.singleton(label);
+			}
 		};
 	}
 
@@ -150,4 +176,15 @@ public final class FSALabelConditions
 			}
 		};
 	}
+
+	public static boolean isTrueCondition(IFSALabelCondition<?> labelCondition)
+	{
+		return labelCondition == trueCondition;
+	}
+
+	public static boolean isEpsilonCondition(IFSALabelCondition<?> labelCondition)
+	{
+		return labelCondition.test();
+	}
+
 }

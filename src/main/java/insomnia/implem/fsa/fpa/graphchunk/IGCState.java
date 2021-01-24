@@ -1,5 +1,6 @@
 package insomnia.implem.fsa.fpa.graphchunk;
 
+import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAValueCondition;
 
 /**
@@ -8,10 +9,8 @@ import insomnia.fsa.IFSAValueCondition;
  * 
  * @author zuri
  */
-public interface IGCState<VAL>
+interface IGCState<VAL, LBL> extends IFSAState<VAL, LBL>
 {
-	int getId();
-
 	boolean isInitial();
 
 	/*

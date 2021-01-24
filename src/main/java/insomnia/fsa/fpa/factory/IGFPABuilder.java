@@ -12,7 +12,7 @@ import insomnia.fsa.fpa.IGFPA;
  * 
  * @author zuri
  */
-public interface IGFPABuilder<VAL, LBL>
+public interface IGFPABuilder<VAL, LBL> extends IGFPA<VAL, LBL>
 {
 	/**
 	 * Reset the builder to the initial empty state (create an empty automaton).
@@ -33,15 +33,11 @@ public interface IGFPABuilder<VAL, LBL>
 
 	// ========================================================================
 
-	IGFPA<VAL, LBL> create();
+	Collection<IFSAEdge<VAL, LBL>> getEdges();
 
-	IGFPA<VAL, LBL> create( //
-		Collection<IFSAState<VAL, LBL>> states, //
-		Collection<IFSAState<VAL, LBL>> rootedStates, //
-		Collection<IFSAState<VAL, LBL>> terminalStates, //
-		Collection<IFSAState<VAL, LBL>> initialStates, //
-		Collection<IFSAState<VAL, LBL>> finalStates, //
-		Collection<IFSAEdge<VAL, LBL>> edges, //
-		IFPAProperties properties //
-	);
+	Collection<IFSAState<VAL, LBL>> getStates();
+
+	Collection<IFSAState<VAL, LBL>> getRootedStates();
+
+	Collection<IFSAState<VAL, LBL>> getTerminalStates();
 }

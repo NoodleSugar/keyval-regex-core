@@ -18,17 +18,12 @@ public abstract class AbstractDependencyValidation<V, E> implements IDependencyV
 
 	public AbstractDependencyValidation(Collection<IDependencyCondition<V, E>> conditions)
 	{
-		setConditions(new ArrayList<>(conditions));
+		this.conditions = new ArrayList<>(conditions);
 	}
 
 	protected Collection<IDependencyCondition<V, E>> getConditions()
 	{
 		return conditions;
-	}
-
-	protected void setConditions(Collection<IDependencyCondition<V, E>> conditions)
-	{
-		this.conditions = conditions;
 	}
 
 	@Override

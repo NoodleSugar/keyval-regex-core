@@ -6,6 +6,11 @@ import java.util.Collections;
 
 public final class PRegexElements
 {
+	private PRegexElements()
+	{
+		throw new AssertionError();
+	}
+
 	public static class Key extends AbstractElement
 	{
 		String label;

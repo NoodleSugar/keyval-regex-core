@@ -5,17 +5,16 @@ import java.util.Collections;
 
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
+import insomnia.fsa.fpa.AbstractGFPA;
 import insomnia.fsa.fpa.IFPAProperties;
-import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.fsa.fpa.FPAProperties;
 
 /**
  * @author zuri
  * @param <VAL>
  * @param <LBL>
- * @param <RET> The constructed type
  */
-public abstract class AbstractGFPABuilder<VAL, LBL, RET extends IGFPA<VAL, LBL>> implements IGFPABuilder<VAL, LBL>
+public abstract class AbstractGFPABuilder<VAL, LBL> extends AbstractGFPA<VAL, LBL> implements IGFPABuilder<VAL, LBL>
 {
 	protected Collection<IFSAState<VAL, LBL>> states, initialStates, finalStates, rootedStates, terminalStates;
 
@@ -27,12 +26,57 @@ public abstract class AbstractGFPABuilder<VAL, LBL, RET extends IGFPA<VAL, LBL>>
 
 	public AbstractGFPABuilder()
 	{
+		super();
 		clear();
 	}
 	// ========================================================================
 
 	@Override
-	public AbstractGFPABuilder<VAL, LBL, RET> clear()
+	public Collection<IFSAState<VAL, LBL>> getStates()
+	{
+		return states;
+	}
+
+	@Override
+	public Collection<IFSAState<VAL, LBL>> getInitialStates()
+	{
+		return initialStates;
+	}
+
+	@Override
+	public Collection<IFSAState<VAL, LBL>> getFinalStates()
+	{
+		return finalStates;
+	}
+
+	@Override
+	public Collection<IFSAState<VAL, LBL>> getRootedStates()
+	{
+		return rootedStates;
+	}
+
+	@Override
+	public Collection<IFSAState<VAL, LBL>> getTerminalStates()
+	{
+		return terminalStates;
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getEdges()
+	{
+		return edges;
+	}
+
+	@Override
+	public IFPAProperties getProperties()
+	{
+		return properties;
+	}
+
+	// ========================================================================
+
+	@Override
+	public AbstractGFPABuilder<VAL, LBL> clear()
 	{
 		states     = initialStates = finalStates = rootedStates = terminalStates = Collections.emptyList();
 		edges      = Collections.emptyList();
@@ -41,7 +85,7 @@ public abstract class AbstractGFPABuilder<VAL, LBL, RET extends IGFPA<VAL, LBL>>
 	}
 
 	@Override
-	public AbstractGFPABuilder<VAL, LBL, RET> set(Collection<IFSAState<VAL, LBL>> states, Collection<IFSAState<VAL, LBL>> initialStates, Collection<IFSAState<VAL, LBL>> finalStates, Collection<IFSAEdge<VAL, LBL>> edges)
+	public AbstractGFPABuilder<VAL, LBL> set(Collection<IFSAState<VAL, LBL>> states, Collection<IFSAState<VAL, LBL>> initialStates, Collection<IFSAState<VAL, LBL>> finalStates, Collection<IFSAEdge<VAL, LBL>> edges)
 	{
 		this.states        = states;
 		this.initialStates = initialStates;
@@ -51,21 +95,21 @@ public abstract class AbstractGFPABuilder<VAL, LBL, RET extends IGFPA<VAL, LBL>>
 	}
 
 	@Override
-	public AbstractGFPABuilder<VAL, LBL, RET> setProperties(IFPAProperties properties)
+	public AbstractGFPABuilder<VAL, LBL> setProperties(IFPAProperties properties)
 	{
 		this.properties = properties;
 		return this;
 	}
 
 	@Override
-	public AbstractGFPABuilder<VAL, LBL, RET> setRootedStates(Collection<IFSAState<VAL, LBL>> rootedStates)
+	public AbstractGFPABuilder<VAL, LBL> setRootedStates(Collection<IFSAState<VAL, LBL>> rootedStates)
 	{
 		this.rootedStates = rootedStates;
 		return this;
 	}
 
 	@Override
-	public AbstractGFPABuilder<VAL, LBL, RET> setTerminalStates(Collection<IFSAState<VAL, LBL>> terminalStates)
+	public AbstractGFPABuilder<VAL, LBL> setTerminalStates(Collection<IFSAState<VAL, LBL>> terminalStates)
 	{
 		this.terminalStates = terminalStates;
 		return this;
@@ -73,24 +117,4 @@ public abstract class AbstractGFPABuilder<VAL, LBL, RET extends IGFPA<VAL, LBL>>
 
 	// ========================================================================
 
-	@Override
-	public abstract RET create();
-
-	@Override
-	public RET create( //
-		Collection<IFSAState<VAL, LBL>> states, //
-		Collection<IFSAState<VAL, LBL>> rootedStates, //
-		Collection<IFSAState<VAL, LBL>> terminalStates, //
-		Collection<IFSAState<VAL, LBL>> initialStates, //
-		Collection<IFSAState<VAL, LBL>> finalStates, //
-		Collection<IFSAEdge<VAL, LBL>> edges, //
-		IFPAProperties properties //
-	)
-	{
-		return clear() //
-			.set(terminalStates, initialStates, finalStates, edges) //
-			.setProperties(properties) //
-			.setRootedStates(rootedStates).setTerminalStates(terminalStates) //
-			.create();
-	}
 }

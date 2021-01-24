@@ -1,17 +1,23 @@
-package insomnia.implem.fsa.fpa.gbuilder;
+package insomnia.fsa.fpa;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.fpa.AbstractGFPA;
-import insomnia.fsa.fpa.IFPAProperties;
-import insomnia.fsa.fpa.IGFPA;
 
-public abstract class AbstractGBuilderFPA<VAL, LBL> //
+/**
+ * A simple {@link IGFPA} implementation which use simple collections for storage.
+ * 
+ * @author zuri
+ * @param <VAL>
+ * @param <LBL>
+ */
+public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	extends AbstractGFPA<VAL, LBL> //
 	implements IGFPA<VAL, LBL>
 {
@@ -25,7 +31,9 @@ public abstract class AbstractGBuilderFPA<VAL, LBL> //
 	private Collection<IFSAState<VAL, LBL>> states;
 	private Collection<IFSAEdge<VAL, LBL>>  edges;
 
-	protected AbstractGBuilderFPA( //
+	private Map<IFSAState<VAL, LBL>, Collection<IFSAEdge<VAL, LBL>>> edgesOf;
+
+	protected AbstractSimpleGFPA( //
 		Collection<IFSAState<VAL, LBL>> states, //
 		Collection<IFSAState<VAL, LBL>> rootedStates, //
 		Collection<IFSAState<VAL, LBL>> terminalStates, //
@@ -43,6 +51,14 @@ public abstract class AbstractGBuilderFPA<VAL, LBL> //
 
 		this.rootedStates   = rootedStates;
 		this.terminalStates = terminalStates;
+
+		this.edgesOf = new HashMap<>();
+
+		for (IFSAEdge<VAL, LBL> edge : edges)
+		{
+			Collection<IFSAEdge<VAL, LBL>> coll = edgesOf.computeIfAbsent(edge.getParent(), e -> new ArrayList<>());
+			coll.add(edge);
+		}
 	}
 
 	@Override
@@ -70,9 +86,27 @@ public abstract class AbstractGBuilderFPA<VAL, LBL> //
 	}
 
 	@Override
+	public Collection<IFSAState<VAL, LBL>> getRootedStates()
+	{
+		return rootedStates;
+	}
+
+	@Override
+	public Collection<IFSAState<VAL, LBL>> getTerminalStates()
+	{
+		return terminalStates;
+	}
+
+	@Override
 	public int nbStates()
 	{
 		return states.size();
+	}
+
+	@Override
+	public int nbEdges()
+	{
+		return edges.size();
 	}
 
 	@Override
@@ -82,33 +116,36 @@ public abstract class AbstractGBuilderFPA<VAL, LBL> //
 	}
 
 	@Override
-	public Collection<IFSAEdge<VAL, LBL>> getEdges(Collection<? extends IFSAState<VAL, LBL>> states)
+	public Collection<IFSAState<VAL, LBL>> getStates()
 	{
-		List<IFSAEdge<VAL, LBL>> ret = new ArrayList<>();
+		return Collections.unmodifiableCollection(states);
+	}
 
-		for (IFSAState<VAL, LBL> _state : states)
-		{
-			IGBuilderState<VAL, LBL> state = (IGBuilderState<VAL, LBL>) _state;
-			ret.addAll(state.getEdges());
-		}
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getEdges()
+	{
+		return Collections.unmodifiableCollection(edges);
+	}
+
+	@Override
+	public int nbEdges(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		int ret = 0;
+
+		for (IFSAState<VAL, LBL> state : states)
+			ret += edgesOf.getOrDefault(state, Collections.emptyList()).size();
+
 		return ret;
 	}
 
 	@Override
-	public String toString()
+	public Collection<IFSAEdge<VAL, LBL>> getEdges(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
-		StringBuffer s1 = new StringBuffer();
+		List<IFSAEdge<VAL, LBL>> ret = new ArrayList<>();
 
-		s1.append("Initials: ").append(initialStates).append("\n");
-		s1.append("Finals: ").append(finalStates).append("\n");
-		s1.append("Rooted: ").append(rootedStates).append("\n");
-		s1.append("Terminals: ").append(terminalStates).append("\n");
-		s1.append("Nodes: ").append(states).append("\n");
-		s1.append("Edges:\n");
+		for (IFSAState<VAL, LBL> state : states)
+			ret.addAll(edgesOf.getOrDefault(state, Collections.emptyList()));
 
-		for (IFSAEdge<VAL, LBL> edge : edges)
-			s1.append(edge).append("\n");
-
-		return s1.toString();
+		return ret;
 	}
 }

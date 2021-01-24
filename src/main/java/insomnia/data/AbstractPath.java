@@ -24,6 +24,7 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	{
 		return null;
 	}
+	// =========================================================================
 
 	@SuppressWarnings("unchecked")
 	public AbstractPath(IPath<VAL, LBL> path, int begin, int end)
@@ -68,35 +69,17 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 		initPath(this, isRooted, isTerminal, path.getLabels().subList(begin, end), value);
 	}
 
-	public AbstractPath(List<? extends LBL> labels)
-	{
-		initPath(this, default_isRoot, default_isTerminal, labels, nullValue());
-	}
-
-	public AbstractPath(List<? extends LBL> labels, VAL value)
-	{
-		initPath(this, default_isRoot, default_isTerminal, labels, value);
-	}
-
-	public AbstractPath(boolean isRooted, List<? extends LBL> labels)
-	{
-		initPath(this, isRooted, default_isTerminal, labels, nullValue());
-	}
-
-	public AbstractPath(boolean isRooted, List<? extends LBL> labels, VAL value)
-	{
-		initPath(this, isRooted, default_isTerminal, labels, value);
-	}
-
-	public AbstractPath(boolean isRooted, boolean isTerminal, List<? extends LBL> labels)
-	{
-		initPath(this, isRooted, isTerminal, labels, nullValue());
-	}
-
 	public AbstractPath(boolean isRooted, boolean isTerminal, List<? extends LBL> labels, VAL value)
 	{
 		initPath(this, isRooted, isTerminal, labels, value);
 	}
+
+	public AbstractPath()
+	{
+		this(false, false, Collections.emptyList(), null);
+	}
+
+	// =========================================================================
 
 	@Override
 	public Optional<IEdge<VAL, LBL>> getChild(INode<VAL, LBL> node)

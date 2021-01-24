@@ -9,13 +9,12 @@ import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import insomnia.data.IPath;
 import insomnia.data.PathOp;
-import insomnia.implem.kv.data.KVPath;
-import insomnia.implem.kv.data.KVPaths;
 
 class TestPaths
 {
-	public static KVPath pathFromString(String p)
+	public static IPath<KVValue, KVLabel> pathFromString(String p)
 	{
 		return KVPaths.pathFromString(p);
 	}
@@ -44,7 +43,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("isSimplePrefixSource")
-	void isSimplePrefixTest(boolean proper, KVPath needle, KVPath haystack, boolean isPrefix)
+	void isSimplePrefixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, boolean isPrefix)
 	{
 		assertEquals(isPrefix, PathOp.isSimplePrefix(needle, haystack, proper));
 	}
@@ -129,7 +128,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("isPrefixSource")
-	void isPrefixTest(boolean proper, KVPath needle, KVPath haystack, boolean isPrefix)
+	void isPrefixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, boolean isPrefix)
 	{
 		assertEquals(isPrefix, PathOp.isPrefix(needle, haystack, proper));
 	}
@@ -157,7 +156,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("isSimpleSuffixSource")
-	void isSimpleSuffixTest(boolean proper, KVPath needle, KVPath haystack, boolean isSuffix)
+	void isSimpleSuffixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, boolean isSuffix)
 	{
 		assertEquals(isSuffix, PathOp.isSimpleSuffix(needle, haystack, proper));
 	}
@@ -233,7 +232,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("isSuffixSource")
-	void isSuffixTest(boolean proper, KVPath needle, KVPath haystack, boolean isSuffix)
+	void isSuffixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, boolean isSuffix)
 	{
 		assertEquals(isSuffix, PathOp.isSuffix(needle, haystack, proper));
 	}
@@ -258,7 +257,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findSimpleInclusionsSource")
-	void findSimpleInclusionTest(boolean noSuffOrPref, KVPath needle, KVPath haystack, int[] result)
+	void findSimpleInclusionTest(boolean noSuffOrPref, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, int[] result)
 	{
 		assertArrayEquals(result, PathOp.findSimpleInclusions(needle, haystack, noSuffOrPref));
 	}
@@ -316,7 +315,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findInclusionsSource")
-	void findInclusionTest(boolean noSuffOrPref, KVPath needle, KVPath haystack, int[] result)
+	void findInclusionTest(boolean noSuffOrPref, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, int[] result)
 	{
 		assertArrayEquals(result, PathOp.findInclusions(needle, haystack, noSuffOrPref));
 	}
@@ -348,7 +347,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findSimpleSuffixPrefixSource")
-	void findSuffixPrefixTest(boolean proper, KVPath needle, KVPath haystack, int[] result)
+	void findSuffixPrefixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, int[] result)
 	{
 		assertArrayEquals(result, PathOp.findSimpleSuffixPrefix(needle, haystack, proper));
 	}
@@ -380,7 +379,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findSimplePrefixSuffixSource")
-	void findSimplePrefixSuffixTest(boolean proper, KVPath needle, KVPath haystack, int[] result)
+	void findSimplePrefixSuffixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, int[] result)
 	{
 		assertArrayEquals(result, PathOp.findSimplePrefixSuffix(needle, haystack, proper));
 	}
@@ -458,7 +457,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findPossiblePrefixesSource")
-	void findPossiblePrefixesTest(boolean proper, KVPath needle, KVPath haystack, int[] result)
+	void findPossiblePrefixesTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, int[] result)
 	{
 		assertArrayEquals(result, PathOp.findPossiblePrefixes(needle, haystack, proper));
 	}
@@ -522,7 +521,7 @@ class TestPaths
 
 	@ParameterizedTest
 	@MethodSource("findPossibleSuffixesSource")
-	void findPossibleSuffixesTest(boolean proper, KVPath needle, KVPath haystack, int[] result)
+	void findPossibleSuffixesTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, int[] result)
 	{
 		assertArrayEquals(result, PathOp.findPossibleSuffixes(needle, haystack, proper));
 	}

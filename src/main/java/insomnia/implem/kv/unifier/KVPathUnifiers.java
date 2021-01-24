@@ -2,6 +2,7 @@ package insomnia.implem.kv.unifier;
 
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
+import insomnia.implem.unifier.PathUnifier;
 import insomnia.unifier.PathUnifiers;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -13,7 +14,7 @@ public final class KVPathUnifiers
 	{
 		try
 		{
-			unifiers = new PathUnifiers(KVPathUnifier.class);
+			unifiers = new PathUnifiers(PathUnifier.class);
 		}
 		catch (NoSuchMethodException | SecurityException e)
 		{

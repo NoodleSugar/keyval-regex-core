@@ -6,24 +6,23 @@ import java.util.Optional;
 import insomnia.fsa.IFSAValueCondition;
 import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 
-public final class GCStates
+final class GCStates
 {
 	private GCStates()
 	{
+		throw new AssertionError();
 	}
 
 	// =========================================================================
 
-	public static abstract class AbstractGCState<VAL> implements IGCState<VAL>
+	private static abstract class AbstractGCState<VAL, LBL> implements IGCState<VAL, LBL>
 	{
-		private int     id;
 		private boolean isInitial, isFinal, isRooted, isTerminal;
 
 		private IFSAValueCondition<VAL> valueCondition;
 
-		public AbstractGCState(int id, IFSAValueCondition<VAL> valueCondition)
+		public AbstractGCState(IFSAValueCondition<VAL> valueCondition)
 		{
-			this.id             = id;
 			this.valueCondition = valueCondition;
 
 			this.isInitial  = false;
@@ -33,36 +32,30 @@ public final class GCStates
 		}
 
 		@Override
-		public int getId()
-		{
-			return id;
-		}
-
-		@Override
 		public IFSAValueCondition<VAL> getValueCondition()
 		{
 			return valueCondition;
 		}
 
-		AbstractGCState<VAL> setInitial(boolean isInitial)
+		AbstractGCState<VAL, LBL> setInitial(boolean isInitial)
 		{
 			this.isInitial = isInitial;
 			return this;
 		}
 
-		AbstractGCState<VAL> setFinal(boolean isFinal)
+		AbstractGCState<VAL, LBL> setFinal(boolean isFinal)
 		{
 			this.isFinal = isFinal;
 			return this;
 		}
 
-		AbstractGCState<VAL> setRooted(boolean isRooted)
+		AbstractGCState<VAL, LBL> setRooted(boolean isRooted)
 		{
 			this.isRooted = isRooted;
 			return this;
 		}
 
-		AbstractGCState<VAL> setTerminal(boolean isTerminal)
+		AbstractGCState<VAL, LBL> setTerminal(boolean isTerminal)
 		{
 			this.isTerminal = isTerminal;
 			return this;
@@ -92,22 +85,6 @@ public final class GCStates
 			return isTerminal;
 		}
 
-		@SuppressWarnings("unchecked")
-		@Override
-		public boolean equals(Object obj)
-		{
-			if (!(obj instanceof AbstractGCState))
-				return false;
-
-			return id == ((AbstractGCState<VAL>) obj).id;
-		}
-
-		@Override
-		public int hashCode()
-		{
-			return id;
-		}
-
 		@Override
 		public String toString()
 		{
@@ -121,7 +98,7 @@ public final class GCStates
 			if (isRooted)
 				sb.append("^");
 
-			sb.append(id);
+			sb.append(Integer.toHexString(System.identityHashCode(this)));
 
 			if (!valueCondition.toString().isEmpty())
 				sb.append(":").append(valueCondition.toString());
@@ -140,17 +117,17 @@ public final class GCStates
 
 	// =========================================================================
 
-	static class StateSimple<VAL> extends AbstractGCState<VAL>
+	private static class StateSimple<VAL, LBL> extends AbstractGCState<VAL, LBL>
 	{
-		public StateSimple(int id, IFSAValueCondition<VAL> valueCondition)
+		public StateSimple(IFSAValueCondition<VAL> valueCondition)
 		{
-			super(id, valueCondition);
+			super(valueCondition);
 		}
 	}
 
-	private static <VAL> IGCState<VAL> create(int id, boolean isRooted, boolean isTerminal, boolean isInitial, boolean isFinal, IFSAValueCondition<VAL> valueCondition)
+	private static <VAL, LBL> IGCState<VAL, LBL> create(boolean isRooted, boolean isTerminal, boolean isInitial, boolean isFinal, IFSAValueCondition<VAL> valueCondition)
 	{
-		return new StateSimple<VAL>(id, valueCondition) //
+		return new StateSimple<VAL, LBL>(valueCondition) //
 			.setRooted(isRooted) //
 			.setTerminal(isTerminal) //
 			.setInitial(isInitial) //
@@ -163,86 +140,85 @@ public final class GCStates
 	 * 
 	 * @return
 	 */
-	private static <VAL> IGCState<VAL> createNullableValueEq(int id, boolean isRooted, boolean isTerminal, boolean isInitial, boolean isFinal, VAL value)
+	private static <VAL, LBL> IGCState<VAL, LBL> createNullableValueEq(boolean isRooted, boolean isTerminal, boolean isInitial, boolean isFinal, VAL value)
 	{
 		if (null == value)
-			return create(id, isRooted, isTerminal, isInitial, isFinal, FSAValueConditions.createAny());
+			return create(isRooted, isTerminal, isInitial, isFinal, FSAValueConditions.createAny());
 
-		return create(id, isRooted, isTerminal, isInitial, isFinal, FSAValueConditions.createEq(value));
+		return create(isRooted, isTerminal, isInitial, isFinal, FSAValueConditions.createEq(value));
 
 	}
 
-	public static <VAL> IGCState<VAL> create(int id, Optional<VAL> value)
+	public static <VAL, LBL> IGCState<VAL, LBL> create(Optional<VAL> value)
 	{
-		return createNullableValueEq(id, false, false, false, false, value.orElse(null));
+		return createNullableValueEq(false, false, false, false, value.orElse(null));
 	}
 
-	public static <VAL> IGCState<VAL> create(int id)
+	public static <VAL, LBL> IGCState<VAL, LBL> create()
 	{
-		return create(id, Optional.empty());
+		return create(Optional.empty());
 	}
 
 	// =========================================================================
 
-	public static <VAL> void setRooted(IGCState<VAL> state)
+	public static <VAL, LBL> void setRooted(IGCState<VAL, LBL> state)
 	{
 		setRooted(state, true);
 	}
 
-	public static <VAL> void setTerminal(IGCState<VAL> state)
+	public static <VAL, LBL> void setTerminal(IGCState<VAL, LBL> state)
 	{
 		setTerminal(state, true);
 	}
 
-	public static <VAL> void setInitial(IGCState<VAL> state)
+	public static <VAL, LBL> void setInitial(IGCState<VAL, LBL> state)
 	{
 		setInitial(state, true);
 	}
 
-	public static <VAL> void setFinal(IGCState<VAL> state)
+	public static <VAL, LBL> void setFinal(IGCState<VAL, LBL> state)
 	{
 		setFinal(state, true);
 	}
 
-	public static <VAL> void setRooted(IGCState<VAL> state, boolean isRooted)
+	public static <VAL, LBL> void setRooted(IGCState<VAL, LBL> state, boolean isRooted)
 	{
 		if (!(state instanceof AbstractGCState))
 			throw new InvalidParameterException();
 
-		((AbstractGCState<VAL>) state).setRooted(isRooted);
+		((AbstractGCState<VAL, LBL>) state).setRooted(isRooted);
 	}
 
-	public static <VAL> void setTerminal(IGCState<VAL> state, boolean isTerminal)
+	public static <VAL, LBL> void setTerminal(IGCState<VAL, LBL> state, boolean isTerminal)
 	{
 		if (!(state instanceof AbstractGCState))
 			throw new InvalidParameterException();
 
-		((AbstractGCState<VAL>) state).setTerminal(isTerminal);
+		((AbstractGCState<VAL, LBL>) state).setTerminal(isTerminal);
 	}
 
-	public static <VAL> void setInitial(IGCState<VAL> state, boolean isInitial)
+	public static <VAL, LBL> void setInitial(IGCState<VAL, LBL> state, boolean isInitial)
 	{
 		if (!(state instanceof AbstractGCState))
 			throw new InvalidParameterException();
 
-		((AbstractGCState<VAL>) state).setInitial(isInitial);
+		((AbstractGCState<VAL, LBL>) state).setInitial(isInitial);
 	}
 
-	public static <VAL> void setFinal(IGCState<VAL> state, boolean isFinal)
+	public static <VAL, LBL> void setFinal(IGCState<VAL, LBL> state, boolean isFinal)
 	{
 		if (!(state instanceof AbstractGCState))
 			throw new InvalidParameterException();
 
-		((AbstractGCState<VAL>) state).setFinal(isFinal);
+		((AbstractGCState<VAL, LBL>) state).setFinal(isFinal);
 	}
 
-	public static <VAL> void copy(IGCState<VAL> dest, IGCState<VAL> src, int newId)
+	public static <VAL, LBL> void copy(IGCState<VAL, LBL> dest, IGCState<VAL, LBL> src)
 	{
 		if (!(dest instanceof AbstractGCState))
 			throw new InvalidParameterException();
 
-		AbstractGCState<VAL> gcDest = (AbstractGCState<VAL>) dest;
-		gcDest.id             = newId;
+		AbstractGCState<VAL, LBL> gcDest = (AbstractGCState<VAL, LBL>) dest;
 		gcDest.valueCondition = src.getValueCondition();
 		setRooted(dest, src.isRooted());
 		setTerminal(dest, src.isTerminal());
@@ -250,8 +226,8 @@ public final class GCStates
 		setFinal(dest, src.isFinal());
 	}
 
-	public static <VAL> IGCState<VAL> copy(IGCState<VAL> src, int newId)
+	public static <VAL, LBL> IGCState<VAL, LBL> copy(IGCState<VAL, LBL> src)
 	{
-		return create(newId, src.isRooted(), src.isTerminal(), src.isInitial(), src.isFinal(), src.getValueCondition());
+		return create(src.isRooted(), src.isTerminal(), src.isInitial(), src.isFinal(), src.getValueCondition());
 	}
 }

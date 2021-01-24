@@ -5,11 +5,10 @@ import java.util.Collections;
 import insomnia.rule.IRule;
 import insomnia.rule.dependency.IDependencyCondition;
 
-public class VocabularyAlphaCondition<V, E> implements IDependencyCondition<V, E>
+public final class VocabularyAlphaCondition<VAL, LBL> implements IDependencyCondition<VAL, LBL>
 {
-
 	@Override
-	public boolean test(IRule<V, E> t, IRule<V, E> u)
+	public boolean test(IRule<VAL, LBL> t, IRule<VAL, LBL> u)
 	{
 		return !Collections.disjoint(t.getHead().getVocabulary(), u.getBody().getVocabulary());
 	}

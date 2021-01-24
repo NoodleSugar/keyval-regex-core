@@ -3,7 +3,7 @@ package insomnia.implem.kv.pregex;
 import java.security.InvalidParameterException;
 import java.util.HashMap;
 
-public class Quantifier
+public final class Quantifier
 {
 	private final int inf;
 	private final int sup;

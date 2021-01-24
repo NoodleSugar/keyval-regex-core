@@ -8,7 +8,7 @@ public final class FSAValueConditions
 {
 	private FSAValueConditions()
 	{
-		throw new UnsupportedOperationException();
+		throw new AssertionError();
 	}
 
 	// =========================================================================

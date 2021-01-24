@@ -1,5 +1,7 @@
 package insomnia.implem.fsa.labelcondition;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Predicate;
 
 import insomnia.fsa.IFSALabelCondition;
@@ -60,5 +62,11 @@ public final class PredicateFSALabelCondition<LBL> implements IFSALabelCondition
 	public String toString()
 	{
 		return print.toString();
+	}
+
+	@Override
+	public Collection<LBL> getLabels()
+	{
+		return Collections.emptyList();
 	}
 }

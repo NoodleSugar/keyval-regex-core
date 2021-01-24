@@ -12,7 +12,7 @@ import insomnia.fsa.IFSALabelCondition;
  * @param <LBL> Label type to test.
  * @param <ELMNT>
  */
-public interface IGCEdge<LBL> // extends Predicate<LBL>
+interface IGCEdge<VAL, LBL>
 {
 	/**
 	 * If the edge is a classic one, get its label as a {@link String}.
