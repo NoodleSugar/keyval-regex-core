@@ -1,6 +1,6 @@
 package insomnia.implem.kv.data;
 
-import insomnia.fsa.factory.IFSALabelFactory;
+import insomnia.fsa.creational.IFSALabelFactory;
 
 public final class KVLabels
 {

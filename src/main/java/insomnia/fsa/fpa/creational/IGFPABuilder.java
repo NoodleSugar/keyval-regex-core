@@ -1,4 +1,4 @@
-package insomnia.fsa.fpa.factory;
+package insomnia.fsa.fpa.creational;
 
 import java.util.Collection;
 

@@ -1,4 +1,4 @@
-package insomnia.implem.fsa.fpa;
+package insomnia.implem.fsa.fpa.creational;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.IPath;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.factory.IFSALabelFactory;
+import insomnia.fsa.creational.IFSALabelFactory;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fpa.IGraphChunkModifier;
 import insomnia.fsa.fpa.IGraphChunkModifier.Environment;

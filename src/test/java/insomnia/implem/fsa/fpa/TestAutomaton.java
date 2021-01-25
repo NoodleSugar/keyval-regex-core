@@ -26,7 +26,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.data.IPath;
 import insomnia.fsa.fpa.IFPA;
-import insomnia.implem.fsa.fpa.FPAFactory;
+import insomnia.implem.fsa.fpa.creational.FPAFactory;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.GCPathRuleApplierSimple;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVLabels;
@@ -38,7 +38,7 @@ import insomnia.implem.kv.pregex.PRegexParser;
 import insomnia.implem.kv.rule.KVPathRules;
 import insomnia.implem.kv.unifier.KVPathUnifiers;
 import insomnia.implem.rule.dependency.BetaDependencyValidation;
-import insomnia.implem.rule.grd.GRDFactory;
+import insomnia.implem.rule.grd.creational.GRDFactory;
 import insomnia.lib.help.HelpLists;
 import insomnia.rule.IRule;
 import insomnia.rule.grd.IGRD;

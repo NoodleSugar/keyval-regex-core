@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import insomnia.data.factory.ITreeBuilder;
+import insomnia.data.creational.ITreeBuilder;
 import insomnia.fsa.fta.IBUFTA;
-import insomnia.implem.data.factory.TreeBuilder;
-import insomnia.implem.fsa.fta.bubuilder.BUBuilder;
+import insomnia.implem.data.creational.TreeBuilder;
+import insomnia.implem.fsa.fta.creational.BUBuilder;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVLabels;
 import insomnia.implem.kv.data.KVValue;

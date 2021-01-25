@@ -19,7 +19,7 @@ import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.rule.KVPathRules;
 import insomnia.implem.kv.unifier.KVPathUnifiers;
 import insomnia.implem.rule.dependency.AlphaDependencyValidation;
-import insomnia.implem.rule.grd.GRDFactory;
+import insomnia.implem.rule.grd.creational.GRDFactory;
 import insomnia.lib.help.HelpLists;
 import insomnia.rule.IPathRule;
 import insomnia.rule.IRule;

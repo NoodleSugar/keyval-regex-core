@@ -1,4 +1,4 @@
-package insomnia.implem.rule.grd;
+package insomnia.implem.rule.grd.creational;
 
 import java.util.ArrayList;
 import java.util.Collection;

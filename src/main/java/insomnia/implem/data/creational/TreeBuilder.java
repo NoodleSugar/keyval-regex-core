@@ -1,4 +1,4 @@
-package insomnia.implem.data.factory;
+package insomnia.implem.data.creational;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ import java.util.Set;
 
 import insomnia.data.IEdge;
 import insomnia.data.INode;
-import insomnia.data.factory.ITreeBuilder;
+import insomnia.data.creational.ITreeBuilder;
 import insomnia.implem.data.Trees;
 
 /**

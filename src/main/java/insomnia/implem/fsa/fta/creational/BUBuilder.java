@@ -1,4 +1,4 @@
-package insomnia.implem.fsa.fta.bubuilder;
+package insomnia.implem.fsa.fta.creational;
 
 import java.util.ArrayList;
 import java.util.Collection;

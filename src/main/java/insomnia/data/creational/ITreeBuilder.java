@@ -1,4 +1,4 @@
-package insomnia.data.factory;
+package insomnia.data.creational;
 
 import insomnia.data.ITree;
 

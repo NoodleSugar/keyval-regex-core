@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
-import insomnia.implem.data.factory.TreeBuilder;
+import insomnia.implem.data.creational.TreeBuilder;
 
 public final class Trees
 {

@@ -1,4 +1,4 @@
-package insomnia.implem.fsa.fpa;
+package insomnia.implem.fsa.fpa.creational;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,6 +14,8 @@ import insomnia.fsa.fpa.AbstractSimpleGFPA;
 import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.fsa.edge.FSAEdge;
+import insomnia.implem.fsa.fpa.FPAProperties;
+import insomnia.implem.fsa.fpa.FPAs;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
 import insomnia.implem.fsa.state.FSAState;
 

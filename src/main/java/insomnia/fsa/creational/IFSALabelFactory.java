@@ -1,4 +1,4 @@
-package insomnia.fsa.factory;
+package insomnia.fsa.creational;
 
 /**
  * Factory of LBL needed in some FSA processes.
