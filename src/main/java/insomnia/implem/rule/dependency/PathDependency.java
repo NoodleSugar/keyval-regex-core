@@ -6,7 +6,7 @@ import insomnia.rule.dependency.IPathDependency;
 import insomnia.unifier.IPathUnifier;
 import insomnia.unifier.IUnifier;
 
-public final class PathDependency<VAL, LBL> implements IPathDependency<VAL, LBL>
+final class PathDependency<VAL, LBL> implements IPathDependency<VAL, LBL>
 {
 	private IRule<VAL, LBL>        source;
 	private IRule<VAL, LBL>        target;

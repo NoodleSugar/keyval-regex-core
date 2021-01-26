@@ -9,10 +9,9 @@ import java.util.Optional;
 
 import insomnia.data.IPath;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.fpa.IGraphChunkModifier;
-import insomnia.fsa.fpa.IGraphChunkModifier.Environment;
 import insomnia.implem.data.Paths;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
+import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier.Environment;
 import insomnia.implem.rule.PathRules;
 import insomnia.rule.IPathRule;
 import insomnia.rule.dependency.IDependency;

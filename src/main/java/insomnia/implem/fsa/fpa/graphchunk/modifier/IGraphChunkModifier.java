@@ -1,4 +1,4 @@
-package insomnia.fsa.fpa;
+package insomnia.implem.fsa.fpa.graphchunk.modifier;
 
 import insomnia.data.IPath;
 import insomnia.fsa.IFSAState;
