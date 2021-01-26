@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.data.IPath;
 import insomnia.data.PathOp;
+import insomnia.lib.help.HelpLists;
 
 class TestPaths
 {
@@ -45,7 +46,7 @@ class TestPaths
 	@MethodSource("isSimplePrefixSource")
 	void isSimplePrefixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, boolean isPrefix)
 	{
-		assertEquals(isPrefix, PathOp.isSimplePrefix(needle, haystack, proper));
+		assertEquals(isPrefix, HelpLists.isPrefix(needle.getLabels(), haystack.getLabels(), proper));
 	}
 
 	static List<Object[]> isPrefixSource()
@@ -158,7 +159,7 @@ class TestPaths
 	@MethodSource("isSimpleSuffixSource")
 	void isSimpleSuffixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, boolean isSuffix)
 	{
-		assertEquals(isSuffix, PathOp.isSimpleSuffix(needle, haystack, proper));
+		assertEquals(isSuffix, HelpLists.isSuffix(needle.getLabels(), haystack.getLabels(), proper));
 	}
 
 	static List<Object[]> isSuffixSource()
@@ -259,7 +260,7 @@ class TestPaths
 	@MethodSource("findSimpleInclusionsSource")
 	void findSimpleInclusionTest(boolean noSuffOrPref, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, int[] result)
 	{
-		assertArrayEquals(result, PathOp.findSimpleInclusions(needle, haystack, noSuffOrPref));
+		assertArrayEquals(result, HelpLists.findInclusions(needle.getLabels(), haystack.getLabels(), noSuffOrPref));
 	}
 
 	static List<Object[]> findInclusionsSource()
@@ -349,7 +350,7 @@ class TestPaths
 	@MethodSource("findSimpleSuffixPrefixSource")
 	void findSuffixPrefixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, int[] result)
 	{
-		assertArrayEquals(result, PathOp.findSimpleSuffixPrefix(needle, haystack, proper));
+		assertArrayEquals(result, HelpLists.findSuffixPrefix(needle.getLabels(), haystack.getLabels(), proper));
 	}
 
 	static List<Object[]> findSimplePrefixSuffixSource()
@@ -381,7 +382,7 @@ class TestPaths
 	@MethodSource("findSimplePrefixSuffixSource")
 	void findSimplePrefixSuffixTest(boolean proper, IPath<KVValue, KVLabel> needle, IPath<KVValue, KVLabel> haystack, int[] result)
 	{
-		assertArrayEquals(result, PathOp.findSimplePrefixSuffix(needle, haystack, proper));
+		assertArrayEquals(result, HelpLists.findPrefixSuffix(needle.getLabels(), haystack.getLabels(), proper));
 	}
 
 	static List<Object[]> findPossiblePrefixesSource()
