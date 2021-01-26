@@ -1,6 +1,5 @@
 package insomnia.implem.fsa.fpa.graphchunk;
 
-import java.security.InvalidParameterException;
 import java.util.Optional;
 
 import insomnia.fsa.IFSALabelCondition;
@@ -50,9 +49,6 @@ final class GCEdges
 
 	public static <VAL, LBL> IGCEdge<VAL, LBL> copy(IGCEdge<VAL, LBL> src)
 	{
-		if (!(src instanceof GCEdge))
-			throw new InvalidParameterException();
-
-		return ((GCEdge<VAL, LBL>) src).copy();
+		return new GCEdge<VAL, LBL>(src.getLabelCondition());
 	}
 }
