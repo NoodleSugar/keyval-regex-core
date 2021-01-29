@@ -10,31 +10,35 @@ import insomnia.data.IPath;
 import insomnia.data.PathOp;
 import insomnia.rule.IPathRule;
 
+/**
+ * Factory of {@link IPathUnifier} able to compute {@link IPathUnifier}s (strong/weak/all) depending on initials {@link IPath} or {@link IPathRule} .
+ * 
+ * @author zuri
+ */
 public final class PathUnifiers<VAL, LBL>
 {
-	public static <VAL, LBL> int[] findAllPrefixSuffix(IPath<VAL, LBL> p, IPath<VAL, LBL> s)
-	{
-		return PathOp.findProperSimplePrefixSuffix(p, s);
-	}
-
-	// Inclusions strictes (limites exclues)
-	public static <VAL, LBL> int[] findAllInclusions(IPath<VAL, LBL> i, IPath<VAL, LBL> c)
-	{
-		return PathOp.findAllInclusions(i, c);
-	}
-
-	// =========================================================================
-
 	private IPathUnifierFactory<VAL, LBL, IPathUnifier<VAL, LBL>> unifierFactory;
 
+	/**
+	 * Use internally a {@link IPathUnifierFactory} to create the concrete {@link IPathUnifier} objects when needed.
+	 */
 	public PathUnifiers(IPathUnifierFactory<VAL, LBL, IPathUnifier<VAL, LBL>> ufactory)
 	{
 		unifierFactory = ufactory;
 	}
 
-	public PathUnifiers(Class<IPathUnifier<VAL, LBL>> unifierClass) throws NoSuchMethodException, SecurityException
+	/**
+	 * Use 'unifierClass' as a concrete class of {@link IPathUnifier}.
+	 * This constructor will search a constructor in 'unifierClass' to create objects of type {@link IPathUnifier} when needed.
+	 * 
+	 * @param unifierClass A class of type {@link IPathUnifier} that must have a constructor signature like {@link IPathUnifierFactory#create(IPath, IPath, IPath, IPath, IPath)}.
+	 * @throws NoSuchMethodException If the constructor does not exists
+	 * @throws SecurityException     If the constructor is not accessible (see {@link Class#getDeclaredConstructor(Class...) })
+	 * @throws RuntimeException      If cannot instantiate a {@link IPathUnifier} when constructor is called later.
+	 */
+	public PathUnifiers(Class<? extends IPathUnifier<VAL, LBL>> unifierClass) throws NoSuchMethodException, SecurityException
 	{
-		Constructor<IPathUnifier<VAL, LBL>> constructor = unifierClass.getDeclaredConstructor(IPath.class, IPath.class, IPath.class, IPath.class, IPath.class);
+		Constructor<? extends IPathUnifier<VAL, LBL>> constructor = unifierClass.getDeclaredConstructor(IPath.class, IPath.class, IPath.class, IPath.class, IPath.class);
 
 		/*
 		 * Create the factory with the unifier's class constructor
@@ -91,7 +95,17 @@ public final class PathUnifiers<VAL, LBL>
 		return strongUnifiers(a.getHead(), b.getBody(), firstFind);
 	}
 
-	public Collection<IPathUnifier<VAL, LBL>> weakUnifiers(IPath<VAL, LBL> head, IPath<VAL, LBL> body, boolean firstFind, boolean existentialHead)
+	/**
+	 * Find all the weak unifiers from head to body according to the path rewriting framework.
+	 * The weak unifiers are these where the body's suffix or prefix is not empty.
+	 * 
+	 * @param head            Head, may be from a rule
+	 * @param body            Body, may be from a rule
+	 * @param firstFind       Stop the process at the first one founded
+	 * @param existentialHead If head is an existential one
+	 * @return All the strong unifiers.
+	 */
+	private Collection<IPathUnifier<VAL, LBL>> weakUnifiers(IPath<VAL, LBL> head, IPath<VAL, LBL> body, boolean firstFind, boolean existentialHead)
 	{
 		List<IPathUnifier<VAL, LBL>> ret = new ArrayList<>();
 
@@ -177,7 +191,20 @@ public final class PathUnifiers<VAL, LBL>
 		return ret;
 	}
 
-	public Collection<IPathUnifier<VAL, LBL>> strongUnifiers(IPath<VAL, LBL> head, IPath<VAL, LBL> body, boolean firstFind)
+	/**
+	 * Find all the strong unifiers from head to body according to the path rewriting framework.
+	 * The strong unifiers are these where the body's suffix and prefix are empty.
+	 * <p>
+	 * Note:
+	 * The computation for an existential head is the same as for the non existential one, so there is no parameter 'existentialHead' like in {@link #weakUnifiers(IPath, IPath, boolean, boolean)}.
+	 * </p>
+	 * 
+	 * @param head      Head, may be from a rule
+	 * @param body      Body, may be from a rule
+	 * @param firstFind Stop the process at the first one founded
+	 * @return All the strong unifiers.
+	 */
+	private Collection<IPathUnifier<VAL, LBL>> strongUnifiers(IPath<VAL, LBL> head, IPath<VAL, LBL> body, boolean firstFind)
 	{
 		List<IPathUnifier<VAL, LBL>> ret = new ArrayList<>();
 
