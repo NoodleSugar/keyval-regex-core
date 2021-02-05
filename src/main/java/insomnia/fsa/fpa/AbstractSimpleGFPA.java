@@ -7,8 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import insomnia.data.IPath;
+import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
+import insomnia.implem.fsa.fpa.GFPAMatcher;
 
 /**
  * A simple {@link IGFPA} implementation which use simple collections for storage.
@@ -59,6 +62,12 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 			Collection<IFSAEdge<VAL, LBL>> coll = edgesOf.computeIfAbsent(edge.getParent(), e -> new ArrayList<>());
 			coll.add(edge);
 		}
+	}
+
+	@Override
+	public ITreeMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element)
+	{
+		return new GFPAMatcher<>(this, element);
 	}
 
 	@Override

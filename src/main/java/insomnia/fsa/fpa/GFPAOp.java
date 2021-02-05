@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import insomnia.data.IPath;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 
@@ -19,7 +20,7 @@ public final class GFPAOp
 
 	// =========================================================================
 
-	public static <VAL, LBL> boolean test(IGFPA<VAL, LBL> automaton, IFPAPath<VAL, LBL> element)
+	public static <VAL, LBL> boolean test(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
 	{
 		Collection<IFSAState<VAL, LBL>> states = automaton.getInitialStates();
 		states = automaton.nextValidStates(states, element);
@@ -28,7 +29,7 @@ public final class GFPAOp
 
 	// =========================================================================
 
-	private static <VAL, LBL> void cleanBadStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, IFPAPath<VAL, LBL> theElement)
+	private static <VAL, LBL> void cleanBadStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
 	{
 		if (!theElement.isTerminal())
 			states.removeIf(state -> automaton.isTerminal(state));
@@ -36,7 +37,7 @@ public final class GFPAOp
 		states.removeIf(state -> false == state.getValueCondition().test(theElement.getValue().orElse(null)));
 	}
 
-	private static <VAL, LBL> boolean checkPreConditions(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, IFPAPath<VAL, LBL> theElement)
+	private static <VAL, LBL> boolean checkPreConditions(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
 	{
 		if (states.isEmpty())
 			return false;
@@ -47,7 +48,7 @@ public final class GFPAOp
 		return true;
 	}
 
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidState_sync(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, IFPAPath<VAL, LBL> theElement)
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidState_sync(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
 	{
 		Set<IFSAState<VAL, LBL>>        ret        = new HashSet<>(automaton.nbStates() * 2);
 		Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(automaton.nbStates());
@@ -76,7 +77,7 @@ public final class GFPAOp
 		return new ArrayList<>(ret);
 	}
 
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidStates_general(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, IFPAPath<VAL, LBL> theElement)
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidStates_general(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
 	{
 		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(automaton.nbStates() * 2);
 		Collection<IFSAState<VAL, LBL>> buffStates;

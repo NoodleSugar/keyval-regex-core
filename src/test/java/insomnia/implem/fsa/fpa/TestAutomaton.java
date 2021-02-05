@@ -155,7 +155,7 @@ public class TestAutomaton
 		@MethodSource
 		void complex(String subject, boolean match)
 		{
-			assertEquals(match, automaton.test(KVPaths.pathFromString(subject)));
+			assertEquals(match, automaton.matcher(KVPaths.pathFromString(subject)).matches());
 		}
 	}
 	// =========================================================================
@@ -224,7 +224,7 @@ public class TestAutomaton
 		try
 		{
 			IFPA<KVValue, KVLabel> automaton = parse(regex, fprovider);
-			assertEquals(match, automaton.test(KVPaths.pathFromString(pathSubject)));
+			assertEquals(match, automaton.matcher(KVPaths.pathFromString(pathSubject)).matches());
 		}
 		catch (IOException | ParseException e)
 		{
@@ -251,7 +251,7 @@ public class TestAutomaton
 		try
 		{
 			IFPA<KVValue, KVLabel> automaton = parse(regex, fprovider, rvalue);
-			assertEquals(match, automaton.test(subject));
+			assertEquals(match, automaton.matcher(subject).matches());
 		}
 		catch (IOException | ParseException e)
 		{
@@ -304,7 +304,7 @@ public class TestAutomaton
 	void matchPath(IPath<KVValue, KVLabel> path, IPath<KVValue, KVLabel> query, boolean match)
 	{
 		IFPA<KVValue, KVLabel> automaton = automatonFromPath(path);
-		assertEquals(match, automaton.test(query));
+		assertEquals(match, automaton.matcher(query).matches());
 	}
 
 	// =========================================================================
@@ -416,6 +416,6 @@ public class TestAutomaton
 			.setGraphChunkModifier(modifier.getGraphChunkModifier(grd)) //
 			.create();
 
-		assertEquals(expected, automaton.test(KVPaths.pathFromString(query)));
+		assertEquals(expected, automaton.matcher(KVPaths.pathFromString(query)).matches());
 	}
 }

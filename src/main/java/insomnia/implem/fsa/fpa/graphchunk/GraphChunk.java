@@ -20,6 +20,8 @@ import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DirectedPseudograph;
 
+import insomnia.data.IPath;
+import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
@@ -28,6 +30,7 @@ import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.fsa.edge.FSAEdge;
 import insomnia.implem.fsa.fpa.FPAProperties;
+import insomnia.implem.fsa.fpa.GFPAMatcher;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
 
 /**
@@ -69,6 +72,12 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		// By default we don't know if it is deterministic
 		properties = new FPAProperties(false, true);
 		cleanGraph();
+	}
+
+	@Override
+	public ITreeMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element)
+	{
+		return new GFPAMatcher<>(this, element);
 	}
 
 	public static <VAL, LBL> GraphChunk<VAL, LBL> createOneEdge(IFSALabelCondition<LBL> labelCondition)

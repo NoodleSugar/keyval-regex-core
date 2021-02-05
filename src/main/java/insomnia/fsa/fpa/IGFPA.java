@@ -2,6 +2,7 @@ package insomnia.fsa.fpa;
 
 import java.util.Collection;
 
+import insomnia.data.IPath;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 
@@ -39,9 +40,9 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	Collection<IFSAEdge<VAL, LBL>> getEdges(IFSAState<VAL, LBL> state);
 
-	Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IFPAPath<VAL, LBL> element);
+	Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IPath<VAL, LBL> element);
 
-	Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, IFPAPath<VAL, LBL> element);
+	Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, IPath<VAL, LBL> element);
 
 	Collection<IFSAState<VAL, LBL>> epsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states);
 
