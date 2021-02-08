@@ -11,6 +11,7 @@ import java.util.Queue;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.AbstractSimpleGFPA;
+import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.fsa.edge.FSAEdge;
@@ -137,7 +138,7 @@ public final class FPABuilder<VAL, LBL>
 		Collection<IFSAState<VAL, LBL>> processedStates = new HashSet<>();
 		Collection<IFSAState<VAL, LBL>> states, rootedStates, terminalStates, initialStates, finalStates;
 
-		listOfNextStates.add(gfpa.epsilonClosure(gfpa.getInitialStates()));
+		listOfNextStates.add(GFPAOp.epsilonClosure(gfpa, gfpa.getInitialStates()));
 		states         = new HashSet<>();
 		initialStates  = new ArrayList<>();
 		finalStates    = new HashSet<>();
@@ -160,7 +161,7 @@ public final class FPABuilder<VAL, LBL>
 			{
 				if (FSALabelConditions.isEpsilonCondition(currentEdge.getLabelCondition()))
 				{
-					Collection<IFSAState<VAL, LBL>> subStates = gfpa.epsilonClosure(currentEdge.getChild());
+					Collection<IFSAState<VAL, LBL>> subStates = GFPAOp.epsilonClosure(gfpa, currentEdge.getChild());
 					Collection<IFSAEdge<VAL, LBL>>  subEdges  = gfpa.getEdges(subStates);
 
 					for (IFSAEdge<VAL, LBL> subEdge : subEdges)
@@ -192,7 +193,7 @@ public final class FPABuilder<VAL, LBL>
 				states.add(edge.getChild());
 
 				if (!processedStates.contains(edge.getChild()))
-					listOfNextStates.add(gfpa.epsilonClosure(edge.getChild()));
+					listOfNextStates.add(GFPAOp.epsilonClosure(gfpa, edge.getChild()));
 			}
 			addedEdges.clear();
 			processedStates.addAll(currentStates);

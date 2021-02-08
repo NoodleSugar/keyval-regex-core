@@ -3,7 +3,6 @@ package insomnia.fsa.fpa;
 import java.util.Collection;
 import java.util.Collections;
 
-import insomnia.data.IPath;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 
@@ -19,33 +18,6 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	public Collection<IFSAEdge<VAL, LBL>> getEdges(IFSAState<VAL, LBL> state)
 	{
 		return getEdges(Collections.singletonList(state));
-	}
-
-	@Override
-	public Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, IPath<VAL, LBL> element)
-	{
-		return nextValidStates(Collections.singletonList(state), element);
-	}
-
-	@Override
-	public Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
-	{
-		if (getProperties().isSynchronous())
-			return GFPAOp.nextValidState_sync(this, states, theElement);
-		else
-			return GFPAOp.nextValidStates_general(this, states, theElement);
-	}
-
-	@Override
-	public Collection<IFSAState<VAL, LBL>> epsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states)
-	{
-		return GFPAOp.epsilonClosure(this, states);
-	}
-
-	@Override
-	public Collection<IFSAState<VAL, LBL>> epsilonClosure(IFSAState<VAL, LBL> state)
-	{
-		return epsilonClosure(Collections.singletonList(state));
 	}
 
 	// =========================================================================

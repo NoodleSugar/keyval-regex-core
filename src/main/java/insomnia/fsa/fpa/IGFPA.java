@@ -2,7 +2,6 @@ package insomnia.fsa.fpa;
 
 import java.util.Collection;
 
-import insomnia.data.IPath;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 
@@ -24,6 +23,10 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	IFPAProperties getProperties();
 
+	boolean isInitial(IFSAState<VAL, LBL> state);
+
+	boolean isFinal(IFSAState<VAL, LBL> state);
+
 	boolean isRooted(IFSAState<VAL, LBL> state);
 
 	boolean isTerminal(IFSAState<VAL, LBL> state);
@@ -34,28 +37,13 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	Collection<IFSAState<VAL, LBL>> getFinalStates();
 
+	Collection<IFSAState<VAL, LBL>> getRootedStates();
+
+	Collection<IFSAState<VAL, LBL>> getTerminalStates();
+
 	Collection<IFSAEdge<VAL, LBL>> getEdges();
 
 	Collection<IFSAEdge<VAL, LBL>> getEdges(Collection<? extends IFSAState<VAL, LBL>> states);
 
 	Collection<IFSAEdge<VAL, LBL>> getEdges(IFSAState<VAL, LBL> state);
-
-	Collection<IFSAState<VAL, LBL>> nextValidStates(Collection<? extends IFSAState<VAL, LBL>> states, IPath<VAL, LBL> element);
-
-	Collection<IFSAState<VAL, LBL>> nextValidStates(IFSAState<VAL, LBL> state, IPath<VAL, LBL> element);
-
-	Collection<IFSAState<VAL, LBL>> epsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states);
-
-	Collection<IFSAState<VAL, LBL>> epsilonClosure(IFSAState<VAL, LBL> state);
-
-	// ========================================================================
-	// Help
-
-	boolean isInitial(IFSAState<VAL, LBL> state);
-
-	boolean isFinal(IFSAState<VAL, LBL> state);
-
-	Collection<IFSAState<VAL, LBL>> getRootedStates();
-
-	Collection<IFSAState<VAL, LBL>> getTerminalStates();
 }

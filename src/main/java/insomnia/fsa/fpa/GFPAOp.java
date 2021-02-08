@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import insomnia.data.IPath;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 
@@ -15,95 +14,14 @@ public final class GFPAOp
 {
 	private GFPAOp()
 	{
-
+		throw new AssertionError();
 	}
 
 	// =========================================================================
 
-	public static <VAL, LBL> boolean test(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> epsilonClosure(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
 	{
-		Collection<IFSAState<VAL, LBL>> states = automaton.getInitialStates();
-		states = automaton.nextValidStates(states, element);
-		return !Collections.disjoint(states, automaton.getFinalStates());
-	}
-
-	// =========================================================================
-
-	private static <VAL, LBL> void cleanBadStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
-	{
-		if (!theElement.isTerminal())
-			states.removeIf(state -> automaton.isTerminal(state));
-
-		states.removeIf(state -> false == state.getValueCondition().test(theElement.getValue().orElse(null)));
-	}
-
-	private static <VAL, LBL> boolean checkPreConditions(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
-	{
-		if (states.isEmpty())
-			return false;
-
-		if (!theElement.isRooted())
-			states.removeIf((state) -> automaton.isRooted(state));
-
-		return true;
-	}
-
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidState_sync(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
-	{
-		Set<IFSAState<VAL, LBL>>        ret        = new HashSet<>(automaton.nbStates() * 2);
-		Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(automaton.nbStates());
-
-		ret.addAll(states);
-
-		if (!checkPreConditions(automaton, ret, theElement))
-			return Collections.emptyList();
-
-		for (LBL element : theElement.getLabels())
-		{
-			if (ret.isEmpty())
-				return Collections.emptyList();
-
-			buffStates.addAll(ret);
-			ret.clear();
-
-			for (IFSAEdge<VAL, LBL> edge : automaton.getEdges(buffStates))
-			{
-				if (edge.getLabelCondition().test(element))
-					ret.add(edge.getChild());
-			}
-			buffStates.clear();
-		}
-		cleanBadStates(automaton, ret, theElement);
-		return new ArrayList<>(ret);
-	}
-
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidStates_general(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
-	{
-		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(automaton.nbStates() * 2);
-		Collection<IFSAState<VAL, LBL>> buffStates;
-
-		ret.addAll(states);
-
-		if (!checkPreConditions(automaton, ret, theElement))
-			return Collections.emptyList();
-
-		for (LBL element : theElement.getLabels())
-		{
-			if (ret.isEmpty())
-				return Collections.emptyList();
-
-			buffStates = automaton.epsilonClosure(ret);
-			ret.clear();
-
-			for (IFSAEdge<VAL, LBL> edge : automaton.getEdges(buffStates))
-			{
-				if (edge.getLabelCondition().test(element))
-					ret.add(edge.getChild());
-			}
-		}
-		ret = automaton.epsilonClosure(ret);
-		cleanBadStates(automaton, ret, theElement);
-		return ret;
+		return epsilonClosure(automaton, Collections.singleton(state));
 	}
 
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> epsilonClosure(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states)

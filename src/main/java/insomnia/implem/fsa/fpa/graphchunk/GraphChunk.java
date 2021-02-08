@@ -30,7 +30,7 @@ import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.fsa.edge.FSAEdge;
 import insomnia.implem.fsa.fpa.FPAProperties;
-import insomnia.implem.fsa.fpa.GFPAMatcher;
+import insomnia.implem.fsa.fpa.GFPAMatchers;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
 
 /**
@@ -77,7 +77,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	@Override
 	public ITreeMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element)
 	{
-		return new GFPAMatcher<>(this, element);
+		return GFPAMatchers.create(this, element);
 	}
 
 	public static <VAL, LBL> GraphChunk<VAL, LBL> createOneEdge(IFSALabelCondition<LBL> labelCondition)

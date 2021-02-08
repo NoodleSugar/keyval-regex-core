@@ -11,7 +11,7 @@ import insomnia.data.IPath;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
-import insomnia.implem.fsa.fpa.GFPAMatcher;
+import insomnia.implem.fsa.fpa.GFPAMatchers;
 
 /**
  * A simple {@link IGFPA} implementation which use simple collections for storage.
@@ -67,7 +67,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	@Override
 	public ITreeMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element)
 	{
-		return new GFPAMatcher<>(this, element);
+		return GFPAMatchers.create(this, element);
 	}
 
 	@Override
