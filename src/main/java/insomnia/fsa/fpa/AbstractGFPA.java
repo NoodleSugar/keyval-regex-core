@@ -35,6 +35,19 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 		return getFinalStates().contains(state);
 	}
 
+
+	@Override
+	public boolean isRooted(IFSAState<VAL, LBL> state)
+	{
+		return getRootedStates().contains(state);
+	}
+
+	@Override
+	public boolean isTerminal(IFSAState<VAL, LBL> state)
+	{
+		return getTerminalStates().contains(state);
+	}
+
 	// =========================================================================
 
 	@Override

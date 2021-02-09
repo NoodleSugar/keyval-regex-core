@@ -25,9 +25,6 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 
 	private Tree()
 	{
-		childrenOf = new HashMap<>();
-		parentOf   = new HashMap<>();
-		vocabulary = new HashSet<>();
 	}
 
 	Tree(ITree<VAL, LBL> src)
@@ -42,6 +39,28 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 		recursiveConstruct(root, src, srcNode);
 		vocabulary = Collections.unmodifiableList(new ArrayList<>(vocabulary));
 	}
+
+	private static <VAL, LBL> Tree<VAL, LBL> mutable()
+	{
+		Tree<VAL, LBL> ret = new Tree<>();
+		ret.childrenOf = new HashMap<>();
+		ret.parentOf   = new HashMap<>();
+		ret.vocabulary = new HashSet<>();
+		return ret;
+	}
+
+	static <VAL, LBL> ITree<VAL, LBL> empty()
+	{
+		Tree<VAL, LBL> ret = new Tree<>();
+
+		ret.root       = Nodes.create(false, false, null);
+		ret.childrenOf = Collections.emptyMap();
+		ret.parentOf   = Collections.emptyMap();
+		ret.vocabulary = Collections.emptyList();
+		return ret;
+	}
+
+	// =========================================================================
 
 	private IEdge<VAL, LBL> createEdge(INode<VAL, LBL> parent, INode<VAL, LBL> child, LBL label, List<IEdge<VAL, LBL>> childrenOf)
 	{
@@ -92,7 +111,7 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 
 	static <RVAL, RLBL, SVAL, SLBL> Tree<RVAL, RLBL> map(ITree<SVAL, SLBL> src, Function<SVAL, RVAL> fmapVal, Function<SLBL, RLBL> fmapLabel)
 	{
-		Tree<RVAL, RLBL> ret = new Tree<>();
+		Tree<RVAL, RLBL> ret = mutable();
 		ret.root = ret.mapNode(src.getRoot(), fmapVal);
 		ret.recursiveMap(ret.root, src, src.getRoot(), fmapVal, fmapLabel);
 		return ret;

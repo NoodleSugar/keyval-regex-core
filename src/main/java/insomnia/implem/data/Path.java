@@ -7,31 +7,44 @@ import java.util.Optional;
 import insomnia.data.AbstractPath;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
-import insomnia.data.IPath;
+import insomnia.data.PathOp;
+import insomnia.data.PathOp.RealLimits;
 
 final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 {
+	/**
+	 * Real offset of a node.
+	 * Serve in the subPath creation to make sure that the subNodes are the same that the parent path nodes.
+	 */
+	private int realNodeOffset = 0;
+
 	Path()
 	{
 		super();
 	}
 
-	// Constructeur de sous-chemin
-	Path(IPath<VAL, LBL> path, int begin, int end)
-	{
-		super(path, begin, end);
-	}
-
 	// path doit contenir au moins une clé
-	Path(boolean isRooted, boolean isTerminal, List<LBL> labels, VAL value)
+	Path(int offset, boolean isRooted, boolean isTerminal, List<LBL> labels, VAL value)
 	{
 		super(isRooted, isTerminal, labels, value);
+		this.realNodeOffset = offset;
 	}
 
 	@Override
-	public Path<VAL, LBL> subPath(int begin, int end)
+	public Path<VAL, LBL> subPath(int from, int to)
 	{
-		return new Path<>(this, begin, end);
+		if (from == to)
+			return new Path<>();
+
+		RealLimits limits = PathOp.realLimits(this, from, to);
+		VAL        value;
+
+		if (limits.isTerminal())
+			value = getValue().orElse(null);
+		else
+			value = null;
+
+		return new Path<>(limits.getFrom() + realNodeOffset, limits.isRooted(), limits.isTerminal(), getLabels().subList(limits.getFrom(), limits.getTo()), value);
 	}
 
 	// =========================================================================
@@ -72,6 +85,29 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 		{
 			return isTerminal;
 		}
+
+		@Override
+		public int hashCode()
+		{
+			return pos;
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (!(obj instanceof PathNode))
+				return false;
+
+			@SuppressWarnings("unchecked")
+			PathNode<VAL, LBL> node = (PathNode<VAL, LBL>) obj;
+			return pos == node.pos;
+		}
+
+		@Override
+		public String toString()
+		{
+			return "<" + pos + ">";
+		}
 	}
 
 	// =========================================================================
@@ -111,6 +147,6 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 	public INode<VAL, LBL> getRoot()
 	{
 		boolean isTerminal = isEmpty() && isTerminal();
-		return new PathNode<>(0, isRooted(), isTerminal, Optional.empty());
+		return new PathNode<>(realNodeOffset, isRooted(), isTerminal, Optional.empty());
 	}
 }

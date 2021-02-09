@@ -18,6 +18,20 @@ public final class Trees
 
 	// =========================================================================
 
+	private final static ITree<?, ?> emptyTree = Tree.empty();
+
+	/**
+	 * Create an empty {@link Tree}.
+	 * The {@link Tree} returned can be compare to other returned empty {@link Tree}s with {@link Tree#equals(Object)}.
+	 * 
+	 * @see TreeBuilder
+	 */
+	@SuppressWarnings("unchecked")
+	public static <VAL, LBL> ITree<VAL, LBL> empty()
+	{
+		return (ITree<VAL, LBL>) emptyTree;
+	}
+
 	/**
 	 * Create a new tree copying informations from 'src'.
 	 * 

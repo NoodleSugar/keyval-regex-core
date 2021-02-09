@@ -1,7 +1,6 @@
 package insomnia.implem.data.creational;
 
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -23,96 +22,7 @@ import insomnia.implem.data.Trees;
  */
 public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 {
-	private class Node implements INode<VAL, LBL>
-	{
-		private Optional<VAL> value;
-
-		Edge                  parent   = null;
-		List<IEdge<VAL, LBL>> children = new ArrayList<>();
-
-		boolean isRooted   = false;
-		boolean isTerminal = false;
-
-		Node()
-		{
-			this.value = Optional.empty();
-		}
-
-		void addEdge(Edge edge)
-		{
-			children.add(edge);
-		}
-
-		void setParent(Edge parent)
-		{
-			this.parent = parent;
-		}
-
-		void setValue(VAL value)
-		{
-			this.value      = Optional.of(value);
-			this.isTerminal = true;
-		}
-
-		@Override
-		public Optional<VAL> getValue()
-		{
-			return value;
-		}
-
-		@Override
-		public boolean isRooted()
-		{
-			return isRooted;
-		}
-
-		@Override
-		public boolean isTerminal()
-		{
-			return isTerminal;
-		}
-	}
-
-	// =========================================================================
-
-	private class Edge implements IEdge<VAL, LBL>
-	{
-		LBL  label;
-		Node parent;
-		Node child;
-
-		Edge(LBL label, Node parent, Node child)
-		{
-			this.label  = label;
-			this.parent = parent;
-			this.child  = child;
-			TreeBuilder.this.vocab.add(label);
-			parent.addEdge(this);
-			child.setParent(this);
-		}
-
-		@Override
-		public LBL getLabel()
-		{
-			return label;
-		}
-
-		@Override
-		public INode<VAL, LBL> getParent()
-		{
-			return parent;
-		}
-
-		@Override
-		public INode<VAL, LBL> getChild()
-		{
-			return child;
-		}
-	}
-
-	// =========================================================================
-
-	private Node root, currentNode;
+	private Node<VAL, LBL> root, currentNode;
 
 	private Set<LBL> vocab;
 
@@ -126,7 +36,7 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	@Override
 	public ITreeBuilder<VAL, LBL> clear()
 	{
-		root  = new Node();
+		root  = new Node<>();
 		vocab = new HashSet<>();
 
 		currentNode = root;
@@ -136,13 +46,13 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	@Override
 	public boolean isEmpty()
 	{
-		return root.children.isEmpty();
+		return root.getChildren().isEmpty();
 	}
 
 	@Override
 	public ITreeBuilder<VAL, LBL> setRooted(boolean isRooted)
 	{
-		root.isRooted = isRooted;
+		root.setRooted(isRooted);
 		return this;
 	}
 
@@ -155,19 +65,19 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	@Override
 	public boolean isRooted()
 	{
-		return root.isRooted;
+		return root.isRooted();
 	}
 
 	@Override
 	public List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
 	{
-		return ((Node) node).children;
+		return ((Node<VAL, LBL>) node).getChildren();
 	}
 
 	@Override
 	public Optional<IEdge<VAL, LBL>> getParent(INode<VAL, LBL> node)
 	{
-		return Optional.ofNullable(((Node) node).parent);
+		return Optional.ofNullable(((Node<VAL, LBL>) node).getParent());
 	}
 
 	@Override
@@ -179,8 +89,8 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	@Override
 	public ITreeBuilder<VAL, LBL> add(LBL label)
 	{
-		Node newNode = new Node();
-		new Edge(label, currentNode, newNode);
+		Node<VAL, LBL> newNode = new Node<>();
+		new Edge<>(label, currentNode, newNode, vocab);
 		currentNode = newNode;
 		return this;
 	}
@@ -191,7 +101,7 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 		if (currentNode == root)
 			throw new InvalidParameterException();
 
-		currentNode = (Node) currentNode.parent.getParent();
+		currentNode = (Node<VAL, LBL>) currentNode.getParent().getParent();
 		return this;
 	}
 
@@ -206,7 +116,7 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	@Override
 	public ITreeBuilder<VAL, LBL> endTerminal()
 	{
-		currentNode.isTerminal = true;
+		currentNode.setTerminal(true);
 		end();
 		return this;
 	}

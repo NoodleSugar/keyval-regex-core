@@ -20,54 +20,7 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	private boolean isRooted;
 	private boolean isTerminal;
 
-	private VAL nullValue()
-	{
-		return null;
-	}
 	// =========================================================================
-
-	@SuppressWarnings("unchecked")
-	public AbstractPath(IPath<VAL, LBL> path, int begin, int end)
-	{
-		if (begin == end)
-		{
-			initPath(this, default_isRoot, default_isTerminal, Collections.EMPTY_LIST, nullValue());
-			return;
-		}
-		boolean isRooted   = false;
-		boolean isTerminal = false;
-		VAL     value;
-
-		if (path.isRooted())
-		{
-			if (begin > 0)
-			{
-				begin--;
-				end -= 2;
-			}
-			else
-			{
-				isRooted = true;
-				end--;
-			}
-		}
-
-		if (path.isTerminal())
-		{
-			if (end == path.nbLabels() + 1)
-			{
-				isTerminal = true;
-				end--;
-			}
-		}
-
-		if (isTerminal)
-			value = path.getValue().orElse(null);
-		else
-			value = nullValue();
-
-		initPath(this, isRooted, isTerminal, path.getLabels().subList(begin, end), value);
-	}
 
 	public AbstractPath(boolean isRooted, boolean isTerminal, List<? extends LBL> labels, VAL value)
 	{
@@ -76,7 +29,7 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 
 	public AbstractPath()
 	{
-		this(false, false, Collections.emptyList(), null);
+		this(default_isRoot, default_isTerminal, Collections.emptyList(), null);
 	}
 
 	// =========================================================================

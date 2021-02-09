@@ -75,7 +75,7 @@ public final class Paths
 
 	private static <VAL, LBL> IPath<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels, VAL value)
 	{
-		return new Path<>(isRooted, isTerminal, labels, value);
+		return new Path<>(0, isRooted, isTerminal, labels, value);
 	}
 
 	public static <VAL, LBL> IPath<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels)

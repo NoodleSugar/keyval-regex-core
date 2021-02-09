@@ -25,6 +25,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.data.IPath;
+import insomnia.data.PathOp;
+import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.fpa.IFPA;
 import insomnia.implem.fsa.fpa.creational.FPAFactory;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.GCPathRuleApplierSimple;
@@ -305,6 +307,52 @@ public class TestAutomaton
 	{
 		IFPA<KVValue, KVLabel> automaton = automatonFromPath(path);
 		assertEquals(match, automaton.matcher(query).matches());
+	}
+
+	static List<Object[]> findPath()
+	{
+		return Arrays.asList(new Object[][] { //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.b.c.a.b.a"), new int[] { 0, 3 } }, //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString(".a.b.c.a.b.a"), new int[] { 1, 4 } }, //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString("a.b.c.a.b.a.b."), new int[] { 0, 3, 5 } }, //
+				{ KVPaths.pathFromString("a.b"), KVPaths.pathFromString(".a.b.c.a.b.a.b."), new int[] { 1, 4, 6 } }, //
+
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString("a.b.c.a.b.a"), new int[] {} }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b.c.a.b.a"), new int[] { 0 } }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString("a.b.c.a.b.a.b."), new int[] {} }, //
+				{ KVPaths.pathFromString(".a.b"), KVPaths.pathFromString(".a.b.c.a.b.a.b."), new int[] { 0 } }, //
+
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b.c.a.b.a.b"), new int[] {} }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString("a.b.c.a.b.a.b."), new int[] { 5 } }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString(".a.b.c.a.b.a.b"), new int[] {} }, //
+				{ KVPaths.pathFromString("a.b."), KVPaths.pathFromString(".a.b.c.a.b.a.b."), new int[] { 6 } }, //
+
+				{ KVPaths.pathFromString(".a.b."), KVPaths.pathFromString("a.b"), new int[] {} }, //
+				{ KVPaths.pathFromString(".a.b."), KVPaths.pathFromString(".a.b"), new int[] {} }, //
+				{ KVPaths.pathFromString(".a.b."), KVPaths.pathFromString("a.b."), new int[] {} }, //
+				{ KVPaths.pathFromString(".a.b."), KVPaths.pathFromString(".a.b."), new int[] { 0 } }, //
+
+				{ KVPaths.pathFromString(".a.b."), KVPaths.pathFromString(".a.b.b."), new int[] {} }, //
+				{ KVPaths.pathFromString(".a.b."), KVPaths.pathFromString(".a.a.b."), new int[] {} }, //
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource
+	void findPath(IPath<KVValue, KVLabel> path, IPath<KVValue, KVLabel> query, int groups[])
+	{
+		IFPA<KVValue, KVLabel>         automaton = automatonFromPath(path);
+		ITreeMatcher<KVValue, KVLabel> matcher   = automaton.matcher(query);
+
+		int i = 0;
+
+		while (matcher.find())
+		{
+			assertEquals(path, matcher.group());
+			assertEquals(PathOp.getPathNode(query, groups[i]), matcher.group().getRoot());
+			i++;
+		}
+		assertEquals(groups.length, i);
 	}
 
 	// =========================================================================

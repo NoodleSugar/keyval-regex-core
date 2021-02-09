@@ -70,17 +70,6 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 		return GFPAMatchers.create(this, element);
 	}
 
-	@Override
-	public boolean isRooted(IFSAState<VAL, LBL> state)
-	{
-		return rootedStates.contains(state);
-	}
-
-	@Override
-	public boolean isTerminal(IFSAState<VAL, LBL> state)
-	{
-		return terminalStates.contains(state);
-	}
 
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getFinalStates()

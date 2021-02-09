@@ -20,7 +20,7 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	 * @param end   Exclusive end index.
 	 * @return The sub path.
 	 */
-	IPath<VAL, LBL> subPath(int begin, int end);
+	IPath<VAL, LBL> subPath(int from, int to);
 
 	/**
 	 * @return the labels of the path conserving the path order.

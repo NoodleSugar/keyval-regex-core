@@ -1,5 +1,7 @@
 package insomnia.data;
 
+import java.util.Optional;
+
 import org.apache.commons.lang3.ArrayUtils;
 
 import insomnia.lib.help.HelpLists;
@@ -18,6 +20,125 @@ public final class PathOp
 	private PathOp()
 	{
 		throw new AssertionError();
+	}
+
+	// =========================================================================
+
+	public static class Limits
+	{
+		private final int from, to;
+
+		Limits(int from, int to)
+		{
+			this.from = from;
+			this.to   = to;
+		}
+
+		public int getFrom()
+		{
+			return from;
+		}
+
+		public int getTo()
+		{
+			return to;
+		}
+	}
+
+	public static class RealLimits extends Limits
+	{
+		private final boolean isRooted, isTerminal;
+
+		RealLimits(boolean isRooted, boolean isTerminal, int from, int to)
+		{
+			super(from, to);
+			this.isRooted   = isRooted;
+			this.isTerminal = isTerminal;
+		}
+
+		public boolean isRooted()
+		{
+			return isRooted;
+		}
+
+		public boolean isTerminal()
+		{
+			return isTerminal;
+		}
+	}
+
+	/**
+	 * Transform the conceptual limits (taking into account isRooted/isTerminal nature) into real limits to refer to a memory location.
+	 * 
+	 * @param path   the path of reference
+	 * @param limits (input/output) the limits of the path that will be modified
+	 */
+	static public RealLimits realLimits(IPath<?, ?> path, int from, int to)
+	{
+		assert (from < to);
+		boolean isRooted   = false;
+		boolean isTerminal = false;
+
+		if (path.isRooted())
+		{
+			if (from > 0)
+			{
+				from--;
+				to -= 2;
+			}
+			else
+			{
+				isRooted = true;
+				to--;
+			}
+		}
+		if (path.isTerminal())
+		{
+			if (to == path.nbLabels() + 1)
+			{
+				isTerminal = true;
+				to--;
+			}
+		}
+		return new RealLimits(isRooted, isTerminal, from, to);
+	}
+
+	/**
+	 * Return the node of a path located at the index 'index'.
+	 * This function does not take into account the isRooted nature of 'path' in the index.
+	 * 
+	 * @param path  the path to search in
+	 * @param index the index where to get the node
+	 * @return the index if exists or {@code null}
+	 */
+	static public <VAL, LBL> INode<VAL, LBL> getRealPathNode(IPath<VAL, LBL> path, int index)
+	{
+		INode<VAL, LBL> ret = path.getRoot();
+
+		while (index-- > 0)
+		{
+			Optional<IEdge<VAL, LBL>> child = path.getChild(ret);
+
+			if (!child.isPresent())
+				return null;
+
+			ret = child.get().getChild();
+		}
+		return ret;
+	}
+
+	/**
+	 * Get the node of a path located at the conceptual location 'from'.
+	 * This function take into account the isRooted nature of 'path' in 'from'.
+	 * 
+	 * @param path the path to search in
+	 * @param from the location where to get the node counting the isRooted nature
+	 * @return
+	 */
+	static public <VAL, LBL> INode<VAL, LBL> getPathNode(IPath<VAL, LBL> path, int from)
+	{
+		RealLimits limits = realLimits(path, from, from + 1);
+		return getRealPathNode(path, limits.getFrom());
 	}
 
 	// =========================================================================
