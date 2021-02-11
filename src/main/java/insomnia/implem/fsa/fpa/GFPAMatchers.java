@@ -69,29 +69,7 @@ public class GFPAMatchers
 		@Override
 		Collection<IFSAState<VAL, LBL>> doMatch()
 		{
-			Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(automaton.nbStates() * 2);
-			Collection<IFSAState<VAL, LBL>> buffStates;
-
-			ret.addAll(automaton.getInitialStates());
-			GFPAOp.initStates(automaton, ret, element);
-
-			for (LBL element : element.getLabels())
-			{
-				if (ret.isEmpty())
-					return Collections.emptyList();
-
-				buffStates = GFPAOp.epsilonClosure(automaton, ret);
-				ret.clear();
-
-				for (IFSAEdge<VAL, LBL> edge : automaton.getEdges(buffStates))
-				{
-					if (edge.getLabelCondition().test(element))
-						ret.add(edge.getChild());
-				}
-			}
-			ret = GFPAOp.epsilonClosure(automaton, ret);
-			GFPAOp.finalizeStates(automaton, ret, element);
-			return ret;
+			return GFPAOp.nextValidStates(automaton, element);
 		}
 	}
 
@@ -107,29 +85,7 @@ public class GFPAMatchers
 		@Override
 		Collection<IFSAState<VAL, LBL>> doMatch()
 		{
-			Set<IFSAState<VAL, LBL>>        ret        = new HashSet<>(automaton.nbStates() * 2);
-			Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(automaton.nbStates());
-
-			ret.addAll(automaton.getInitialStates());
-			GFPAOp.initStates(automaton, ret, element);
-
-			for (LBL element : element.getLabels())
-			{
-				if (ret.isEmpty())
-					return Collections.emptyList();
-
-				buffStates.addAll(ret);
-				ret.clear();
-
-				for (IFSAEdge<VAL, LBL> edge : automaton.getEdges(buffStates))
-				{
-					if (edge.getLabelCondition().test(element))
-						ret.add(edge.getChild());
-				}
-				buffStates.clear();
-			}
-			GFPAOp.finalizeStates(automaton, ret, element);
-			return new ArrayList<>(ret);
+			return GFPAOp.nextValidStatesSync(automaton, element);
 		}
 	}
 

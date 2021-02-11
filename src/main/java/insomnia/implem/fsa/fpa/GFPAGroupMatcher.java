@@ -63,7 +63,7 @@ class GFPAGroupMatcher<VAL, LBL>
 
 	Collection<IFSAState<VAL, LBL>> epsilonClosure(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states)
 	{
-		return GFPAOp.epsilonClosure(automaton, states);
+		return GFPAOp.getEpsilonClosure(automaton, states);
 	}
 
 	// =========================================================================

@@ -138,7 +138,7 @@ public final class FPABuilder<VAL, LBL>
 		Collection<IFSAState<VAL, LBL>> processedStates = new HashSet<>();
 		Collection<IFSAState<VAL, LBL>> states, rootedStates, terminalStates, initialStates, finalStates;
 
-		listOfNextStates.add(GFPAOp.epsilonClosure(gfpa, gfpa.getInitialStates()));
+		listOfNextStates.add(GFPAOp.getEpsilonClosure(gfpa, gfpa.getInitialStates()));
 		states         = new HashSet<>();
 		initialStates  = new ArrayList<>();
 		finalStates    = new HashSet<>();
@@ -161,7 +161,7 @@ public final class FPABuilder<VAL, LBL>
 			{
 				if (FSALabelConditions.isEpsilonCondition(currentEdge.getLabelCondition()))
 				{
-					Collection<IFSAState<VAL, LBL>> subStates = GFPAOp.epsilonClosure(gfpa, currentEdge.getChild());
+					Collection<IFSAState<VAL, LBL>> subStates = GFPAOp.getEpsilonClosure(gfpa, currentEdge.getChild());
 					Collection<IFSAEdge<VAL, LBL>>  subEdges  = gfpa.getEdges(subStates);
 
 					for (IFSAEdge<VAL, LBL> subEdge : subEdges)
@@ -193,7 +193,7 @@ public final class FPABuilder<VAL, LBL>
 				states.add(edge.getChild());
 
 				if (!processedStates.contains(edge.getChild()))
-					listOfNextStates.add(GFPAOp.epsilonClosure(gfpa, edge.getChild()));
+					listOfNextStates.add(GFPAOp.getEpsilonClosure(gfpa, edge.getChild()));
 			}
 			addedEdges.clear();
 			processedStates.addAll(currentStates);

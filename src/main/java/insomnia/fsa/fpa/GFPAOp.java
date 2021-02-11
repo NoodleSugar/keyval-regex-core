@@ -82,17 +82,70 @@ public final class GFPAOp
 		return true;
 	}
 
-	// =========================================================================
-
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> epsilonClosure(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
-	{
-		return epsilonClosure(automaton, Collections.singleton(state));
-	}
-
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> epsilonClosure(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states)
+	public static <VAL, LBL> void nextValidStatesSync(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label)
 	{
 		if (states.isEmpty())
-			return Collections.emptyList();
+			return;
+
+		Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(states);
+		states.clear();
+
+		for (IFSAEdge<VAL, LBL> edge : automaton.getEdges(buffStates))
+		{
+			if (edge.getLabelCondition().test(label))
+				states.add(edge.getChild());
+		}
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidStates(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
+	{
+		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(automaton.nbStates() * 2);
+
+		ret.addAll(automaton.getInitialStates());
+		GFPAOp.initStates(automaton, ret, element);
+
+		for (LBL label : element.getLabels())
+		{
+			GFPAOp.epsilonClosure(automaton, ret);
+			GFPAOp.nextValidStatesSync(automaton, ret, label);
+		}
+		GFPAOp.epsilonClosure(automaton, ret);
+		GFPAOp.finalizeStates(automaton, ret, element);
+		return ret;
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidStatesSync(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
+	{
+		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(automaton.nbStates() * 2);
+
+		ret.addAll(automaton.getInitialStates());
+		GFPAOp.initStates(automaton, ret, element);
+
+		for (LBL label : element.getLabels())
+			GFPAOp.nextValidStatesSync(automaton, ret, label);
+
+		GFPAOp.finalizeStates(automaton, ret, element);
+		return ret;
+	}
+
+	// =========================================================================
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
+		return getEpsilonClosure(automaton, Collections.singleton(state));
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		Collection<IFSAState<VAL, LBL>> ret = new ArrayList<>(states);
+		epsilonClosure(automaton, ret);
+		return ret;
+	}
+
+	public static <VAL, LBL> void epsilonClosure(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
+	{
+		if (states.isEmpty())
+			return;
 
 		Set<IFSAState<VAL, LBL>>  ret         = new HashSet<>(automaton.nbStates() * 2);
 		List<IFSAState<VAL, LBL>> buffStates  = new ArrayList<>(automaton.nbStates());
@@ -113,6 +166,6 @@ public final class GFPAOp
 			ret.addAll(addedStates);
 			addedStates.clear();
 		}
-		return new ArrayList<>(ret);
+		states.addAll(ret);
 	}
 }
