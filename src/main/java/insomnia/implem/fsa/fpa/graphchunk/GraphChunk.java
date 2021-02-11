@@ -704,7 +704,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getInitialStates()
 	{
-		return Collections.singleton(start);
+		return gc_getStates().stream().filter(s -> s.isInitial()).collect(Collectors.toList());
 	}
 
 	@Override
@@ -716,10 +716,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getRootedStates()
 	{
-		if (start.isRooted())
-			return Collections.singleton(start);
-
-		return Collections.emptyList();
+		return gc_getStates().stream().filter(s -> s.isRooted()).collect(Collectors.toList());
 	}
 
 	@Override
