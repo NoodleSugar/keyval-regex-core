@@ -1,18 +1,11 @@
 package insomnia.implem.fsa.fpa;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
-import insomnia.data.INode;
 import insomnia.data.IPath;
-import insomnia.data.ITree;
-import insomnia.data.regex.ITreeMatchResult;
+import insomnia.data.regex.AbstractTreeMatcher;
 import insomnia.data.regex.ITreeMatcher;
-import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
@@ -27,12 +20,12 @@ public class GFPAMatchers
 
 	// =========================================================================
 
-	private abstract static class AbstractGFPAMatcher<VAL, LBL> implements ITreeMatcher<VAL, LBL>
+	private abstract static class AbstractGFPAMatcher<VAL, LBL> //
+		extends AbstractTreeMatcher<VAL, LBL> //
+		implements ITreeMatcher<VAL, LBL>
 	{
 		protected IGFPA<VAL, LBL> automaton;
 		protected IPath<VAL, LBL> element;
-
-		private ITreeMatchResult<VAL, LBL> matchResult;
 
 		private GFPAGroupMatcher<VAL, LBL> groupMatcher;
 
@@ -40,13 +33,13 @@ public class GFPAMatchers
 
 		public AbstractGFPAMatcher(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
 		{
+			super();
 			this.automaton    = automaton;
 			this.element      = element;
 			this.groupMatcher = GFPAGroupMatcher.create(automaton, element);
-			this.matchResult  = TreeMatchResults.empty();
 		}
 
-		Boolean matches = null;
+		private Boolean matches = null;
 
 		@Override
 		public boolean matches()
@@ -61,30 +54,6 @@ public class GFPAMatchers
 		public boolean find()
 		{
 			return (!TreeMatchResults.empty().equals(matchResult = groupMatcher.nextMatch()));
-		}
-
-		@Override
-		public ITreeMatchResult<VAL, LBL> toMatchResult()
-		{
-			return matchResult;
-		}
-
-		@Override
-		public INode<VAL, LBL> start()
-		{
-			return matchResult.start();
-		}
-
-		@Override
-		public List<INode<VAL, LBL>> end()
-		{
-			return matchResult.end();
-		}
-
-		@Override
-		public ITree<VAL, LBL> group()
-		{
-			return matchResult.group();
 		}
 	}
 
