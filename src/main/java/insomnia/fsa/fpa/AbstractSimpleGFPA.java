@@ -33,8 +33,10 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	private Collection<IFSAState<VAL, LBL>> finalStates;
 	private Collection<IFSAState<VAL, LBL>> states;
 	private Collection<IFSAEdge<VAL, LBL>>  edges;
+	private Collection<IFSAEdge<VAL, LBL>>  epsilonEdges;
 
 	private Map<IFSAState<VAL, LBL>, Collection<IFSAEdge<VAL, LBL>>> edgesOf;
+	private Map<IFSAState<VAL, LBL>, Collection<IFSAEdge<VAL, LBL>>> epsilonEdgesOf;
 
 	protected AbstractSimpleGFPA( //
 		Collection<IFSAState<VAL, LBL>> states, //
@@ -42,25 +44,49 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 		Collection<IFSAState<VAL, LBL>> terminalStates, //
 		Collection<IFSAState<VAL, LBL>> initialStates, //
 		Collection<IFSAState<VAL, LBL>> finalStates, //
-		Collection<IFSAEdge<VAL, LBL>> edges, //
+		Collection<IFSAEdge<VAL, LBL>> allEdges, //
 		IFPAProperties properties //
 	)
 	{
-		this.edges         = edges;
-		this.states        = states;
-		this.initialStates = initialStates;
-		this.finalStates   = finalStates;
-		this.properties    = properties;
-
+		this.states         = states;
+		this.initialStates  = initialStates;
+		this.finalStates    = finalStates;
+		this.properties     = properties;
 		this.rootedStates   = rootedStates;
 		this.terminalStates = terminalStates;
 
+		this.edges   = new ArrayList<>();
 		this.edgesOf = new HashMap<>();
 
-		for (IFSAEdge<VAL, LBL> edge : edges)
+		if (properties.isSynchronous())
 		{
-			Collection<IFSAEdge<VAL, LBL>> coll = edgesOf.computeIfAbsent(edge.getParent(), e -> new ArrayList<>());
-			coll.add(edge);
+			epsilonEdgesOf = Collections.emptyMap();
+			epsilonEdges   = Collections.emptyList();
+
+			for (IFSAEdge<VAL, LBL> edge : allEdges)
+			{
+				edges.add(edge);
+				edgesOf.computeIfAbsent(edge.getParent(), e -> new ArrayList<>()).add(edge);
+			}
+		}
+		else
+		{
+			epsilonEdges   = new ArrayList<>();
+			epsilonEdgesOf = new HashMap<>();
+
+			for (IFSAEdge<VAL, LBL> edge : allEdges)
+			{
+				if (IFSAEdge.isEpsilon(edge))
+				{
+					epsilonEdges.add(edge);
+					epsilonEdgesOf.computeIfAbsent(edge.getParent(), e -> new ArrayList<>()).add(edge);
+				}
+				else
+				{
+					edges.add(edge);
+					edgesOf.computeIfAbsent(edge.getParent(), e -> new ArrayList<>()).add(edge);
+				}
+			}
 		}
 	}
 
@@ -86,26 +112,15 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getRootedStates()
 	{
-		return rootedStates;
+		return Collections.unmodifiableCollection(rootedStates);
 	}
 
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getTerminalStates()
 	{
-		return terminalStates;
+		return Collections.unmodifiableCollection(terminalStates);
 	}
 
-	@Override
-	public int nbStates()
-	{
-		return states.size();
-	}
-
-	@Override
-	public int nbEdges()
-	{
-		return edges.size();
-	}
 
 	@Override
 	public IFPAProperties getProperties()
@@ -120,30 +135,72 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	}
 
 	@Override
+	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		Collection<IFSAState<VAL, LBL>> ret = new ArrayList<>();
+		ret.addAll(states);
+
+		if (!properties.isSynchronous())
+			GFPAOp.epsilonClosure(this, ret);
+
+		return ret;
+	}
+
+	// =========================================================================
+
+	@Override
 	public Collection<IFSAEdge<VAL, LBL>> getEdges()
 	{
 		return Collections.unmodifiableCollection(edges);
 	}
 
 	@Override
-	public int nbEdges(Collection<? extends IFSAState<VAL, LBL>> states)
+	public Collection<IFSAEdge<VAL, LBL>> getEpsilonEdges()
 	{
-		int ret = 0;
+		return Collections.unmodifiableCollection(epsilonEdges);
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getAllEdges()
+	{
+		Collection<IFSAEdge<VAL, LBL>> ret = new ArrayList<>(edges.size() + epsilonEdges.size());
+		ret.addAll(edges);
+		ret.addAll(epsilonEdges);
+		return ret;
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		List<IFSAEdge<VAL, LBL>> ret = new ArrayList<>();
 
 		for (IFSAState<VAL, LBL> state : states)
-			ret += edgesOf.getOrDefault(state, Collections.emptyList()).size();
+			ret.addAll(epsilonEdgesOf.getOrDefault(state, Collections.emptyList()));
 
 		return ret;
 	}
 
 	@Override
-	public Collection<IFSAEdge<VAL, LBL>> getEdges(Collection<? extends IFSAState<VAL, LBL>> states)
+	public Collection<IFSAEdge<VAL, LBL>> getEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
 		List<IFSAEdge<VAL, LBL>> ret = new ArrayList<>();
 
 		for (IFSAState<VAL, LBL> state : states)
 			ret.addAll(edgesOf.getOrDefault(state, Collections.emptyList()));
 
+		return ret;
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		List<IFSAEdge<VAL, LBL>> ret = new ArrayList<>();
+
+		for (IFSAState<VAL, LBL> state : states)
+		{
+			ret.addAll(edgesOf.getOrDefault(state, Collections.emptyList()));
+			ret.addAll(epsilonEdgesOf.getOrDefault(state, Collections.emptyList()));
+		}
 		return ret;
 	}
 }

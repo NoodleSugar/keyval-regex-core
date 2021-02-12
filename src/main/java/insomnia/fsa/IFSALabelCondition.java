@@ -9,14 +9,14 @@ public interface IFSALabelCondition<LBL> extends Predicate<LBL>
 	boolean test(LBL element);
 
 	/**
-	 * true if epsilon transition
-	 */
-	boolean test();
-
-	/**
-	 * Get all the labels validated by the condition.
-	 * 
-	 * @return
+	 * Get all the labels validated by the condition if available.
 	 */
 	Collection<LBL> getLabels();
+
+	// =========================================================================
+
+	public static boolean isEpsilon(IFSALabelCondition<?> labelCondition)
+	{
+		return labelCondition == null;
+	}
 }

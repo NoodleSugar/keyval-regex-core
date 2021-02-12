@@ -45,7 +45,7 @@ public final class Paths
 		for (;;)
 		{
 //			// TODO: rooted path
-			Collection<IFSAEdge<VAL, LBL>> edges = gfpa.getEdges(state);
+			Collection<IFSAEdge<VAL, LBL>> edges = gfpa.getEdgesOf(state);
 
 			int size = edges.size();
 

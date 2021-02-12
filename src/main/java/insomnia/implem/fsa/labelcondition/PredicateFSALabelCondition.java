@@ -34,12 +34,6 @@ public final class PredicateFSALabelCondition<LBL> implements IFSALabelCondition
 		return predicate.test(element);
 	}
 
-	@Override
-	public boolean test()
-	{
-		return false;
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean equals(Object obj)

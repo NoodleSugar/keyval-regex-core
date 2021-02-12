@@ -1,12 +1,10 @@
 package insomnia.implem.fsa.fpa;
 
-import java.util.Collection;
 import java.util.Collections;
 
 import insomnia.data.IPath;
 import insomnia.data.regex.AbstractTreeMatcher;
 import insomnia.data.regex.ITreeMatcher;
-import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.data.regex.TreeMatchResults;
@@ -20,18 +18,16 @@ public class GFPAMatchers
 
 	// =========================================================================
 
-	private abstract static class AbstractGFPAMatcher<VAL, LBL> //
+	private static class GFPAMatcher<VAL, LBL> //
 		extends AbstractTreeMatcher<VAL, LBL> //
 		implements ITreeMatcher<VAL, LBL>
 	{
-		protected IGFPA<VAL, LBL> automaton;
-		protected IPath<VAL, LBL> element;
+		private IGFPA<VAL, LBL> automaton;
+		private IPath<VAL, LBL> element;
 
 		private GFPAGroupMatcher<VAL, LBL> groupMatcher;
 
-		abstract Collection<IFSAState<VAL, LBL>> doMatch();
-
-		public AbstractGFPAMatcher(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
+		public GFPAMatcher(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
 		{
 			super();
 			this.automaton    = automaton;
@@ -47,7 +43,7 @@ public class GFPAMatchers
 			if (null != matches)
 				return matches;
 
-			return matches = !Collections.disjoint(doMatch(), automaton.getFinalStates());
+			return matches = !Collections.disjoint(GFPAOp.getNextValidStates(automaton, element), automaton.getFinalStates());
 		}
 
 		@Override
@@ -59,43 +55,8 @@ public class GFPAMatchers
 
 	// =========================================================================
 
-	private static class GFPAMatcher<VAL, LBL> extends AbstractGFPAMatcher<VAL, LBL>
-	{
-		public GFPAMatcher(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
-		{
-			super(automaton, element);
-		}
-
-		@Override
-		Collection<IFSAState<VAL, LBL>> doMatch()
-		{
-			return GFPAOp.nextValidStates(automaton, element);
-		}
-	}
-
-	// =========================================================================
-
-	private static class GFPAMatcherSync<VAL, LBL> extends AbstractGFPAMatcher<VAL, LBL>
-	{
-		public GFPAMatcherSync(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
-		{
-			super(automaton, element);
-		}
-
-		@Override
-		Collection<IFSAState<VAL, LBL>> doMatch()
-		{
-			return GFPAOp.nextValidStatesSync(automaton, element);
-		}
-	}
-
-	// =========================================================================
-
 	public static <VAL, LBL> ITreeMatcher<VAL, LBL> create(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
 	{
-		if (automaton.getProperties().isSynchronous())
-			return new GFPAMatcherSync<>(automaton, element);
-
 		return new GFPAMatcher<>(automaton, element);
 	}
 }

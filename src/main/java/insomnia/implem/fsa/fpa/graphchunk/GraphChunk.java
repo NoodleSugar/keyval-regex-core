@@ -225,21 +225,9 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		return properties;
 	}
 
-	@Override
 	public int nbEdges(IFSAState<VAL, LBL> state)
 	{
 		return graph.outDegreeOf((IGCState<VAL, LBL>) state);
-	}
-
-	@Override
-	public int nbEdges(Collection<? extends IFSAState<VAL, LBL>> states)
-	{
-		int ret = 0;
-
-		for (IFSAState<VAL, LBL> state : states)
-			ret += nbEdges(state);
-
-		return ret;
 	}
 
 	public int nbParentEdges(IFSAState<VAL, LBL> state)
@@ -277,6 +265,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		graph.addVertex(this.end);
 	}
 
+	public void addState(IFSAState<VAL, LBL> state)
+	{
+		graph.addVertex((IGCState<VAL, LBL>) state);
+	}
+
 	public void addEdge(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child, IFSALabelCondition<LBL> labelCondition)
 	{
 		graph.addVertex((IGCState<VAL, LBL>) parent);
@@ -284,7 +277,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		graph.addEdge((IGCState<VAL, LBL>) parent, (IGCState<VAL, LBL>) child, new GCEdges.GCEdge<>(labelCondition));
 
 		// Is epsilon
-		if (labelCondition.test())
+		if (IFSALabelCondition.isEpsilon(labelCondition))
 			setProperties(getProperties().setSynchronous(false));
 	}
 
@@ -653,34 +646,28 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	}
 
 	@Override
-	public Collection<IFSAEdge<VAL, LBL>> getEdges(IFSAState<VAL, LBL> state)
+	public Collection<IFSAEdge<VAL, LBL>> getAllEdges()
 	{
-		return getEdges(Collections.singleton(state));
+		return gc_as_fsa_edge(graph.edgeSet());
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Collection<IFSAEdge<VAL, LBL>> getEdges(Collection<? extends IFSAState<VAL, LBL>> states)
+	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
 		return gc_as_fsa_edge(gc_getEdges((Collection<IGCState<VAL, LBL>>) states));
 	}
 
 	@Override
-	public Collection<IFSAEdge<VAL, LBL>> getEdges()
+	public boolean isInitial(IFSAState<VAL, LBL> state)
 	{
-		return gc_as_fsa_edge(graph.edgeSet());
+		return ((IGCState<VAL, LBL>) state).isInitial();
 	}
 
 	@Override
-	public int nbStates()
+	public boolean isFinal(IFSAState<VAL, LBL> state)
 	{
-		return graph.vertexSet().size();
-	}
-
-	@Override
-	public int nbEdges()
-	{
-		return graph.edgeSet().size();
+		return ((IGCState<VAL, LBL>) state).isFinal();
 	}
 
 	@Override

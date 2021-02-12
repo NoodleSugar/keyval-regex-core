@@ -61,24 +61,8 @@ class GFPAGroupMatcher<VAL, LBL>
 
 	// =========================================================================
 
-	Collection<IFSAState<VAL, LBL>> epsilonClosure(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states)
-	{
-		return GFPAOp.getEpsilonClosure(automaton, states);
-	}
-
-	// =========================================================================
-
 	public static <VAL, LBL> GFPAGroupMatcher<VAL, LBL> create(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
 	{
-		if (automaton.getProperties().isSynchronous())
-			return new GFPAGroupMatcher<VAL, LBL>(automaton, element)
-			{
-				@Override
-				Collection<IFSAState<VAL, LBL>> epsilonClosure(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states)
-				{
-					return new ArrayList<>(states);
-				}
-			};
 		return new GFPAGroupMatcher<>(automaton, element);
 	}
 	// =========================================================================
@@ -192,7 +176,7 @@ class GFPAGroupMatcher<VAL, LBL>
 			if (currentStates.isEmpty())
 				break;
 
-			Collection<IFSAState<VAL, LBL>> buffStates = epsilonClosure(automaton, currentStates);
+			Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(currentStates);
 			currentStates.clear();
 
 			for (IFSAState<VAL, LBL> currentState : buffStates)
@@ -202,7 +186,7 @@ class GFPAGroupMatcher<VAL, LBL>
 				if (groupOffsets.isEmpty())
 					continue;
 
-				for (IFSAEdge<VAL, LBL> edge : automaton.getEdges(currentState))
+				for (IFSAEdge<VAL, LBL> edge : automaton.getReachableEdges(currentState))
 				{
 					if (!edge.getLabelCondition().test(label))
 						continue;
@@ -211,7 +195,7 @@ class GFPAGroupMatcher<VAL, LBL>
 					boolean             isInitial         = automaton.isInitial(nextState);
 					boolean             isFinal           = automaton.isFinal(nextState);
 					boolean             isTerminal        = automaton.isTerminal(nextState);
-					int                 nextState_nbEdges = automaton.getEdges(nextState).size();
+					int                 nextState_nbEdges = automaton.getEdgesOf(nextState).size();
 
 					if (isInitial && !GFPAOp.checkInitialState(automaton, nextState))
 						continue;

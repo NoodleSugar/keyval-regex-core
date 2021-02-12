@@ -16,7 +16,6 @@ public final class FSALabelConditions
 	// =========================================================================
 
 	private final static IFSALabelCondition<?> trueCondition;
-	private final static IFSALabelCondition<?> epsilonCondition;
 
 	private abstract static class AbstractLabelCondition<LBL> implements IFSALabelCondition<LBL>
 	{
@@ -25,12 +24,6 @@ public final class FSALabelConditions
 		public AbstractLabelCondition(Object obj)
 		{
 			this.obj = obj;
-		}
-
-		@Override
-		public boolean test()
-		{
-			return false;
 		}
 
 		@Override
@@ -75,12 +68,6 @@ public final class FSALabelConditions
 			}
 
 			@Override
-			public boolean test()
-			{
-				return false;
-			}
-
-			@Override
 			public Collection<Object> getLabels()
 			{
 				return Collections.emptyList();
@@ -98,39 +85,6 @@ public final class FSALabelConditions
 				return obj == this;
 			}
 		};
-
-		epsilonCondition = new IFSALabelCondition<Object>()
-		{
-			@Override
-			public boolean test(Object element)
-			{
-				return false;
-			}
-
-			@Override
-			public boolean test()
-			{
-				return true;
-			}
-
-			@Override
-			public Collection<Object> getLabels()
-			{
-				return Collections.emptyList();
-			}
-
-			@Override
-			public String toString()
-			{
-				return "ε";
-			}
-
-			@Override
-			public boolean equals(Object obj)
-			{
-				return obj == this;
-			}
-		};
 	}
 
 	@SuppressWarnings("unchecked")
@@ -139,10 +93,9 @@ public final class FSALabelConditions
 		return (IFSALabelCondition<LBL>) trueCondition;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <LBL> IFSALabelCondition<LBL> epsilonCondition()
 	{
-		return (IFSALabelCondition<LBL>) epsilonCondition;
+		return null;
 	}
 
 	public static <LBL> IFSALabelCondition<LBL> createEq(LBL label)
@@ -181,10 +134,4 @@ public final class FSALabelConditions
 	{
 		return labelCondition == trueCondition;
 	}
-
-	public static boolean isEpsilonCondition(IFSALabelCondition<?> labelCondition)
-	{
-		return labelCondition.test();
-	}
-
 }

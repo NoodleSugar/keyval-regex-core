@@ -16,7 +16,7 @@ public final class FPAs<VAL, LBL> //
 	{
 		AbstractFSA(IGFPA<VAL, LBL> graphFPA)
 		{
-			super(graphFPA.getStates(), graphFPA.getRootedStates(), graphFPA.getTerminalStates(), graphFPA.getInitialStates(), graphFPA.getFinalStates(), graphFPA.getEdges(), graphFPA.getProperties());
+			super(graphFPA.getStates(), graphFPA.getRootedStates(), graphFPA.getTerminalStates(), graphFPA.getInitialStates(), graphFPA.getFinalStates(), graphFPA.getAllEdges(), graphFPA.getProperties());
 		}
 	}
 

@@ -13,15 +13,9 @@ import insomnia.fsa.IFSAState;
  */
 public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 {
-	int nbStates();
-
-	int nbEdges();
-
-	int nbEdges(Collection<? extends IFSAState<VAL, LBL>> states);
-
-	int nbEdges(IFSAState<VAL, LBL> state);
-
 	IFPAProperties getProperties();
+
+	// =========================================================================
 
 	boolean isInitial(IFSAState<VAL, LBL> state);
 
@@ -41,9 +35,39 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	Collection<IFSAState<VAL, LBL>> getTerminalStates();
 
+	void epsilonClosure(Collection<IFSAState<VAL, LBL>> states);
+
+	Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states);
+
+	Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IFSAState<VAL, LBL> state);
+
+	// =========================================================================
+
+	/**
+	 * @return all edges excluding epsilon transitions
+	 */
 	Collection<IFSAEdge<VAL, LBL>> getEdges();
 
-	Collection<IFSAEdge<VAL, LBL>> getEdges(Collection<? extends IFSAState<VAL, LBL>> states);
+	Collection<IFSAEdge<VAL, LBL>> getEpsilonEdges();
 
-	Collection<IFSAEdge<VAL, LBL>> getEdges(IFSAState<VAL, LBL> state);
+	Collection<IFSAEdge<VAL, LBL>> getAllEdges();
+
+	Collection<IFSAEdge<VAL, LBL>> getEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states);
+
+	Collection<IFSAEdge<VAL, LBL>> getEdgesOf(IFSAState<VAL, LBL> state);
+
+	Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states);
+
+	Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesOf(IFSAState<VAL, LBL> state);
+
+	Collection<IFSAEdge<VAL, LBL>> getAllEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states);
+
+	Collection<IFSAEdge<VAL, LBL>> getAllEdgesOf(IFSAState<VAL, LBL> state);
+
+	/**
+	 * Get the edges reachable from 'states' through epsilon transitions.
+	 */
+	Collection<IFSAEdge<VAL, LBL>> getReachableEdges(Collection<? extends IFSAState<VAL, LBL>> states);
+
+	Collection<IFSAEdge<VAL, LBL>> getReachableEdges(IFSAState<VAL, LBL> state);
 }

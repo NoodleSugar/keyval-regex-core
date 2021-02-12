@@ -11,4 +11,11 @@ public interface IFSAEdge<VAL, LBL>
 	IFSAState<VAL, LBL> getChild();
 
 	IFSALabelCondition<LBL> getLabelCondition();
+
+	// =========================================================================
+
+	static <VAL, LBL> boolean isEpsilon(IFSAEdge<VAL, LBL> edge)
+	{
+		return null == edge.getLabelCondition();
+	}
 }

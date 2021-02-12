@@ -4,26 +4,23 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.AbstractSimpleGFPA;
-import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.fsa.edge.FSAEdge;
 import insomnia.implem.fsa.fpa.FPAProperties;
 import insomnia.implem.fsa.fpa.FPAs;
-import insomnia.implem.fsa.labelcondition.FSALabelConditions;
 import insomnia.implem.fsa.state.FSAState;
 
 public final class FPABuilder<VAL, LBL>
 {
-	boolean         mustBeSync;
-	boolean         createNewStates;
+	boolean mustBeSync;
+	boolean createNewStates;
+
 	IGFPA<VAL, LBL> gfpa;
 
 	public FPABuilder(IGFPA<VAL, LBL> gfpa)
@@ -70,7 +67,8 @@ public final class FPABuilder<VAL, LBL>
 
 	public IGFPA<VAL, LBL> create()
 	{
-		IGFPA<VAL, LBL> gfpa = this.gfpa;
+		IGFPA<VAL, LBL> gfpa       = this.gfpa;
+		boolean         mustBeSync = this.mustBeSync && !gfpa.getProperties().isSynchronous();
 
 		// Generate a copy of gfpa with new states and edges;
 		if (createNewStates)
@@ -118,7 +116,7 @@ public final class FPABuilder<VAL, LBL>
 		}
 
 		// Add edges
-		for (IFSAEdge<VAL, LBL> edge : gfpa.getEdges())
+		for (IFSAEdge<VAL, LBL> edge : gfpa.getAllEdges())
 			edges.add(new FSAEdge<>(newStatesMap.get(edge.getParent()), newStatesMap.get(edge.getChild()), edge.getLabelCondition()));
 
 		return FPAs.create(new AbstractSimpleGFPA<VAL, LBL>(newStatesMap.values(), rootedStates, terminalStates, initialStates, finalStates, edges, gfpa.getProperties())
@@ -130,78 +128,47 @@ public final class FPABuilder<VAL, LBL>
 
 	private IGFPA<VAL, LBL> createSync(IGFPA<VAL, LBL> gfpa)
 	{
-		Collection<IFSAEdge<VAL, LBL>> edges      = new ArrayList<>();
-		Collection<IFSAEdge<VAL, LBL>> addedEdges = new ArrayList<>();
+		Collection<IFSAEdge<VAL, LBL>> edges = new ArrayList<>(gfpa.getEdges());
 
-		Queue<Collection<IFSAState<VAL, LBL>>> listOfNextStates = new LinkedList<>();
-
-		Collection<IFSAState<VAL, LBL>> processedStates = new HashSet<>();
-		Collection<IFSAState<VAL, LBL>> states, rootedStates, terminalStates, initialStates, finalStates;
-
-		listOfNextStates.add(GFPAOp.getEpsilonClosure(gfpa, gfpa.getInitialStates()));
-		states         = new HashSet<>();
-		initialStates  = new ArrayList<>();
+		Collection<IFSAState<VAL, LBL>> rootedStates, terminalStates, initialStates, finalStates;
+		initialStates  = new HashSet<>();
 		finalStates    = new HashSet<>();
 		rootedStates   = new HashSet<>();
 		terminalStates = new HashSet<>();
 
-		boolean isInitial = true;
-
 		// TODO: combine state value condition when needed
-		while (!listOfNextStates.isEmpty())
+		for (IFSAState<VAL, LBL> state : gfpa.getStates())
 		{
-			Collection<IFSAState<VAL, LBL>> currentStates = listOfNextStates.poll();
+			Collection<IFSAState<VAL, LBL>> currentStates = new ArrayList<>(gfpa.getEpsilonClosure(state));
 
-			boolean isRooted   = currentStates.stream().allMatch(s -> gfpa.isRooted(s));
-			boolean isTerminal = currentStates.stream().allMatch(s -> gfpa.isTerminal(s));
-			boolean isFinal    = currentStates.stream().anyMatch(s -> gfpa.isFinal(s));
-			currentStates.removeAll(processedStates);
+			if (gfpa.isInitial(state))
+				initialStates.add(state);
+			if (gfpa.isFinal(state))
+				finalStates.add(state);
+			if (gfpa.isRooted(state))
+				rootedStates.add(state);
+			if (gfpa.isTerminal(state))
+				terminalStates.add(state);
 
-			for (IFSAEdge<VAL, LBL> currentEdge : gfpa.getEdges(currentStates))
+			currentStates.remove(state);
+
+			for (IFSAState<VAL, LBL> otherState : currentStates)
 			{
-				if (FSALabelConditions.isEpsilonCondition(currentEdge.getLabelCondition()))
-				{
-					Collection<IFSAState<VAL, LBL>> subStates = GFPAOp.getEpsilonClosure(gfpa, currentEdge.getChild());
-					Collection<IFSAEdge<VAL, LBL>>  subEdges  = gfpa.getEdges(subStates);
+				if (gfpa.isRooted(state))
+					rootedStates.add(otherState);
+				if (gfpa.isInitial(state))
+					initialStates.add(otherState);
 
-					for (IFSAEdge<VAL, LBL> subEdge : subEdges)
-					{
-						// Skip epsilon edges (not needed)
-						if (FSALabelConditions.isEpsilonCondition(subEdge.getLabelCondition()))
-							continue;
-
-						addedEdges.add(new FSAEdge<>(currentEdge.getParent(), subEdge.getChild(), subEdge.getLabelCondition()));
-					}
-				}
-				else
-					addedEdges.add(currentEdge);
+				if (gfpa.isTerminal(otherState))
+					terminalStates.add(state);
+				if (gfpa.isFinal(otherState))
+					finalStates.add(state);
 			}
-
-			if (isRooted)
-				rootedStates.addAll(currentStates);
-			if (isTerminal)
-				terminalStates.addAll(currentStates);
-			if (isInitial)
-				initialStates.addAll(currentStates);
-			if (isFinal)
-				finalStates.addAll(currentStates);
-
-			for (IFSAEdge<VAL, LBL> edge : addedEdges)
-			{
-				edges.add(edge);
-				states.add(edge.getParent());
-				states.add(edge.getChild());
-
-				if (!processedStates.contains(edge.getChild()))
-					listOfNextStates.add(GFPAOp.getEpsilonClosure(gfpa, edge.getChild()));
-			}
-			addedEdges.clear();
-			processedStates.addAll(currentStates);
-			isInitial = false;
+			for (IFSAEdge<VAL, LBL> edge : gfpa.getEdgesOf(currentStates))
+				edges.add(new FSAEdge<>(state, edge.getChild(), edge.getLabelCondition()));
 		}
 		IFPAProperties properties = new FPAProperties(false, true);
-
-		return FPAs.create(new AbstractSimpleGFPA<VAL, LBL>(states, rootedStates, terminalStates, initialStates, finalStates, edges, properties)
+		return FPAs.create(new AbstractSimpleGFPA<VAL, LBL>(gfpa.getStates(), rootedStates, terminalStates, initialStates, finalStates, edges, properties)
 		{
 		});
 	}

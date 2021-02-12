@@ -2,7 +2,6 @@ package insomnia.fsa.fpa;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -82,7 +81,7 @@ public final class GFPAOp
 		return true;
 	}
 
-	public static <VAL, LBL> void nextValidStatesSync(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label)
+	public static <VAL, LBL> void nextValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label)
 	{
 		if (states.isEmpty())
 			return;
@@ -90,75 +89,55 @@ public final class GFPAOp
 		Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(states);
 		states.clear();
 
-		for (IFSAEdge<VAL, LBL> edge : automaton.getEdges(buffStates))
+		for (IFSAEdge<VAL, LBL> edge : automaton.getReachableEdges(buffStates))
 		{
 			if (edge.getLabelCondition().test(label))
 				states.add(edge.getChild());
 		}
 	}
 
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidStates(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getNextValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label)
 	{
-		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(automaton.nbStates() * 2);
-
-		ret.addAll(automaton.getInitialStates());
-		GFPAOp.initStates(automaton, ret, element);
-
-		for (LBL label : element.getLabels())
-		{
-			GFPAOp.epsilonClosure(automaton, ret);
-			GFPAOp.nextValidStatesSync(automaton, ret, label);
-		}
-		GFPAOp.epsilonClosure(automaton, ret);
-		GFPAOp.finalizeStates(automaton, ret, element);
+		List<IFSAState<VAL, LBL>> ret = new ArrayList<>(states);
+		nextValidStates(automaton, ret, label);
 		return ret;
 	}
 
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> nextValidStatesSync(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getNextValidStates(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
 	{
-		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(automaton.nbStates() * 2);
+		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(automaton.getStates().size() * 2);
 
 		ret.addAll(automaton.getInitialStates());
 		GFPAOp.initStates(automaton, ret, element);
 
 		for (LBL label : element.getLabels())
-			GFPAOp.nextValidStatesSync(automaton, ret, label);
+			GFPAOp.nextValidStates(automaton, ret, label);
 
+		automaton.epsilonClosure(ret);
 		GFPAOp.finalizeStates(automaton, ret, element);
 		return ret;
 	}
 
 	// =========================================================================
 
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
-	{
-		return getEpsilonClosure(automaton, Collections.singleton(state));
-	}
-
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states)
-	{
-		Collection<IFSAState<VAL, LBL>> ret = new ArrayList<>(states);
-		epsilonClosure(automaton, ret);
-		return ret;
-	}
-
 	public static <VAL, LBL> void epsilonClosure(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
 	{
 		if (states.isEmpty())
 			return;
 
-		Set<IFSAState<VAL, LBL>>  ret         = new HashSet<>(automaton.nbStates() * 2);
-		List<IFSAState<VAL, LBL>> buffStates  = new ArrayList<>(automaton.nbStates());
-		List<IFSAState<VAL, LBL>> addedStates = new ArrayList<>(automaton.nbStates());
+		int nbStates = automaton.getStates().size();
 
-		ret.addAll(states);
+		Set<IFSAState<VAL, LBL>>  ret         = new HashSet<>(nbStates * 2);
+		List<IFSAState<VAL, LBL>> buffStates  = new ArrayList<>(nbStates);
+		List<IFSAState<VAL, LBL>> addedStates = new ArrayList<>(nbStates);
+
 		buffStates.addAll(states);
 
 		while (!buffStates.isEmpty())
 		{
-			for (IFSAEdge<VAL, LBL> edge : automaton.getEdges(buffStates))
+			for (IFSAEdge<VAL, LBL> edge : automaton.getEpsilonEdgesOf(buffStates))
 			{
-				if (edge.getLabelCondition().test() && !ret.contains(edge.getChild()))
+				if (edge.getLabelCondition() == null && !ret.contains(edge.getChild()))
 					addedStates.add(edge.getChild());
 			}
 			buffStates.clear();
