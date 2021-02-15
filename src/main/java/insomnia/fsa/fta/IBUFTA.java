@@ -1,10 +1,14 @@
 package insomnia.fsa.fta;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import insomnia.fsa.IFSAEdge;
+import insomnia.data.INode;
 import insomnia.fsa.IFSAState;
+import insomnia.fsa.fpa.IGFPA;
 
 /**
  * Bottom-up tree Automaton.
@@ -15,16 +19,7 @@ import insomnia.fsa.IFSAState;
  */
 public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 {
-	/**
-	 * Get the states that can be affected to a leaf.
-	 */
-	Collection<IFSAState<VAL, LBL>> getInitialStates();
-
-	Collection<IFSAState<VAL, LBL>> getFinalStates();
-
-	boolean isRooted(IFSAState<VAL, LBL> state);
-
-	boolean isTerminal(IFSAState<VAL, LBL> state);
+	IGFPA<VAL, LBL> getGFPA();
 
 	/**
 	 * Get all {@link IFTAEdge} that may validate parentStates.
@@ -34,5 +29,17 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	 */
 	Collection<IFTAEdge<VAL, LBL>> getHyperEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates);
 
-	Collection<IFSAEdge<VAL, LBL>> getEdges(Collection<? extends IFSAState<VAL, LBL>> states);
+	// =========================================================================
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getInitials(IBUFTA<VAL, LBL> automaton, INode<VAL, LBL> node)
+	{
+		Collection<IFSAState<VAL, LBL>> states = new ArrayList<>(automaton.getGFPA().getInitialStates());
+
+		Stream<IFSAState<VAL, LBL>> stream = states.stream().filter( //
+			s -> !automaton.getGFPA().isRooted(s) //
+				&& (!node.getValue().isPresent() || s.getValueCondition().test(node.getValue().get())) //
+		);
+		return stream.collect(Collectors.toList());
+	}
+
 }

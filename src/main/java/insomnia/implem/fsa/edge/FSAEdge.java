@@ -62,7 +62,14 @@ public final class FSAEdge<VAL, LBL> implements IFSAEdge<VAL, LBL>
 	{
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(parent).append(" -(").append(labelCondition).append(")-> ").append(child);
+		sb.append(parent).append(" --");
+
+		if (IFSAEdge.isEpsilon(this))
+			sb.append("ε");
+		else
+			sb.append("(").append(labelCondition).append(")");
+
+		sb.append("--> ").append(child);
 		return sb.toString();
 	}
 }

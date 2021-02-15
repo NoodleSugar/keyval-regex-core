@@ -3,7 +3,9 @@ package insomnia.lib.help;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -61,6 +63,61 @@ public final class HelpLists
 			base.increment(num);
 		}
 		return ret;
+	}
+
+	public static <E> Iterator<List<E>> cartesianProduct(Collection<Collection<E>> sets)
+	{
+		return cartesianProduct(new ArrayList<>(sets));
+	}
+
+	public static <E> Iterator<List<E>> cartesianProduct(List<Collection<E>> sets)
+	{
+		return new Iterator<List<E>>()
+		{
+			Base          base;
+			int[]         num;
+			int           i, nb;
+			List<E>       ret;
+			List<List<E>> ref;
+
+			{
+				i  = 0;
+				nb = sets.size();
+				int ibase[] = new int[nb];
+				int i       = 0;
+
+				for (Collection<E> set : sets)
+					ibase[i++] = set.size();
+
+				ref = sets.stream().map(l -> l instanceof List ? (List<E>) l : new ArrayList<>(l)).collect(Collectors.toList());
+				num = new int[nb];
+				ret = new ArrayList<>(nb);
+
+				base = new Base(ibase);
+			}
+
+			@Override
+			public boolean hasNext()
+			{
+				if (i >= base.max())
+					return false;
+
+				i++;
+				ret.clear();
+
+				for (int j = 0; j < nb; j++)
+					ret.add(ref.get(j).get(num[j]));
+
+				base.increment(num);
+				return true;
+			}
+
+			@Override
+			public List<E> next()
+			{
+				return new ArrayList<>(ret);
+			}
+		};
 	}
 
 	// =========================================================================

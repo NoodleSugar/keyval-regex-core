@@ -54,7 +54,7 @@ class Node<VAL, LBL> implements INode<VAL, LBL>
 
 	void setValue(VAL value)
 	{
-		this.value      = Optional.of(value);
+		this.value      = Optional.ofNullable(value);
 		this.isTerminal = true;
 	}
 

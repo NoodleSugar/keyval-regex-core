@@ -1,15 +1,21 @@
 package insomnia.implem.data.creational;
 
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import insomnia.data.IEdge;
 import insomnia.data.INode;
+import insomnia.data.ITree;
 import insomnia.data.creational.ITreeBuilder;
 import insomnia.implem.data.Trees;
 
@@ -28,13 +34,21 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 
 	public TreeBuilder()
 	{
-		clear();
+		reset();
+	}
+
+	public TreeBuilder(ITree<VAL, LBL> tree)
+	{
+		reset();
+		tree(tree, tree.getRoot());
 	}
 
 	// =========================================================================
 
+	// =========================================================================
+
 	@Override
-	public ITreeBuilder<VAL, LBL> clear()
+	public ITreeBuilder<VAL, LBL> reset()
 	{
 		root  = new Node<>();
 		vocab = new HashSet<>();
@@ -87,11 +101,89 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	}
 
 	@Override
-	public ITreeBuilder<VAL, LBL> add(LBL label)
+	public ITreeBuilder<VAL, LBL> setCurrentNode(INode<VAL, LBL> currentNode)
 	{
-		Node<VAL, LBL> newNode = new Node<>();
-		new Edge<>(label, currentNode, newNode, vocab);
-		currentNode = newNode;
+		this.currentNode = (Node<VAL, LBL>) currentNode;
+		return this;
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> parent(LBL label)
+	{
+		return parent(label, null);
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> parent(LBL label, Collection<? super IEdge<VAL, LBL>> addedEdge)
+	{
+		p_parent(label, addedEdge);
+		return this;
+	}
+
+	public void p_parent(LBL label, Collection<? super IEdge<VAL, LBL>> addedEdge)
+	{
+		Node<VAL, LBL>  newNode = new Node<>();
+		IEdge<VAL, LBL> newEdge = new Edge<>(label, newNode, root, vocab);
+
+		if (null != addedEdge)
+			addedEdge.add(newEdge);
+
+		// Change the root node
+		boolean isRooted = isRooted();
+		setRooted(false);
+		root = newNode;
+		root.setRooted(isRooted);
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> child(LBL label)
+	{
+		return child(label, null);
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> child(LBL label, Collection<? super IEdge<VAL, LBL>> addedEdge)
+	{
+		currentNode = child(currentNode, label, addedEdge);
+		return this;
+	}
+
+	private Node<VAL, LBL> child(Node<VAL, LBL> currentNode, LBL label, Collection<? super IEdge<VAL, LBL>> addedEdge)
+	{
+		Node<VAL, LBL>  newNode = new Node<>();
+		IEdge<VAL, LBL> newEdge = new Edge<>(label, currentNode, newNode, vocab);
+
+		if (null != addedEdge)
+			addedEdge.add(newEdge);
+
+		return newNode;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree, INode<VAL, LBL> treeRoot)
+	{
+		Deque<Pair<Node<VAL, LBL>, INode<VAL, LBL>>> nodes = new LinkedList<>();
+		nodes.add(Pair.of(currentNode, treeRoot));
+
+		Pair<Node<VAL, LBL>, INode<VAL, LBL>> pair;
+		List<IEdge<VAL, LBL>>                 addedEdges = new ArrayList<>(1);
+
+		while (null != (pair = nodes.poll()))
+		{
+			INode<VAL, LBL> treeNode = pair.getRight();
+			Node<VAL, LBL>  bnode    = pair.getLeft();
+
+			bnode.setTerminal(treeNode.isTerminal());
+			bnode.setValue(treeNode.getValue().orElseGet(null));
+
+			for (IEdge<VAL, LBL> edge : tree.getChildren(treeRoot))
+			{
+				child(bnode, edge.getLabel(), addedEdges);
+				nodes.add(Pair.of((Node<VAL, LBL>) addedEdges.get(0), treeNode));
+				nodes.clear();
+			}
+		}
 		return this;
 	}
 

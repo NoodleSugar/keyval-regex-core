@@ -31,6 +31,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 
 	private Collection<IFSAState<VAL, LBL>> initialStates;
 	private Collection<IFSAState<VAL, LBL>> finalStates;
+
 	private Collection<IFSAState<VAL, LBL>> states;
 	private Collection<IFSAEdge<VAL, LBL>>  edges;
 	private Collection<IFSAEdge<VAL, LBL>>  epsilonEdges;
@@ -96,7 +97,6 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 		return GFPAMatchers.create(this, element);
 	}
 
-
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getFinalStates()
 	{
@@ -120,7 +120,6 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	{
 		return Collections.unmodifiableCollection(terminalStates);
 	}
-
 
 	@Override
 	public IFPAProperties getProperties()

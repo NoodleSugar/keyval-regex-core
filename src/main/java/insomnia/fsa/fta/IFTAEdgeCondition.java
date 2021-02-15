@@ -16,4 +16,8 @@ public interface IFTAEdgeCondition<VAL, LBL> extends Predicate<List<IFSAState<VA
 	 * Useful for non deterministic automaton.
 	 */
 	boolean testND(List<Collection<IFSAState<VAL, LBL>>> multiStates);
+
+	Collection<List<IFSAState<VAL, LBL>>> validStates(List<IFSAState<VAL, LBL>> states);
+
+	Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<Collection<IFSAState<VAL, LBL>>> states);
 }
