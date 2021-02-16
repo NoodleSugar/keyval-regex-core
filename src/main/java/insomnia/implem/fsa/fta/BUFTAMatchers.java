@@ -3,7 +3,7 @@ package insomnia.implem.fsa.fta;
 import java.util.Collections;
 
 import insomnia.data.ITree;
-import insomnia.data.regex.AbstractTreeMatcher;
+import insomnia.data.regex.ITreeMatchResult;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.implem.data.regex.TreeMatchResults;
@@ -17,16 +17,16 @@ public final class BUFTAMatchers
 
 	// =========================================================================
 
-	private static class Matcher<VAL, LBL> extends AbstractTreeMatcher<VAL, LBL> //
-		implements ITreeMatcher<VAL, LBL>
+	private static class Matcher<VAL, LBL> implements ITreeMatcher<VAL, LBL>
 	{
 		private ITree<VAL, LBL>             element;
 		private IBUFTA<VAL, LBL>            automaton;
 		private BUFTAGroupMatcher<VAL, LBL> groupMatcher;
+		private ITreeMatchResult<VAL, LBL>  matchResult;
 
 		Matcher(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element)
 		{
-			super();
+			this.matchResult  = TreeMatchResults.empty();
 			this.element      = element;
 			this.automaton    = automaton;
 			this.groupMatcher = BUFTAGroupMatcher.create(automaton, element);
@@ -47,6 +47,12 @@ public final class BUFTAMatchers
 		public boolean find()
 		{
 			return (!TreeMatchResults.empty().equals(matchResult = groupMatcher.nextMatch()));
+		}
+
+		@Override
+		public ITreeMatchResult<VAL, LBL> toMatchResult()
+		{
+			return matchResult;
 		}
 	}
 

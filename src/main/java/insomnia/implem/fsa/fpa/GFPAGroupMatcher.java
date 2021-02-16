@@ -12,11 +12,12 @@ import java.util.Queue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import insomnia.data.IPath;
-import insomnia.data.regex.ITreeMatchResult;
+import insomnia.data.regex.IPathMatchResult;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
+import insomnia.implem.data.regex.PathMatchResults;
 import insomnia.implem.data.regex.TreeMatchResults;
 
 /**
@@ -147,19 +148,19 @@ class GFPAGroupMatcher<VAL, LBL>
 	/**
 	 * @return the next match if exists or {@link TreeMatchResults#empty()}
 	 */
-	public ITreeMatchResult<VAL, LBL> nextMatch()
+	public IPathMatchResult<VAL, LBL> nextMatch()
 	{
 		if (end)
-			return TreeMatchResults.empty();
+			return PathMatchResults.empty();
 
 		while (!end && currentResults.isEmpty())
 			nextValidStep();
 
 		if (currentResults.isEmpty())
-			return TreeMatchResults.empty();
+			return PathMatchResults.empty();
 
 		Result<VAL, LBL> result = currentResults.poll();
-		return TreeMatchResults.create(element.subPath(result.limits.getLeft(), result.limits.getRight()));
+		return PathMatchResults.create(element.subPath(result.limits.getLeft(), result.limits.getRight()));
 	}
 
 	private void nextValidStep()

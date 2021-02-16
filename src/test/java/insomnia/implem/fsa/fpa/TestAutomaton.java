@@ -348,7 +348,7 @@ public class TestAutomaton
 
 		while (matcher.find())
 		{
-			assertEquals(query.subPath(groups[i], groups[i] + path.nbLabels() + rooted), matcher.group());
+			assertEquals(query.subPath(groups[i], groups[i] + path.nbLabels() + rooted), matcher.toMatchResult().group());
 			i++;
 		}
 		assertEquals(groups.length, i);

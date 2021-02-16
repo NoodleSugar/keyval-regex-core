@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import insomnia.data.IPath;
-import insomnia.data.regex.ITreeMatcher;
+import insomnia.data.regex.IPathMatcher;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.implem.fsa.fpa.GFPAMatchers;
@@ -92,7 +92,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	}
 
 	@Override
-	public ITreeMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element)
+	public IPathMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element)
 	{
 		return GFPAMatchers.create(this, element);
 	}

@@ -201,7 +201,7 @@ public class TestAutomaton
 		while (matcher.find())
 		{
 			i++;
-			System.out.println(matcher.group());
+			System.out.println(matcher.toMatchResult().group());
 //			assertEquals(pattern, matcher.group());
 		}
 		assertEquals(3, i);

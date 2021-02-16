@@ -21,7 +21,7 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DirectedPseudograph;
 
 import insomnia.data.IPath;
-import insomnia.data.regex.ITreeMatcher;
+import insomnia.data.regex.IPathMatcher;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
@@ -75,7 +75,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	}
 
 	@Override
-	public ITreeMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element)
+	public IPathMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element)
 	{
 		return GFPAMatchers.create(this, element);
 	}

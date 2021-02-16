@@ -3,10 +3,11 @@ package insomnia.implem.fsa.fpa;
 import java.util.Collections;
 
 import insomnia.data.IPath;
-import insomnia.data.regex.AbstractTreeMatcher;
-import insomnia.data.regex.ITreeMatcher;
+import insomnia.data.regex.IPathMatchResult;
+import insomnia.data.regex.IPathMatcher;
 import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
+import insomnia.implem.data.regex.PathMatchResults;
 import insomnia.implem.data.regex.TreeMatchResults;
 
 public class GFPAMatchers
@@ -18,18 +19,18 @@ public class GFPAMatchers
 
 	// =========================================================================
 
-	private static class GFPAMatcher<VAL, LBL> //
-		extends AbstractTreeMatcher<VAL, LBL> //
-		implements ITreeMatcher<VAL, LBL>
+	private static class GFPAMatcher<VAL, LBL> implements IPathMatcher<VAL, LBL>
 	{
 		private IGFPA<VAL, LBL> automaton;
 		private IPath<VAL, LBL> element;
 
 		private GFPAGroupMatcher<VAL, LBL> groupMatcher;
 
+		private IPathMatchResult<VAL, LBL> matchResult;
+
 		public GFPAMatcher(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
 		{
-			super();
+			this.matchResult  = PathMatchResults.empty();
 			this.automaton    = automaton;
 			this.element      = element;
 			this.groupMatcher = GFPAGroupMatcher.create(automaton, element);
@@ -51,11 +52,17 @@ public class GFPAMatchers
 		{
 			return (!TreeMatchResults.empty().equals(matchResult = groupMatcher.nextMatch()));
 		}
+
+		@Override
+		public IPathMatchResult<VAL, LBL> toMatchResult()
+		{
+			return matchResult;
+		}
 	}
 
 	// =========================================================================
 
-	public static <VAL, LBL> ITreeMatcher<VAL, LBL> create(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
+	public static <VAL, LBL> IPathMatcher<VAL, LBL> create(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
 	{
 		return new GFPAMatcher<>(automaton, element);
 	}

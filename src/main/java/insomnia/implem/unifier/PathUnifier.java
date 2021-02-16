@@ -27,14 +27,14 @@ public final class PathUnifier<VAL, LBL> extends AbstractPathUnifier<VAL, LBL>
 	@Override
 	protected IPath<VAL, LBL> emptyPath()
 	{
-		return Paths.create();
+		return Paths.empty();
 	}
 
 	@Override
 	public IPath<VAL, LBL> getBody()
 	{
 		if (getPrefixBody().isEmpty() && getSuffixBody().isEmpty())
-			return Paths.create();
+			return Paths.empty();
 
 		return Paths.concat(Arrays.asList(getPrefixBody(), getSuffixBody()));
 	}
@@ -43,7 +43,7 @@ public final class PathUnifier<VAL, LBL> extends AbstractPathUnifier<VAL, LBL>
 	public IPath<VAL, LBL> getHead()
 	{
 		if (getPrefixHead().isEmpty() && getSuffixHead().isEmpty())
-			return Paths.create();
+			return Paths.empty();
 
 		return Paths.concat(Arrays.asList(getPrefixHead(), getSuffixHead()));
 	}

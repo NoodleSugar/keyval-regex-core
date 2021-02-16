@@ -2,7 +2,7 @@ package insomnia.implem.data.regex;
 
 import insomnia.data.ITree;
 import insomnia.data.regex.ITreeMatchResult;
-import insomnia.implem.data.Trees;
+import insomnia.implem.data.Paths;
 
 public final class TreeMatchResults
 {
@@ -18,7 +18,7 @@ public final class TreeMatchResults
 		return new TreeMatchResult<>(group);
 	}
 
-	private final static TreeMatchResult<?, ?> emptyResult = new TreeMatchResult<>(Trees.empty());
+	private final static ITreeMatchResult<?, ?> emptyResult = new PathMatchResult<>(Paths.empty());
 
 	@SuppressWarnings("unchecked")
 	public static <VAL, LBL> ITreeMatchResult<VAL, LBL> empty()

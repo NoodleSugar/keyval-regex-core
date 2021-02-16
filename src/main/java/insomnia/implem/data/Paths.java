@@ -68,12 +68,15 @@ public final class Paths
 
 	// =========================================================================
 
+//	private final static IPath<?, ?> emptyPath = new Path<>();
+
 	/**
 	 * @return an empty path
 	 */
-	public static <VAL, LBL> IPath<VAL, LBL> create()
+	@SuppressWarnings("unchecked")
+	public static <VAL, LBL> IPath<VAL, LBL> empty()
 	{
-		return new Path<>();
+		return (IPath<VAL, LBL>) Trees.empty();
 	}
 
 	/**
@@ -111,7 +114,7 @@ public final class Paths
 	public static <VAL, LBL> IPath<VAL, LBL> concat(List<IPath<VAL, LBL>> paths) throws InvalidParameterException
 	{
 		if (paths.size() == 0)
-			return create();
+			return empty();
 		if (paths.size() == 1)
 			return create(paths.get(0).isRooted(), paths.get(0).isTerminal(), paths.get(0).getLabels());
 

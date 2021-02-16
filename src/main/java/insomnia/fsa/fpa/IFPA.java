@@ -1,12 +1,12 @@
 package insomnia.fsa.fpa;
 
 import insomnia.data.IPath;
-import insomnia.data.regex.ITreeMatcher;
+import insomnia.data.regex.IPathMatcher;
 
 /**
  * A Finite Path Automaton.
  */
 public interface IFPA<VAL, LBL>
 {
-	ITreeMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element);
+	IPathMatcher<VAL, LBL> matcher(IPath<VAL, LBL> element);
 }

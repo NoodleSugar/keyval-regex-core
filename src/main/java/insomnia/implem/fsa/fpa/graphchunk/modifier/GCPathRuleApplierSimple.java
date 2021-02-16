@@ -58,7 +58,7 @@ public class GCPathRuleApplierSimple<VAL, LBL>
 		if (null == queryPath)
 			throw new InvalidParameterException("graph chunk does not represent a path");
 
-		IPathRule<VAL, LBL> queryRule = PathRules.create(queryPath, Paths.create(), false);
+		IPathRule<VAL, LBL> queryRule = PathRules.create(queryPath, Paths.empty(), false);
 
 		Collection<IDependency<VAL, LBL>> dependencies = grd.getDependencies(queryRule);
 

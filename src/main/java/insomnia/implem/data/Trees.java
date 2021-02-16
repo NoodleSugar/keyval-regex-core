@@ -14,7 +14,10 @@ public final class Trees
 
 	// =========================================================================
 
-	private final static ITree<?, ?> emptyTree = Tree.empty();
+	/**
+	 * A path to compare to other path types
+	 */
+	private final static ITree<?, ?> emptyTree = new Path<>();
 
 	/**
 	 * Create an empty {@link Tree}.

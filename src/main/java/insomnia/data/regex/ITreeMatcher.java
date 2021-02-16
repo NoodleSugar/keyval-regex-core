@@ -11,7 +11,7 @@ import insomnia.data.ITree;
  * @author zuri
  * @see Matcher
  */
-public interface ITreeMatcher<VAL, LBL> extends ITreeMatchResult<VAL, LBL>
+public interface ITreeMatcher<VAL, LBL>
 {
 	/**
 	 * Check if there is a match of the {@link ITree} element without computing a {@link ITreeMatchResult}.
