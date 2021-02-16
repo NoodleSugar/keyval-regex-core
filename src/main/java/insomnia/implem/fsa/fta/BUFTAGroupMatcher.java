@@ -290,7 +290,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 				nodeData = nodeStatesMap.get(childNode);
 				Collection<IFSAState<VAL, LBL>> childStates = nodeData.getStates();
 
-				Collection<IFSAState<VAL, LBL>> newStates = GFPAOp.getNextValidStates(gfpa, childStates, childEdge.getLabel());
+				Collection<IFSAState<VAL, LBL>> newStates = GFPAOp.getNextValidStates(gfpa, childStates, childEdge.getLabel(), childEdge.getChild().getValue());
 
 				if (!newStates.isEmpty())
 				{

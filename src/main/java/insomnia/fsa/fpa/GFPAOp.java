@@ -3,12 +3,15 @@ package insomnia.fsa.fpa;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import insomnia.data.IPath;
 import insomnia.fsa.IFSAEdge;
+import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
+import insomnia.fsa.IFSAValueCondition;
 
 public final class GFPAOp
 {
@@ -30,8 +33,6 @@ public final class GFPAOp
 	{
 		if (!theElement.isTerminal())
 			states.removeIf(state -> automaton.isTerminal(state));
-
-		states.removeIf(state -> false == state.getValueCondition().test(theElement.getLeaf().getValue()));
 	}
 
 	/**
@@ -45,6 +46,8 @@ public final class GFPAOp
 	{
 		if (!theElement.isRooted())
 			states.removeIf((state) -> automaton.isRooted(state));
+
+		states.removeIf(state -> !testValue(state.getValueCondition(), theElement.getRoot().getValue()));
 	}
 
 	/**
@@ -81,7 +84,17 @@ public final class GFPAOp
 		return true;
 	}
 
-	public static <VAL, LBL> void nextValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label)
+	public static <LBL> boolean testLabel(IFSALabelCondition<LBL> cond, LBL label)
+	{
+		return label == null || cond.test(label);
+	}
+
+	public static <VAL> boolean testValue(IFSAValueCondition<VAL> cond, VAL value)
+	{
+		return value == null || cond.test(value);
+	}
+
+	public static <VAL, LBL> void nextValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label, VAL value)
 	{
 		if (states.isEmpty())
 			return;
@@ -91,15 +104,15 @@ public final class GFPAOp
 
 		for (IFSAEdge<VAL, LBL> edge : automaton.getReachableEdges(buffStates))
 		{
-			if (edge.getLabelCondition().test(label))
+			if (testLabel(edge.getLabelCondition(), label) && testValue(edge.getChild().getValueCondition(), value))
 				states.add(edge.getChild());
 		}
 	}
 
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getNextValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label)
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getNextValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label, VAL value)
 	{
 		List<IFSAState<VAL, LBL>> ret = new ArrayList<>(states);
-		nextValidStates(automaton, ret, label);
+		nextValidStates(automaton, ret, label, value);
 		return ret;
 	}
 
@@ -110,8 +123,12 @@ public final class GFPAOp
 		ret.addAll(automaton.getInitialStates());
 		GFPAOp.initStates(automaton, ret, element);
 
-		for (LBL label : element.getLabels())
-			GFPAOp.nextValidStates(automaton, ret, label);
+		Iterator<LBL> labels = element.getLabels().iterator();
+		Iterator<VAL> values = element.getValues().iterator();
+		values.next(); // Skip the root
+
+		while (labels.hasNext())
+			GFPAOp.nextValidStates(automaton, ret, labels.next(), values.next());
 
 		automaton.epsilonClosure(ret);
 		GFPAOp.finalizeStates(automaton, ret, element);
@@ -147,4 +164,6 @@ public final class GFPAOp
 		}
 		states.addAll(ret);
 	}
+
+
 }

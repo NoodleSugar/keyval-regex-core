@@ -101,7 +101,7 @@ class BUFTAMatches<VAL, LBL>
 			{
 				INode<VAL, LBL>                 childNode   = childEdge.getChild();
 				Collection<IFSAState<VAL, LBL>> childStates = nodeStatesMap.get(childNode);
-				Collection<IFSAState<VAL, LBL>> newStates   = GFPAOp.getNextValidStates(gfpa, childStates, childEdge.getLabel());
+				Collection<IFSAState<VAL, LBL>> newStates   = GFPAOp.getNextValidStates(gfpa, childStates, childEdge.getLabel(), childEdge.getChild().getValue());
 
 				childsSubStates.add(CollectionUtils.union(IBUFTA.getInitials(automaton, childNode), newStates));
 				// No need of that node anymore
