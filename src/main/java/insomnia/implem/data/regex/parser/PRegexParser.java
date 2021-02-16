@@ -1,4 +1,4 @@
-package insomnia.implem.kv.pregex;
+package insomnia.implem.data.regex.parser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,10 +10,10 @@ import java.util.Collection;
 
 import org.apache.commons.io.IOUtils;
 
+import insomnia.implem.data.regex.parser.PRegexElements.Disjunction;
+import insomnia.implem.data.regex.parser.PRegexElements.MultipleElement;
+import insomnia.implem.data.regex.parser.PRegexElements.Sequence;
 import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.pregex.PRegexElements.Disjunction;
-import insomnia.implem.kv.pregex.PRegexElements.MultipleElement;
-import insomnia.implem.kv.pregex.PRegexElements.Sequence;
 
 public class PRegexParser
 {

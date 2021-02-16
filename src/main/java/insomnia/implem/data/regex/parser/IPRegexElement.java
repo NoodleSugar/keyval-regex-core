@@ -1,4 +1,4 @@
-package insomnia.implem.kv.pregex;
+package insomnia.implem.data.regex.parser;
 
 import java.util.Collection;
 

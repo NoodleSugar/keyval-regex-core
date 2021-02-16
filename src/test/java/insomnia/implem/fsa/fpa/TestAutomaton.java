@@ -28,6 +28,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import insomnia.data.IPath;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.fpa.IFPA;
+import insomnia.implem.data.regex.parser.IPRegexElement;
+import insomnia.implem.data.regex.parser.PRegexParser;
 import insomnia.implem.fsa.fpa.creational.FPAFactory;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.GCPathRuleApplierSimple;
 import insomnia.implem.kv.data.KVLabel;
@@ -35,8 +37,6 @@ import insomnia.implem.kv.data.KVLabels;
 import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.kv.data.KVValues;
-import insomnia.implem.kv.pregex.IPRegexElement;
-import insomnia.implem.kv.pregex.PRegexParser;
 import insomnia.implem.kv.rule.KVPathRules;
 import insomnia.implem.kv.unifier.KVPathUnifiers;
 import insomnia.implem.rule.dependency.BetaDependencyValidation;
@@ -62,6 +62,7 @@ public class TestAutomaton
 				} }, //
 				{ "FromBuilder", new Function()
 				{
+
 					@Override
 					public Object apply(Object obj)
 					{
@@ -78,6 +79,7 @@ public class TestAutomaton
 					}
 
 				} }, //
+
 				{ "FromBuilderSync", new Function()
 				{
 					@Override

@@ -11,18 +11,18 @@ import insomnia.data.IPath;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.creational.IFSALabelFactory;
 import insomnia.fsa.fpa.IGFPA;
+import insomnia.implem.data.regex.parser.IPRegexElement;
+import insomnia.implem.data.regex.parser.Quantifier;
+import insomnia.implem.data.regex.parser.PRegexElements.Disjunction;
+import insomnia.implem.data.regex.parser.PRegexElements.Key;
+import insomnia.implem.data.regex.parser.PRegexElements.Regex;
+import insomnia.implem.data.regex.parser.PRegexElements.Sequence;
+import insomnia.implem.data.regex.parser.PRegexElements.Value;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fpa.graphchunk.IGCAFactory;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier.Environment;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
-import insomnia.implem.kv.pregex.IPRegexElement;
-import insomnia.implem.kv.pregex.PRegexElements.Disjunction;
-import insomnia.implem.kv.pregex.PRegexElements.Key;
-import insomnia.implem.kv.pregex.PRegexElements.Regex;
-import insomnia.implem.kv.pregex.PRegexElements.Sequence;
-import insomnia.implem.kv.pregex.PRegexElements.Value;
-import insomnia.implem.kv.pregex.Quantifier;
 
 /**
  * The factory to create an automaton from a parsed regex or a path.
