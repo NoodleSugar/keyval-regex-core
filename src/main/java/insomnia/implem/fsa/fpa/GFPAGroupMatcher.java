@@ -112,7 +112,7 @@ class GFPAGroupMatcher<VAL, LBL>
 			if (element.isRooted())
 			{
 				start++;
-				end += 2;
+				end++;
 			}
 		}
 		else if (element.isRooted())
