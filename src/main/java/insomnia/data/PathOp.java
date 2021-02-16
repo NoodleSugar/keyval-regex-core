@@ -70,27 +70,23 @@ public final class PathOp
 	/**
 	 * Transform the conceptual limits (taking into account isRooted/isTerminal nature) into real limits to refer to a memory location.
 	 * 
-	 * @param path   the path of reference
-	 * @param limits (input/output) the limits of the path that will be modified
+	 * @param path the path of reference
+	 * @param from the starting conceptual point of the path
+	 * @param to   the (excluded) ending conceptual point of the path
 	 */
 	static public RealLimits realLimits(IPath<?, ?> path, int from, int to)
 	{
-		assert (from < to);
+		assert (0 <= from && from < to);
 		boolean isRooted   = false;
 		boolean isTerminal = false;
 
 		if (path.isRooted())
 		{
 			if (from > 0)
-			{
 				from--;
-				to -= 2;
-			}
 			else
-			{
 				isRooted = true;
-				to--;
-			}
+			to--;
 		}
 		if (path.isTerminal())
 		{
