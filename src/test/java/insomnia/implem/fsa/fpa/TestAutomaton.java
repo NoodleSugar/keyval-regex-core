@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,7 +26,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.data.IPath;
-import insomnia.data.PathOp;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.fpa.IFPA;
 import insomnia.implem.fsa.fpa.creational.FPAFactory;
@@ -343,13 +343,12 @@ public class TestAutomaton
 	{
 		IFPA<KVValue, KVLabel>         automaton = automatonFromPath(path);
 		ITreeMatcher<KVValue, KVLabel> matcher   = automaton.matcher(query);
-
-		int i = 0;
+		int                            rooted    = BooleanUtils.toInteger(path.isRooted());
+		int                            i         = 0;
 
 		while (matcher.find())
 		{
-			assertEquals(path, matcher.group());
-			assertEquals(PathOp.getPathNode(query, groups[i]), matcher.group().getRoot());
+			assertEquals(query.subPath(groups[i], groups[i] + path.nbLabels() + rooted), matcher.group());
 			i++;
 		}
 		assertEquals(groups.length, i);
