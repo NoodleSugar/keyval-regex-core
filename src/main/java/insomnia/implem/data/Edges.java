@@ -43,6 +43,12 @@ public final class Edges
 		{
 			return child;
 		}
+
+		@Override
+		public String toString()
+		{
+			return IEdge.toString(this);
+		}
 	}
 
 	// =========================================================================

@@ -1,7 +1,5 @@
 package insomnia.data;
 
-import java.util.Optional;
-
 import org.apache.commons.lang3.ArrayUtils;
 
 import insomnia.lib.help.HelpLists;
@@ -109,18 +107,7 @@ public final class PathOp
 	 */
 	static public <VAL, LBL> INode<VAL, LBL> getRealPathNode(IPath<VAL, LBL> path, int index)
 	{
-		INode<VAL, LBL> ret = path.getRoot();
-
-		while (index-- > 0)
-		{
-			Optional<IEdge<VAL, LBL>> child = path.getChild(ret);
-
-			if (!child.isPresent())
-				return null;
-
-			ret = child.get().getChild();
-		}
-		return ret;
+		return path.getNodes().get(index);
 	}
 
 	/**

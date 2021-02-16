@@ -4,7 +4,6 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 import insomnia.data.IEdge;
 import insomnia.data.INode;
@@ -105,7 +104,7 @@ public class FPAFactory<VAL, LBL>
 				public GraphChunk<VAL, LBL> gluePath(GraphChunk<VAL, LBL> gchunk, IFSAState<VAL, LBL> start, IPath<VAL, LBL> path)
 				{
 					IGCAFactory<VAL, LBL> afactory = gchunk.getAFactory();
-					IFSAState<VAL, LBL>   end      = afactory.create(path.getValue());
+					IFSAState<VAL, LBL>   end      = afactory.create(path.getLeaf().getValue());
 
 					afactory.setFinal(end, true);
 					afactory.setTerminal(end, path.isTerminal());
@@ -143,7 +142,7 @@ public class FPAFactory<VAL, LBL>
 		INode<VAL, LBL>     pNode = path.getRoot();
 		IFSAState<VAL, LBL> lastGCState;
 
-		Optional<IEdge<VAL, LBL>> optChild = path.getChild(pNode);
+		IEdge<VAL, LBL> optChild = path.getChild(pNode);
 
 		{
 			IFSAState<VAL, LBL> newGCState = afactory.create(pNode.getValue());
@@ -154,20 +153,20 @@ public class FPAFactory<VAL, LBL>
 			lastGCState = newGCState;
 		}
 
-		if (optChild.isPresent())
+		if (null != optChild)
 		{
 			for (;;)
 			{
-				pNode = optChild.get().getChild();
-				Optional<VAL> value = pNode.getValue();
+				pNode = optChild.getChild();
+				VAL value = pNode.getValue();
 
-				Optional<IEdge<VAL, LBL>> nextOptChild = path.getChild(pNode);
+				IEdge<VAL, LBL> nextOptChild = path.getChild(pNode);
 
 				IFSAState<VAL, LBL> newGCState = afactory.create(value);
-				currentAutomaton.addEdge(lastGCState, newGCState, FSALabelConditions.createEq(optChild.get().getLabel()));
+				currentAutomaton.addEdge(lastGCState, newGCState, FSALabelConditions.createEq(optChild.getLabel()));
 				lastGCState = newGCState;
 
-				if (!nextOptChild.isPresent())
+				if (null == nextOptChild)
 					break;
 
 				optChild = nextOptChild;

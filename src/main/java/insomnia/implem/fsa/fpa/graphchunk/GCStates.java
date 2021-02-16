@@ -1,7 +1,6 @@
 package insomnia.implem.fsa.fpa.graphchunk;
 
 import java.security.InvalidParameterException;
-import java.util.Optional;
 
 import insomnia.fsa.IFSAValueCondition;
 import insomnia.implem.fsa.valuecondition.FSAValueConditions;
@@ -149,14 +148,14 @@ final class GCStates
 
 	}
 
-	public static <VAL, LBL> IGCState<VAL, LBL> create(Optional<VAL> value)
+	public static <VAL, LBL> IGCState<VAL, LBL> create(VAL value)
 	{
-		return createNullableValueEq(false, false, false, false, value.orElse(null));
+		return createNullableValueEq(false, false, false, false, value);
 	}
 
 	public static <VAL, LBL> IGCState<VAL, LBL> create()
 	{
-		return create(Optional.empty());
+		return create(null);
 	}
 
 	// =========================================================================

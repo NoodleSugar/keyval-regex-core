@@ -96,7 +96,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	{
 		GraphChunk<VAL, LBL>  ret      = new GraphChunk<>();
 		IGCAFactory<VAL, LBL> afactory = ret.getAFactory();
-		IFSAState<VAL, LBL>   a        = afactory.create(Optional.ofNullable(value));
+		IFSAState<VAL, LBL>   a        = afactory.create(value);
 		afactory.setTerminal(a, true);
 		afactory.setFinal(a, true);
 		ret.setStart(a);
@@ -133,7 +133,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		}
 
 		@Override
-		public IFSAState<VAL, LBL> create(Optional<VAL> value)
+		public IFSAState<VAL, LBL> create(VAL value)
 		{
 			return GCStates.create(value);
 		}

@@ -14,7 +14,6 @@ import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.data.creational.ISubTreeBuilder;
-import insomnia.implem.data.Trees;
 
 /**
  * An implementation of a sub-tree builder which select existing nodes and edges from a tree.
@@ -177,6 +176,6 @@ public final class SubTreeBuilder<VAL, LBL> implements ISubTreeBuilder<VAL, LBL>
 	@Override
 	public String toString()
 	{
-		return Trees.toString(this);
+		return ITree.toString(this);
 	}
 }

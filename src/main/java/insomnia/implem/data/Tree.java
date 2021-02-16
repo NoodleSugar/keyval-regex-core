@@ -96,12 +96,13 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 
 	private <SVAL, SLBL> INode<VAL, LBL> mapNode(INode<SVAL, SLBL> srcNode, Function<SVAL, VAL> mapVal)
 	{
-		Optional<SVAL> srcNodeValue = srcNode.getValue();
+		SVAL srcNodeValue = srcNode.getValue();
 
-		if (srcNodeValue.isPresent())
-			return Nodes.create(srcNode, Optional.of(mapVal.apply(srcNodeValue.get())));
+		if (srcNodeValue == null)
+			return Nodes.create(srcNode, null);
 
-		return Nodes.create(srcNode, Optional.empty());
+		return Nodes.create(srcNode, mapVal.apply(srcNodeValue));
+
 	}
 
 	private <SLBL> LBL mapLabel(SLBL srcLabel, Function<SLBL, LBL> mapLabel)
@@ -175,6 +176,6 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 	@Override
 	public String toString()
 	{
-		return Trees.toString(this);
+		return ITree.toString(this);
 	}
 }

@@ -37,7 +37,7 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 
 		Stream<IFSAState<VAL, LBL>> stream = states.stream().filter( //
 			s -> !automaton.getGFPA().isRooted(s) //
-				&& (!node.getValue().isPresent() || s.getValueCondition().test(node.getValue().get())) //
+				&& (null == node.getValue() || s.getValueCondition().test(node.getValue())) //
 		);
 		return stream.collect(Collectors.toList());
 	}

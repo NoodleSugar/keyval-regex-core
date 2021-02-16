@@ -31,7 +31,7 @@ public final class GFPAOp
 		if (!theElement.isTerminal())
 			states.removeIf(state -> automaton.isTerminal(state));
 
-		states.removeIf(state -> false == state.getValueCondition().test(theElement.getValue().orElse(null)));
+		states.removeIf(state -> false == state.getValueCondition().test(theElement.getLeaf().getValue()));
 	}
 
 	/**

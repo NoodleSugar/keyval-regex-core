@@ -7,9 +7,9 @@ import insomnia.data.INode;
 
 class Edge<VAL, LBL> implements IEdge<VAL, LBL>
 {
-	LBL            label;
-	Node<VAL, LBL> parent;
-	Node<VAL, LBL> child;
+	private LBL            label;
+	private Node<VAL, LBL> parent;
+	private Node<VAL, LBL> child;
 
 	Edge(LBL label, Node<VAL, LBL> parent, Node<VAL, LBL> child, Collection<LBL> vocabulary)
 	{
@@ -37,5 +37,11 @@ class Edge<VAL, LBL> implements IEdge<VAL, LBL>
 	public INode<VAL, LBL> getChild()
 	{
 		return child;
+	}
+
+	@Override
+	public String toString()
+	{
+		return IEdge.toString(this);
 	}
 }

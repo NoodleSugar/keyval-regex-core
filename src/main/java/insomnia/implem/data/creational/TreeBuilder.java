@@ -17,7 +17,6 @@ import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.data.creational.ITreeBuilder;
-import insomnia.implem.data.Trees;
 
 /**
  * An implementation of a tree builder.
@@ -175,7 +174,7 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 			Node<VAL, LBL>  bnode    = pair.getLeft();
 
 			bnode.setTerminal(treeNode.isTerminal());
-			bnode.setValue(treeNode.getValue().orElseGet(null));
+			bnode.setValue(treeNode.getValue());
 
 			for (IEdge<VAL, LBL> edge : tree.getChildren(treeRoot))
 			{
@@ -218,6 +217,6 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	@Override
 	public String toString()
 	{
-		return Trees.toString(this);
+		return ITree.toString(this);
 	}
 }

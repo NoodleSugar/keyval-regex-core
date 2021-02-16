@@ -3,10 +3,12 @@ package insomnia.lib.help;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -14,6 +16,41 @@ import insomnia.lib.numeric.Base;
 
 public final class HelpLists
 {
+	/**
+	 * Create a static list of size elements.
+	 * Elements of its list may be modified but its not allowed to add/remove elements.
+	 * 
+	 * @param size the size of the list
+	 * @return a static list of 'size' elements
+	 */
+	@SuppressWarnings("unchecked")
+	public static <E> List<E> staticList(int size)
+	{
+		return (List<E>) Arrays.asList(new Object[size]);
+	}
+
+	/**
+	 * Transform a list to a static one.
+	 * Elements of its list may be modified but its not allowed to add/remove elements.
+	 * 
+	 * @param src the list to copy
+	 * @return a static copy of 'src'
+	 */
+	public static <E> List<E> staticList(List<? extends E> src)
+	{
+		ArrayList<E> ret = new ArrayList<>(src);
+		ret.trimToSize();
+		return ListUtils.fixedSizeList(ret);
+	}
+
+	/**
+	 * @return an immutable list
+	 */
+	public static <E> List<E> downcast(List<? extends E> list)
+	{
+		return Collections.unmodifiableList(list);
+	}
+
 	public static <A, B> List<Object[]> mergePairsArrays(Collection<Pair<A[], B[]>> pairs)
 	{
 		if (pairs.size() == 0)

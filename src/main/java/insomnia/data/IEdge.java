@@ -14,4 +14,15 @@ public interface IEdge<VAL, LBL>
 	INode<VAL, LBL> getParent();
 
 	INode<VAL, LBL> getChild();
+
+	// =========================================================================
+
+	public static String toString(IEdge<?, ?> edge)
+	{
+		return new StringBuilder() //
+			.append(edge.getParent()) //
+			.append("--[").append(edge.getLabel()).append("]-->") //
+			.append(edge.getChild()) //
+			.toString();
+	}
 }

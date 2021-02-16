@@ -1,7 +1,5 @@
 package insomnia.implem.fsa.fpa.graphchunk;
 
-import java.util.Optional;
-
 import insomnia.fsa.IFSAState;
 
 /**
@@ -13,7 +11,7 @@ public interface IGCAFactory<VAL, LBL>
 {
 	IFSAState<VAL, LBL> create();
 
-	IFSAState<VAL, LBL> create(Optional<VAL> value);
+	IFSAState<VAL, LBL> create(VAL value);
 
 	void setInitial(IFSAState<VAL, LBL> state, boolean v);
 

@@ -2,24 +2,25 @@ package insomnia.implem.data.creational;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 
 class Node<VAL, LBL> implements INode<VAL, LBL>
 {
-	private Optional<VAL> value;
+	private VAL value;
 
-	private Edge<VAL, LBL>        parent   = null;
-	private List<IEdge<VAL, LBL>> children = new ArrayList<>();
+	private Edge<VAL, LBL>        parent;
+	private List<IEdge<VAL, LBL>> children;
 
-	private boolean isRooted   = false;
-	private boolean isTerminal = false;
+	private boolean isRooted;
+	private boolean isTerminal;
 
 	Node()
 	{
-		this.value = Optional.empty();
+		children   = new ArrayList<IEdge<VAL, LBL>>();
+		isRooted   = false;
+		isTerminal = false;
 	}
 
 	List<IEdge<VAL, LBL>> getChildren()
@@ -54,12 +55,12 @@ class Node<VAL, LBL> implements INode<VAL, LBL>
 
 	void setValue(VAL value)
 	{
-		this.value      = Optional.ofNullable(value);
+		this.value      = value;
 		this.isTerminal = true;
 	}
 
 	@Override
-	public Optional<VAL> getValue()
+	public VAL getValue()
 	{
 		return value;
 	}
@@ -74,5 +75,11 @@ class Node<VAL, LBL> implements INode<VAL, LBL>
 	public boolean isTerminal()
 	{
 		return isTerminal;
+	}
+
+	@Override
+	public String toString()
+	{
+		return INode.toString(this);
 	}
 }

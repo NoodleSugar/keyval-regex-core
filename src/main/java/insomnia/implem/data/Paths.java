@@ -68,21 +68,46 @@ public final class Paths
 
 	// =========================================================================
 
+	/**
+	 * @return an empty path
+	 */
 	public static <VAL, LBL> IPath<VAL, LBL> create()
 	{
 		return new Path<>();
 	}
 
+	/**
+	 * Create a path ended by a value.
+	 * 
+	 * @param isRooted   the path is rooted
+	 * @param isTerminal the path is terminal
+	 * @param labels     labels of the path
+	 * @param value      the value for the last node
+	 */
 	private static <VAL, LBL> IPath<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels, VAL value)
 	{
-		return new Path<>(0, isRooted, isTerminal, labels, value);
+		return new Path<>(isRooted, isTerminal, labels, value);
 	}
 
+	/**
+	 * Create a path without value.
+	 * 
+	 * @param isRooted   the path is rooted
+	 * @param isTerminal the path is terminal
+	 * @param labels     labels of the path
+	 */
 	public static <VAL, LBL> IPath<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels)
 	{
 		return create(isRooted, isTerminal, labels, null);
 	}
 
+	/**
+	 * Concatenate some paths.
+	 * 
+	 * @param paths the paths to concatenate in order
+	 * @return a path which is the concatenation of all paths
+	 * @throws InvalidParameterException
+	 */
 	public static <VAL, LBL> IPath<VAL, LBL> concat(List<IPath<VAL, LBL>> paths) throws InvalidParameterException
 	{
 		if (paths.size() == 0)

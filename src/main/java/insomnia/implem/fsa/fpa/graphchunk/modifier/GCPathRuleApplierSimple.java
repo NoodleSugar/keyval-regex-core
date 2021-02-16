@@ -117,7 +117,7 @@ public class GCPathRuleApplierSimple<VAL, LBL>
 
 			bodyChunks.stream().filter((gc) -> {
 				IFSAState<VAL, LBL> endState = gc.getEnd();
-				return gc.isFinal(endState) && gc.isTerminal(endState) == rule.getBody().isTerminal() && endState.getValueCondition().test(rule.getBody().getValue().orElse(null));
+				return gc.isFinal(endState) && gc.isTerminal(endState) == rule.getBody().isTerminal() && endState.getValueCondition().test(rule.getBody().getLeaf().getValue());
 			}).findFirst();
 
 			if (!bodyChunks.isEmpty())

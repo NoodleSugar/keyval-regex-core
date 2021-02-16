@@ -71,7 +71,7 @@ class BUFTAMatches<VAL, LBL>
 			if (!node.isTerminal())
 				stream = stream.filter(state -> !gfpa.isTerminal(state));
 
-			VAL value = node.getValue().orElse(null);
+			VAL value = node.getValue();
 			stream = stream.filter(state -> state.getValueCondition().test(value));
 
 			List<IFSAState<VAL, LBL>> states = stream.collect(Collectors.toList());

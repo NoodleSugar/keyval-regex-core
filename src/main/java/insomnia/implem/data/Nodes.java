@@ -1,29 +1,27 @@
 package insomnia.implem.data;
 
-import java.util.Optional;
-
 import insomnia.data.INode;
 
 public final class Nodes
 {
 	private Nodes()
 	{
-
+		throw new AssertionError();
 	}
 
 	// =========================================================================
 
 	private static abstract class Node<VAL, LBL> implements INode<VAL, LBL>
 	{
-		private Optional<VAL> value;
+		private VAL value;
 
-		Node(Optional<VAL> value)
+		Node(VAL value)
 		{
 			this.value = value;
 		}
 
 		@Override
-		public Optional<VAL> getValue()
+		public VAL getValue()
 		{
 			return value;
 		}
@@ -31,19 +29,20 @@ public final class Nodes
 		@Override
 		public String toString()
 		{
-			StringBuilder sb = new StringBuilder();
-			sb.append(Integer.toHexString(System.identityHashCode(this)));
-
-			if (value.isPresent())
-				sb.append("(").append(value.get()).append(")");
-
-			return sb.toString();
+			return INode.toString(this);
 		}
 	}
 
 	// =========================================================================
 
-	public static <VAL, LBL> INode<VAL, LBL> create(boolean isRooted, boolean isTerminal, Optional<VAL> value)
+	/**
+	 * Create a new node.
+	 * 
+	 * @param isRooted   the node is rooted
+	 * @param isTerminal the node is terminal
+	 * @param value      the value of the node
+	 */
+	public static <VAL, LBL> INode<VAL, LBL> create(boolean isRooted, boolean isTerminal, VAL value)
 	{
 		return new Node<VAL, LBL>(value)
 		{
@@ -61,12 +60,23 @@ public final class Nodes
 		};
 	}
 
+	/**
+	 * Create a new node copying 'src'.
+	 * 
+	 * @param src the node to copy
+	 */
 	public static <VAL, LBL> INode<VAL, LBL> create(INode<VAL, ?> src)
 	{
 		return create(src.isRooted(), src.isTerminal(), src.getValue());
 	}
 
-	public static <VAL, LBL> INode<VAL, LBL> create(INode<?, ?> src, Optional<VAL> value)
+	/**
+	 * Create a new node copying 'src' but set the value to 'value'.
+	 * 
+	 * @param src   the node to copy
+	 * @param value the value for the new node
+	 */
+	public static <VAL, LBL> INode<VAL, LBL> create(INode<?, ?> src, VAL value)
 	{
 		return create(src.isRooted(), src.isTerminal(), value);
 	}
