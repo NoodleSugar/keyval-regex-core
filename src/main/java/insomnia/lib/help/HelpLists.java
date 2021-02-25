@@ -36,7 +36,7 @@ public final class HelpLists
 	 * @param src the list to copy
 	 * @return a static copy of 'src'
 	 */
-	public static <E> List<E> staticList(List<? extends E> src)
+	public static <E> List<E> staticList(Collection<? extends E> src)
 	{
 		ArrayList<E> ret = new ArrayList<>(src);
 		ret.trimToSize();
