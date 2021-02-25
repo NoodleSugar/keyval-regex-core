@@ -2,29 +2,29 @@ package insomnia.implem.kv.data;
 
 import org.apache.commons.lang3.ObjectUtils;
 
-public class KVValue
+public final class KVValue
 {
 	public enum Type
 	{
 		NUMBER, STRING, NULL
 	};
 
-	Type   type;
-	Object obj;
+	private Type   type;
+	private Object obj;
 
-	public KVValue()
+	KVValue()
 	{
 		type = Type.NULL;
 		obj  = ObjectUtils.NULL;
 	}
 
-	public KVValue(Number nb)
+	KVValue(Number nb)
 	{
 		type = Type.NUMBER;
 		obj  = nb;
 	}
 
-	public KVValue(String s)
+	KVValue(String s)
 	{
 		obj = s;
 	}

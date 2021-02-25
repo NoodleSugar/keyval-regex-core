@@ -3,6 +3,7 @@ package insomnia.implem.kv.rule.grd;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,9 +17,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.rule.KVPathRule;
-import insomnia.implem.kv.rule.dependency.KVAlphaDependencyValidation;
+import insomnia.implem.kv.rule.KVPathRules;
+import insomnia.implem.kv.unifier.KVPathUnifiers;
+import insomnia.implem.rule.dependency.AlphaDependencyValidation;
+import insomnia.implem.rule.grd.creational.GRDFactory;
 import insomnia.lib.help.HelpLists;
+import insomnia.rule.IPathRule;
 import insomnia.rule.IRule;
 import insomnia.rule.dependency.IDependency;
 import insomnia.rule.dependency.IDependencyValidation;
@@ -26,30 +30,30 @@ import insomnia.rule.grd.IGRD;
 
 public class TestGRD<E, V>
 {
-	static List<Object[]> alphaGRD()
+	static List<Object[]> alphaGRD() throws ParseException
 	{
 		List<Object[]> ret         = new ArrayList<>();
 		List<Object[]> validations = new ArrayList<>();
-		validations.add(new Object[] { new KVAlphaDependencyValidation() });
+		validations.add(new Object[] { new AlphaDependencyValidation<>(KVPathUnifiers.get()) });
 
-		KVPathRule a, b;
+		IPathRule<KVValue, KVLabel> a, b;
 
 		// =====================================================================
-		a = KVPathRule.create("a", "b.a");
+		a = KVPathRules.fromString("a", "b.a");
 		ret.add(new Object[] { //
 				new Object[] { a }, //
 				new Object[][] { { a, a } }, //
 		});
 		// =====================================================================
-		a = KVPathRule.create("a", "b");
-		b = KVPathRule.create("b.c", "d");
+		a = KVPathRules.fromString("a", "b");
+		b = KVPathRules.fromString("b.c", "d");
 		ret.add(new Object[] { //
 				new Object[] { a, b }, //
 				new Object[][] { { a, b } }, //
 		});
 		// =====================================================================
-		a = KVPathRule.create("a", "b");
-		b = KVPathRule.create("b.c", "d.a");
+		a = KVPathRules.fromString("a", "b");
+		b = KVPathRules.fromString("b.c", "d.a");
 		ret.add(new Object[] { //
 				new Object[] { a, b }, //
 				new Object[][] { { a, b }, { b, a } }, //
@@ -57,19 +61,19 @@ public class TestGRD<E, V>
 		// =====================================================================
 
 		// =====================================================================
-		a = KVPathRule.create(".a", ".b.a");
+		a = KVPathRules.fromString(".a", ".b.a");
 		ret.add(new Object[] { //
 				new Object[] { a }, //
 				new Object[][] {}, //
 		});
 		// =====================================================================
-		a = KVPathRule.create(".a", ".a.b");
+		a = KVPathRules.fromString(".a", ".a.b");
 		ret.add(new Object[] { //
 				new Object[] { a }, //
 				new Object[][] { { a, a } }, //
 		});
 		// =====================================================================
-		a = KVPathRule.create(".a", ".a.b");
+		a = KVPathRules.fromString(".a", ".a.b");
 		ret.add(new Object[] { //
 				new Object[] { a }, //
 				new Object[][] { { a, a } }, //
@@ -105,7 +109,7 @@ public class TestGRD<E, V>
 			expected.add(elist);
 		}
 
-		IGRD<KVValue, KVLabel> grd = new KVGRDFactory(rules, validation).create();
+		IGRD<KVValue, KVLabel> grd = new GRDFactory(rules, validation).create();
 
 		for (IDependency<KVValue, KVLabel> edge : grd.edgeSet())
 		{

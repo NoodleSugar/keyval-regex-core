@@ -10,43 +10,47 @@ import insomnia.data.IPath;
 import insomnia.data.PathOp;
 import insomnia.rule.IPathRule;
 
-public final class PathUnifiers<V, E>
+/**
+ * Factory of {@link IPathUnifier} able to compute {@link IPathUnifier}s (strong/weak/all) depending on initials {@link IPath} or {@link IPathRule} .
+ * 
+ * @author zuri
+ */
+public final class PathUnifiers<VAL, LBL>
 {
-	public static <V, E> int[] findAllPrefixSuffix(IPath<V, E> p, IPath<V, E> s)
-	{
-		return PathOp.findProperSimplePrefixSuffix(p, s);
-	}
+	private IPathUnifierFactory<VAL, LBL, IPathUnifier<VAL, LBL>> unifierFactory;
 
-	// Inclusions strictes (limites exclues)
-	public static <V, E> int[] findAllInclusions(IPath<V, E> i, IPath<V, E> c)
-	{
-		return PathOp.findAllInclusions(i, c);
-	}
-
-	// =========================================================================
-
-	private IPathUnifierFactory<V, E, IPathUnifier<V, E>> unifierFactory;
-
-	public PathUnifiers(IPathUnifierFactory<V, E, IPathUnifier<V, E>> ufactory)
+	/**
+	 * Use internally a {@link IPathUnifierFactory} to create the concrete {@link IPathUnifier} objects when needed.
+	 */
+	public PathUnifiers(IPathUnifierFactory<VAL, LBL, IPathUnifier<VAL, LBL>> ufactory)
 	{
 		unifierFactory = ufactory;
 	}
 
-	public PathUnifiers(Class<IPathUnifier<V, E>> unifierClass) throws NoSuchMethodException, SecurityException
+	/**
+	 * Use 'unifierClass' as a concrete class of {@link IPathUnifier}.
+	 * This constructor will search a constructor in 'unifierClass' to create objects of type {@link IPathUnifier} when needed.
+	 * 
+	 * @param unifierClass A class of type {@link IPathUnifier} that must have a constructor signature like {@link IPathUnifierFactory#create(IPath, IPath, IPath, IPath, IPath)}.
+	 * @throws NoSuchMethodException If the constructor does not exists
+	 * @throws SecurityException     If the constructor is not accessible (see {@link Class#getDeclaredConstructor(Class...) })
+	 * @throws RuntimeException      If cannot instantiate a {@link IPathUnifier} when constructor is called later.
+	 */
+	public PathUnifiers(Class<? extends IPathUnifier<VAL, LBL>> unifierClass) throws NoSuchMethodException, SecurityException
 	{
-		Constructor<IPathUnifier<V, E>> constructor = unifierClass.getDeclaredConstructor(IPath.class, IPath.class, IPath.class, IPath.class, IPath.class);
+		Constructor<? extends IPathUnifier<VAL, LBL>> constructor = unifierClass.getDeclaredConstructor(IPath.class, IPath.class, IPath.class, IPath.class, IPath.class);
 
 		/*
 		 * Create the factory with the unifier's class constructor
 		 */
-		unifierFactory = new AbstractPathUnifierFactory<V, E, IPathUnifier<V, E>>()
+		unifierFactory = new AbstractPathUnifierFactory<VAL, LBL, IPathUnifier<VAL, LBL>>()
 		{
 			@Override
-			public IPathUnifier<V, E> create(IPath<V, E> pb, IPath<V, E> sb, IPath<V, E> ph, IPath<V, E> sh, IPath<V, E> ref)
+			public IPathUnifier<VAL, LBL> create(IPath<VAL, LBL> pb, IPath<VAL, LBL> sb, IPath<VAL, LBL> ph, IPath<VAL, LBL> sh, IPath<VAL, LBL> ref)
 			{
 				try
 				{
-					return (IPathUnifier<V, E>) constructor.newInstance(pb, sb, ph, sh, ref);
+					return (IPathUnifier<VAL, LBL>) constructor.newInstance(pb, sb, ph, sh, ref);
 				}
 				catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 				{
@@ -56,44 +60,54 @@ public final class PathUnifiers<V, E>
 		};
 	}
 
-	public Collection<IPathUnifier<V, E>> weakUnifiers(IPath<V, E> head, IPath<V, E> body, boolean existentialHead)
+	public Collection<IPathUnifier<VAL, LBL>> weakUnifiers(IPath<VAL, LBL> head, IPath<VAL, LBL> body, boolean existentialHead)
 	{
 		return weakUnifiers(head, body, false, existentialHead);
 	}
 
-	public Collection<IPathUnifier<V, E>> weakUnifiers(IPath<V, E> head, IPath<V, E> body)
+	public Collection<IPathUnifier<VAL, LBL>> weakUnifiers(IPath<VAL, LBL> head, IPath<VAL, LBL> body)
 	{
 		return weakUnifiers(head, body, false, false);
 	}
 
-	public Collection<IPathUnifier<V, E>> strongUnifiers(IPath<V, E> head, IPath<V, E> body)
+	public Collection<IPathUnifier<VAL, LBL>> strongUnifiers(IPath<VAL, LBL> head, IPath<VAL, LBL> body)
 	{
 		return strongUnifiers(head, body, false);
 	}
 
-	public Collection<IPathUnifier<V, E>> weakUnifiers(IPathRule<V, E> a, IPathRule<V, E> b)
+	public Collection<IPathUnifier<VAL, LBL>> weakUnifiers(IPathRule<VAL, LBL> a, IPathRule<VAL, LBL> b)
 	{
 		return weakUnifiers(a.getHead(), b.getBody(), false, a.isExistential());
 	}
 
-	public Collection<IPathUnifier<V, E>> strongUnifiers(IPathRule<V, E> a, IPathRule<V, E> b)
+	public Collection<IPathUnifier<VAL, LBL>> strongUnifiers(IPathRule<VAL, LBL> a, IPathRule<VAL, LBL> b)
 	{
 		return strongUnifiers(a.getHead(), b.getBody(), false);
 	}
 
-	public Collection<IPathUnifier<V, E>> weakUnifiers(IPathRule<V, E> a, IPathRule<V, E> b, boolean firstFind)
+	public Collection<IPathUnifier<VAL, LBL>> weakUnifiers(IPathRule<VAL, LBL> a, IPathRule<VAL, LBL> b, boolean firstFind)
 	{
 		return weakUnifiers(a.getHead(), b.getBody(), firstFind, a.isExistential());
 	}
 
-	public Collection<IPathUnifier<V, E>> strongUnifiers(IPathRule<V, E> a, IPathRule<V, E> b, boolean firstFind)
+	public Collection<IPathUnifier<VAL, LBL>> strongUnifiers(IPathRule<VAL, LBL> a, IPathRule<VAL, LBL> b, boolean firstFind)
 	{
 		return strongUnifiers(a.getHead(), b.getBody(), firstFind);
 	}
 
-	public Collection<IPathUnifier<V, E>> weakUnifiers(IPath<V, E> head, IPath<V, E> body, boolean firstFind, boolean existentialHead)
+	/**
+	 * Find all the weak unifiers from head to body according to the path rewriting framework.
+	 * The weak unifiers are these where the body's suffix or prefix is not empty.
+	 * 
+	 * @param head            Head, may be from a rule
+	 * @param body            Body, may be from a rule
+	 * @param firstFind       Stop the process at the first one founded
+	 * @param existentialHead If head is an existential one
+	 * @return All the strong unifiers.
+	 */
+	private Collection<IPathUnifier<VAL, LBL>> weakUnifiers(IPath<VAL, LBL> head, IPath<VAL, LBL> body, boolean firstFind, boolean existentialHead)
 	{
-		List<IPathUnifier<V, E>> ret = new ArrayList<>();
+		List<IPathUnifier<VAL, LBL>> ret = new ArrayList<>();
 
 		final int h_size = head.size();
 		final int b_size = body.size();
@@ -177,9 +191,22 @@ public final class PathUnifiers<V, E>
 		return ret;
 	}
 
-	public Collection<IPathUnifier<V, E>> strongUnifiers(IPath<V, E> head, IPath<V, E> body, boolean firstFind)
+	/**
+	 * Find all the strong unifiers from head to body according to the path rewriting framework.
+	 * The strong unifiers are these where the body's suffix and prefix are empty.
+	 * <p>
+	 * Note:
+	 * The computation for an existential head is the same as for the non existential one, so there is no parameter 'existentialHead' like in {@link #weakUnifiers(IPath, IPath, boolean, boolean)}.
+	 * </p>
+	 * 
+	 * @param head      Head, may be from a rule
+	 * @param body      Body, may be from a rule
+	 * @param firstFind Stop the process at the first one founded
+	 * @return All the strong unifiers.
+	 */
+	private Collection<IPathUnifier<VAL, LBL>> strongUnifiers(IPath<VAL, LBL> head, IPath<VAL, LBL> body, boolean firstFind)
 	{
-		List<IPathUnifier<V, E>> ret = new ArrayList<>();
+		List<IPathUnifier<VAL, LBL>> ret = new ArrayList<>();
 
 		final int h_size = head.size();
 		final int b_size = body.size();
@@ -236,7 +263,7 @@ public final class PathUnifiers<V, E>
 		return ret;
 	}
 
-	public boolean haveUnifiers(IPathRule<V, E> a, IPathRule<V, E> b)
+	public boolean haveUnifiers(IPathRule<VAL, LBL> a, IPathRule<VAL, LBL> b)
 	{
 		if (!strongUnifiers(a, b, true).isEmpty())
 			return true;
@@ -247,22 +274,22 @@ public final class PathUnifiers<V, E>
 		return false;
 	}
 
-	public Collection<IPathUnifier<V, E>> compute(IPathRule<V, E> a, IPathRule<V, E> b)
+	public Collection<IPathUnifier<VAL, LBL>> compute(IPathRule<VAL, LBL> a, IPathRule<VAL, LBL> b)
 	{
-		List<IPathUnifier<V, E>> ret = new ArrayList<>();
+		List<IPathUnifier<VAL, LBL>> ret = new ArrayList<>();
 		ret.addAll(weakUnifiers(a, b));
 		ret.addAll(strongUnifiers(a, b));
 		return ret;
 	}
 
-	public Collection<IPathUnifier<V, E>> compute(IPath<V, E> head, IPath<V, E> body)
+	public Collection<IPathUnifier<VAL, LBL>> compute(IPath<VAL, LBL> head, IPath<VAL, LBL> body)
 	{
 		return compute(head, body, false);
 	}
 
-	public Collection<IPathUnifier<V, E>> compute(IPath<V, E> head, IPath<V, E> body, boolean existentialHead)
+	public Collection<IPathUnifier<VAL, LBL>> compute(IPath<VAL, LBL> head, IPath<VAL, LBL> body, boolean existentialHead)
 	{
-		List<IPathUnifier<V, E>> ret = new ArrayList<>();
+		List<IPathUnifier<VAL, LBL>> ret = new ArrayList<>();
 		ret.addAll(weakUnifiers(head, body, existentialHead));
 		ret.addAll(strongUnifiers(head, body, existentialHead));
 		return ret;

@@ -2,79 +2,48 @@ package insomnia.implem.kv.pregex;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
+import java.util.List;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.implem.kv.pregex.PRegexParser;
+import insomnia.implem.data.regex.parser.PRegexParser;
 
 class TestRegex
 {
-	PRegexParser parser = new PRegexParser();
-
-	String regex;
-
-	@Test
-	void errorElement()
+	public static void pathFromString(String regex) throws ParseException, IOException
 	{
-		regex = "a.";
-		assertThrows(ParseException.class, () -> parser.parse(new ByteArrayInputStream(regex.getBytes())), "Expected element");
+		new PRegexParser("''\"\"").parse(regex);
 	}
 
-	@Test
-	void errorSymbol()
+	static List<Object> error()
 	{
-		regex = "()";
-		assertThrows(ParseException.class, () -> parser.parse(new ByteArrayInputStream(regex.getBytes())), "Expected symbol");
+		List<Object> a = Arrays.asList( //
+			"a$.", //
+			"(a.b)$", //
+			"(a.b$).v", //
+			"(a$).v", //
+			"(a|(a$)).v", //
+			"^a.^b", //
+			".^b", //
+
+			"a{10 20}", //"
+			"a{10,20.b", //
+			"a.b.(c", //
+			"(a))", //
+			"/a", //
+			"a.\"b" //
+		);
+		return a;
 	}
 
-	@Test
-	void errorNumber()
+	@ParameterizedTest
+	@MethodSource
+	void error(String regex)
 	{
-		regex = "20e";
-		assertThrows(ParseException.class, () -> parser.parse(new ByteArrayInputStream(regex.getBytes())), "Expected number");
-	}
-
-	@Test
-	void errorComma()
-	{
-		regex = "a[10 20]";
-		assertThrows(ParseException.class, () -> parser.parse(new ByteArrayInputStream(regex.getBytes())), "Expected ','");
-	}
-
-	@Test
-	void errorCloseRBracket()
-	{
-		regex = "a[10,20.b";
-		assertThrows(ParseException.class, () -> parser.parse(new ByteArrayInputStream(regex.getBytes())), "Expected ']'");
-	}
-
-	@Test
-	void errorCloseBracket()
-	{
-		regex = "a.b.(c";
-		assertThrows(ParseException.class, () -> parser.parse(new ByteArrayInputStream(regex.getBytes())), "Expected ')'");
-	}
-
-	@Test
-	void errorInvalidRegex()
-	{
-		regex = "(a))";
-		assertThrows(ParseException.class, () -> parser.parse(new ByteArrayInputStream(regex.getBytes())), "Invalid regex");
-	}
-
-	@Test
-	void errorInvalidCharacter()
-	{
-		regex = "/a";
-		assertThrows(ParseException.class, () -> parser.parse(new ByteArrayInputStream(regex.getBytes())), "Invalid character '/'");
-	}
-
-	@Test
-	void errorEOF()
-	{
-		regex = "a.\"b";
-		assertThrows(ParseException.class, () -> parser.parse(new ByteArrayInputStream(regex.getBytes())), "EOF while reading word");
+		assertThrows(ParseException.class, () -> pathFromString(regex));
 	}
 }

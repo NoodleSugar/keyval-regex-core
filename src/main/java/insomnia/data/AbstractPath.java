@@ -1,175 +1,88 @@
 package insomnia.data;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
+import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.BooleanUtils;
 
 public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 {
-	private final static boolean default_isRoot     = false;
-	private final static boolean default_isTerminal = false;
 
-	private List<LBL> labels;
-	private VAL       value;
+	// =========================================================================o
 
-	private boolean isRooted;
-	private boolean isTerminal;
-
-	private VAL nullValue()
+	@Override
+	public INode<VAL, LBL> getRoot()
 	{
-		return null;
-	}
-
-	@SuppressWarnings("unchecked")
-	public AbstractPath(IPath<VAL, LBL> path, int begin, int end)
-	{
-		if (begin == end)
-		{
-			initPath(this, default_isRoot, default_isTerminal, Collections.EMPTY_LIST, nullValue());
-			return;
-		}
-		boolean isRooted   = false;
-		boolean isTerminal = false;
-		VAL     value;
-
-		if (path.isRooted())
-		{
-			if (begin > 0)
-			{
-				begin--;
-				end -= 2;
-			}
-			else
-			{
-				isRooted = true;
-				end--;
-			}
-		}
-
-		if (path.isTerminal())
-		{
-			if (end == path.nbLabels() + 1)
-			{
-				isTerminal = true;
-				end--;
-			}
-		}
-
-		if (isTerminal)
-			value = path.getValue().orElse(null);
-		else
-			value = nullValue();
-
-		initPath(this, isRooted, isTerminal, path.getLabels().subList(begin, end), value);
-	}
-
-	public AbstractPath(List<? extends LBL> labels)
-	{
-		initPath(this, default_isRoot, default_isTerminal, labels, nullValue());
-	}
-
-	public AbstractPath(List<? extends LBL> labels, VAL value)
-	{
-		initPath(this, default_isRoot, default_isTerminal, labels, value);
-	}
-
-	public AbstractPath(boolean isRooted, List<? extends LBL> labels)
-	{
-		initPath(this, isRooted, default_isTerminal, labels, nullValue());
-	}
-
-	public AbstractPath(boolean isRooted, List<? extends LBL> labels, VAL value)
-	{
-		initPath(this, isRooted, default_isTerminal, labels, value);
-	}
-
-	public AbstractPath(boolean isRooted, boolean isTerminal, List<? extends LBL> labels)
-	{
-		initPath(this, isRooted, isTerminal, labels, nullValue());
-	}
-
-	public AbstractPath(boolean isRooted, boolean isTerminal, List<? extends LBL> labels, VAL value)
-	{
-		initPath(this, isRooted, isTerminal, labels, value);
+		return getNodes().get(0);
 	}
 
 	@Override
-	public Optional<IEdge<VAL, LBL>> getChild(INode<VAL, LBL> node)
+	public INode<VAL, LBL> getLeaf()
+	{
+		return getNodes().get(nbNodes() - 1);
+	}
+
+	@Override
+	public IEdge<VAL, LBL> getChild(INode<VAL, LBL> node)
 	{
 		List<? extends IEdge<VAL, LBL>> childs = getChildren(node);
 
 		if (childs.isEmpty())
-			return Optional.empty();
+			return null;
 
-		return Optional.of(childs.get(0));
+		return childs.get(0);
 	}
 
-	private static <VAL, LBL> void initPath(AbstractPath<VAL, LBL> path, boolean isRooted, boolean isTerminal, List<? extends LBL> labels, VAL value)
-	{
-		path.isRooted   = isRooted;
-		path.isTerminal = isTerminal;
-		path.value      = value;
-		/*
-		 * Empty path
-		 */
-		if (labels.size() == 0)
-		{
-			path.labels = Collections.emptyList();
-			return;
-		}
-		path.labels = new ArrayList<>(labels);
-	}
-
+	@Override
 	public int nbLabels()
 	{
-		return labels.size();
+		return getLabels().size();
+	}
+
+	@Override
+	public int nbNodes()
+	{
+		return getNodes().size();
 	}
 
 	@Override
 	public boolean isEmpty()
 	{
-		return labels.isEmpty();
+		return getLabels().isEmpty();
 	}
 
 	@Override
-	public List<LBL> getLabels()
+	public List<VAL> getValues()
 	{
-		return Collections.unmodifiableList(labels);
+		return IterableUtils.toList(IterableUtils.transformedIterable(getNodes(), INode::getValue));
 	}
 
 	@Override
 	public Collection<LBL> getVocabulary()
 	{
-		return new HashSet<>(labels);
-	}
-
-	@Override
-	public Optional<VAL> getValue()
-	{
-		return Optional.ofNullable(value);
+		return new HashSet<>(getLabels());
 	}
 
 	@Override
 	public int size()
 	{
-		return labels.size() + BooleanUtils.toInteger(isRooted) + BooleanUtils.toInteger(isTerminal);
+		return getLabels().size() + BooleanUtils.toInteger(isRooted()) + BooleanUtils.toInteger(isTerminal());
 	}
 
 	@Override
 	public boolean isRooted()
 	{
-		return isRooted;
+		return getRoot().isRooted();
 	}
 
 	@Override
 	public boolean isTerminal()
 	{
-		return isTerminal;
+		return getLeaf().isTerminal();
 	}
 
 	@Override
@@ -199,36 +112,77 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 		if (o == null || !(o instanceof IPath))
 			return false;
 
-		return PathOp.areEquals(this, (IPath<?, ?>) o) && ((IPath<?, ?>) o).getValue().equals(getValue());
+		IPath<?, ?> path = (IPath<?, ?>) o;
+
+		if (nbLabels() != path.nbLabels())
+			return false;
+		if (!PathOp.areEquals(this, path))
+			return false;
+
+		Iterator<?> a = IteratorUtils.transformedIterator(getNodes().iterator(), INode::getValue);
+		Iterator<?> b = IteratorUtils.transformedIterator(path.getNodes().iterator(), INode::getValue);
+
+		while (a.hasNext() && a.next() == b.next())
+			;
+		return !a.hasNext();
 	}
 
 	@Override
 	public int hashCode()
 	{
-		return this.labels.hashCode() + BooleanUtils.toInteger(isRooted) + BooleanUtils.toInteger(isTerminal);
+		return getLabels().hashCode() + getValues().hashCode() + BooleanUtils.toInteger(isRooted()) + BooleanUtils.toInteger(isTerminal());
+	}
+
+	private boolean nodeToString(StringBuilder sb, INode<VAL, LBL> node)
+	{
+		VAL value = node.getValue();
+
+		if (value == null)
+			return false;
+
+		sb.append("=").append(value);
+		return true;
 	}
 
 	@Override
 	public String toString()
 	{
-		StringBuffer buf = new StringBuffer();
-		buf.append(isRooted ? "^" : "");
+		StringBuilder sb = new StringBuilder();
+		nodeToString(sb, getRoot());
 
-		if (labels.size() > 0)
+		if (0 < sb.length())
 		{
-			for (LBL label : labels)
-				buf.append(label).append(".");
+			sb.insert(0, "(");
+			sb.append(")");
+		}
+		sb.insert(0, getRoot().isRooted() ? "[R]" : "");
 
-			if (!isTerminal)
-				buf.deleteCharAt(buf.length() - 1);
+		if (0 < sb.length() && getLabels().size() > 0)
+			sb.append(".");
+
+		if (getLabels().size() > 0)
+		{
+			Iterator<INode<VAL, LBL>> nodes = getNodes().iterator();
+			nodes.next();
+
+			for (LBL label : getLabels())
+			{
+				int builderLastLen = sb.length();
+
+				if (null != label)
+					sb.append(label);
+
+				if (nodeToString(sb, nodes.next()))
+					sb.insert(builderLastLen, "(").append(")");
+
+				sb.append(".");
+			}
+			sb.deleteCharAt(sb.length() - 1);
 		}
 
-		if (isTerminal)
-			buf.append("$");
+		if (getLeaf().isTerminal())
+			sb.append("[T]");
 
-		if (getValue().isPresent())
-			buf.append(getValue().get());
-
-		return buf.toString();
+		return sb.toString();
 	}
 }

@@ -10,46 +10,46 @@ import insomnia.rule.IRule;
 import insomnia.unifier.IPathUnifier;
 import insomnia.unifier.PathUnifiers;
 
-public abstract class AbstractAlphaDependencyValidation<V, E> extends AbstractDependencyValidation<V, E>
+public abstract class AbstractAlphaDependencyValidation<VAL, LBL> extends AbstractDependencyValidation<VAL, LBL>
 {
-	private PathUnifiers<V, E> pathUnifiers;
+	private PathUnifiers<VAL, LBL> pathUnifiers;
 
-	public AbstractAlphaDependencyValidation(Collection<IDependencyCondition<V, E>> conditions, PathUnifiers<V, E> pathUnifiers)
+	public AbstractAlphaDependencyValidation(Collection<IDependencyCondition<VAL, LBL>> conditions, PathUnifiers<VAL, LBL> pathUnifiers)
 	{
 		super(conditions);
 		this.pathUnifiers = pathUnifiers;
 	}
 
-	private PathUnifiers<V, E> getPathUnifiers()
+	private PathUnifiers<VAL, LBL> getPathUnifiers()
 	{
 		return pathUnifiers;
 	}
 
-	abstract protected IDependency<V, E> newPathDependency(IPathUnifier<V, E> unifier, IPathRule<V, E> a, IPathRule<V, E> b);
+	abstract protected IDependency<VAL, LBL> newPathDependency(IPathUnifier<VAL, LBL> unifier, IPathRule<VAL, LBL> a, IPathRule<VAL, LBL> b);
 
 	@Override
-	public boolean test(IRule<V, E> a, IRule<V, E> b)
+	public boolean test(IRule<VAL, LBL> a, IRule<VAL, LBL> b)
 	{
 		if (false == super.test(a, b))
 			return false;
 
 		if (a instanceof IPathRule && b instanceof IPathRule)
-			return getPathUnifiers().haveUnifiers((IPathRule<V, E>) a, (IPathRule<V, E>) b);
+			return getPathUnifiers().haveUnifiers((IPathRule<VAL, LBL>) a, (IPathRule<VAL, LBL>) b);
 
 		throw new NotImplementedException("");
 	}
 
 	@Override
-	public Collection<IDependency<V, E>> getDependencies(IRule<V, E> a, IRule<V, E> b)
+	public Collection<IDependency<VAL, LBL>> getDependencies(IRule<VAL, LBL> a, IRule<VAL, LBL> b)
 	{
 		if (a instanceof IPathRule && b instanceof IPathRule)
 		{
-			Collection<IDependency<V, E>> alphas = new ArrayList<>();
+			Collection<IDependency<VAL, LBL>> alphas = new ArrayList<>();
 
-			Collection<IPathUnifier<V, E>> unifiers = getPathUnifiers().compute((IPathRule<V, E>) a, (IPathRule<V, E>) b);
+			Collection<IPathUnifier<VAL, LBL>> unifiers = getPathUnifiers().compute((IPathRule<VAL, LBL>) a, (IPathRule<VAL, LBL>) b);
 
-			for (IPathUnifier<V, E> unifier : unifiers)
-				alphas.add(newPathDependency(unifier, (IPathRule<V, E>) a, (IPathRule<V, E>) b));
+			for (IPathUnifier<VAL, LBL> unifier : unifiers)
+				alphas.add(newPathDependency(unifier, (IPathRule<VAL, LBL>) a, (IPathRule<VAL, LBL>) b));
 
 			return alphas;
 		}

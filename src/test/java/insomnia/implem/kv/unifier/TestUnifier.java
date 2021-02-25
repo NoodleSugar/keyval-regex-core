@@ -3,6 +3,7 @@ package insomnia.implem.kv.unifier;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -10,12 +11,11 @@ import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import insomnia.data.IPath;
 import insomnia.implem.kv.data.KVLabel;
-import insomnia.implem.kv.data.KVPath;
 import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.unifier.KVPathUnifier;
-import insomnia.implem.kv.unifier.KVPathUnifiers;
+import insomnia.implem.unifier.PathUnifier;
 import insomnia.unifier.IPathUnifier;
 import insomnia.unifier.PathUnifiers;
 
@@ -23,30 +23,37 @@ class TestUnifier
 {
 	PathUnifiers<KVValue, KVLabel> UNIFIERS = KVPathUnifiers.get();
 
-	public static KVPath pathFromString(String p)
+	public static IPath<KVValue, KVLabel> pathFromString(String p)
 	{
-		return KVPaths.pathFromString(p);
+		try
+		{
+			return KVPaths.pathFromString(p);
+		}
+		catch (ParseException e)
+		{
+			throw new AssertionError(e);
+		}
 	}
 
-	public static KVPathUnifier unifierFromStrings(String pb, String sb, String ph, String sh)
+	public static PathUnifier<KVValue, KVLabel> unifierFromStrings(String pb, String sb, String ph, String sh)
 	{
 		return unifierFromStrings(pb, sb, ph, sh, "");
 	}
 
-	public static KVPathUnifier unifierFromStrings(String pb, String sb, String ph, String sh, String ref)
+	public static PathUnifier<KVValue, KVLabel> unifierFromStrings(String pb, String sb, String ph, String sh, String ref)
 	{
-		return new KVPathUnifier(pathFromString(pb), pathFromString(sb), pathFromString(ph), pathFromString(sh), pathFromString(ref));
+		return new PathUnifier<>(pathFromString(pb), pathFromString(sb), pathFromString(ph), pathFromString(sh), pathFromString(ref));
 	}
 
-	static List<Object[]> computeSource()
+	static List<Object[]> compute()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("b.a.b.a"), pathFromString("a.b"), new KVPathUnifier[] { //
+				{ "b.a.b.a", "a.b", new PathUnifier[] { //
 						unifierFromStrings("a", "", "", "a.b.a", "b"), //
 						unifierFromStrings("", "b", "b.a.b", "", "a"), //
 						unifierFromStrings("", "", "b", "a", "a.b"), //
 				} }, //
-				{ pathFromString("a.a.a"), pathFromString("a.a"), new KVPathUnifier[] { //
+				{ "a.a.a", "a.a", new PathUnifier[] { //
 						unifierFromStrings("a", "", "", "a.a", "a"), //
 						unifierFromStrings("", "", "", "a", "a.a"), //
 						unifierFromStrings("", "", "a", "", "a.a"), //
@@ -57,112 +64,118 @@ class TestUnifier
 	}
 
 	@ParameterizedTest
-	@MethodSource("computeSource")
-	void compute(KVPath head, KVPath body, KVPathUnifier ref_unifiers[])
+	@MethodSource
+	void compute(String shead, String sbody, PathUnifier<KVValue, KVLabel> ref_unifiers[])
 	{
+		IPath<KVValue, KVLabel>                    head     = pathFromString(shead);
+		IPath<KVValue, KVLabel>                    body     = pathFromString(sbody);
 		Collection<IPathUnifier<KVValue, KVLabel>> unifiers = UNIFIERS.compute(head, body);
 		assertEquals(ref_unifiers.length, unifiers.size());
 
-		for (KVPathUnifier ref : ref_unifiers)
+		for (PathUnifier<KVValue, KVLabel> ref : ref_unifiers)
 			assertTrue(unifiers.contains(ref));
 	}
 
-	static List<Object[]> weakKVPathUnifiersSource()
+	static List<Object[]> weakKVPathUnifier()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("A.y"), pathFromString("y.B"), new KVPathUnifier[] { //
+				{ "A.y", "y.B", new PathUnifier[] { //
 						unifierFromStrings("", "B", "A", "", "y"), //
 				} }, //
-				{ pathFromString("y.A"), pathFromString("B.y"), new KVPathUnifier[] { //
+				{ "y.A", "B.y", new PathUnifier[] { //
 						unifierFromStrings("B", "", "", "A", "y"), //
 				} }, //
-				{ pathFromString("y"), pathFromString("y.B"), new KVPathUnifier[] { //
+				{ "y", "y.B", new PathUnifier[] { //
 						unifierFromStrings("", "B", "", "", "y"), //
 				} }, //
-				{ pathFromString("y"), pathFromString("B.y"), new KVPathUnifier[] { //
+				{ "y", "B.y", new PathUnifier[] { //
 						unifierFromStrings("B", "", "", "", "y"), //
 				} }, //
-				{ pathFromString("y"), pathFromString("B.y.B"), new KVPathUnifier[] { //
+				{ "y", "B.y.B", new PathUnifier[] { //
 						unifierFromStrings("B", "B", "", "", "y"), //
 				} }, //
 
 				// Strong cases
-				{ pathFromString("A.y  "), pathFromString("y"), new KVPathUnifier[] {} }, //
-				{ pathFromString("  y.A"), pathFromString("y"), new KVPathUnifier[] {} }, //
-				{ pathFromString("A.y.A"), pathFromString("y"), new KVPathUnifier[] {} }, //
-				{ pathFromString("  y  "), pathFromString("y"), new KVPathUnifier[] {} }, //
+				{ "A.y  ", "y", new PathUnifier[] {} }, //
+				{ "  y.A", "y", new PathUnifier[] {} }, //
+				{ "A.y.A", "y", new PathUnifier[] {} }, //
+				{ "  y  ", "y", new PathUnifier[] {} }, //
 
 				// Fixed cases
-				{ pathFromString(".A.y"), pathFromString("y.B"), new KVPathUnifier[] { //
-						unifierFromStrings("", "B", ".A", "", "y"), //
+				{ "^.A.y", "y.B", new PathUnifier[] { //
+						unifierFromStrings("", "B", "^.A", "", "y"), //
 				} }, //
-				{ pathFromString("A.y"), pathFromString("y.B."), new KVPathUnifier[] { //
-						unifierFromStrings("", "B.", "A", "", "y"), //
+				{ "A.y", "y.B$", new PathUnifier[] { //
+						unifierFromStrings("", "B$", "A", "", "y"), //
 				} }, //
-				{ pathFromString(".A.y"), pathFromString("y.B."), new KVPathUnifier[] { //
-						unifierFromStrings("", "B.", ".A", "", "y"), //
+				{ "^.A.y", "y.B$", new PathUnifier[] { //
+						unifierFromStrings("", "B$", "^.A", "", "y"), //
 				} }, //
 
 				// False fixed cases
-				{ pathFromString(" A.y."), pathFromString(" y.B"), new KVPathUnifier[] {} }, //
-				{ pathFromString(" A.y "), pathFromString(".y.B"), new KVPathUnifier[] {} }, //
-				{ pathFromString(".A.y."), pathFromString(".y.B"), new KVPathUnifier[] {} }, //
+				{ " A.y$", " y.B", new PathUnifier[] {} }, //
+				{ " A.y ", "^.y.B", new PathUnifier[] {} }, //
+				{ "^.A.y$", "^.y.B", new PathUnifier[] {} }, //
 
 		});
 	}
 
 	@ParameterizedTest
-	@MethodSource("weakKVPathUnifiersSource")
-	void weakKVPathUnifier(KVPath head, KVPath body, KVPathUnifier ref_unifiers[])
+	@MethodSource
+	void weakKVPathUnifier(String shead, String sbody, PathUnifier<KVValue, KVLabel> ref_unifiers[])
 	{
+		IPath<KVValue, KVLabel>                    head     = pathFromString(shead);
+		IPath<KVValue, KVLabel>                    body     = pathFromString(sbody);
 		Collection<IPathUnifier<KVValue, KVLabel>> unifiers = UNIFIERS.weakUnifiers(head, body);
 		assertEquals(ref_unifiers.length, unifiers.size());
 
-		for (KVPathUnifier ref : ref_unifiers)
+		for (PathUnifier<KVValue, KVLabel> ref : ref_unifiers)
 			assertTrue(unifiers.contains(ref));
 	}
 
-	static List<Object[]> strongKVPathUnifiersSource()
+	static List<Object[]> strongKVPathUnifier()
 	{
 		return Arrays.asList(new Object[][] { //
-				{ pathFromString("A.y"), pathFromString("y"), new KVPathUnifier[] { //
+				{ "A.y", "y", new PathUnifier[] { //
 						unifierFromStrings("", "", "A", "", "y"), //
 				} }, //
-				{ pathFromString("y.A"), pathFromString("y"), new KVPathUnifier[] { //
+				{ "y.A", "y", new PathUnifier[] { //
 						unifierFromStrings("", "", "", "A", "y"), //
 				} }, //
-				{ pathFromString("A.y.A"), pathFromString("y"), new KVPathUnifier[] { //
+				{ "A.y.A", "y", new PathUnifier[] { //
 						unifierFromStrings("", "", "A", "A", "y"), //
 				} }, //
-				{ pathFromString("y"), pathFromString("y"), new KVPathUnifier[] { //
+				{ "y", "y", new PathUnifier[] { //
 						unifierFromStrings("", "", "", "", "y"), //
 				} }, //
 				// Weak cases
-				{ pathFromString(" A.y  "), pathFromString("y.B"), new KVPathUnifier[] {} }, //
-				{ pathFromString(".A.y  "), pathFromString("y."), new KVPathUnifier[] {} }, //
-				{ pathFromString(" A.y  "), pathFromString("y."), new KVPathUnifier[] {} }, //
-				{ pathFromString("  y.A"), pathFromString("B.y  "), new KVPathUnifier[] {} }, //
-				{ pathFromString("  y  "), pathFromString("  y.B"), new KVPathUnifier[] {} }, //
-				{ pathFromString("  y  "), pathFromString("B.y  "), new KVPathUnifier[] {} }, //
-				{ pathFromString("  y  "), pathFromString("B.y.B"), new KVPathUnifier[] {} }, //
+				{ " A.y  ", "y.B", new PathUnifier[] {} }, //
+				{ "^.A.y  ", "y$", new PathUnifier[] {} }, //
+				{ " A.y  ", "y$", new PathUnifier[] {} }, //
+				{ "  y.A", "B.y  ", new PathUnifier[] {} }, //
+				{ "  y  ", "  y.B", new PathUnifier[] {} }, //
+				{ "  y  ", "B.y  ", new PathUnifier[] {} }, //
+				{ "  y  ", "B.y.B", new PathUnifier[] {} }, //
 
 				// Fixed cases
-				{ pathFromString(".A.y"), pathFromString("y"), new KVPathUnifier[] { //
-						unifierFromStrings("", "", ".A", "", "y"), //
+				{ "^.A.y", "y", new PathUnifier[] { //
+						unifierFromStrings("", "", "^.A", "", "y"), //
 				} }, //
 				// False fixed cases
-				{ pathFromString("A.y"), pathFromString(".y"), new KVPathUnifier[] {} }, //
+				{ "A.y", "^.y", new PathUnifier[] {} }, //
 		});
 	}
 
 	@ParameterizedTest
-	@MethodSource("strongKVPathUnifiersSource")
-	void strongKVPathUnifier(KVPath head, KVPath body, KVPathUnifier ref_unifiers[])
+	@MethodSource
+	void strongKVPathUnifier(String shead, String sbody, PathUnifier<KVValue, KVLabel> ref_unifiers[])
 	{
+		IPath<KVValue, KVLabel>                    head     = pathFromString(shead);
+		IPath<KVValue, KVLabel>                    body     = pathFromString(sbody);
 		Collection<IPathUnifier<KVValue, KVLabel>> unifiers = UNIFIERS.strongUnifiers(head, body);
 		assertEquals(ref_unifiers.length, unifiers.size());
 
-		for (KVPathUnifier ref : ref_unifiers)
+		for (PathUnifier<KVValue, KVLabel> ref : ref_unifiers)
 			assertTrue(unifiers.contains(ref));
 	}
 }

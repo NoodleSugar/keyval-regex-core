@@ -1,5 +1,6 @@
 package insomnia.fsa;
 
+import java.util.Collection;
 import java.util.function.Predicate;
 
 public interface IFSALabelCondition<LBL> extends Predicate<LBL>
@@ -8,7 +9,14 @@ public interface IFSALabelCondition<LBL> extends Predicate<LBL>
 	boolean test(LBL element);
 
 	/**
-	 * true if epsilon transition
+	 * Get all the labels validated by the condition if available.
 	 */
-	boolean test();
+	Collection<LBL> getLabels();
+
+	// =========================================================================
+
+	public static boolean isEpsilon(IFSALabelCondition<?> labelCondition)
+	{
+		return labelCondition == null;
+	}
 }

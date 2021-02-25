@@ -1,10 +1,9 @@
 package insomnia.data;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Immutable Path where the leaf may have a value.
+ * An immutable Path.
  * 
  * @author zuri
  * @param <VAL>
@@ -20,27 +19,33 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	 * @param end   Exclusive end index.
 	 * @return The sub path.
 	 */
-	IPath<VAL, LBL> subPath(int begin, int end);
+	IPath<VAL, LBL> subPath(int from, int to);
 
 	/**
-	 * @return the labels of the path conserving the path order.
+	 * @return the labels of the path conserving the path order
 	 */
 	List<LBL> getLabels();
 
 	/**
-	 * @return the child edge of 'node' if exists.
+	 * @return nodes in order
 	 */
-	Optional<IEdge<VAL, LBL>> getChild(INode<VAL, LBL> node);
+	List<INode<VAL, LBL>> getNodes();
 
 	/**
-	 * @return the value of the leaf node if set.
+	 * @return values in order
 	 */
-	Optional<VAL> getValue();
+	List<VAL> getValues();
+
+	INode<VAL, LBL> getLeaf();
 
 	/**
-	 * @return the number of labels.
+	 * @return the child edge of 'node' if exists, or {@code null}
 	 */
+	IEdge<VAL, LBL> getChild(INode<VAL, LBL> node);
+
 	int nbLabels();
+
+	int nbNodes();
 
 	/**
 	 * The size of a path is the number of labels plus the isRooted or/and isTerminal natures.
@@ -48,14 +53,6 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	 * @return the size of the path.
 	 */
 	int size();
-
-	/**
-	 * No edges are present.
-	 * It may have the root.
-	 * 
-	 * @return
-	 */
-	boolean isEmpty();
 
 	/**
 	 * The leaf must be a true leaf.
