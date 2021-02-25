@@ -1,19 +1,29 @@
 package insomnia.implem.data.regex.parser;
 
-import java.util.Collection;
+import java.util.List;
 
 public interface IPRegexElement
 {
 	public enum Type
 	{
-		KEY, SEQUENCE, DISJUNCTION, REGEX, VALUE,
+		EMPTY, KEY, SEQUENCE, DISJUNCTION
 	};
+
+	boolean isRooted();
+
+	boolean isTerminal();
+
+	String getLabel();
+
+	String getValue();
+
+	String getLabelDelimiters();
+
+	String getValueDelimiters();
 
 	Quantifier getQuantifier();
 
 	Type getType();
 
-	Collection<IPRegexElement> getElements();
-
-	void setQuantifier(Quantifier q);
+	List<IPRegexElement> getElements();
 }

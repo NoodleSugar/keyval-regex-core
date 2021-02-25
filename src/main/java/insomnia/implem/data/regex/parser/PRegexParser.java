@@ -4,277 +4,196 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.ParseException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.PrimitiveIterator.OfInt;
+import java.util.Stack;
 
 import org.apache.commons.io.IOUtils;
 
-import insomnia.implem.data.regex.parser.PRegexElements.Disjunction;
+import insomnia.implem.data.regex.parser.IPRegexElement.Type;
+import insomnia.implem.data.regex.parser.PLexer.LexerValue;
+import insomnia.implem.data.regex.parser.PLexer.Token;
 import insomnia.implem.data.regex.parser.PRegexElements.MultipleElement;
-import insomnia.implem.data.regex.parser.PRegexElements.Sequence;
-import insomnia.implem.kv.data.KVValue;
+import insomnia.implem.data.regex.parser.PRegexElements.PRegexElement;
 
-public class PRegexParser
+/**
+ * A parser able to read path regular expressions.
+ * <p>
+ * A valid regex is a sequence of elements delimited by 'point' characters: E<sub>1</sub>.E<sub>2</sub>. ... .E<sub>n</sub>.
+ * An element E of a regex can contain a label, a value and a quantifier like: <code>"person=zuri{1,2}"</code>; each of its items can be absent which can result in an empty element.
+ * The disjunction
+ * <q>{@code |}</q> create a new element that will refer to the classic disjunction case, its priority is lower than the point
+ * <q>{@code .}</q>.
+ * Parenthesis can be used to define recursively an element containing more elements, and permits to change operators priority and to apply a quantifier.
+ * </p>
+ * <p>
+ * A value or a label may be delimited by <em>delimiters</em>, which are pair of characters (begin/end) that can enclose them.
+ * Delimiters can be set at the creation of the parser (see. {@link #PRegexParser(Map)}, {@link #PRegexParser(String)}).
+ * When no delimiters are presents, the {@link PLexer} consider that a char belongs to a word if it verify {@code (c == '_' || Character.isLetterOrDigit(c) || Character.isSpaceChar(c))}.
+ * </p>
+ * <p>
+ * If a regex contains only one element without label, then the represented path has only one node.
+ * To specify a null label the parser must set the <em>nullLabels</em> informations ({@link #setNullLabels(Collection)}).
+ * It's a collection of {@link String} that stores labels that are considered to be null.
+ * By default the parser consider the label
+ * <q>_</q> to a null label, so the regex:
+ * <q>{@code _=1}</q> represents an edge labeled by a null followed by a node with the value of
+ * <q>1</q>.
+ * </p>
+ * <h3>Some examples:</h3>
+ * <ul>
+ * <li>person.(name="zuri"|name="noodle"){1,3}</li>
+ * <li>repeat=more{100}</li>
+ * </ul>
+ * </p>
+ * <h2>Rooted/terminal</h2>
+ * <p>
+ * A path may be prefixed by {@code ^} to refer to a true data root.
+ * In this case it is considered as an element and must be follow by a point if the root has to store its own value.
+ * If {@code ^} has no relevant information to store than the point may be omitted.
+ * An element may also be suffixed by {@code $} to refer to a true data leaf; it is called a terminal path.
+ * <h2>Some examples:</h2>
+ * <ul>
+ * <li>^person</li>
+ * <li>^=rootValue.person</li>
+ * <li>name$</li>
+ * <li>^.person.name=zuri$</li>
+ * <li>^=150$</li>
+ * <li>^$</li>
+ * </ul>
+ * 
+ * @author zuri
+ * @author noodle
+ */
+public final class PRegexParser
 {
-	/**
-	 * Represents the type of element that the Lexer will send to the Parser
-	 */
-	private enum Token
-	{
-		END, WORD, REGEX, //
-		POINT, VERTICAL_BAR, //
-		OPEN_PARENTH, CLOSE_PARENTH, //
-		OPEN_BRACE, COMMA, CLOSE_BRACE, NUMBER, //
-		STAR, PLUS, QUESTION_MARK;
-	}
-
-	/**
-	 * Contains the type and the data of the Lexer elements
-	 */
-	private class LexerValue
-	{
-		private Token  token;
-		private String data;
-
-		public LexerValue(Token token, String data)
-		{
-			this.token = token;
-			this.data  = data;
-		}
-
-		public Token getToken()
-		{
-			return token;
-		}
-
-		public String getData()
-		{
-			return data;
-		}
-	}
-
-	/**
-	 * The different states of the Lexer automaton
-	 */
-	private enum LexerState
-	{
-		START, WORD, DELIMITED_WORD, REGEX, NUMBER, BACKSLASH;
-	}
-
-	private class Lexer
-	{
-		private InputStream regexStream;
-		private boolean     readLastChar;
-		private int         lastChar;
-		private int         offset;
-
-		public Lexer(InputStream regexStream) throws IOException
-		{
-			this.regexStream = regexStream;
-			readLastChar     = false;
-			lastChar         = ' ';
-			offset           = 0;
-		}
-
-		public LexerValue nextToken() throws IOException, ParseException
-		{
-			LexerState lexerState = LexerState.START;
-			LexerState wordState  = null;
-			String     data       = "";
-
-			char c;
-			int  d;
-			while (true)
-			{
-				if (readLastChar)
-				{
-					d            = lastChar;
-					readLastChar = false;
-				}
-				else
-				{
-					d = regexStream.read();
-					offset++;
-				}
-				c = (char) d;
-
-				switch (lexerState)
-				{
-				case START:
-					if (d == -1)
-						return new LexerValue(Token.END, null);
-					if (c == '(')
-						return new LexerValue(Token.OPEN_PARENTH, null);
-					if (c == ')')
-						return new LexerValue(Token.CLOSE_PARENTH, null);
-					if (c == '+')
-						return new LexerValue(Token.PLUS, null);
-					if (c == '*')
-						return new LexerValue(Token.STAR, null);
-					if (c == '?')
-						return new LexerValue(Token.QUESTION_MARK, null);
-					if (c == '|')
-						return new LexerValue(Token.VERTICAL_BAR, null);
-					if (c == '.')
-						return new LexerValue(Token.POINT, null);
-					if (c == '{')
-						return new LexerValue(Token.OPEN_BRACE, null);
-					if (c == '}')
-						return new LexerValue(Token.CLOSE_BRACE, null);
-					if (c == ',')
-						return new LexerValue(Token.COMMA, null);
-					if (c == '"')
-					{
-						lexerState = LexerState.DELIMITED_WORD;
-						wordState  = LexerState.DELIMITED_WORD;
-						break;
-					}
-					if (c == '~')
-					{
-						lexerState = LexerState.REGEX;
-						wordState  = LexerState.REGEX;
-						break;
-					}
-					if (c == '\\')
-					{
-						lexerState = LexerState.BACKSLASH;
-						wordState  = LexerState.WORD;
-						break;
-					}
-					if (Character.isLetter(c))
-					{
-						lexerState  = LexerState.WORD;
-						wordState   = LexerState.WORD;
-						data       += c;
-						break;
-					}
-					if (Character.isDigit(c) || c == '-')
-					{
-						lexerState  = LexerState.NUMBER;
-						data       += c;
-						break;
-					}
-					throw new ParseException("Invalid character '" + c + "'", offset);
-
-				case NUMBER:
-					if (Character.isDigit(c))
-					{
-						data += c;
-						break;
-					}
-					readLastChar = true;
-					lastChar = d;
-					return new LexerValue(Token.NUMBER, data);
-
-				case WORD:
-					if (c == '\\')
-					{
-						lexerState = LexerState.BACKSLASH;
-						break;
-					}
-					if (Character.isLetter(c) || c == '_' || c == '-' || c == '\\' || c == '"' || c == '\'' || c == '/')
-					{
-						data += c;
-						break;
-					}
-					readLastChar = true;
-					lastChar = d;
-					return new LexerValue(Token.WORD, data);
-
-				case DELIMITED_WORD:
-					if (d == -1)
-						throw new ParseException("EOF while reading word", offset);
-					if (c == '\\')
-					{
-						lexerState = LexerState.BACKSLASH;
-						break;
-					}
-					if (c != '"')
-					{
-						data += c;
-						break;
-					}
-					return new LexerValue(Token.WORD, data);
-				case REGEX:
-					if (c == '\\')
-					{
-						lexerState = LexerState.BACKSLASH;
-						break;
-					}
-					if (c != '~')
-					{
-						data += c;
-						break;
-					}
-					return new LexerValue(Token.REGEX, data);
-
-				case BACKSLASH:
-					if (d == -1)
-						throw new ParseException("EOF while reading String value", offset);
-					lexerState = wordState;
-					data += c;
-					break;
-
-				default:
-					throw new ParseException("An unknown error occured", offset);
-				}
-			}
-
-		}
-
-	}
+	private static final String EMSG_INVALID_REGEX = "Invalid regex";
 
 	private enum ReaderState
 	{
-		END, STORE, //
-		OR_ELEMENT, MULTI_ELEMENT, ELEMENT, //
-		SYMBOL, QUANTIFIER, QUANT_INF, QUANT_SUP, QUANT_SUP2, //
+		END, //
+		OR_ELEMENT, ELEMENT, //
+		ADD_IN_SEQUENCE, ADD_IN_DISJUNCTION, //
+		ROOT_CHECK_WORD, //
+		TERMINAL, //
+		VALUE, VALUE2, QUANTIFIER, QUANT_INF, QUANT_SUP, QUANT_SUP2, //
 		POINT, VERTICAL_BAR, //
 		COMMA, CLOSE_BRACE, CLOSE_PARENTH;
 	};
+	// ==========================================================================
 
-	public IPRegexElement parse(String regex, KVValue value) throws IOException, ParseException
-	{
-		return parse(IOUtils.toInputStream(regex, Charset.defaultCharset()), value);
-	}
+	private Map<String, String> allDelimiters;
+	private Collection<String>  nullLabels;
 
-	public IPRegexElement parse(String regex) throws IOException, ParseException
+	// ==========================================================================
+
+	/**
+	 * Construct with empty delimiters and nullLabels contains
+	 * <q>{@code _}</q>
+	 */
+	public PRegexParser()
 	{
-		return parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+		allDelimiters = Collections.emptyMap();
+		nullLabels    = Collections.singleton("_");
 	}
 
 	/**
-	 * Parse a pregex with a final value.
+	 * Create a regex parser where the delimiters are given as a String
 	 * 
-	 * @param value If null, no information for the value is added to the {@link IPRegexElement}.
+	 * @param delimiters contains pairs of char delimiters: <begin,end>.
 	 */
-	public <VAL> IPRegexElement parse(InputStream regexStream, VAL value) throws IOException, ParseException
+	public PRegexParser(String delimiters)
 	{
-		IPRegexElement elts = parse(regexStream);
+		this();
+		setDelimiters(delimiters);
+	}
 
-		if (value == null)
-			return elts;
+	/**
+	 * Create a regex parser with delimiters
+	 * 
+	 * @param valueDelimiters delimiters where a start char delimiter is associated with its end char delimiter
+	 */
+	public PRegexParser(Map<String, String> valueDelimiters)
+	{
+		this();
+		setDelimiters(valueDelimiters);
+	}
 
-		Collection<IPRegexElement> elements = new ArrayList<>();
-		elements.add(elts);
-		elements.add(PRegexElements.createValue(value));
-		return PRegexElements.createSequence(elements);
+	// ==========================================================================
+
+	/**
+	 * Change the delimiters
+	 * 
+	 * @param delimiters contains pairs of char delimiters: <begin,end>.
+	 */
+	public PRegexParser setDelimiters(String delimiters)
+	{
+		assert (delimiters.length() % 2 == 0);
+		this.allDelimiters = new HashMap<>();
+		OfInt chars = delimiters.chars().iterator();
+
+		while (chars.hasNext())
+			this.allDelimiters.put(String.valueOf((char) chars.next().intValue()), String.valueOf((char) chars.next().intValue()));
+
+		return this;
+	}
+
+	/**
+	 * Change the delimiters
+	 * 
+	 * @param valueDelimiters delimiters where a start char delimiter is associated with its end char delimiter
+	 */
+	public PRegexParser setDelimiters(Map<String, String> delimiters)
+	{
+		this.allDelimiters = new HashMap<>(delimiters);
+		return this;
+	}
+
+	public PRegexParser setNullLabels(Collection<String> labels)
+	{
+		nullLabels = new HashSet<>(labels);
+		return this;
+	}
+
+	public Map<String, String> getDelimiters()
+	{
+		return Collections.unmodifiableMap(allDelimiters);
+	}
+
+	public Collection<String> getNullLabels()
+	{
+		return Collections.unmodifiableCollection(nullLabels);
+	}
+
+	// ==========================================================================
+
+	public IPRegexElement parse(String regex) throws ParseException
+	{
+		try
+		{
+			return parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+		}
+		catch (IOException e)
+		{
+			// Should never happens because the input is a String
+			throw new AssertionError(e);
+		}
 	}
 
 	public IPRegexElement parse(InputStream regexStream) throws IOException, ParseException
 	{
-		Lexer lexer = new Lexer(regexStream);
+		PLexer lexer = new PLexer(regexStream, allDelimiters);
 
-		ArrayDeque<ReaderState>    readerStateStack = new ArrayDeque<ReaderState>();
-		ArrayDeque<IPRegexElement> elementStack     = new ArrayDeque<IPRegexElement>();
+		Stack<ReaderState>   readerStateStack = new Stack<>();
+		Stack<PRegexElement> elementStack     = new Stack<>();
 
+		elementStack.push(PRegexElements.createDisjunction());
 		readerStateStack.push(ReaderState.END);
 		readerStateStack.push(ReaderState.OR_ELEMENT);
-
-		Disjunction or = PRegexElements.createDisjunction();
-		or.setQuantifier(Quantifier.from(1, 1));
-		elementStack.push(or);
 
 		ReaderState state;
 
@@ -298,64 +217,102 @@ public class PRegexParser
 				token = v.getToken();
 				data  = v.getData();
 			}
-
 			switch (state)
 			{
 			case OR_ELEMENT:
 				readerStateStack.push(ReaderState.VERTICAL_BAR);
-				readerStateStack.push(ReaderState.MULTI_ELEMENT);
-				skipLexer = true;
-				break;
-
-			case MULTI_ELEMENT:
-				if (elementStack.peek() instanceof Disjunction)
-				{
-					Sequence m = PRegexElements.createSequence();
-					m.setQuantifier(Quantifier.from(1, 1));
-
-					elementStack.push(m);
-					readerStateStack.push(ReaderState.STORE);
-				}
-				readerStateStack.push(ReaderState.POINT);
 				readerStateStack.push(ReaderState.ELEMENT);
 				skipLexer = true;
 				break;
 
 			case ELEMENT:
-				if (token == Token.WORD || token == Token.REGEX)
+
+				switch (token)
 				{
-					readerStateStack.push(ReaderState.STORE);
+				case WORD:
+				{
+					if (nullLabels.contains(data))
+						data = null;
+					PRegexElement element = PRegexElements.createKey(data);
+					element.labelDelimiters = v.getDelimiters();
+					elementStack.push(element);
+
+					readerStateStack.push(ReaderState.POINT);
+					readerStateStack.push(ReaderState.TERMINAL);
 					readerStateStack.push(ReaderState.QUANTIFIER);
-					readerStateStack.push(ReaderState.SYMBOL);
-					skipLexer = true;
+					readerStateStack.push(ReaderState.VALUE);
 					break;
 				}
-				else if (token == Token.OPEN_PARENTH)
-				{
-					Disjunction o = PRegexElements.createDisjunction();
-					o.setQuantifier(Quantifier.from(1, 1));
-
-					elementStack.push(o);
+				case TERMINAL:
+					elementStack.push(PRegexElements.createEmpty());
+					readerStateStack.push(ReaderState.ADD_IN_SEQUENCE);
+					readerStateStack.push(ReaderState.TERMINAL);
+					skipLexer = true;
+					break;
+				case ROOTED:
+					elementStack.push(PRegexElements.createEmpty(true, false));
+					readerStateStack.push(ReaderState.POINT);
+					readerStateStack.push(ReaderState.TERMINAL);
+					readerStateStack.push(ReaderState.VALUE);
+					readerStateStack.push(ReaderState.ROOT_CHECK_WORD);
+					break;
+				case OPEN_PARENTH:
+					elementStack.push(PRegexElements.createDisjunction());
+					readerStateStack.push(ReaderState.POINT);
+					readerStateStack.push(ReaderState.QUANTIFIER);
 					readerStateStack.push(ReaderState.CLOSE_PARENTH);
 					readerStateStack.push(ReaderState.OR_ELEMENT);
 					break;
+				default:
+					elementStack.push(PRegexElements.createEmpty());
+					readerStateStack.push(ReaderState.POINT);
+					readerStateStack.push(ReaderState.TERMINAL);
+					readerStateStack.push(ReaderState.QUANTIFIER);
+					readerStateStack.push(ReaderState.VALUE);
+					skipLexer = true;
 				}
-				throw new ParseException("Expected element", lexer.offset);
+				break;
 
-			case SYMBOL:
+			case ROOT_CHECK_WORD:
 				if (token == Token.WORD)
 				{
-					elementStack.push(PRegexElements.createKey(data));
-					break;
+					int size = readerStateStack.size();
+					readerStateStack.subList(size - 3, size).clear();
+					readerStateStack.push(ReaderState.ELEMENT);
+					readerStateStack.push(ReaderState.ADD_IN_SEQUENCE);
 				}
-				else if (token == Token.REGEX)
+				skipLexer = true;
+				break;
+
+			case TERMINAL:
+				if (token == Token.TERMINAL)
 				{
-					elementStack.push(PRegexElements.createRegex(data));
-					break;
+					PRegexElement element = elementStack.peek();
+					element.setTerminal(true);
 				}
-				throw new ParseException("Expected symbol", lexer.offset);
+				else
+					skipLexer = true;
+				break;
+
+			case VALUE:
+				if (token == Token.EQUALS)
+					readerStateStack.push(ReaderState.VALUE2);
+				else
+					skipLexer = true;
+				break;
+
+			case VALUE2:
+			{
+				if (token != Token.WORD)
+					throw new ParseException("Expected value", lexer.getOffset());
+				PRegexElement element = elementStack.peek();
+				element.setValue(data);
+				element.valueDelimiters = v.getDelimiters();
+				break;
+			}
 
 			case QUANTIFIER:
+			{
 				Quantifier q;
 
 				if (token == Token.STAR)
@@ -372,18 +329,28 @@ public class PRegexParser
 				}
 				else
 				{
-					q         = Quantifier.from(1, 1);
 					skipLexer = true;
+					break;
 				}
 				elementStack.peek().setQuantifier(q);
-
 				break;
+			}
 
 			case QUANT_INF:
-				if (token != Token.NUMBER)
-					throw new ParseException("Expected number", lexer.offset);
-				quant_inf = Integer.parseInt(data);
+			{
+				final String errorMsg = "Expected number";
+				if (token != Token.WORD)
+					throw new ParseException(errorMsg, lexer.getOffset());
+				try
+				{
+					quant_inf = Integer.parseInt(data.trim());
+				}
+				catch (NumberFormatException e)
+				{
+					throw new ParseException(errorMsg + "; " + e.getMessage(), lexer.getOffset());
+				}
 				break;
+			}
 
 			case QUANT_SUP:
 				if (token == Token.CLOSE_BRACE)
@@ -398,32 +365,48 @@ public class PRegexParser
 					readerStateStack.push(ReaderState.QUANT_SUP2);
 				}
 				else
-					throw new ParseException("Expected number or '}'", lexer.offset);
+					throw new ParseException("Expected number or '}'", lexer.getOffset());
 				break;
 
 			case QUANT_SUP2:
-				if (token != Token.NUMBER)
-					throw new ParseException("Expected number", lexer.offset);
+			{
+				final String errorMsg = "Expected number";
 
-				quant_sup = Integer.parseInt(data);
+				if (token != Token.WORD)
+					throw new ParseException(errorMsg, lexer.getOffset());
+				try
+				{
+					quant_sup = Integer.parseInt(data.trim());
+				}
+				catch (NumberFormatException e)
+				{
+					throw new ParseException(errorMsg + "; " + e.getMessage(), lexer.getOffset());
+				}
 				break;
+			}
 
 			case COMMA:
 				if (token != Token.COMMA)
-					throw new ParseException("Expected ','", lexer.offset);
+					throw new ParseException("Expected ','", lexer.getOffset());
 				break;
 
 			case CLOSE_BRACE:
 				if (token != Token.CLOSE_BRACE)
-					throw new ParseException("Expected '}'", lexer.offset);
+					throw new ParseException("Expected '}'", lexer.getOffset());
 				elementStack.peek().setQuantifier(Quantifier.from(quant_inf, quant_sup));
 				break;
 
 			case POINT:
 				if (token == Token.POINT)
-					readerStateStack.push(ReaderState.MULTI_ELEMENT);
+				{
+					if (elementStack.peek().isTerminal())
+						throw new ParseException("A terminal element must end a sequence", lexer.getOffset());
+
+					readerStateStack.push(ReaderState.ELEMENT);
+				}
 				else
 					skipLexer = true;
+				readerStateStack.push(ReaderState.ADD_IN_SEQUENCE);
 				break;
 
 			case VERTICAL_BAR:
@@ -431,66 +414,102 @@ public class PRegexParser
 					readerStateStack.push(ReaderState.OR_ELEMENT);
 				else
 					skipLexer = true;
+				readerStateStack.push(ReaderState.ADD_IN_DISJUNCTION);
 				break;
 
 			case CLOSE_PARENTH:
-
 				if (token != Token.CLOSE_PARENTH)
-					throw new ParseException("Expected ')'", lexer.offset);
-
-				readerStateStack.push(ReaderState.STORE);
-				readerStateStack.push(ReaderState.QUANTIFIER);
+					throw new ParseException("Expected ')'", lexer.getOffset());
 				break;
 
-			case STORE:
-				IPRegexElement element = elementStack.pop();
-				IPRegexElement container = elementStack.peek();
-				boolean addElt = true;
+			case ADD_IN_SEQUENCE:
+			{
+				skipLexer = true;
+				PRegexElement element   = simplifyMultipleElement(elementStack.pop());
+				PRegexElement container = elementStack.peek();
 
-				// Si le conteneur n'a qu'un élément
-				if (element instanceof MultipleElement)
+				if (container.getType() != Type.SEQUENCE)
 				{
-					IPRegexElement top  = element;
-					Quantifier     oldQ = top.getQuantifier();
+					container = PRegexElements.createSequence();
+					elementStack.push(container);
+				}
+				if (!container.getElements().isEmpty())
+				{
+					if (element.isRooted())
+						throw new ParseException("A rooted element must begin a sequence", lexer.getOffset());
 
-					if (top.getElements().size() == 1)
+					// transform the first element from 'empty' to 'key'
+					if (container.getElements().size() == 1)
 					{
-						element = top.getElements().toArray(new IPRegexElement[] {})[0];
-						element.setQuantifier(Quantifier.multiplication(oldQ, element.getQuantifier()));
+						IPRegexElement first = container.getElements().get(0);
+						if (first.getType() == Type.EMPTY && !first.isRooted())
+							container.getElements().set(0, PRegexElements.createKey(first));
+					}
+
+					if (element.getType() == Type.EMPTY)
+					{
+						PRegexElement newElement = PRegexElements.createKey(element);
+						newElement.setValue(element.getValue());
+						element = newElement;
 					}
 				}
+				container.getElements().add(element);
 
-				if (element.getQuantifier().equals(Quantifier.from(1, 1)) && element instanceof MultipleElement)
-				{
-					IPRegexElement top = element;
-					if (element.getClass() == container.getClass())
-					{
-						addElt = false;
+				if (element.isRooted())
+					container.setRooted(true);
+				if (element.isTerminal())
+					container.setTerminal(true);
+				break;
+			}
 
-						for (IPRegexElement e : top.getElements())
-							container.getElements().add(e);
-					}
-				}
-				if (addElt)
-					container.getElements().add(element);
+			case ADD_IN_DISJUNCTION:
+			{
+				PRegexElement element = simplifyMultipleElement(elementStack.pop());
+
+				if (elementStack.isEmpty())
+					throw new ParseException(EMSG_INVALID_REGEX, lexer.getOffset());
+
+				PRegexElement container = elementStack.peek();
+
+				if (container.getType() != Type.DISJUNCTION)
+					throw new ParseException(EMSG_INVALID_REGEX, lexer.getOffset());
+
+				container.getElements().add(element);
+
+				if (element.isTerminal())
+					container.setTerminal(true);
 
 				skipLexer = true;
 				break;
+			}
 
 			case END:
+			{
 				if (token != Token.END)
-					throw new ParseException("Invalid regex", lexer.offset);
+					throw new ParseException("Invalid regex", lexer.getOffset());
 
-				IPRegexElement elt = elementStack.pop();
-
-				if (elt instanceof MultipleElement && elt.getElements().size() == 1)
-					return elt.getElements().toArray(new IPRegexElement[] {})[0];
-
-				return elt;
-
+				PRegexElement element = elementStack.pop();
+				return simplifyMultipleElement(element);
+			}
 			default:
 				break;
 			}
 		}
+	}
+
+	private PRegexElement simplifyMultipleElement(PRegexElement element)
+	{
+		if (element instanceof MultipleElement)
+		{
+			int size = element.getElements().size();
+
+			if (size == 1)
+			{
+				Quantifier oldQ = element.getQuantifier();
+				element = (PRegexElement) element.getElements().get(0);
+				element.setQuantifier(Quantifier.multiplication(oldQ, element.getQuantifier()));
+			}
+		}
+		return element;
 	}
 }

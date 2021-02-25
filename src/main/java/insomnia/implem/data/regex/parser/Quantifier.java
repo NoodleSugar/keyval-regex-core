@@ -58,6 +58,7 @@ public final class Quantifier
 		return sup;
 	}
 
+	@Override
 	public String toString()
 	{
 		if (inf == 1 && sup == 1)
@@ -68,6 +69,8 @@ public final class Quantifier
 			return "+";
 		if (inf == 0 && sup == 1)
 			return "?";
+		else if (inf == sup)
+			return "{" + inf + "}";
 		else
 			return "{" + inf + ", " + sup + "}";
 	}

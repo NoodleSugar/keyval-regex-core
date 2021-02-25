@@ -1,8 +1,8 @@
 package insomnia.implem.data.regex.parser;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 public final class PRegexElements
 {
@@ -11,7 +11,9 @@ public final class PRegexElements
 		throw new AssertionError();
 	}
 
-	public static class Key extends AbstractElement
+	// ==========================================================================
+
+	private static class Key extends PRegexElement
 	{
 		String label;
 
@@ -21,83 +23,33 @@ public final class PRegexElements
 			this.label = label;
 		}
 
+		@Override
 		public String getLabel()
 		{
 			return label;
 		}
-
-		public String toString()
-		{
-			return label + quantifier;
-		}
 	}
 
-	public static IPRegexElement createKey(String label)
+	public static Key createKey(IPRegexElement e)
+	{
+		Key ret = new Key(null);
+		ret.setRooted(e.isRooted());
+		ret.setTerminal(e.isTerminal());
+		ret.setQuantifier(e.getQuantifier());
+		return ret;
+	}
+
+	public static Key createKey(String label)
 	{
 		return new Key(label);
 	}
 
-	// =========================================================================
-
-	public static class Value<VAL> extends AbstractElement
+	public static Key createKey(boolean isRooted, boolean isTerminal, String label)
 	{
-		VAL value;
-
-		private Value(VAL value)
-		{
-			super(Type.VALUE);
-			this.value = value;
-		}
-
-		public VAL getValue()
-		{
-			return value;
-		}
-
-		public String toString()
-		{
-			return value.toString();
-		}
-	}
-
-	public static <VAL> Value<VAL> createValue(VAL value)
-	{
-		Value<VAL> ret = new Value<>(value);
-		ret.quantifier = Quantifier.from(1, 1);
+		Key ret = new Key(label);
+		ret.setRooted(isRooted);
+		ret.setTerminal(isTerminal);
 		return ret;
-	}
-
-	// =========================================================================
-
-	/**
-	 * Regex element (delimited by ~)
-	 * Two different regex can have intersection area,
-	 * the user must take care of their use because of the determinization algorithm.
-	 */
-	public static class Regex extends AbstractElement
-	{
-		String regex;
-
-		private Regex(String regex)
-		{
-			super(Type.REGEX);
-			this.regex = regex;
-		}
-
-		public String getRegex()
-		{
-			return regex;
-		}
-
-		public String toString()
-		{
-			return regex + quantifier;
-		}
-	}
-
-	public static Regex createRegex(String regex)
-	{
-		return new Regex(regex);
 	}
 
 	// =========================================================================
@@ -105,9 +57,9 @@ public final class PRegexElements
 	/**
 	 * Union element
 	 */
-	public static class Disjunction extends MultipleElement
+	private static class Disjunction extends MultipleElement
 	{
-		public Disjunction(Collection<IPRegexElement> elements)
+		public Disjunction(List<IPRegexElement> elements)
 		{
 			super(Type.DISJUNCTION, elements);
 		}
@@ -124,7 +76,7 @@ public final class PRegexElements
 		return createDisjunction(new ArrayList<>());
 	}
 
-	public static Disjunction createDisjunction(Collection<IPRegexElement> elements)
+	public static Disjunction createDisjunction(List<IPRegexElement> elements)
 	{
 		return new Disjunction(elements);
 	}
@@ -134,9 +86,34 @@ public final class PRegexElements
 	/**
 	 * Union element
 	 */
-	public static class Sequence extends MultipleElement
+	private static class Empty extends PRegexElement
 	{
-		public Sequence(Collection<IPRegexElement> elements)
+		public Empty(boolean isRooted, boolean isTerminal)
+		{
+			super(Type.EMPTY);
+			setRooted(isRooted);
+			setTerminal(isTerminal);
+		}
+	}
+
+	public static Empty createEmpty()
+	{
+		return createEmpty(false, false);
+	}
+
+	public static Empty createEmpty(boolean isRooted, boolean isTerminal)
+	{
+		return new Empty(isRooted, isTerminal);
+	}
+
+	// =========================================================================
+
+	/**
+	 * Union element
+	 */
+	private static class Sequence extends MultipleElement
+	{
+		public Sequence(List<IPRegexElement> elements)
 		{
 			super(Type.SEQUENCE, elements);
 		}
@@ -153,20 +130,26 @@ public final class PRegexElements
 		return createSequence(new ArrayList<>());
 	}
 
-	public static Sequence createSequence(Collection<IPRegexElement> elements)
+	public static Sequence createSequence(List<IPRegexElement> elements)
 	{
 		return new Sequence(elements);
 	}
 	// =========================================================================
 
-	static abstract class AbstractElement implements IPRegexElement
+	static class PRegexElement implements IPRegexElement
 	{
+		String     value;
 		Quantifier quantifier;
+		String     labelDelimiters, valueDelimiters;
+		boolean    rooted, terminal;
 
 		Type type;
 
-		public AbstractElement(Type type)
+		public PRegexElement(Type type)
 		{
+			labelDelimiters = "";
+			valueDelimiters = "";
+			rooted          = terminal = false;
 			this.type       = type;
 			this.quantifier = Quantifier.from(1, 1);
 		}
@@ -176,8 +159,35 @@ public final class PRegexElements
 			this.quantifier = quantifier;
 		}
 
+		public void setValue(String value)
+		{
+			this.value = value;
+		}
+
+		public void setRooted(boolean rooted)
+		{
+			this.rooted = rooted;
+		}
+
+		public void setTerminal(boolean terminal)
+		{
+			this.terminal = terminal;
+		}
+
 		@Override
-		public Collection<IPRegexElement> getElements()
+		public boolean isRooted()
+		{
+			return rooted;
+		}
+
+		@Override
+		public boolean isTerminal()
+		{
+			return terminal;
+		}
+
+		@Override
+		public List<IPRegexElement> getElements()
 		{
 			return Collections.emptyList();
 		}
@@ -189,64 +199,98 @@ public final class PRegexElements
 		}
 
 		@Override
+		public String getLabel()
+		{
+			return "";
+		}
+
+		@Override
+		public String getValue()
+		{
+			return value;
+		}
+
+		@Override
 		public Quantifier getQuantifier()
 		{
 			return quantifier;
+		}
+
+		@Override
+		public String getValueDelimiters()
+		{
+			return valueDelimiters;
+		}
+
+		@Override
+		public String getLabelDelimiters()
+		{
+			return labelDelimiters;
+		}
+
+		@Override
+		public String toString()
+		{
+			StringBuilder sb = new StringBuilder();
+
+			if (isRooted())
+				sb.append("^");
+
+			if (null != getLabel())
+				sb.append(getLabel());
+
+			if (null != value)
+				sb.append("=").append(value);
+
+			if (isTerminal())
+				sb.append("$");
+
+			sb.append(quantifier);
+			return sb.toString();
 		}
 	}
 
 	/**
 	 * Sequence|disjunction element
 	 */
-	public static abstract class MultipleElement extends AbstractElement
+	static abstract class MultipleElement extends PRegexElement
 	{
-		Collection<IPRegexElement> elements;
+		List<IPRegexElement> elements;
 
 		abstract String toString_separator();
 
-		public MultipleElement(Type type, Collection<IPRegexElement> elements)
+		public MultipleElement(Type type, List<IPRegexElement> elements)
 		{
 			super(type);
-			this.elements = elements;
+			this.elements = new ArrayList<>(elements);
 		}
 
 		/**
 		 * @return The modifiable {@link ArrayList} of elements.
 		 */
 		@Override
-		public Collection<IPRegexElement> getElements()
+		public List<IPRegexElement> getElements()
 		{
 			return elements;
 		}
 
 		public String toString()
 		{
-			StringBuffer buffer = new StringBuffer();
+			StringBuilder sb  = new StringBuilder();
+			String        sep = toString_separator();
 
-			boolean hasQuantifier = quantifier.getInf() != 1 || quantifier.getSup() != 1;
-
-			if (hasQuantifier)
-				buffer.append('(');
-
-			String sep = toString_separator();
-
+			sb.append("(");
 			boolean first = true;
 			for (IPRegexElement e : this.elements)
 			{
 				if (first)
 					first = false;
 				else
-					buffer.append(sep);
-
-				if (e.getType() == Type.KEY)
-					buffer.append(e);
-				else
-					buffer.append('(').append(e).append(')');
+					sb.append(sep);
+				sb.append(e);
 			}
-			if (hasQuantifier)
-				buffer.append(')').append(quantifier);
-
-			return buffer.toString();
+			sb.append(")").append(getQuantifier());
+			return sb.toString();
 		}
 	}
 }
