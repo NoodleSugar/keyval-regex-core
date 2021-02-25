@@ -1,8 +1,9 @@
 package insomnia.implem.kv.rule;
 
-import insomnia.implem.data.Paths;
+import java.text.ParseException;
+
 import insomnia.implem.kv.data.KVLabel;
-import insomnia.implem.kv.data.KVLabels;
+import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.rule.PathRules;
 import insomnia.rule.IPathRule;
@@ -14,13 +15,13 @@ public final class KVPathRules
 		throw new AssertionError();
 	}
 
-	public static IPathRule<KVValue, KVLabel> fromString(String body, String head)
+	public static IPathRule<KVValue, KVLabel> fromString(String body, String head) throws ParseException
 	{
-		return PathRules.create(Paths.pathFromString(body, KVLabels::create), Paths.pathFromString(head, KVLabels::create));
+		return PathRules.create(KVPaths.pathFromString(body), KVPaths.pathFromString(head));
 	}
 
-	public static IPathRule<KVValue, KVLabel> fromString(String body, String head, boolean isExistential)
+	public static IPathRule<KVValue, KVLabel> fromString(String body, String head, boolean isExistential) throws ParseException
 	{
-		return PathRules.create(Paths.pathFromString(body, KVLabels::create), Paths.pathFromString(head, KVLabels::create), isExistential);
+		return PathRules.create(KVPaths.pathFromString(body), KVPaths.pathFromString(head), isExistential);
 	}
 }

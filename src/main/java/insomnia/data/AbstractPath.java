@@ -157,7 +157,7 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 		}
 		sb.insert(0, getRoot().isRooted() ? "[R]" : "");
 
-		if (0 < sb.length())
+		if (0 < sb.length() && getLabels().size() > 0)
 			sb.append(".");
 
 		if (getLabels().size() > 0)
@@ -169,7 +169,8 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 			{
 				int builderLastLen = sb.length();
 
-				sb.append("").append(label).append("");
+				if (null != label)
+					sb.append(label);
 
 				if (nodeToString(sb, nodes.next()))
 					sb.insert(builderLastLen, "(").append(")");

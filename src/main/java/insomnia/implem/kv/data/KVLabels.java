@@ -1,7 +1,5 @@
 package insomnia.implem.kv.data;
 
-import insomnia.fsa.creational.IFSALabelFactory;
-
 public final class KVLabels
 {
 	private KVLabels()
@@ -11,19 +9,13 @@ public final class KVLabels
 
 	// =========================================================================
 
-	public static IFSALabelFactory<KVLabel> getFSALabelFactory()
+	public static KVLabel mapLabel(String slabel)
 	{
-		return new IFSALabelFactory<KVLabel>()
-		{
-			@Override
-			public KVLabel create(String label)
-			{
-				return KVLabels.create(label);
-			}
-		};
-	}
+		if (slabel == null)
+			return null;
 
-	// =========================================================================
+		return new KVLabel(slabel);
+	}
 
 	public static KVLabel create(String label)
 	{

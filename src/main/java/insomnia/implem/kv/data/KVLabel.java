@@ -15,12 +15,15 @@ public final class KVLabel
 		if (obj == null || !(obj instanceof KVLabel))
 			return false;
 
-		return label.equals(((KVLabel) obj).label);
+		return label == ((KVLabel) obj).label //
+			|| label.equals(((KVLabel) obj).label);
 	}
 
 	@Override
 	public int hashCode()
 	{
+		if (label == null)
+			return 0;
 		return label.hashCode();
 	}
 

@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 import insomnia.data.AbstractPath;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
+import insomnia.data.IPath;
 import insomnia.data.PathOp;
 import insomnia.data.PathOp.RealLimits;
 import insomnia.lib.Side;
@@ -31,6 +32,25 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 		super();
 		nodes  = Collections.singletonList(new PathNode(0, null));
 		labels = Collections.emptyList();
+	}
+
+	Path(IPath<VAL, LBL> src)
+	{
+		super();
+		List<PathNode> tmpNodes = new ArrayList<>();
+
+		int pos = 0;
+		for (INode<VAL, LBL> node : src.getNodes())
+			tmpNodes.add(new PathNode(pos++, node.getValue()));
+
+		if (src.isRooted())
+			tmpNodes.get(0).isRooted = true;
+
+		if (src.isTerminal())
+			tmpNodes.get(tmpNodes.size() - 1).isTerminal = true;
+
+		nodes  = HelpLists.staticList(tmpNodes);
+		labels = HelpLists.staticList(src.getLabels());
 	}
 
 	/**

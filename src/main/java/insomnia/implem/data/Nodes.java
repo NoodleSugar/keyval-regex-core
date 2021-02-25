@@ -57,7 +57,31 @@ public final class Nodes
 			{
 				return isRooted;
 			}
+
+			@Override
+			public String toString()
+			{
+				return INode.toString(this);
+			}
 		};
+	}
+
+	/**
+	 * Create a new empty node non rooted/terminal
+	 */
+	public static <VAL, LBL> INode<VAL, LBL> create()
+	{
+		return create(false, false, null);
+	}
+
+	/**
+	 * Create a new node non rooted/terminal, with a value
+	 * 
+	 * @param value the value for the new node
+	 */
+	public static <VAL, LBL> INode<VAL, LBL> create(VAL value)
+	{
+		return create(false, false, value);
 	}
 
 	/**

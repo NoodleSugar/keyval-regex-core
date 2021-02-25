@@ -7,7 +7,7 @@ public final class Edges
 {
 	private Edges()
 	{
-
+		throw new AssertionError();
 	}
 
 	// =========================================================================

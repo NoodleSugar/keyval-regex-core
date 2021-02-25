@@ -1,18 +1,20 @@
 package insomnia.implem.data;
 
 import java.security.InvalidParameterException;
+import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.regex.Pattern;
+
+import org.apache.commons.collections4.IterableUtils;
 
 import insomnia.data.IPath;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
+import insomnia.implem.data.regex.parser.IPRegexElement;
+import insomnia.implem.data.regex.parser.PRegexParser;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 
 public final class Paths
@@ -66,6 +68,22 @@ public final class Paths
 		}
 	}
 
+	static public <VAL, LBL> IPath<VAL, LBL> pathFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
+	{
+		return new PathFromPRegexElementBuilder<>(mapValue, mapLabel).create(element);
+	}
+
+	static public <VAL, LBL> List<IPath<VAL, LBL>> pathsFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
+	{
+		return IterableUtils.toList(new PathsFromPRegexElementBuilder<>(element, mapValue, mapLabel));
+	}
+
+	public static IPath<String, String> pathFromString(String p) throws ParseException
+	{
+		PRegexParser parser = new PRegexParser("''\"\"");
+		return Paths.pathFromPRegexElement(parser.parse(p), s -> s, s -> s);
+	}
+
 	// =========================================================================
 
 //	private final static IPath<?, ?> emptyPath = new Path<>();
@@ -77,6 +95,11 @@ public final class Paths
 	public static <VAL, LBL> IPath<VAL, LBL> empty()
 	{
 		return (IPath<VAL, LBL>) Trees.empty();
+	}
+
+	public static <VAL, LBL> IPath<VAL, LBL> create(IPath<VAL, LBL> src)
+	{
+		return new Path<>(src);
 	}
 
 	/**
@@ -134,54 +157,5 @@ public final class Paths
 			labels.addAll(path.getLabels());
 
 		return create(isRooted, isTerminal, labels);
-	}
-
-	// =========================================================================
-
-	public static <LBL> List<LBL> string2KVLabel(List<String> labels, Function<String, LBL> labelFactory)
-	{
-		List<LBL> kvlabels = new ArrayList<>(labels.size());
-
-		for (String l : labels)
-			kvlabels.add(labelFactory.apply(l));
-
-		return kvlabels;
-	}
-
-	public static <VAL, LBL> IPath<VAL, LBL> pathFromString(String p, boolean isRooted, boolean isTerminal, VAL value, Function<String, LBL> labelFactory)
-	{
-		return create(isRooted, isTerminal, string2KVLabel(Arrays.asList(p.trim().split(Pattern.quote("."))), labelFactory), value);
-	}
-
-	/*
-	 * Help function for creating paths.
-	 * These must be temporary
-	 */
-	public static <VAL, LBL> IPath<VAL, LBL> pathFromString(String p, Function<String, LBL> labelFactory)
-	{
-		return pathFromString(p, null, labelFactory);
-	}
-
-	/*
-	 * If value != null the resulting path is automatically terminal.
-	 */
-	public static <VAL, LBL> IPath<VAL, LBL> pathFromString(String p, VAL value, Function<String, LBL> labelFactory)
-	{
-		if (p.isEmpty())
-			return create(false, false, Collections.emptyList(), value);
-
-		if (p.equals("^"))
-			return create(true, false, Collections.emptyList(), value);
-
-		if (p.equals("$"))
-			return create(false, true, Collections.emptyList(), value);
-
-		p = p.trim();
-
-		boolean isRooted   = p.charAt(0) == '.';
-		boolean isTerminal = p.charAt(p.length() - 1) == '.';
-
-		p = p.substring(isRooted ? 1 : 0, p.length() - (isTerminal ? 1 : 0));
-		return pathFromString(p, isRooted, isTerminal || null != value, value, labelFactory);
 	}
 }
