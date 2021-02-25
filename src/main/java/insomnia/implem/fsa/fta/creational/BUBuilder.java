@@ -19,7 +19,6 @@ import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
 import insomnia.implem.fsa.fpa.creational.FPABuilder;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
-import insomnia.implem.fsa.fpa.graphchunk.IGCAFactory;
 import insomnia.implem.fsa.fta.BUFTAMatchers;
 import insomnia.implem.fsa.fta.edge.FTAEdge;
 import insomnia.implem.fsa.fta.edgeCondition.FTAEdgeConditions;
@@ -90,20 +89,18 @@ public final class BUBuilder<VAL, LBL>
 
 	private IFSAState<VAL, LBL> newStateFrom(INode<VAL, LBL> node)
 	{
-		IGCAFactory<VAL, LBL> afactory = gchunk.getAFactory();
-		IFSAState<VAL, LBL>   newState = afactory.create(node.getValue());
-		afactory.setRooted(newState, node.isRooted());
+		IFSAState<VAL, LBL> newState = gchunk.createState(node.getValue());
+		gchunk.setRooted(newState, node.isRooted());
 		gchunk.addState(newState);
 		return newState;
 	}
 
 	private void buildFromTree(ITree<VAL, LBL> tree)
 	{
-		// TODO: encode roote/terminal cases
+		// TODO: encode root/terminal cases
 		Map<INode<VAL, LBL>, IFSAState<VAL, LBL>> stateOf = new HashMap<>();
 
-		IGCAFactory<VAL, LBL>         afactory = gchunk.getAFactory();
-		ListIterator<INode<VAL, LBL>> nodes    = TreeOp.bottomUpOrder(tree).listIterator();
+		ListIterator<INode<VAL, LBL>> nodes = TreeOp.bottomUpOrder(tree).listIterator();
 
 		// Process Leaves
 		while (nodes.hasNext())
@@ -117,11 +114,11 @@ public final class BUBuilder<VAL, LBL>
 			}
 
 			IFSAState<VAL, LBL> newState = newStateFrom(node);
-			afactory.setInitial(newState, true);
+			gchunk.setInitial(newState, true);
 			stateOf.put(node, newState);
 
 			if (node.isTerminal())
-				afactory.setTerminal(newState, true);
+				gchunk.setTerminal(newState, true);
 		}
 
 		// Process internal nodes
@@ -148,7 +145,7 @@ public final class BUBuilder<VAL, LBL>
 				for (IEdge<VAL, LBL> edge : nodeChilds)
 				{
 					IFSAState<VAL, LBL> parentState = stateOf.get(edge.getChild());
-					IFSAState<VAL, LBL> childState  = afactory.create();
+					IFSAState<VAL, LBL> childState  = gchunk.createState();
 					gchunk.addEdge(parentState, childState, FSALabelConditions.createEq(edge.getLabel()));
 					nodeChildStates.add(childState);
 					stateOf.remove(edge.getChild());
@@ -158,18 +155,17 @@ public final class BUBuilder<VAL, LBL>
 			}
 		}
 		IFSAState<VAL, LBL> root = stateOf.get(tree.getRoot());
-		afactory.setFinal(root, true);
+		gchunk.setFinal(root, true);
 
 		if (tree.getRoot().isRooted())
-			afactory.setRooted(root, true);
+			gchunk.setRooted(root, true);
 	}
 
 	private void addEdge( //
 		IFSAState<VAL, LBL> buState, //
 		ITree<VAL, LBL> tree, IEdge<VAL, LBL> tEdge)
 	{
-		IGCAFactory<VAL, LBL> afactory = gchunk.getAFactory();
-		IFSAState<VAL, LBL>   newState = afactory.create(tEdge.getChild().getValue());
+		IFSAState<VAL, LBL> newState = gchunk.createState(tEdge.getChild().getValue());
 		gchunk.addEdge(newState, buState, FSALabelConditions.createEq(tEdge.getLabel()));
 		buildFromTree_recursive(newState, tree, tEdge.getChild());
 	}
@@ -178,18 +174,16 @@ public final class BUBuilder<VAL, LBL>
 		IFSAState<VAL, LBL> buState, //
 		ITree<VAL, LBL> tree, INode<VAL, LBL> tNode)
 	{
-		IGCAFactory<VAL, LBL> afactory = gchunk.getAFactory();
-
 		if (tNode.isRooted())
-			afactory.setRooted(buState, true);
+			gchunk.setRooted(buState, true);
 		if (tNode.isTerminal())
-			afactory.setTerminal(buState, true);
+			gchunk.setTerminal(buState, true);
 
 		Collection<IEdge<VAL, LBL>> tEdges = tree.getChildren(tNode);
 
 		if (tEdges.size() == 0)
 		{
-			afactory.setInitial(buState, true);
+			gchunk.setInitial(buState, true);
 			return;
 		}
 		else if (tEdges.size() == 1)
@@ -202,7 +196,7 @@ public final class BUBuilder<VAL, LBL>
 
 		for (IEdge<VAL, LBL> tEdge : tree.getChildren(tNode))
 		{
-			IFSAState<VAL, LBL> silentState = afactory.create();
+			IFSAState<VAL, LBL> silentState = gchunk.createState();
 			addEdge(silentState, tree, tEdge);
 			parents.add(silentState);
 		}

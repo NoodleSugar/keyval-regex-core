@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 
 import insomnia.data.IPath;
@@ -37,7 +37,9 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	private Collection<IFSAEdge<VAL, LBL>>  epsilonEdges;
 
 	private Map<IFSAState<VAL, LBL>, Collection<IFSAEdge<VAL, LBL>>> edgesOf;
+	private Map<IFSAState<VAL, LBL>, Collection<IFSAEdge<VAL, LBL>>> edgesTo;
 	private Map<IFSAState<VAL, LBL>, Collection<IFSAEdge<VAL, LBL>>> epsilonEdgesOf;
+	private Map<IFSAState<VAL, LBL>, Collection<IFSAEdge<VAL, LBL>>> epsilonEdgesTo;
 
 	protected AbstractSimpleGFPA( //
 		Collection<IFSAState<VAL, LBL>> states, //
@@ -58,9 +60,11 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 
 		this.edges   = new ArrayList<>();
 		this.edgesOf = new HashMap<>();
+		this.edgesTo = new HashMap<>();
 
 		if (properties.isSynchronous())
 		{
+			epsilonEdgesTo = Collections.emptyMap();
 			epsilonEdgesOf = Collections.emptyMap();
 			epsilonEdges   = Collections.emptyList();
 
@@ -68,12 +72,14 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 			{
 				edges.add(edge);
 				edgesOf.computeIfAbsent(edge.getParent(), e -> new ArrayList<>()).add(edge);
+				edgesTo.computeIfAbsent(edge.getChild(), e -> new ArrayList<>()).add(edge);
 			}
 		}
 		else
 		{
 			epsilonEdges   = new ArrayList<>();
 			epsilonEdgesOf = new HashMap<>();
+			epsilonEdgesTo = new HashMap<>();
 
 			for (IFSAEdge<VAL, LBL> edge : allEdges)
 			{
@@ -81,11 +87,13 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 				{
 					epsilonEdges.add(edge);
 					epsilonEdgesOf.computeIfAbsent(edge.getParent(), e -> new ArrayList<>()).add(edge);
+					epsilonEdgesTo.computeIfAbsent(edge.getChild(), e -> new ArrayList<>()).add(edge);
 				}
 				else
 				{
 					edges.add(edge);
 					edgesOf.computeIfAbsent(edge.getParent(), e -> new ArrayList<>()).add(edge);
+					edgesTo.computeIfAbsent(edge.getChild(), e -> new ArrayList<>()).add(edge);
 				}
 			}
 		}
@@ -140,7 +148,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 		ret.addAll(states);
 
 		if (!properties.isSynchronous())
-			GFPAOp.epsilonClosure(this, ret);
+			GFPAOp.epsilonClosureOf(this, ret);
 
 		return ret;
 	}
@@ -169,12 +177,47 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	}
 
 	@Override
-	public Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
+	public Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
-		List<IFSAEdge<VAL, LBL>> ret = new ArrayList<>();
+		Collection<IFSAEdge<VAL, LBL>> ret = new HashSet<>();
 
 		for (IFSAState<VAL, LBL> state : states)
-			ret.addAll(epsilonEdgesOf.getOrDefault(state, Collections.emptyList()));
+			ret.addAll(epsilonEdgesTo.getOrDefault(state, Collections.emptySet()));
+
+		return ret;
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		Collection<IFSAEdge<VAL, LBL>> ret = new HashSet<>();
+
+		for (IFSAState<VAL, LBL> state : states)
+			ret.addAll(edgesTo.getOrDefault(state, Collections.emptySet()));
+
+		return ret;
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		Collection<IFSAEdge<VAL, LBL>> ret = new HashSet<>();
+
+		for (IFSAState<VAL, LBL> state : states)
+		{
+			ret.addAll(edgesTo.getOrDefault(state, Collections.emptySet()));
+			ret.addAll(epsilonEdgesTo.getOrDefault(state, Collections.emptySet()));
+		}
+		return ret;
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		Collection<IFSAEdge<VAL, LBL>> ret = new HashSet<>();
+
+		for (IFSAState<VAL, LBL> state : states)
+			ret.addAll(epsilonEdgesOf.getOrDefault(state, Collections.emptySet()));
 
 		return ret;
 	}
@@ -182,10 +225,10 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	@Override
 	public Collection<IFSAEdge<VAL, LBL>> getEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
-		List<IFSAEdge<VAL, LBL>> ret = new ArrayList<>();
+		Collection<IFSAEdge<VAL, LBL>> ret = new HashSet<>();
 
 		for (IFSAState<VAL, LBL> state : states)
-			ret.addAll(edgesOf.getOrDefault(state, Collections.emptyList()));
+			ret.addAll(edgesOf.getOrDefault(state, Collections.emptySet()));
 
 		return ret;
 	}
@@ -193,12 +236,12 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	@Override
 	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
-		List<IFSAEdge<VAL, LBL>> ret = new ArrayList<>();
+		Collection<IFSAEdge<VAL, LBL>> ret = new HashSet<>();
 
 		for (IFSAState<VAL, LBL> state : states)
 		{
-			ret.addAll(edgesOf.getOrDefault(state, Collections.emptyList()));
-			ret.addAll(epsilonEdgesOf.getOrDefault(state, Collections.emptyList()));
+			ret.addAll(edgesOf.getOrDefault(state, Collections.emptySet()));
+			ret.addAll(epsilonEdgesOf.getOrDefault(state, Collections.emptySet()));
 		}
 		return ret;
 	}

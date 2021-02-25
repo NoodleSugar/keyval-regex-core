@@ -1,5 +1,7 @@
 package insomnia.implem.fsa.edge;
 
+import java.util.Objects;
+
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
@@ -48,13 +50,13 @@ public final class FSAEdge<VAL, LBL> implements IFSAEdge<VAL, LBL>
 
 		return edge.getParent().equals(getParent()) //
 			&& edge.getChild().equals(getChild()) //
-			&& edge.getLabelCondition().equals(getLabelCondition());
+			&& Objects.equals(edge.getLabelCondition(), this.getLabelCondition());
 	}
 
 	@Override
 	public int hashCode()
 	{
-		return getParent().hashCode() + getChild().hashCode() + labelCondition.hashCode();
+		return getParent().hashCode() + getChild().hashCode() + (labelCondition == null ? 0 : labelCondition.hashCode());
 	}
 
 	@Override

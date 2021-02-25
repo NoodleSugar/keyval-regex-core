@@ -212,6 +212,34 @@ final class GCStates
 		((AbstractGCState<VAL, LBL>) state).setFinal(isFinal);
 	}
 
+	public static <VAL, LBL> void setValueCondition(IGCState<VAL, LBL> state, IFSAValueCondition<VAL> valueCondition)
+	{
+		if (!(state instanceof AbstractGCState))
+			throw new InvalidParameterException();
+
+		((AbstractGCState<VAL, LBL>) state).valueCondition = valueCondition;
+	}
+
+	public static <VAL, LBL> void merge(IGCState<VAL, LBL> dest, IGCState<VAL, LBL> src)
+	{
+		if (!(dest instanceof AbstractGCState))
+			throw new InvalidParameterException();
+
+		if (dest.getValueCondition().equals(FSAValueConditions.createAny()))
+			GCStates.setValueCondition(dest, src.getValueCondition());
+		else if (!src.getValueCondition().equals(dest.getValueCondition()))
+			throw new AssertionError();
+
+		if (src.isRooted())
+			setRooted(dest, true);
+		if (src.isTerminal())
+			setTerminal(dest, true);
+		if (src.isInitial())
+			setInitial(dest, true);
+		if (src.isFinal())
+			setFinal(dest, true);
+	}
+
 	public static <VAL, LBL> void copy(IGCState<VAL, LBL> dest, IGCState<VAL, LBL> src)
 	{
 		if (!(dest instanceof AbstractGCState))

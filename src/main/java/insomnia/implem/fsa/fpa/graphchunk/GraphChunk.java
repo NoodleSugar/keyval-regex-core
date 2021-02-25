@@ -80,25 +80,27 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		return GFPAMatchers.create(this, element);
 	}
 
-	public static <VAL, LBL> GraphChunk<VAL, LBL> createOneEdge(IFSALabelCondition<LBL> labelCondition)
+	public static <VAL, LBL> GraphChunk<VAL, LBL> createOneEdge(boolean isRooted, IFSALabelCondition<LBL> labelCondition, VAL aval, VAL bval)
 	{
 		GraphChunk<VAL, LBL>  ret      = new GraphChunk<>();
 		IGCAFactory<VAL, LBL> afactory = ret.getAFactory();
-		IFSAState<VAL, LBL>   a        = afactory.create();
-		IFSAState<VAL, LBL>   b        = afactory.create();
+		IFSAState<VAL, LBL>   a        = afactory.create(aval);
+		IFSAState<VAL, LBL>   b        = afactory.create(bval);
+		afactory.setRooted(a, isRooted);
+
 		ret.setStart(a);
 		ret.setEnd(b);
 		ret.addEdge(a, b, labelCondition);
 		return ret;
 	}
 
-	public static <VAL, LBL> GraphChunk<VAL, LBL> createOneTerminalState(VAL value)
+	public static <VAL, LBL> GraphChunk<VAL, LBL> createOneState(boolean isRooted, boolean isTerminal, VAL value)
 	{
 		GraphChunk<VAL, LBL>  ret      = new GraphChunk<>();
 		IGCAFactory<VAL, LBL> afactory = ret.getAFactory();
 		IFSAState<VAL, LBL>   a        = afactory.create(value);
-		afactory.setTerminal(a, true);
-		afactory.setFinal(a, true);
+		afactory.setRooted(a, isRooted);
+		afactory.setTerminal(a, isTerminal);
 		ret.setStart(a);
 		ret.setEnd(a);
 		return ret;
@@ -113,7 +115,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 
 		for (IGCState<VAL, LBL> state : Arrays.asList(start, end))
 		{
-			for (IGCEdge<VAL, LBL> edge : gc_getEdges(state))
+			for (IGCEdge<VAL, LBL> edge : gc_getEdgesOf(state))
 			{
 				if (FSALabelConditions.isTrueCondition(edge.getLabelCondition()) && this.graph.getEdgeTarget(edge).equals(state))
 					gchunk.graph.removeEdge(edge);
@@ -170,7 +172,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	private static AFactory<?, ?> afactory = new AFactory<>();
 
 	@SuppressWarnings("unchecked")
-	public IGCAFactory<VAL, LBL> getAFactory()
+	private IGCAFactory<VAL, LBL> getAFactory()
 	{
 		return (IGCAFactory<VAL, LBL>) afactory;
 	}
@@ -182,17 +184,27 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		return graph.vertexSet();
 	}
 
-	private Collection<IGCEdge<VAL, LBL>> gc_getEdges(IGCState<VAL, LBL> state)
+	private Collection<IGCEdge<VAL, LBL>> gc_getEdgesOf(IGCState<VAL, LBL> state)
 	{
-		return gc_getEdges(Collections.singleton(state));
+		return gc_getEdgesOf(Collections.singleton(state));
 	}
 
-	private Collection<IGCEdge<VAL, LBL>> gc_getEdges(Collection<IGCState<VAL, LBL>> states)
+	private Collection<IGCEdge<VAL, LBL>> gc_getEdgesOf(Collection<IGCState<VAL, LBL>> states)
 	{
 		Collection<IGCEdge<VAL, LBL>> ret = new HashSet<IGCEdge<VAL, LBL>>();
 
 		for (IGCState<VAL, LBL> state : states)
 			ret.addAll(graph.outgoingEdgesOf(state));
+
+		return ret;
+	}
+
+	private Collection<IGCEdge<VAL, LBL>> gc_getEdgesTo(Collection<IGCState<VAL, LBL>> states)
+	{
+		Collection<IGCEdge<VAL, LBL>> ret = new HashSet<IGCEdge<VAL, LBL>>();
+
+		for (IGCState<VAL, LBL> state : states)
+			ret.addAll(graph.incomingEdgesOf(state));
 
 		return ret;
 	}
@@ -238,7 +250,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	public Collection<IGCEdge<VAL, LBL>> getLimitEdgesWithoutLoop(IFSAState<VAL, LBL> state)
 	{
 		IGCState<VAL, LBL>            fstate = (IGCState<VAL, LBL>) state;
-		Collection<IGCEdge<VAL, LBL>> ret    = gc_getEdges(fstate);
+		Collection<IGCEdge<VAL, LBL>> ret    = gc_getEdgesOf(fstate);
 
 		if (state == getStart() || state == getEnd())
 			ret.removeIf(edge -> this.graph.getEdgeTarget((IGCEdge<VAL, LBL>) edge).equals(fstate));
@@ -291,6 +303,36 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	{
 		addEdge((IGCState<VAL, LBL>) getEnd(), end, labelCondition);
 		this.end = (IGCState<VAL, LBL>) end;
+	}
+
+	public void setRooted(IFSAState<VAL, LBL> state, boolean v)
+	{
+		getAFactory().setRooted(state, v);
+	}
+
+	public void setTerminal(IFSAState<VAL, LBL> state, boolean v)
+	{
+		getAFactory().setTerminal(state, v);
+	}
+
+	public void setInitial(IFSAState<VAL, LBL> state, boolean v)
+	{
+		getAFactory().setInitial(state, v);
+	}
+
+	public void setFinal(IFSAState<VAL, LBL> state, boolean v)
+	{
+		getAFactory().setFinal(state, v);
+	}
+
+	public IFSAState<VAL, LBL> createState()
+	{
+		return getAFactory().create();
+	}
+
+	public IFSAState<VAL, LBL> createState(VAL value)
+	{
+		return getAFactory().create(value);
 	}
 
 	// =========================================================================
@@ -494,18 +536,24 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		for (IGCEdge<VAL, LBL> edgeData : edges)
 		{
 			IGCState<VAL, LBL> target = graph.getEdgeTarget(edgeData);
-			graph.addEdge((IGCState<VAL, LBL>) dest, target, copyEdge(edgeData));
+			graph.addEdge(dest, target, copyEdge(edgeData));
 		}
 		// Copy to avoid concurent modification
-		edges = new ArrayList<>(graph.incomingEdgesOf((IGCState<VAL, LBL>) src));
+		edges = new ArrayList<>(graph.incomingEdgesOf(src));
 
 		for (IGCEdge<VAL, LBL> edgeData : edges)
 		{
 			IGCState<VAL, LBL> source = graph.getEdgeSource(edgeData);
-			graph.addEdge(source, (IGCState<VAL, LBL>) dest, copyEdge(edgeData));
+			graph.addEdge(source, dest, copyEdge(edgeData));
 		}
-		GCStates.copy(dest, src);
-		graph.removeVertex((IGCState<VAL, LBL>) src);
+		GCStates.merge(dest, src);
+		graph.removeVertex(src);
+	}
+
+	public void add(GraphChunk<VAL, LBL> b)
+	{
+		Graphs.addGraph(graph, b.graph);
+		properties = FPAProperties.union(properties, b.properties);
 	}
 
 	private void glue(IGCState<VAL, LBL> glue, GraphChunk<VAL, LBL> b)
@@ -571,6 +619,8 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		Graphs.addGraph(graph, b.graph);
 		this.start = (IGCState<VAL, LBL>) start;
 		this.end   = (IGCState<VAL, LBL>) end;
+
+		setProperties(FPAProperties.union(getProperties(), b.getProperties()));
 	}
 
 	/**
@@ -655,7 +705,14 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	@Override
 	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
-		return gc_as_fsa_edge(gc_getEdges((Collection<IGCState<VAL, LBL>>) states));
+		return gc_as_fsa_edge(gc_getEdgesOf((Collection<IGCState<VAL, LBL>>) states));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		return gc_as_fsa_edge(gc_getEdgesTo((Collection<IGCState<VAL, LBL>>) states));
 	}
 
 	@Override
@@ -691,24 +748,24 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getInitialStates()
 	{
-		return gc_getStates().stream().filter(s -> s.isInitial()).collect(Collectors.toList());
+		return gc_getStates().stream().filter(s -> isInitial(s)).collect(Collectors.toList());
 	}
 
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getFinalStates()
 	{
-		return gc_getStates().stream().filter(s -> s.isFinal()).collect(Collectors.toList());
+		return gc_getStates().stream().filter(s -> isFinal(s)).collect(Collectors.toList());
 	}
 
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getRootedStates()
 	{
-		return gc_getStates().stream().filter(s -> s.isRooted()).collect(Collectors.toList());
+		return gc_getStates().stream().filter(s -> isRooted(s)).collect(Collectors.toList());
 	}
 
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getTerminalStates()
 	{
-		return gc_getStates().stream().filter(s -> s.isTerminal()).collect(Collectors.toList());
+		return gc_getStates().stream().filter(s -> isTerminal(s)).collect(Collectors.toList());
 	}
 }

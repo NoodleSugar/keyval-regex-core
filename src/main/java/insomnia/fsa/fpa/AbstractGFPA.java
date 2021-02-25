@@ -1,8 +1,8 @@
 package insomnia.fsa.fpa;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 import insomnia.fsa.IFSAEdge;
@@ -21,7 +21,6 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	{
 		return getFinalStates().contains(state);
 	}
-
 
 	@Override
 	public boolean isRooted(IFSAState<VAL, LBL> state)
@@ -65,7 +64,7 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 		if (getProperties().isSynchronous())
 			return;
 
-		GFPAOp.epsilonClosure(this, states);
+		GFPAOp.epsilonClosureOf(this, states);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -75,7 +74,7 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 		if (getProperties().isSynchronous())
 			return (Collection<IFSAState<VAL, LBL>>) states;
 
-		Collection<IFSAState<VAL, LBL>> ret = new ArrayList<>(states);
+		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(states);
 		epsilonClosure(ret);
 		return ret;
 	}
@@ -101,9 +100,39 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	}
 
 	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		return getAllEdgesTo(states).stream().filter(edge -> !IFSAEdge.isEpsilon(edge)).collect(Collectors.toSet());
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getEdgesTo(IFSAState<VAL, LBL> state)
+	{
+		return getEdgesTo(Collections.singletonList(state));
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states)
+	{
+		return getAllEdgesTo(states).stream().filter(IFSAEdge::isEpsilon).collect(Collectors.toSet());
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesTo(IFSAState<VAL, LBL> state)
+	{
+		return getEpsilonEdgesTo(Collections.singletonList(state));
+	}
+
+	@Override
+	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesTo(IFSAState<VAL, LBL> state)
+	{
+		return getAllEdgesTo(Collections.singletonList(state));
+	}
+
+	@Override
 	public Collection<IFSAEdge<VAL, LBL>> getEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
-		return getAllEdgesOf(states).stream().filter(edge -> !IFSAEdge.isEpsilon(edge)).collect(Collectors.toList());
+		return getAllEdgesOf(states).stream().filter(edge -> !IFSAEdge.isEpsilon(edge)).collect(Collectors.toSet());
 	}
 
 	@Override
@@ -115,7 +144,7 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	@Override
 	public Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
-		return getAllEdgesOf(states).stream().filter(IFSAEdge::isEpsilon).collect(Collectors.toList());
+		return getAllEdgesOf(states).stream().filter(IFSAEdge::isEpsilon).collect(Collectors.toSet());
 	}
 
 	@Override
@@ -156,9 +185,11 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 		s1.append("States: ").append(getStates()).append("\n");
 		s1.append("Edges:\n");
 
-		for (IFSAEdge<VAL, LBL> edge : getAllEdges())
-			s1.append(edge).append("\n");
-
+		for (IFSAState<VAL, LBL> state : getStates())
+		{
+			for (IFSAEdge<VAL, LBL> edge : getAllEdgesOf(state))
+				s1.append(edge).append("\n");
+		}
 		return s1.toString();
 	}
 }

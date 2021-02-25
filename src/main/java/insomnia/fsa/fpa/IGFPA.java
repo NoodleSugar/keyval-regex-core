@@ -52,6 +52,18 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	Collection<IFSAEdge<VAL, LBL>> getAllEdges();
 
+	Collection<IFSAEdge<VAL, LBL>> getEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states);
+
+	Collection<IFSAEdge<VAL, LBL>> getEdgesTo(IFSAState<VAL, LBL> state);
+
+	Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states);
+
+	Collection<IFSAEdge<VAL, LBL>> getEpsilonEdgesTo(IFSAState<VAL, LBL> state);
+
+	Collection<IFSAEdge<VAL, LBL>> getAllEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states);
+
+	Collection<IFSAEdge<VAL, LBL>> getAllEdgesTo(IFSAState<VAL, LBL> state);
+
 	Collection<IFSAEdge<VAL, LBL>> getEdgesOf(Collection<? extends IFSAState<VAL, LBL>> states);
 
 	Collection<IFSAEdge<VAL, LBL>> getEdgesOf(IFSAState<VAL, LBL> state);

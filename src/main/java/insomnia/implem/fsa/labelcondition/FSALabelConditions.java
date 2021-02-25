@@ -105,7 +105,7 @@ public final class FSALabelConditions
 			@Override
 			public boolean test(LBL element)
 			{
-				return element.equals(label);
+				return label.equals(element);
 			}
 
 			@Override
@@ -114,6 +114,14 @@ public final class FSALabelConditions
 				return Collections.singleton(label);
 			}
 		};
+	}
+
+	public static <LBL> IFSALabelCondition<LBL> createAnyOrEq(LBL label)
+	{
+		if (label == null)
+			return trueCondition();
+
+		return createEq(label);
 	}
 
 	public static <LBL> IFSALabelCondition<LBL> createRegex(String regex)
