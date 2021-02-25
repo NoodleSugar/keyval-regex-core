@@ -3,6 +3,7 @@ package insomnia.implem.kv.rule.grd;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,7 +30,7 @@ import insomnia.rule.grd.IGRD;
 
 public class TestGRD<E, V>
 {
-	static List<Object[]> alphaGRD()
+	static List<Object[]> alphaGRD() throws ParseException
 	{
 		List<Object[]> ret         = new ArrayList<>();
 		List<Object[]> validations = new ArrayList<>();
