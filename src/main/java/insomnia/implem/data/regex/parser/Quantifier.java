@@ -44,8 +44,8 @@ public final class Quantifier
 	 */
 	private Quantifier(int inf, int sup) throws InvalidParameterException
 	{
-		if (inf < 0 || (sup != -1 && (sup < inf || sup == 0)))
-			throw new InvalidParameterException("Invalid quantifier");
+		if (inf < 0 || sup < -1 || sup < inf)
+			throw new IllegalArgumentException(String.format("Invalid quantifier {%d,%d}", inf, sup));
 		this.inf = inf;
 		this.sup = sup;
 	}
