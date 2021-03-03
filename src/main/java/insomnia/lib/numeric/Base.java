@@ -1,5 +1,7 @@
 package insomnia.lib.numeric;
 
+import java.util.Arrays;
+
 public final class Base
 {
 	private int base[];
@@ -8,6 +10,23 @@ public final class Base
 	{
 		this.base = base;
 	}
+	// ==========================================================================
+
+	/**
+	 * Create a numeric base of a determined length with a unique base number for each element.
+	 * 
+	 * @param base   the base for each element
+	 * @param length the size of a number
+	 * @return
+	 */
+	public static Base simple(int base, int length)
+	{
+		int[] abase = new int[length];
+		Arrays.fill(abase, base);
+		return new Base(abase);
+	}
+
+	// ==========================================================================
 
 	public int[] getBase()
 	{
@@ -32,6 +51,20 @@ public final class Base
 			else
 				break;
 		}
+	}
+
+	public int toInt(int num[])
+	{
+		int pos     = base.length - 1;
+		int ret     = num[pos];
+		int accBase = base[pos];
+
+		while (pos-- != 0)
+		{
+			ret     += num[pos] * accBase;
+			accBase *= base[pos + 1];
+		}
+		return ret;
 	}
 
 	int max = -1;
