@@ -1,26 +1,28 @@
 package insomnia.implem.data.regex.parser;
 
+import java.lang.ref.WeakReference;
 import java.security.InvalidParameterException;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 public final class Quantifier
 {
 	private final int inf;
 	private final int sup;
 
-	private static HashMap<String, Quantifier> map = new HashMap<>();
+	private static Map<Quantifier, WeakReference<Quantifier>> map = new WeakHashMap<>();
 
 	public static Quantifier from(int inf, int sup)
 	{
-		String     key = inf + ":" + sup;
-		Quantifier q   = map.get(key);
+		Quantifier                tmp = new Quantifier(inf, sup);
+		WeakReference<Quantifier> q   = map.get(tmp);
 
-		if (q == null)
-		{
-			q = new Quantifier(inf, sup);
-			map.put(key, q);
-		}
-		return q;
+		if (q != null && q.get() != null)
+			return q.get();
+
+		map.put(tmp, new WeakReference<>(tmp));
+		return tmp;
+	}
 	}
 
 	public static Quantifier multiplication(Quantifier q1, Quantifier q2)
@@ -56,6 +58,24 @@ public final class Quantifier
 	public int getSup()
 	{
 		return sup;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+		if (!(obj instanceof Quantifier))
+			return false;
+
+		Quantifier qo = (Quantifier) obj;
+		return inf == qo.inf && sup == qo.sup;
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return inf + sup * 31;
 	}
 
 	@Override
