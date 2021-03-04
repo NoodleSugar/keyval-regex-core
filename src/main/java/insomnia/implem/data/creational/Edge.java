@@ -3,8 +3,14 @@ package insomnia.implem.data.creational;
 import java.util.Collection;
 
 import insomnia.data.IEdge;
-import insomnia.data.INode;
 
+/**
+ * An edge of a data.
+ * 
+ * @author zuri
+ * @param <VAL> type of a node value
+ * @param <LBL> type of an edge label
+ */
 class Edge<VAL, LBL> implements IEdge<VAL, LBL>
 {
 	private LBL            label;
@@ -28,13 +34,13 @@ class Edge<VAL, LBL> implements IEdge<VAL, LBL>
 	}
 
 	@Override
-	public INode<VAL, LBL> getParent()
+	public Node<VAL, LBL> getParent()
 	{
 		return parent;
 	}
 
 	@Override
-	public INode<VAL, LBL> getChild()
+	public Node<VAL, LBL> getChild()
 	{
 		return child;
 	}
@@ -43,5 +49,31 @@ class Edge<VAL, LBL> implements IEdge<VAL, LBL>
 	public String toString()
 	{
 		return IEdge.toString(this);
+	}
+
+	// =========================================================================
+
+	/**
+	 * Change the parent of the {@link Edge}.
+	 * 
+	 * @param newParent the new parent node
+	 */
+	void setParent(Node<VAL, LBL> newParent)
+	{
+		parent.removeEdge(this);
+		newParent.addEdge(this);
+		parent = newParent;
+	}
+
+	/**
+	 * Change the child of the {@link Edge}.
+	 * 
+	 * @param newParent the new child node
+	 */
+	void setChild(Node<VAL, LBL> newChild)
+	{
+		child.setParent(null);
+		newChild.setParent(this);
+		child = newChild;
 	}
 }
