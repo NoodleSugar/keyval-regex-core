@@ -89,6 +89,39 @@ public final class Base
 		return ret;
 	}
 
+	public int[] getNum(int i)
+	{
+		return getNum((long) i);
+	}
+
+	public int[] getNum(long i)
+	{
+		int ret[] = new int[base.length];
+		toNum(i, ret);
+		return ret;
+	}
+
+	public void toNum(int i, int ret[])
+	{
+		toNum((long) i, ret);
+	}
+
+	public void toNum(long i, int ret[])
+	{
+		int pos = ret.length - 1;
+		int b   = 1;
+
+		while (pos != 0 && i != 0)
+		{
+			b = base[pos];
+			int n = (int) (i % b);
+
+			i        /= b;
+			ret[pos]  = n;
+			pos--;
+		}
+		Arrays.fill(ret, 0, pos + 1, 0);
+	}
 
 	private long max = -1;
 
