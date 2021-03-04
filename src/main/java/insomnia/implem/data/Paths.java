@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Triple;
 
 import insomnia.data.INode;
@@ -73,12 +73,16 @@ public final class Paths
 
 	static public <VAL, LBL> IPath<VAL, LBL> pathFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
-		return new PathFromPRegexElementBuilder<>(mapValue, mapLabel).create(element);
+		if (!element.isPath())
+			throw new InvalidParameterException(String.format("'%s' does not represent a path", element));
+		return (IPath<VAL, LBL>) Trees.treeFromPRegexElement(element, mapValue, mapLabel);
 	}
 
 	static public <VAL, LBL> List<IPath<VAL, LBL>> pathsFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
-		return IterableUtils.toList(new PathsFromPRegexElementBuilder<>(element, mapValue, mapLabel));
+		if (!element.isPath())
+			throw new InvalidParameterException(String.format("'%s' does not represent paths", element));
+		return CollectionUtils.collect(new TreesFromPRegexElementBuilder<>(element, mapValue, mapLabel), e -> (IPath<VAL, LBL>) e, new ArrayList<>(element.size()));
 	}
 
 	public static IPath<String, String> pathFromString(String p) throws ParseException
