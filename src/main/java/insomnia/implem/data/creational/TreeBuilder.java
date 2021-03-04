@@ -1,7 +1,5 @@
 package insomnia.implem.data.creational;
 
-import java.security.InvalidParameterException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -16,6 +14,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
+import insomnia.data.TreeOp;
+import insomnia.data.creational.AbstractTreeBuilder;
 import insomnia.data.creational.ITreeBuilder;
 
 /**
@@ -25,36 +25,102 @@ import insomnia.data.creational.ITreeBuilder;
  * @param <VAL>
  * @param <LBL>
  */
-public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
+public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 {
 	private Node<VAL, LBL> root, currentNode;
+
+	private int[] coordinates;
 
 	private Set<LBL> vocab;
 
 	public TreeBuilder()
 	{
+		super();
 		reset();
 	}
 
 	public TreeBuilder(ITree<VAL, LBL> tree)
 	{
-		reset();
+		this();
 		tree(tree, tree.getRoot());
 	}
 
-	// =========================================================================
+	// ==========================================================================
 
-	// =========================================================================
+	@Override
+	public ITreeBuilder<VAL, LBL> reset(ITree<VAL, LBL> src)
+	{
+		reset();
+		tree(src);
+		setRooted(src.isRooted());
+		return this;
+	}
 
 	@Override
 	public ITreeBuilder<VAL, LBL> reset()
 	{
-		root  = new Node<>();
-		vocab = new HashSet<>();
+		coordinates = null;
+		root        = new Node<>();
+		vocab       = new HashSet<>();
 
 		currentNode = root;
 		return this;
 	}
+
+	// ==========================================================================
+
+	@Override
+	public Node<VAL, LBL> getCurrentNode()
+	{
+		return currentNode;
+	}
+
+	@Override
+	public int[] getCurrentCoordinates()
+	{
+		if (coordinates != null)
+			return coordinates;
+
+		coordinates = super.getCurrentCoordinates();
+		return coordinates;
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> setCurrentCoordinates(int... coordinates)
+	{
+		this.coordinates = coordinates.clone();
+		currentNode      = (Node<VAL, LBL>) TreeOp.followIndex(this, coordinates);
+		return this;
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> setCurrentNode(INode<VAL, LBL> currentNode)
+	{
+		this.currentNode = (Node<VAL, LBL>) currentNode;
+		coordinates      = null;
+		return this;
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> setValue(VAL val)
+	{
+		currentNode.setValue(val);
+		return this;
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> setTerminal(boolean terminal)
+	{
+		if (currentNode.isTerminal() == terminal)
+			return this;
+		if (terminal && currentNode.getChildren().size() > 0)
+			throw new IllegalStateException("Only a leaf can be terminal");
+
+		currentNode.setTerminal(terminal);
+		return this;
+	}
+
+	// ==========================================================================
 
 	@Override
 	public boolean isEmpty()
@@ -70,7 +136,7 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	}
 
 	@Override
-	public INode<VAL, LBL> getRoot()
+	public Node<VAL, LBL> getRoot()
 	{
 		return root;
 	}
@@ -84,7 +150,7 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	@Override
 	public List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
 	{
-		return ((Node<VAL, LBL>) node).getChildren();
+		return Collections.unmodifiableList(((Node<VAL, LBL>) node).getChildren());
 	}
 
 	@Override
@@ -100,73 +166,58 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 	}
 
 	@Override
-	public ITreeBuilder<VAL, LBL> setCurrentNode(INode<VAL, LBL> currentNode)
+	public ITreeBuilder<VAL, LBL> parent(LBL label, VAL val)
 	{
-		this.currentNode = (Node<VAL, LBL>) currentNode;
+		Optional<IEdge<VAL, LBL>> popt = getParent(getCurrentNode());
+		Node<VAL, LBL>            newNode;
+		newNode = new Node<>();
+
+		if (popt.isPresent())
+		{
+			Edge<VAL, LBL> parent = (Edge<VAL, LBL>) popt.get();
+			parent.setChild(newNode);
+			new Edge<>(label, newNode, getCurrentNode(), vocab);
+		}
+		else
+		{
+			new Edge<>(label, newNode, getRoot(), vocab);
+			// Change the root node
+			boolean isRooted = isRooted();
+			root.setRooted(false);
+			root = newNode;
+			root.setRooted(isRooted);
+		}
 		return this;
 	}
 
 	@Override
-	public ITreeBuilder<VAL, LBL> parent(LBL label)
+	public ITreeBuilder<VAL, LBL> addChild(LBL label, VAL val, boolean isTerminal)
 	{
-		return parent(label, null);
-	}
+		if (currentNode.isTerminal())
+			throw new IllegalStateException("A terminal value can't have a child");
 
-	@Override
-	public ITreeBuilder<VAL, LBL> parent(LBL label, Collection<? super IEdge<VAL, LBL>> addedEdge)
-	{
-		p_parent(label, addedEdge);
+		Node<VAL, LBL> newNode = new Node<>(val);
+		newNode.setTerminal(isTerminal);
+		new Edge<>(label, currentNode, newNode, vocab);
 		return this;
 	}
 
-	public void p_parent(LBL label, Collection<? super IEdge<VAL, LBL>> addedEdge)
+	private Edge<VAL, LBL> p_addChild(Node<VAL, LBL> currentNode, LBL label, VAL val, boolean isTerminal)
 	{
-		Node<VAL, LBL>  newNode = new Node<>();
-		IEdge<VAL, LBL> newEdge = new Edge<>(label, newNode, root, vocab);
-
-		if (null != addedEdge)
-			addedEdge.add(newEdge);
-
-		// Change the root node
-		boolean isRooted = isRooted();
-		setRooted(false);
-		root = newNode;
-		root.setRooted(isRooted);
+		Node<VAL, LBL> newNode = new Node<>();
+		return new Edge<>(label, currentNode, newNode, vocab);
 	}
 
-	@Override
-	public ITreeBuilder<VAL, LBL> child(LBL label)
-	{
-		return child(label, null);
-	}
-
-	@Override
-	public ITreeBuilder<VAL, LBL> child(LBL label, Collection<? super IEdge<VAL, LBL>> addedEdge)
-	{
-		currentNode = child(currentNode, label, addedEdge);
-		return this;
-	}
-
-	private Node<VAL, LBL> child(Node<VAL, LBL> currentNode, LBL label, Collection<? super IEdge<VAL, LBL>> addedEdge)
-	{
-		Node<VAL, LBL>  newNode = new Node<>();
-		IEdge<VAL, LBL> newEdge = new Edge<>(label, currentNode, newNode, vocab);
-
-		if (null != addedEdge)
-			addedEdge.add(newEdge);
-
-		return newNode;
-	}
-
-	@SuppressWarnings("unchecked")
 	@Override
 	public ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree, INode<VAL, LBL> treeRoot)
 	{
+		if (currentNode.isTerminal())
+			throw new IllegalStateException("A terminal value can't have a child");
+
 		Deque<Pair<Node<VAL, LBL>, INode<VAL, LBL>>> nodes = new LinkedList<>();
 		nodes.add(Pair.of(currentNode, treeRoot));
 
 		Pair<Node<VAL, LBL>, INode<VAL, LBL>> pair;
-		List<IEdge<VAL, LBL>>                 addedEdges = new ArrayList<>(1);
 
 		while (null != (pair = nodes.poll()))
 		{
@@ -176,47 +227,12 @@ public final class TreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 			bnode.setTerminal(treeNode.isTerminal());
 			bnode.setValue(treeNode.getValue());
 
-			for (IEdge<VAL, LBL> edge : tree.getChildren(treeRoot))
+			for (IEdge<VAL, LBL> edge : tree.getChildren(treeNode))
 			{
-				child(bnode, edge.getLabel(), addedEdges);
-				nodes.add(Pair.of((Node<VAL, LBL>) addedEdges.get(0), treeNode));
-				nodes.clear();
+				Edge<VAL, LBL> newEdge = p_addChild(bnode, edge.getLabel(), edge.getChild().getValue(), edge.getChild().isTerminal());
+				nodes.add(Pair.of(newEdge.getChild(), edge.getChild()));
 			}
 		}
 		return this;
-	}
-
-	@Override
-	public ITreeBuilder<VAL, LBL> end()
-	{
-		if (currentNode == root)
-			throw new InvalidParameterException();
-
-		currentNode = (Node<VAL, LBL>) currentNode.getParent().getParent();
-		return this;
-	}
-
-	@Override
-	public ITreeBuilder<VAL, LBL> endTerminal(VAL value)
-	{
-		currentNode.setValue(value);
-		end();
-		return this;
-	}
-
-	@Override
-	public ITreeBuilder<VAL, LBL> endTerminal()
-	{
-		currentNode.setTerminal(true);
-		end();
-		return this;
-	}
-
-	// =========================================================================
-
-	@Override
-	public String toString()
-	{
-		return ITree.toString(this);
 	}
 }
