@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.tuple.Triple;
+
 import insomnia.data.AbstractPath;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.IPath;
-import insomnia.data.PathOp;
 import insomnia.data.PathOp.RealLimits;
 import insomnia.lib.Side;
 import insomnia.lib.help.HelpLists;
@@ -92,12 +93,13 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 			getLeaf().isTerminal = true;
 	}
 
-	private Path(boolean isRooted, boolean isTerminal, List<LBL> labels, List<PathNode> nodes)
+	@SuppressWarnings("unchecked")
+	private Path(boolean isRooted, boolean isTerminal, List<LBL> labels, List<? extends INode<VAL, LBL>> nodes)
 	{
 		super();
 		assert (labels.size() == nodes.size() - 1);
 		this.labels = HelpLists.staticList(labels);
-		this.nodes  = HelpLists.staticList(nodes);
+		this.nodes  = HelpLists.staticList((List<PathNode>) nodes);
 	}
 
 	/**
@@ -130,14 +132,13 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 	@Override
 	public Path<VAL, LBL> subPath(int from, int to)
 	{
-		assert (from >= 0 && to >= from);
+		Triple<RealLimits, List<LBL>, List<INode<VAL, LBL>>> infos = IPath.subPathInfos(this, from, to);
 
-		if (from == to)
+		if (null == infos)
 			return new Path<>();
 
-		RealLimits limits = PathOp.realLimits(this, from, to);
-
-		Path<VAL, LBL> ret = new Path<>(limits.isRooted(), limits.isTerminal(), labels.subList(limits.getFrom(), limits.getTo()), nodes.subList(limits.getFrom(), limits.getTo() + 1));
+		RealLimits     limits = infos.getLeft();
+		Path<VAL, LBL> ret    = new Path<VAL, LBL>(limits.isRooted(), limits.isTerminal(), infos.getMiddle(), infos.getRight());
 		ret.realNodeOffset = limits.getFrom();
 		return ret;
 	}

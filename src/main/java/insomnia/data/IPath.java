@@ -2,6 +2,10 @@ package insomnia.data;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Triple;
+
+import insomnia.data.PathOp.RealLimits;
+
 /**
  * An immutable Path.
  * 
@@ -74,4 +78,26 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	 * Rooted or Terminal.
 	 */
 	boolean isFixed();
+
+	// =========================================================================
+
+	/**
+	 * Get the informations needed for an {@link IPath#subPath(int, int)} implementation.
+	 * 
+	 * @param path the path to consider
+	 * @param from the inclusive index
+	 * @param to   the exclusive index
+	 * @return the limits, values and nodes to get to the new path; or null if an empty path must be create
+	 */
+	public static <VAL, LBL> Triple<RealLimits, List<LBL>, List<INode<VAL, LBL>>> subPathInfos(IPath<VAL, LBL> path, int from, int to)
+	{
+		assert (from >= 0 && to >= from);
+
+		if (from == to)
+			return null;
+
+		RealLimits limits = PathOp.realLimits(path, from, to);
+		return Triple.of(limits, path.getLabels().subList(limits.getFrom(), limits.getTo()), path.getNodes().subList(limits.getFrom(), limits.getTo() + 1));
+	}
+
 }
