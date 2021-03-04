@@ -64,7 +64,12 @@ public final class TreeOp
 	 */
 	public static <VAL, LBL> INode<VAL, LBL> followIndex(ITree<VAL, LBL> tree, int... indexes)
 	{
-		INode<VAL, LBL> ret = tree.getRoot();
+		return followIndex(tree, tree.getRoot(), indexes);
+	}
+
+	public static <VAL, LBL> INode<VAL, LBL> followIndex(ITree<VAL, LBL> tree, INode<VAL, LBL> node, int... indexes)
+	{
+		INode<VAL, LBL> ret = node;
 
 		for (int i = 0; i < indexes.length; i++)
 		{
