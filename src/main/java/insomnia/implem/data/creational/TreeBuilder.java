@@ -27,6 +27,8 @@ import insomnia.data.creational.ITreeBuilder;
  */
 public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 {
+	boolean isPath;
+
 	private Node<VAL, LBL> root, currentNode;
 
 	private int[] coordinates;
@@ -42,7 +44,7 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	public TreeBuilder(ITree<VAL, LBL> tree)
 	{
 		this();
-		tree(tree, tree.getRoot());
+		reset(tree);
 	}
 
 	// ==========================================================================
@@ -59,6 +61,7 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	@Override
 	public ITreeBuilder<VAL, LBL> reset()
 	{
+		isPath      = true;
 		coordinates = null;
 		root        = new Node<>();
 		vocab       = new HashSet<>();
@@ -121,6 +124,12 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	}
 
 	// ==========================================================================
+
+	@Override
+	public boolean isPath()
+	{
+		return isPath;
+	}
 
 	@Override
 	public boolean isEmpty()
@@ -190,6 +199,16 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 		return this;
 	}
 
+	/**
+	 * Update the isPath nature of the builder.
+	 * Call this before to add a new edge.
+	 */
+	private void updateIsPath(Node<VAL, LBL> currentNode)
+	{
+		if (isPath && currentNode.getChildren().size() >= 1)
+			isPath = false;
+	}
+
 	@Override
 	public ITreeBuilder<VAL, LBL> addChild(LBL label, VAL val, boolean isTerminal)
 	{
@@ -198,6 +217,7 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 
 		Node<VAL, LBL> newNode = new Node<>(val);
 		newNode.setTerminal(isTerminal);
+		updateIsPath(currentNode);
 		new Edge<>(label, currentNode, newNode, vocab);
 		return this;
 	}
@@ -205,6 +225,7 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	private Edge<VAL, LBL> p_addChild(Node<VAL, LBL> currentNode, LBL label, VAL val, boolean isTerminal)
 	{
 		Node<VAL, LBL> newNode = new Node<>();
+		updateIsPath(currentNode);
 		return new Edge<>(label, currentNode, newNode, vocab);
 	}
 

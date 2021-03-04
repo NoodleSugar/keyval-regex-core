@@ -192,6 +192,12 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 	// =========================================================================
 
 	@Override
+	public boolean isPath()
+	{
+		return true;
+	}
+
+	@Override
 	public PathNode getRoot()
 	{
 		return nodes.get(0);

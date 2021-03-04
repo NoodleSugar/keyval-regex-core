@@ -44,6 +44,9 @@ public final class Trees
 	 */
 	public static <VAL, LBL> ITree<VAL, LBL> create(ITree<VAL, LBL> src)
 	{
+		if (src.isPath())
+			return Paths.create(ITree.asPath(src));
+
 		return new Tree<VAL, LBL>(src);
 	}
 

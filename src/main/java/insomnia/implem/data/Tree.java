@@ -143,6 +143,17 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 		return root;
 	}
 
+	/**
+	 * This Tree class must never be used to be a Path.
+	 * 
+	 * @return always false
+	 */
+	@Override
+	public boolean isPath()
+	{
+		return false;
+	}
+
 	@Override
 	public boolean isEmpty()
 	{

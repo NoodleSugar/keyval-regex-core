@@ -74,6 +74,12 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	}
 
 	@Override
+	public boolean isPath()
+	{
+		return true;
+	}
+
+	@Override
 	public boolean isRooted()
 	{
 		return getRoot().isRooted();

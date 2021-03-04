@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.lang3.tuple.Triple;
 
+import insomnia.data.INode;
 import insomnia.data.IPath;
+import insomnia.data.PathOp.RealLimits;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
@@ -100,6 +103,17 @@ public final class Paths
 	public static <VAL, LBL> IPath<VAL, LBL> create(IPath<VAL, LBL> src)
 	{
 		return new Path<>(src);
+	}
+
+	public static <VAL, LBL> IPath<VAL, LBL> create(IPath<VAL, LBL> src, int from, int to)
+	{
+		Triple<RealLimits, List<LBL>, List<INode<VAL, LBL>>> infos = IPath.subPathInfos(src, from, to);
+
+		if (null == infos)
+			return empty();
+
+		RealLimits limits = infos.getLeft();
+		return create(limits.isRooted(), limits.isTerminal(), infos.getMiddle());
 	}
 
 	/**

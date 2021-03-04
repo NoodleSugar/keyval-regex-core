@@ -61,6 +61,12 @@ public final class SubTreeBuilder<VAL, LBL> implements ISubTreeBuilder<VAL, LBL>
 	}
 
 	@Override
+	public boolean isPath()
+	{
+		return ITree.isPath(this);
+	}
+
+	@Override
 	public boolean isEmpty()
 	{
 		return childrenOf.getOrDefault(root, Collections.emptyList()).isEmpty();
