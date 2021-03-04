@@ -72,9 +72,14 @@ public final class Base
 
 	public int toInt(int num[])
 	{
-		int pos     = base.length - 1;
-		int ret     = num[pos];
-		int accBase = base[pos];
+		return (int) toLong(num);
+	}
+
+	public long toLong(int num[])
+	{
+		int  pos     = base.length - 1;
+		long ret     = num[pos];
+		long accBase = base[pos];
 
 		while (pos-- != 0)
 		{
