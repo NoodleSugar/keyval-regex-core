@@ -15,17 +15,32 @@ public final class BaseNum
 
 	public BaseNum(int num, int... base)
 	{
-		this(num, Base.from(base));
+		this((long) num, base);
 	}
 
 	public BaseNum(int num, Base base)
 	{
+		this((long) num, base);
+	}
+
+	public BaseNum(long num, int... base)
+	{
+		this(num, Base.from(base));
+		setLong(num);
+	}
+
+	public BaseNum(long num, Base base)
+	{
 		this.base = base;
 		this.num  = new int[base.getBase().length];
+		setLong(num);
+	}
+
 	public BaseNum(Base base)
 	{
 		this(0, base);
 	}
+	// ==========================================================================
 
 	public void increment()
 	{
@@ -37,6 +52,21 @@ public final class BaseNum
 		return num;
 	}
 
+	public void setLong(long i)
+	{
+		base.toNum(i, num);
+	}
+
+	public void setInt(int i)
+	{
+		base.toNum(i, num);
+	}
+
+	public long toLong()
+	{
+		return base.toLong(num);
+	}
+
 	public int toInt()
 	{
 		return base.toInt(num);
@@ -46,10 +76,11 @@ public final class BaseNum
 	{
 		return base;
 	}
+	// ==========================================================================
 
 	@Override
 	public String toString()
 	{
-		return new StringBuilder().append(ArrayUtils.toString(num)).append("(").append(toInt()).append(")").toString();
+		return new StringBuilder().append(ArrayUtils.toString(num)).append("(").append(toLong()).append(")").toString();
 	}
 }
