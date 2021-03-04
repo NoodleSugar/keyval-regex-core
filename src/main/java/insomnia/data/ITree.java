@@ -1,10 +1,9 @@
 package insomnia.data;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Representation of an immutable Tree.
@@ -45,23 +44,70 @@ public interface ITree<VAL, LBL>
 	public static <VAL, LBL> String toString(ITree<VAL, LBL> tree)
 	{
 		StringBuilder sb = new StringBuilder();
-		toString(sb, 0, tree, tree.getRoot());
+		toString(sb, new StringBuilder(" "), tree, tree.getRoot());
 		return sb.toString();
 	}
 
-	static final String toString_spaces = " ";
-
-	static <VAL, LBL> void toString(StringBuilder sb, int depth, ITree<VAL, LBL> tree, INode<VAL, LBL> node)
+	static <VAL, LBL> void toString(StringBuilder sb, StringBuilder prefixBuilder, ITree<VAL, LBL> tree, INode<VAL, LBL> node)
 	{
-		String prefixSpaces = StringUtils.repeat(toString_spaces, depth);
+		int prefixSize = prefixBuilder.length();
 
 		sb.append("<").append(node).append(">");
 		sb.append("\n");
 
-		for (IEdge<VAL, LBL> child : tree.getChildren(node))
+		switch (prefixBuilder.charAt(prefixSize - 1))
 		{
-			sb.append(prefixSpaces).append(toString_spaces).append(child.getLabel()).append(" ");
-			toString(sb, depth + 1, tree, child.getChild());
+		case '└':
+			prefixBuilder.setCharAt(prefixSize - 1, ' ');
+			break;
+		case '├':
+			prefixBuilder.setCharAt(prefixSize - 1, '│');
+			break;
 		}
+		Iterator<IEdge<VAL, LBL>> childs = tree.getChildren(node).iterator();
+		IEdge<VAL, LBL>           current;
+
+		if (!childs.hasNext())
+			return;
+
+		current = childs.next();
+		prefixBuilder.append(childs.hasNext() ? "├" : "└");
+		sb.append(prefixBuilder.toString());
+		prettyNode(sb, current);
+		toString(sb, prefixBuilder, tree, current.getChild());
+		prefixBuilder.setLength(prefixSize + 1);
+
+		if (!childs.hasNext())
+			return;
+
+		current = childs.next();
+
+		while (childs.hasNext())
+		{
+			prefixBuilder.setCharAt(prefixSize, '├');
+			sb.append(prefixBuilder.toString());
+			prettyNode(sb, current);
+			toString(sb, prefixBuilder, tree, current.getChild());
+			prefixBuilder.setLength(prefixSize + 1);
+			current = childs.next();
+		}
+		prefixBuilder.setCharAt(prefixSize, '└');
+		sb.append(prefixBuilder.toString());
+		prettyNode(sb, current);
+		toString(sb, prefixBuilder, tree, current.getChild());
+	}
+
+	static <VAL, LBL> void prettyNode(StringBuilder sb, IEdge<VAL, LBL> edge)
+	{
+		sb.append(edge.getLabel());
+		VAL value = edge.getChild().getValue();
+
+		if (null != value)
+			sb.append('=').append(value);
+
+		if (edge.getChild().isTerminal())
+			sb.append("$");
+
+		sb.append(" ");
 	}
 }
