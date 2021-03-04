@@ -1,5 +1,6 @@
 package insomnia.data;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Triple;
@@ -100,4 +101,56 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 		return Triple.of(limits, path.getLabels().subList(limits.getFrom(), limits.getTo()), path.getNodes().subList(limits.getFrom(), limits.getTo() + 1));
 	}
 
+	// =========================================================================
+	static boolean nodeToString(StringBuilder sb, INode<?, ?> node)
+	{
+		Object value = node.getValue();
+
+		if (value == null)
+			return false;
+
+		sb.append("=").append(value);
+		return true;
+	}
+
+	public static String toString(IPath<?, ?> path)
+	{
+		StringBuilder sb = new StringBuilder();
+		nodeToString(sb, path.getRoot());
+
+		if (0 < sb.length())
+		{
+			sb.insert(0, "(");
+			sb.append(")");
+		}
+		sb.insert(0, path.getRoot().isRooted() ? "[R]" : "");
+
+		if (0 < sb.length() && path.getLabels().size() > 0)
+			sb.append(".");
+
+		if (path.getLabels().size() > 0)
+		{
+			Iterator<?> nodes = path.getNodes().iterator();
+			nodes.next();
+
+			for (Object label : path.getLabels())
+			{
+				int builderLastLen = sb.length();
+
+				if (null != label)
+					sb.append(label);
+
+				if (nodeToString(sb, (INode<?, ?>) nodes.next()))
+					sb.insert(builderLastLen, "(").append(")");
+
+				sb.append(".");
+			}
+			sb.deleteCharAt(sb.length() - 1);
+		}
+
+		if (path.getLeaf().isTerminal())
+			sb.append("[T]");
+
+		return sb.toString();
+	}
 }
