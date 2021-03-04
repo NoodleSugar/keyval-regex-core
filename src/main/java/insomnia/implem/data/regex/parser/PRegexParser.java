@@ -507,7 +507,7 @@ public final class PRegexParser
 			{
 				Quantifier oldQ = element.getQuantifier();
 				element = (PRegexElement) element.getElements().get(0);
-				element.setQuantifier(Quantifier.multiplication(oldQ, element.getQuantifier()));
+				element.setQuantifier(Quantifier.mul(oldQ, element.getQuantifier()));
 			}
 		}
 		return element;

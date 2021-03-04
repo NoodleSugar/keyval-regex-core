@@ -5,13 +5,46 @@ import java.security.InvalidParameterException;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+/**
+ * An element {@link Quantifier} store its repetition informations as a lower (inf) and an upper (sup) bound.
+ * <br>
+ * The bound values may represent infinite repetitions if set to {@link Quantifier#infinite}.
+ * <br>
+ * A {@link Quantifier} guarantee that {@code (0 <= inf && inf <= sup)} if no infinite values are involved, if not then {@code (sup == Quantifier#infinite && (0 <= inf || inf == sup))}.
+ * 
+ * @author zuri noodle
+ * @author zuri
+ */
 public final class Quantifier
 {
-	private final int inf;
-	private final int sup;
+	/**
+	 * The value for the infinite semantic
+	 */
+	public static final long infinite = -1;
+	private final int        inf;
+	private final int        sup;
 
 	private static Map<Quantifier, WeakReference<Quantifier>> map = new WeakHashMap<>();
 
+	// ==========================================================================
+
+	private Quantifier(int inf, int sup) throws InvalidParameterException
+	{
+		if (!(0 <= inf && (sup == infinite || inf <= sup) || (inf == sup && sup == infinite)))
+			throw new IllegalArgumentException(String.format("Invalid quantifier {%d,%d}", inf, sup));
+		this.inf = inf;
+		this.sup = sup;
+	}
+
+	// ==========================================================================
+
+	/**
+	 * Create a new {@link Quantifier}.
+	 * 
+	 * @param inf lower bound
+	 * @param sup upper bound
+	 * @return a quantifier with the requested bounds
+	 */
 	public static Quantifier from(int inf, int sup)
 	{
 		Quantifier                tmp = new Quantifier(inf, sup);
@@ -23,31 +56,16 @@ public final class Quantifier
 		map.put(tmp, new WeakReference<>(tmp));
 		return tmp;
 	}
+	// ==========================================================================
+
+	public static boolean isInfinite(long val)
+	{
+		return val == infinite;
 	}
 
-	public static Quantifier multiplication(Quantifier q1, Quantifier q2)
+	public static boolean isInfinite(int val)
 	{
-		int inf = q1.inf * q2.inf;
-		int sup;
-		if (q1.sup == -1 || q2.sup == -1)
-			sup = -1;
-		else
-			sup = q1.sup * q2.sup;
-
-		return Quantifier.from(inf, sup);
-	}
-
-	/**
-	 * On interdit le quantifier [0, 0]
-	 * Par convention infini = -1
-	 * Bien entendu il faut inf <= sup
-	 */
-	private Quantifier(int inf, int sup) throws InvalidParameterException
-	{
-		if (inf < 0 || sup < -1 || sup < inf)
-			throw new IllegalArgumentException(String.format("Invalid quantifier {%d,%d}", inf, sup));
-		this.inf = inf;
-		this.sup = sup;
+		return val == infinite;
 	}
 
 	public int getInf()
@@ -59,6 +77,52 @@ public final class Quantifier
 	{
 		return sup;
 	}
+	// ==========================================================================
+
+	/**
+	 * Make the sum of two quantifier.
+	 * <br>
+	 * Note that an infinite value summed always result in an infinite value.
+	 * 
+	 * @param q1 first quantifier
+	 * @param q2 second quantifier
+	 * @return a quantifier where the bounds of the two previous ones are summed
+	 */
+	public static Quantifier add(Quantifier q1, Quantifier q2)
+	{
+		int inf = q1.inf + q2.inf;
+		int sup;
+
+		if (isInfinite(q1.sup) || isInfinite(q2.sup))
+			sup = (int) infinite;
+		else
+			sup = q1.sup + q2.sup;
+
+		return Quantifier.from(inf, sup);
+	}
+
+	/**
+	 * Make the product of two quantifier.
+	 * <br>
+	 * Note that an infinite value multiplication always result in an infinite value.
+	 * 
+	 * @param q1 first quantifier
+	 * @param q2 second quantifier
+	 * @return a quantifier where the bounds of the two previous ones are multiplied
+	 */
+	public static Quantifier mul(Quantifier q1, Quantifier q2)
+	{
+		int inf = q1.inf * q2.inf;
+		int sup;
+
+		if (isInfinite(q1.sup) || isInfinite(q2.sup))
+			sup = (int) infinite;
+		else
+			sup = q1.sup * q2.sup;
+
+		return Quantifier.from(inf, sup);
+	}
+	// ==========================================================================
 
 	@Override
 	public boolean equals(Object obj)
@@ -81,11 +145,9 @@ public final class Quantifier
 	@Override
 	public String toString()
 	{
-		if (inf == 1 && sup == 1)
-			return "";
-		if (inf == 0 && sup == -1)
+		if (inf == 0 && isInfinite(sup))
 			return "*";
-		if (inf == 1 && sup == -1)
+		if (inf == 1 && isInfinite(sup))
 			return "+";
 		if (inf == 0 && sup == 1)
 			return "?";
