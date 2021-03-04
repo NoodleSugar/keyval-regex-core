@@ -136,7 +136,7 @@ public final class HelpLists
 			@Override
 			public boolean hasNext()
 			{
-				if (i >= base.max())
+				if (i >= base.size())
 					return false;
 
 				i++;

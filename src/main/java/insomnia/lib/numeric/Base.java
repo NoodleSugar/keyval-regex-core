@@ -84,9 +84,15 @@ public final class Base
 		return ret;
 	}
 
-	int max = -1;
 
-	public int max()
+	private long max = -1;
+
+	public int size()
+	{
+		return (int) longSize();
+	}
+
+	public long longSize()
 	{
 		if (max != -1)
 			return max;
@@ -95,7 +101,6 @@ public final class Base
 			max = 0;
 			return max;
 		}
-
 		int pos = base.length - 1;
 		max = base[pos];
 
