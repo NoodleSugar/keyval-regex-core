@@ -52,6 +52,14 @@ public interface ITree<VAL, LBL>
 
 	// =========================================================================
 
+	public static <VAL, LBL> String treeOrPathToString(ITree<VAL, LBL> tree)
+	{
+		if (tree.isPath())
+			return IPath.toString(asPath(tree));
+
+		return toString(tree);
+	}
+
 	public static <VAL, LBL> String toString(ITree<VAL, LBL> tree)
 	{
 		StringBuilder sb = new StringBuilder();

@@ -182,6 +182,6 @@ public final class SubTreeBuilder<VAL, LBL> implements ISubTreeBuilder<VAL, LBL>
 	@Override
 	public String toString()
 	{
-		return ITree.toString(this);
+		return ITree.treeOrPathToString(this);
 	}
 }

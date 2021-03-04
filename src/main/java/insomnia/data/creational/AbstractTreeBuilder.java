@@ -142,6 +142,6 @@ public abstract class AbstractTreeBuilder<VAL, LBL> implements ITreeBuilder<VAL,
 	@Override
 	public String toString()
 	{
-		return ITree.toString(this);
+		return ITree.treeOrPathToString(this);
 	}
 }
