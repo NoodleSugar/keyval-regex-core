@@ -1,15 +1,22 @@
 package insomnia.lib.numeric;
 
 import java.util.Arrays;
+import java.util.List;
 
 public final class Base
 {
 	private int base[];
 
-	public Base(int... base)
+	private Base(int... base)
 	{
 		this.base = base;
 	}
+
+	private Base(List<? extends Number> base)
+	{
+		this.base = base.stream().mapToInt(Number::intValue).toArray();
+	}
+
 	// ==========================================================================
 
 	/**
@@ -24,6 +31,16 @@ public final class Base
 		int[] abase = new int[length];
 		Arrays.fill(abase, base);
 		return new Base(abase);
+	}
+
+	public static Base from(int... base)
+	{
+		return new Base(base);
+	}
+
+	public static Base from(List<? extends Number> base)
+	{
+		return new Base(base);
 	}
 
 	// ==========================================================================

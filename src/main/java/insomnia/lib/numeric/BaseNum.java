@@ -15,13 +15,16 @@ public final class BaseNum
 
 	public BaseNum(int num, int... base)
 	{
-		this(num, new Base(base));
+		this(num, Base.from(base));
 	}
 
 	public BaseNum(int num, Base base)
 	{
 		this.base = base;
 		this.num  = new int[base.getBase().length];
+	public BaseNum(Base base)
+	{
+		this(0, base);
 	}
 
 	public void increment()
