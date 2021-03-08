@@ -25,13 +25,25 @@ import insomnia.implem.fsa.fta.edgeCondition.FTAEdgeConditions;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
 
 // TODO: change the name
+/**
+ * Builder of a BUFTA.
+ * 
+ * @author zuri
+ * @param <VAL> type of node value
+ * @param <LBL> type of edge label
+ */
 public final class BUBuilder<VAL, LBL>
 {
-	Collection<IFTAEdge<VAL, LBL>> ftaEdges;
-	GraphChunk<VAL, LBL>           gchunk;
+	private Collection<IFTAEdge<VAL, LBL>> ftaEdges;
+	private GraphChunk<VAL, LBL>           gchunk;
 
 	// =========================================================================
 
+	/**
+	 * Create a builder that can build a BUFTA representing a tree.
+	 * 
+	 * @param tree the tree to represent
+	 */
 	public BUBuilder(ITree<VAL, LBL> tree)
 	{
 		this.gchunk   = new GraphChunk<>();
@@ -41,11 +53,18 @@ public final class BUBuilder<VAL, LBL>
 
 	// =========================================================================
 
+	/**
+	 * The concrete builded {@link IBUFTA} implementation.
+	 * 
+	 * @author zuri
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 */
 	private static class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 	{
-		IGFPA<VAL, LBL> gfpa;
+		private IGFPA<VAL, LBL> gfpa;
 
-		Collection<IFTAEdge<VAL, LBL>> ftaEdges;
+		private Collection<IFTAEdge<VAL, LBL>> ftaEdges;
 
 		BUFTA(BUBuilder<VAL, LBL> builder)
 		{
@@ -68,7 +87,7 @@ public final class BUBuilder<VAL, LBL>
 		@Override
 		public Collection<IFTAEdge<VAL, LBL>> getHyperEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates)
 		{
-			//TODO: better approach
+			// TODO: better approach
 			return ftaEdges;
 		}
 
@@ -85,7 +104,7 @@ public final class BUBuilder<VAL, LBL>
 		}
 	}
 
-	// =========================================================================
+	// =========================================================================a
 
 	private IFSAState<VAL, LBL> newStateFrom(INode<VAL, LBL> node)
 	{
@@ -97,7 +116,6 @@ public final class BUBuilder<VAL, LBL>
 
 	private void buildFromTree(ITree<VAL, LBL> tree)
 	{
-		// TODO: encode root/terminal cases
 		Map<INode<VAL, LBL>, IFSAState<VAL, LBL>> stateOf = new HashMap<>();
 
 		ListIterator<INode<VAL, LBL>> nodes = TreeOp.bottomUpOrder(tree).listIterator();
@@ -161,53 +179,15 @@ public final class BUBuilder<VAL, LBL>
 			gchunk.setRooted(root, true);
 	}
 
-	private void addEdge( //
-		IFSAState<VAL, LBL> buState, //
-		ITree<VAL, LBL> tree, IEdge<VAL, LBL> tEdge)
-	{
-		IFSAState<VAL, LBL> newState = gchunk.createState(tEdge.getChild().getValue());
-		gchunk.addEdge(newState, buState, FSALabelConditions.createEq(tEdge.getLabel()));
-		buildFromTree_recursive(newState, tree, tEdge.getChild());
-	}
-
-	private void buildFromTree_recursive( //
-		IFSAState<VAL, LBL> buState, //
-		ITree<VAL, LBL> tree, INode<VAL, LBL> tNode)
-	{
-		if (tNode.isRooted())
-			gchunk.setRooted(buState, true);
-		if (tNode.isTerminal())
-			gchunk.setTerminal(buState, true);
-
-		Collection<IEdge<VAL, LBL>> tEdges = tree.getChildren(tNode);
-
-		if (tEdges.size() == 0)
-		{
-			gchunk.setInitial(buState, true);
-			return;
-		}
-		else if (tEdges.size() == 1)
-		{
-			IEdge<VAL, LBL> tEdge = tEdges.iterator().next();
-			addEdge(buState, tree, tEdge);
-			return;
-		}
-		List<IFSAState<VAL, LBL>> parents = new ArrayList<IFSAState<VAL, LBL>>(tEdges.size());
-
-		for (IEdge<VAL, LBL> tEdge : tree.getChildren(tNode))
-		{
-			IFSAState<VAL, LBL> silentState = gchunk.createState();
-			addEdge(silentState, tree, tEdge);
-			parents.add(silentState);
-		}
-		IFTAEdge<VAL, LBL> newEdge = new FTAEdge<>(parents, buState, FTAEdgeConditions.createInclusive(parents));
-		ftaEdges.add(newEdge);
-	}
-
+	/**
+	 * @return the BUFTA of the initial tree
+	 */
 	public IBUFTA<VAL, LBL> create()
 	{
 		return new BUFTA<>(this);
 	}
+
+	// ==========================================================================
 
 	@Override
 	public String toString()

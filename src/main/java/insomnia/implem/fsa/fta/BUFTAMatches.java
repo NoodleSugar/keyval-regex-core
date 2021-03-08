@@ -9,10 +9,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableUtils;
 
 import insomnia.data.IEdge;
 import insomnia.data.INode;
@@ -37,6 +39,8 @@ class BUFTAMatches<VAL, LBL>
 		this.element   = element;
 	}
 
+	// ==========================================================================
+
 	public Collection<IFSAState<VAL, LBL>> nextValidStates()
 	{
 		Collection<IFSAState<VAL, LBL>> states = nextValidStates_sub();
@@ -47,13 +51,34 @@ class BUFTAMatches<VAL, LBL>
 		return states;
 	}
 
+	// ==========================================================================
+
+	/**
+	 * Get the final states from states that must persist as next states.
+	 * 
+	 * @param states current valid states
+	 */
+	Collection<IFSAState<VAL, LBL>> getPersistantFinal(Collection<IFSAState<VAL, LBL>> states)
+	{
+		return CollectionUtils.select(states, s -> gfpa.isFinal(s) && !gfpa.isRooted(s));
+	}
+
+	private boolean internalCheckFinal(IFSAState<VAL, LBL> state)
+	{
+		return gfpa.isFinal(state) && !gfpa.isRooted(state) && !gfpa.isTerminal(state);
+	}
+
+	private IFSAState<VAL, LBL> internalCheckFinal(Collection<IFSAState<VAL, LBL>> states)
+	{
+		return IterableUtils.find(states, this::internalCheckFinal);
+	}
+
 	/**
 	 * Process the leaves of the element.
 	 * 
-	 * @param nodeStatesMap map a node with all its valid states
 	 * @return the remaining nodes to process in the order of processing
 	 */
-	private Iterator<INode<VAL, LBL>> processLeaves(Map<INode<VAL, LBL>, Collection<IFSAState<VAL, LBL>>> nodeStatesMap)
+	static <VAL, LBL> Iterator<INode<VAL, LBL>> processLeaves(IGFPA<VAL, LBL> gfpa, ITree<VAL, LBL> element, BiConsumer<INode<VAL, LBL>, List<IFSAState<VAL, LBL>>> consume)
 	{
 		ListIterator<INode<VAL, LBL>> bottomUpNodes = TreeOp.bottomUpOrder(element).listIterator();
 
@@ -72,14 +97,14 @@ class BUFTAMatches<VAL, LBL>
 				stream = stream.filter(state -> !gfpa.isTerminal(state));
 
 			VAL value = node.getValue();
-			stream = stream.filter(state -> state.getValueCondition().test(value));
+			stream = stream.filter(state -> GFPAOp.testValue(state.getValueCondition(), value));
 
 			List<IFSAState<VAL, LBL>> states = stream.collect(Collectors.toList());
 
 			if (states.isEmpty())
-				return Collections.<INode<VAL, LBL>>emptyList().iterator();
+				states = Collections.emptyList();
 
-			nodeStatesMap.put(node, states);
+			consume.accept(node, states);
 		}
 		return bottomUpNodes;
 	}
@@ -89,7 +114,7 @@ class BUFTAMatches<VAL, LBL>
 		Map<INode<VAL, LBL>, Collection<IFSAState<VAL, LBL>>> nodeStatesMap   = new HashMap<>();
 		List<Collection<IFSAState<VAL, LBL>>>                 childsSubStates = new ArrayList<>();
 
-		Iterator<INode<VAL, LBL>> nodes = processLeaves(nodeStatesMap);
+		Iterator<INode<VAL, LBL>> nodes = processLeaves(gfpa, element, nodeStatesMap::put);
 
 		while (nodes.hasNext())
 		{
@@ -102,31 +127,32 @@ class BUFTAMatches<VAL, LBL>
 				INode<VAL, LBL>                 childNode   = childEdge.getChild();
 				Collection<IFSAState<VAL, LBL>> childStates = nodeStatesMap.get(childNode);
 				Collection<IFSAState<VAL, LBL>> newStates   = GFPAOp.getNextValidStates(gfpa, childStates, childEdge.getLabel(), childEdge.getChild().getValue());
+				newStates.addAll(getPersistantFinal(childStates));
+				childsSubStates.add(newStates);
 
-				childsSubStates.add(CollectionUtils.union(IBUFTA.getInitials(automaton, childNode), newStates));
+				// Is there a final state in the reached new states ?
+				IFSAState<VAL, LBL> oneFinal = internalCheckFinal(newStates);
+				if (null != oneFinal)
+					return Collections.singleton(oneFinal);
+
 				// No need of that node anymore
 				nodeStatesMap.remove(childNode);
 			}
+			Collection<IFSAState<VAL, LBL>> newStates;
+
 			// If one child node: nothing more to do by construction because no hyper edge exists.
 			if (edgeChilds.size() <= 1)
-			{
-				Collection<IFSAState<VAL, LBL>> newStates = childsSubStates.get(0);
-
-				for (IFSAState<VAL, LBL> newState : newStates)
-				{
-					if (gfpa.isFinal(newState))
-					{
-						if (!gfpa.isRooted(newState))
-							return Collections.singleton(newState);
-					}
-				}
-				nodeStatesMap.put(node, newStates);
-			}
+				newStates = childsSubStates.get(0);
 			else
 			{
+				newStates = new HashSet<>();
+
+				// Each child states must belong to the node states
+				for (Collection<IFSAState<VAL, LBL>> subStates : childsSubStates)
+					newStates.addAll(subStates);
+
 				// Check hyper transitions
-				Collection<IFTAEdge<VAL, LBL>>  hEdges    = automaton.getHyperEdges(childsSubStates);
-				Collection<IFSAState<VAL, LBL>> newStates = new HashSet<>(IBUFTA.getInitials(automaton, node));
+				Collection<IFTAEdge<VAL, LBL>> hEdges = automaton.getHyperEdges(childsSubStates);
 
 				for (IFTAEdge<VAL, LBL> hEdge : hEdges)
 				{
@@ -134,18 +160,15 @@ class BUFTAMatches<VAL, LBL>
 					{
 						IFSAState<VAL, LBL> newState = hEdge.getChild();
 
-						if (gfpa.isFinal(newState))
-						{
-							if (gfpa.isRooted(newState) && node != element.getRoot())
-								continue;
-							if (!gfpa.isRooted(newState))
-								return Collections.singleton(newState);
-						}
+						if (internalCheckFinal(newState))
+							return Collections.singleton(newState);
+
 						newStates.add(newState);
 					}
 				}
-				nodeStatesMap.put(node, newStates);
 			}
+			Collection<IFSAState<VAL, LBL>> initials = IBUFTA.getInitials(automaton, node);
+			nodeStatesMap.put(node, CollectionUtils.union(newStates, initials));
 			childsSubStates.clear();
 		}
 		return nodeStatesMap.get(element.getRoot());

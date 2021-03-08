@@ -21,7 +21,6 @@ import insomnia.lib.help.HelpLists;
 
 public class FTAEdgeConditions
 {
-
 	private static class FTAEdgeCondition<VAL, LBL> implements IFTAEdgeCondition<VAL, LBL>
 	{
 		private List<IFSAState<VAL, LBL>> parentStates;
@@ -31,29 +30,89 @@ public class FTAEdgeConditions
 			this.parentStates = states;
 		}
 
+		/**
+		 * Avoid states from {@code multiStates} that are not in {@code this.parentStates}
+		 */
 		private List<Collection<IFSAState<VAL, LBL>>> cleanBadStates(List<Collection<IFSAState<VAL, LBL>>> multiStates)
 		{
 			return multiStates = multiStates.stream() //
 				.map(states -> CollectionUtils.select(states, s -> parentStates.contains(s))) //
-				.filter(c -> !c.isEmpty()).collect(Collectors.toList());
+				.filter(c -> !c.isEmpty()) //
+				.collect(Collectors.toList());
+		}
+
+		/**
+		 * @param multiStates_out (out value) the multistates to clean
+		 * @return delete positions
+		 */
+		private List<Integer> orderedDeleteBadStates(List<Collection<IFSAState<VAL, LBL>>> multiStates_out)
+		{
+			int           msize      = multiStates_out.size();
+			List<Integer> deletedPos = new ArrayList<>(msize);
+
+			List<Collection<IFSAState<VAL, LBL>>> tmpMultiStates = multiStates_out.stream() //
+				.map(states -> CollectionUtils.select(states, s -> parentStates.contains(s))) //
+				.collect(Collectors.toList());
+			multiStates_out.clear();
+
+			// Clean multistates but remain all their initial positions
+			for (int i = 0; i < msize; i++)
+			{
+				if (tmpMultiStates.get(i).isEmpty())
+					deletedPos.add(i);
+				else
+					multiStates_out.add(tmpMultiStates.get(i));
+			}
+			return deletedPos;
+		}
+
+		private void fillDeletedPositions(Collection<List<IFSAState<VAL, LBL>>> ret, List<Integer> deletedPos)
+		{
+			for (List<IFSAState<VAL, LBL>> r : ret)
+			{
+				for (int i : deletedPos)
+					r.add(i, null);
+			}
 		}
 
 		@Override
 		public Collection<List<IFSAState<VAL, LBL>>> validStates(List<IFSAState<VAL, LBL>> states)
 		{
-			if (states.size() < parentStates.size())
+			return validStatesND(states.stream().map(s -> Collections.singleton(s)).collect(Collectors.toList()));
+		}
+
+		private Collection<List<IFSAState<VAL, LBL>>> p_validStates(List<IFSAState<VAL, LBL>> states)
+		{
+			int parentSize        = parentStates.size();
+			int initialStatesSize = states.size();
+
+			Collection<List<IFSAState<VAL, LBL>>>         ret            = new ArrayList<>();
+			Map<IFSAState<VAL, LBL>, Collection<Integer>> statePositions = validStates_solve(states);
+
+			if (statePositions.isEmpty())
 				return Collections.emptyList();
 
-			validStates_solve(states);
-			return null;
+			List<Pair<IFSAState<VAL, LBL>, Collection<Integer>>> entries = new ArrayList<>(statePositions.size());
+
+			for (IFSAState<VAL, LBL> state : states)
+				entries.add(Pair.of(state, statePositions.get(state)));
+
+			for (List<Integer> indexes : new IteratorIterable<>(HelpLists.cartesianProduct(CollectionUtils.collect(entries, e -> e.getValue()))))
+			{
+				List<IFSAState<VAL, LBL>> validStates = new ArrayList<>(parentSize);
+
+				for (int i = 0; i < initialStatesSize; i++)
+					validStates.add(indexes.contains(i) ? states.get(i) : null);
+				ret.add(validStates);
+			}
+			return ret;
 		}
 
 		@Override
 		public Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<Collection<IFSAState<VAL, LBL>>> multiStates)
 		{
-			int parentSize             = parentStates.size();
-			int initialMultiStatesSize = multiStates.size();
-			multiStates = cleanBadStates(multiStates);
+			int           parentSize = parentStates.size();
+			List<Integer> deletedPos = orderedDeleteBadStates(multiStates);
 
 			if (multiStates.size() < parentSize)
 				return Collections.emptyList();
@@ -61,28 +120,11 @@ public class FTAEdgeConditions
 			Collection<List<IFSAState<VAL, LBL>>> ret = new ArrayList<>();
 
 			for (List<IFSAState<VAL, LBL>> states : new IteratorIterable<>(HelpLists.cartesianProduct(multiStates)))
-			{
-				Map<IFSAState<VAL, LBL>, Collection<Integer>> statePositions = validStates_solve(states);
-
-				if (statePositions.isEmpty())
-					continue;
-
-				List<Pair<IFSAState<VAL, LBL>, Collection<Integer>>> entries = new ArrayList<>(statePositions.size());
-
-				for (IFSAState<VAL, LBL> state : states)
-					entries.add(Pair.of(state, statePositions.get(state)));
-
-				for (List<Integer> indexes : new IteratorIterable<>(HelpLists.cartesianProduct(CollectionUtils.collect(entries, e -> e.getValue()))))
-				{
-					List<IFSAState<VAL, LBL>> validStates = new ArrayList<>(parentSize);
-
-					for (int i = 0; i < initialMultiStatesSize; i++)
-						validStates.add(indexes.contains(i) ? states.get(i) : null);
-					ret.add(validStates);
-				}
-			}
+				ret.addAll(p_validStates(states));
 			if (ret.isEmpty())
 				return Collections.emptyList();
+
+			fillDeletedPositions(ret, deletedPos);
 			return new ArrayList<>(ret);
 		}
 

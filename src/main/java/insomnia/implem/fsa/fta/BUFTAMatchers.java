@@ -40,7 +40,7 @@ public final class BUFTAMatchers
 			if (null != matches)
 				return matches;
 
-			return !Collections.disjoint(new BUFTAMatches<>(automaton, element).nextValidStates(), automaton.getGFPA().getFinalStates());
+			return matches = !Collections.disjoint(new BUFTAMatches<>(automaton, element).nextValidStates(), automaton.getGFPA().getFinalStates());
 		}
 
 		@Override

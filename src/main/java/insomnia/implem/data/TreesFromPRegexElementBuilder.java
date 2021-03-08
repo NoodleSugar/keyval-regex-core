@@ -156,6 +156,9 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 				IPRegexElement e        = data.element;
 				int            nbRepeat = data.nbRepeat;
 
+				if (nbRepeat == 0)
+					return;
+
 				switch (e.getType())
 				{
 				case EMPTY:
@@ -290,8 +293,17 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 
 			private boolean forward(Data data)
 			{
+				if (data.nbRepeat == 0)
+				{
+					if (data.nbRepeat >= 1)
+						return false;
+					data.nbRepeat++;
+					return true;
+				}
 				switch (data.element.getType())
 				{
+				case EMPTY:
+					return false;
 				case KEY:
 					if (data.nbRepeat == data.element.getQuantifier().getSup())
 						return false;
@@ -333,8 +345,6 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 					else
 						return forwardOneSeqData(data);
 				}
-				case EMPTY:
-					return false;
 				default:
 					throw new UnsupportedOperationException(data.element.getType().toString());
 				}

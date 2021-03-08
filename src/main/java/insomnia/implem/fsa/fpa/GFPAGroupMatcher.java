@@ -62,6 +62,15 @@ class GFPAGroupMatcher<VAL, LBL>
 
 	// =========================================================================
 
+	/**
+	 * Create a matcher for an automaton and an element to test.
+	 * 
+	 * @param <VAL>     type of node value
+	 * @param <LBL>     type of edge label
+	 * @param automaton the automaton
+	 * @param element   the element to search in for groups
+	 * @return a group matcher for {@code element} using {@code automaton}
+	 */
 	public static <VAL, LBL> GFPAGroupMatcher<VAL, LBL> create(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
 	{
 		return new GFPAGroupMatcher<>(automaton, element);
@@ -118,7 +127,6 @@ class GFPAGroupMatcher<VAL, LBL>
 		}
 		else if (element.isRooted())
 			end++;
-
 		currentResults.add(new Result<>(state, Pair.of(start, end)));
 	}
 

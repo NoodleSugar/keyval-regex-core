@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import insomnia.data.INode;
 import insomnia.fsa.IFSAState;
+import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
 
 /**
@@ -36,8 +37,8 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 		Collection<IFSAState<VAL, LBL>> states = new ArrayList<>(automaton.getGFPA().getInitialStates());
 
 		Stream<IFSAState<VAL, LBL>> stream = states.stream().filter( //
-			s -> !automaton.getGFPA().isRooted(s) //
-				&& (null == node.getValue() || s.getValueCondition().test(node.getValue())) //
+			s -> !automaton.getGFPA().isTerminal(s) //
+				&& (GFPAOp.testValue(s.getValueCondition(), node.getValue())) //
 		);
 		return stream.collect(Collectors.toList());
 	}
