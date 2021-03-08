@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import insomnia.data.IEdge;
 import insomnia.data.INode;
@@ -164,6 +165,30 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 	public boolean isRooted()
 	{
 		return root.isRooted();
+	}
+
+	@Override
+	public List<INode<VAL, LBL>> getNodes()
+	{
+		return getNodes(getRoot());
+	}
+
+	@Override
+	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
+	{
+		return ITree.getNodes(this, node);
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges()
+	{
+		return childrenOf.values().stream().flatMap(l -> l.stream()).collect(Collectors.toList());
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
+	{
+		return ITree.getEdges(this, node);
 	}
 
 	@Override

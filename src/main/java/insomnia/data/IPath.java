@@ -34,7 +34,26 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	/**
 	 * @return nodes in order
 	 */
+	@Override
+	List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node);
+
+	/**
+	 * @return nodes in order
+	 */
+	@Override
 	List<INode<VAL, LBL>> getNodes();
+
+	/**
+	 * @return edges in order
+	 */
+	@Override
+	List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node);
+
+	/**
+	 * @return edges in order
+	 */
+	@Override
+	List<IEdge<VAL, LBL>> getEdges();
 
 	/**
 	 * @return values in order

@@ -222,6 +222,31 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 	}
 
 	@Override
+	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
+	{
+		assert (node instanceof Path.PathNode);
+		PathNode a = (PathNode) node;
+		return HelpLists.staticList(nodes.subList(a.pos - realNodeOffset, nodes.size()));
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
+	{
+		assert (node instanceof Path.PathNode);
+		List<IEdge<VAL, LBL>> ret = new ArrayList<>();
+		PathNode              a, b;
+		a = (PathNode) node;
+
+		for (int i = a.pos - realNodeOffset + 1; i < nodes.size(); i++)
+		{
+			b = nodes.get(i);
+			ret.add(Edges.create(a, b, getLabels().get(i - 1)));
+			a = b;
+		}
+		return ret;
+	}
+
+	@Override
 	public List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
 	{
 		assert (node instanceof Path.PathNode);

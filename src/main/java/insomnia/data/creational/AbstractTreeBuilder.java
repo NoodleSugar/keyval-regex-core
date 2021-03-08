@@ -13,6 +13,29 @@ import insomnia.data.TreeOp;
 
 public abstract class AbstractTreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 {
+	@Override
+	public List<INode<VAL, LBL>> getNodes()
+	{
+		return ITree.getNodes(this);
+	}
+
+	@Override
+	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
+	{
+		return ITree.getNodes(this, node);
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges()
+	{
+		return ITree.getEdges(this);
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
+	{
+		return ITree.getEdges(this, node);
+	}
 
 	// ==========================================================================
 

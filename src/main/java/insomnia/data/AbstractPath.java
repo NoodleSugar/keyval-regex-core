@@ -27,6 +27,30 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	}
 
 	@Override
+	public List<INode<VAL, LBL>> getNodes()
+	{
+		return getNodes(getRoot());
+	}
+
+	@Override
+	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
+	{
+		return ITree.getNodes(this, node);
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges()
+	{
+		return getEdges(getRoot());
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
+	{
+		return ITree.getEdges(this, node);
+	}
+
+	@Override
 	public IEdge<VAL, LBL> getChild(INode<VAL, LBL> node)
 	{
 		List<? extends IEdge<VAL, LBL>> childs = getChildren(node);
