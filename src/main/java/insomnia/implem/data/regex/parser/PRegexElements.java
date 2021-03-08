@@ -43,6 +43,9 @@ public final class PRegexElements
 			prod *= size;
 			ret  += prod;
 		}
+
+		if (quantifier.getInf() == 0)
+			ret++;
 		return ret;
 	}
 
@@ -61,6 +64,9 @@ public final class PRegexElements
 		@Override
 		public long longSize()
 		{
+			if (Quantifier.isInfinite(quantifier.getSup()))
+				return -1;
+
 			long ret = 0;
 
 			for (int i = quantifier.getInf(), c = quantifier.getSup(); i <= c; i++)
@@ -178,6 +184,9 @@ public final class PRegexElements
 		@Override
 		public long longSize()
 		{
+			if (quantifier.getInf() == 0)
+				return 2;
+
 			return 1;
 		}
 
