@@ -169,164 +169,184 @@ public class TestAutomaton
 
 	// =========================================================================
 
+	public static Object[][][] matchData()
+	{
+		/*
+		 * searchFor -> { searchIn }
+		 */
+		return new Object[][][] { //
+				{ { "" }, //
+						{ "", true }, //
+						{ "a", true }, //
+				}, //
+				{ { "^" }, //
+						{ "", false }, //
+						{ "$", false }, //
+						{ "a", false }, //
+						{ "a$", false }, //
+						{ "^", true }, //
+						{ "^$", true }, //
+						{ "^.a", true }, //
+						{ "^.a.b.c", true }, //
+						{ "^.a.b.c$", true }, //
+				}, //
+				{ { "$" }, //
+						{ "", false }, //
+						{ "^", false }, //
+						{ "a", false }, //
+						{ "^.a", false }, //
+						{ "$", true }, //
+						{ "^$", true }, //
+						{ "a$", true }, //
+						{ "a.b.c$", true }, //
+						{ "^.a.b.c$", true }, //
+				}, //
+				{ { "^$" }, //
+						{ "", false }, //
+						{ "^", false }, //
+						{ "$", false }, //
+						{ "^$", true }, //
+						{ "^=1$", true }, //
+				}, //
+				{ { "^=1$" }, //
+						{ "^=1$", true }, //
+						{ "^=2$", false }, //
+				}, //
+				{ { "a" }, //
+						{ "a", true }, //
+						{ "b", false }, //
+						{ "^a", true }, //
+						{ "a$", true }, //
+						{ "^a$", true }, //
+						{ "a=1", true }, //
+						{ "^x.x.a=1.y.y$", true }, //
+				}, //
+				{ { "a.b" }, //
+						{ "a.b", true }, //
+						{ "a.c", false }, //
+				}, //
+				{ { "a|b" }, //
+						{ "a", true }, //
+						{ "b", true }, //
+						{ "c", false }, //
+				}, //
+				{ { "a|b.c" }, //
+						{ "a", true }, //
+						{ "b.c", true }, //
+						{ "b", false }, //
+				}, //
+				{ { "(a|b).c" }, //
+						{ "a.c", true }, //
+						{ "b.c", true }, //
+						{ "a", false }, //
+						{ "b", false }, //
+						{ "c", false }, //
+						{ "a.b", false }, //
+				}, //
+				{ { "a{3}" }, //
+						{ "a.a.a", true }, //
+						{ "b.a.a.a", true }, //
+						{ "a", false }, //
+				}, //
+				{ { "a{1,2}" }, //
+						{ "a", true }, //
+						{ "a.a", true }, //
+						{ "a.a.a", true }, //
+				}, //
+				{ { "a{0,1}" }, //
+						{ "", true }, //
+						{ "a", true }, //
+						{ "a.a", true }, //
+				}, //
+				{ { "a*" }, //
+						{ "", true }, //
+						{ "a", true }, //
+						{ "a.a", true }, //
+						{ "a" + StringUtils.repeat(".a", 100), true }, //
+						{ "a.b.a.a.a", true }, //
+				}, //
+				{ { "^.a*$" }, //
+						{ "^.a.b.a.a.a", false }, //
+				}, { { "a+" }, //
+						{ "", false }, //
+						{ "a", true }, //
+						{ "a" + StringUtils.repeat(".a", 100), true }, //
+				}, //
+				{ { "a?" }, //
+						{ "", true }, //
+						{ "a", true }, //
+						{ "a.a", true }, //
+				}, //
+				{ { "^.x.a+|y.b+" }, //
+						{ "^.x.b", false }, //
+						{ "^.x.a.b", true }, //
+						{ "^.y.b", true }, //
+						{ "^.y.b.b.b.b", true }, //
+						{ "^.y.a", false }, //
+				}, //
+				{ { "=15" }, //
+						{ "=15", true }, //
+						{ "=16", false }, //
+						{ "x=15", true }, //
+						{ "x=16", false }, //
+						{ "a.b=15", true }, //
+						{ "a.b=15.c=16", true }, //
+				}, //
+				{ { "x=15" }, //
+						{ "=15", false }, //
+						{ "=16", false }, //
+						{ "x=15", true }, //
+						{ "x=16", false }, //
+						{ "a.x=15", true }, //
+						{ "a.x=15.c=16", true }, //
+				}, //
+				{ { "a.b=15" }, //
+						{ "a.b=15", true }, //
+						{ "a.b=16", false }, //
+						{ "a.b", false }, //
+				}, //
+				{ { "^.a?$" }, //
+						{ "^$", true }, //
+						{ "^a$", true }, //
+						{ "^a", false }, //
+						{ "a$", false }, //
+						{ "^a.a$", false }, //
+						{ "a", false }, //
+						{ "", false }, //
+						{ "^", false }, //
+						{ "$", false }, //
+				}, //
+				{ { "^.a*.b|^.x" }, { "^.a.x", false } }, //
+				{ { "a*.b?.c*.c$|(^.d.(e|f){2,5}).~r*e?g+~$" }, //
+						{ "a.d", false }, //
+						{ "a.b.c", false }, //
+						{ "a.b.c$", true }, //
+						{ "b.c.c.c.c.c", false }, //
+						{ "b.c.c.c.c.c$", true }, //
+						{ "a.a.a.c.c$", true }, //
+						{ "c", false }, //
+						{ "c$", true }, //
+						{ "^.c$", true }, //
+
+						{ "^.d.e.e.e.e.e.reg$", true }, //
+						{ "^.d.e.f.e.e.f.reg$", true }, //
+						{ "^.d.f.f.gggg$", true }, //
+						{ "^.d.e.e.rrrrrrreg$", true }, //
+
+						{ "a.b.b.c$", true }, //
+						{ "a.b", false }, //
+						{ "d.e.reg", false }, //
+						{ "e.e.reg", false }, //
+						{ "d.f.f.re", false }, //
+						{ "c.e", false }, //
+						{ "a.b.c.e$", false }, //
+				} };
+	}
+
 	static List<Object[]> match()
 	{
-		List<Object[][]> a = //
-			Arrays.asList(new Object[][][] { //
-					{ { "" }, //
-							{ "", true }, //
-							{ "a", true }, //
-					}, //
-					{ { "^" }, //
-							{ "", false }, //
-							{ "$", false }, //
-							{ "a", false }, //
-							{ "a$", false }, //
-							{ "^", true }, //
-							{ "^$", true }, //
-							{ "^.a", true }, //
-							{ "^.a.b.c", true }, //
-							{ "^.a.b.c$", true }, //
-					}, //
-					{ { "$" }, //
-							{ "", false }, //
-							{ "^", false }, //
-							{ "a", false }, //
-							{ "^.a", false }, //
-							{ "$", true }, //
-							{ "^$", true }, //
-							{ "a$", true }, //
-							{ "a.b.c$", true }, //
-							{ "^.a.b.c$", true }, //
-					}, //
-					{ { "^$" }, //
-							{ "", false }, //
-							{ "^", false }, //
-							{ "$", false }, //
-							{ "^$", true }, //
-							{ "^=1$", true }, //
-					}, //
-					{ { "^=1$" }, //
-							{ "^=1$", true }, //
-							{ "^=2$", false }, //
-					}, //
-					{ { "a" }, //
-							{ "a", true }, //
-							{ "b", false }, //
-							{ "^a", true }, //
-							{ "a$", true }, //
-							{ "^a$", true }, //
-							{ "a=1", true }, //
-							{ "^x.x.a=1.y.y$", true }, //
-					}, //
-					{ { "a.b" }, { "a.b", true }, //
-							{ "a.c", false }, //
-					}, //
-					{ { "a|b" }, //
-							{ "a", true }, //
-							{ "b", true }, //
-							{ "c", false }, //
-					}, //
-					{ { "a|b.c" }, //
-							{ "a", true }, //
-							{ "b.c", true }, //
-							{ "b", false }, //
-					}, //
-					{ { "(a|b).c" }, //
-							{ "a.c", true }, //
-							{ "b.c", true }, //
-							{ "a", false }, //
-							{ "b", false }, //
-							{ "c", false }, //
-					}, //
-					{ { "a{3}" }, //
-							{ "a.a.a", true }, //
-							{ "b.a.a.a", true }, //
-							{ "a", false }, //
-					}, //
-					{ { "a{1,2}" }, //
-							{ "a", true }, //
-							{ "a.a", true }, //
-							{ "a.a.a", true }, //
-					}, //
-					{ { "a{0,1}", "", true }, //
-							{ "a", true }, //
-							{ "a.a", true }, //
-					}, //
-					{ { "a*" }, //
-							{ "", true }, //
-							{ "a", true }, //
-							{ "a.a", true }, //
-							{ "a" + StringUtils.repeat(".a", 100), true }, //
-							{ "a.b.a.a.a", true }, //
-					}, //
-					{ { "^.a*.a$" }, { "^.a.b.a.a.a", false } }, //
-					{ { "a+" }, //
-							{ "", false }, //
-							{ "a", true }, //
-							{ "a" + StringUtils.repeat(".a", 100), true }, //
-					}, //
-					{ { "a?" }, //
-							{ "", true }, //
-							{ "a", true }, //
-							{ "a.a", true }, //
-					}, //
-					{ { "^.x.a+|y.b+" }, //
-							{ "^.x.b", false }, //
-							{ "^.x.a.b", true }, //
-							{ "^.y.b", true }, //
-							{ "^.y.b.b.b.b", true }, //
-							{ "^.y.a", false }, //
-					}, //
-					{ { "=15" }, //
-							{ "=15", true }, //
-							{ "=16", false }, //
-							{ "x=15", true }, //
-							{ "x=16", false }, //
-							{ "a.b=15", true }, //
-							{ "a.b=15.c=16", true }, //
-					}, //
-					{ { "x=15" }, //
-							{ "=15", false }, //
-							{ "=16", false }, //
-							{ "x=15", true }, //
-							{ "x=16", false }, //
-							{ "a.x=15", true }, //
-							{ "a.x=15.c=16", true }, //
-					}, //
-					{ { "a.b=15" }, //
-							{ "a.b=15", true }, //
-							{ "a.b=16", false }, //
-							{ "a.b", false }, //
-					}, //
-					{ { "^.a?$" }, { "a.a", false } }, //
-					{ { "^.a*.b|^.x" }, { "^.a.x", false } }, //
-					{ { "a*.b?.c*.c$|(^.d.(e|f){2,5}).~r*e?g+~$" }, //
-							{ "a.d", false }, //
-							{ "a.b.c", false }, //
-							{ "a.b.c$", true }, //
-							{ "b.c.c.c.c.c", false }, //
-							{ "b.c.c.c.c.c$", true }, //
-							{ "a.a.a.c.c$", true }, //
-							{ "c", false }, //
-							{ "c$", true }, //
-							{ "^.c$", true }, //
-
-							{ "^.d.e.e.e.e.e.reg$", true }, //
-							{ "^.d.e.f.e.e.f.reg$", true }, //
-							{ "^.d.f.f.gggg$", true }, //
-							{ "^.d.e.e.rrrrrrreg$", true }, //
-
-							{ "a.b.b.c$", true }, //
-							{ "a.b", false }, //
-							{ "d.e.reg", false }, //
-							{ "e.e.reg", false }, //
-							{ "d.f.f.re", false }, //
-							{ "c.e", false }, //
-							{ "a.b.c.e$", false }, //
-					} });
-
-		List<Object[]> ret = new ArrayList<>();
+		List<Object[][]> a   = Arrays.asList(matchData());
+		List<Object[]>   ret = new ArrayList<>();
 
 		for (Object[][] item : a)
 		{

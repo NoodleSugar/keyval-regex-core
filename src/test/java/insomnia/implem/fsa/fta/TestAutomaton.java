@@ -1,209 +1,214 @@
 package insomnia.implem.fsa.fta;
 
+import static org.junit.Assume.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.data.IEdge;
 import insomnia.data.ITree;
-import insomnia.data.TreeOp;
-import insomnia.data.creational.ITreeBuilder;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.implem.data.Trees;
-import insomnia.implem.data.creational.TreeBuilder;
+import insomnia.implem.data.regex.parser.PRegexParser;
 import insomnia.implem.fsa.fta.creational.BUBuilder;
-import insomnia.implem.kv.data.KVLabel;
-import insomnia.implem.kv.data.KVLabels;
-import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.data.KVValues;
+import insomnia.lib.help.HelpLists;
 
 public class TestAutomaton
 {
-	// =========================================================================
+	// ==========================================================================
 
-	@Test
-	void match4()
+	static List<Object[]> mergeParameters(List<Object[]> a, List<Object[]> b)
 	{
-		ITreeBuilder<Object, String> tree  = new TreeBuilder<>();
-		List<IEdge<Object, String>>  added = new ArrayList<>();
-
-		tree.setRooted(false) //
-			.child("a") //
-			.child("b", added).end() //
-			.child("c", added).endTerminal(); //
-
-		IBUFTA<Object, String> bufta = new BUBuilder<>(tree).create();
-
-		tree.reset().setRooted(false) //
-			.child("a") //
-			.child("b", added).end() //
-			.child("c", added).endTerminal(14);
-
-		assertEquals(true, bufta.matcher(tree).matches());
-
-		tree.reset().setRooted(false) //
-			.child("a") //
-			.child("b", added).end() //
-			.child("c", added).end(); //
-
-		assertEquals(false, bufta.matcher(tree).matches());
+		List<Pair<Object[], Object[]>> ret    = HelpLists.product(a, b);
+		List<Object[]>                 merged = HelpLists.mergePairsArrays(ret);
+		return merged;
 	}
 
-	@Test
-	void matchRoot2()
+	static List<Object[]> match() throws ParseException
 	{
-		ITreeBuilder<Object, String> tree  = new TreeBuilder<>();
-		List<IEdge<Object, String>>  added = new ArrayList<>();
+		/*
+		 * searchFor -> { searchIn }
+		 */
+		List<Object[][]> a = //
+			Arrays.asList(ArrayUtils.addAll(new Object[][][] { //
+					{ { "a.c" }, //
+							{ "(^)?.X?.a(b,c.X?)", true }, //
+							{ "(^)?.X?.a(b(c.X?))", false }, //
+					}, //
+					{ { "a(b,c)" }, //
+							{ "(^)?.X?.a.(=1)?.(b.(=1)?.(X)?.($)?,c.(=1)?.X?.($)?)", true }, //
+							{ "a(b|c,X)", false }, //
+					}, //
+					{ { "^a(b,c)" }, //
+							{ "^a(b,c)", true }, //
+							{ "((^)?.X)?.a(b,c)", false }, //
+					}, //
+					{ { "a(b,c$)" }, //
+							{ "(^)?.X?.a(b.X?.($)?,c.(=1)?.$)", true }, //
+							{ "a(b,c)", false }, //
+							{ "a(X,c$)", false }, //
+					}, //
+					{ { "^a(aa,ab=5$),b$" }, //
+							{ "^a(aa.(=0)?.X?.($)?,ab=5$),b$", true }, //
+							{ "^a(aa.X?,ab$),b$", false }, //
+							{ "^a(aa.X?,ab=6$),b$", false }, //
+							{ ".a(aa.X?,ab=5$),b$", false }, //
+							{ "^a(aa.X?,ab=5$),b.X?", false }, //
+					}, //
+					{ { "^=1" }, //
+							{ "^=1", true }, //
+							{ "X{0,2}.=1", false }, //
+					}, //
+					{ { "a=1" }, //
+							{ "(^)?.X?.a=1.X?", true }, //
+							{ "(^)?.X?.a=2.X?", false }, //
+							{ "(^)?.X?.=1.X?", false }, //
+					}, //
+			}, insomnia.implem.fsa.fpa.TestAutomaton.matchData() //
+			));
 
-		tree.setRooted(false) //
-			.child("a") //
-			.child("b", added).end() //
-			.child("c", added).end(); //
+		List<Object[]> tmp = new ArrayList<>(), ret = new ArrayList<>();
 
-		IBUFTA<Object, String> bufta = new BUBuilder<>(tree).create();
-		tree.setRooted(true);
-		assertEquals(true, bufta.matcher(tree).matches());
-		tree.setRooted(false);
-		assertEquals(true, bufta.matcher(tree).matches());
+		for (Object[][] item : a)
+		{
+			Object[] regex = item[0];
+			tmp.addAll(mergeParameters(Collections.singletonList(regex), Arrays.asList(ArrayUtils.subarray(item, 1, item.length))));
+		}
+
+		for (Object[] item : tmp)
+		{
+			for (ITree<String, String> t : Trees.treesFromString((String) item[1]))
+			{
+				item[1] = t;
+				ret.add(item.clone());
+			}
+		}
+		return ret;
 	}
 
-	@Test
-	void matchRoot()
+	@ParameterizedTest
+	@MethodSource
+	void match(String pattern, ITree<String, String> tree, boolean match) throws ParseException
 	{
-		ITreeBuilder<Object, String> tree  = new TreeBuilder<>();
-		List<IEdge<Object, String>>  added = new ArrayList<>();
-
-		tree.setRooted(true) //
-			.child("a") //
-			.child("b", added).end() //
-			.child("c", added).end(); //
-
-		IBUFTA<Object, String> bufta = new BUBuilder<>(tree).create();
-		assertEquals(true, bufta.matcher(tree).matches());
-		tree.setRooted(false);
-		assertEquals(false, bufta.matcher(tree).matches());
+		assumeTrue(new PRegexParser("''\"\"~~").parse(pattern).size() == 1);
+		IBUFTA<String, String> bufta = new BUBuilder<>(Trees.treeFromString(pattern)).create();
+		assertEquals(match, bufta.matcher(tree).matches());
 	}
 
-	@Test
-	void match2()
+	static List<Object[]> find()
 	{
-		ITreeBuilder<Object, String> tree  = new TreeBuilder<>();
-		List<IEdge<Object, String>>  added = new ArrayList<>();
+		/*
+		 * searchIn -> { searchFor }
+		 */
+		List<Object[][]> a = //
+			Arrays.asList(new Object[][][] { //
+					{ { "X.a(b.X,c.X)" }, //
+							{ "a", 1 }, //
+							{ "a(b,c)", 1 }, //
+							{ "a.b", 1 }, //
+							{ "a.d", 0 }, //
+							{ "^a", 0 }, //
+							{ "b$", 0 }, //
+					}, //
+					{ { "a.X,b.X" }, //
+							{ "a", 1 }, //
+							{ "a,b", 1 }, //
+							{ "^a", 0 }, //
+					}, //
+					{ { "(a(a(a,b),b))" }, //
+							{ "a", 3 }, //
+							{ "a,b", 2 }, //
+							{ "a.b", 2 }, //
+							{ "a.a.a", 1 }, //
+							{ "a.a.b", 1 }, //
+							{ "a.a.c", 0 }, //
+							{ "^a", 0 }, //
+					}, //
+					{ { "^a(a(b,c),b,c$)" }, //
+							{ "a", 2 }, //
+							{ "^a", 1 }, //
+							{ "b", 2 }, //
+							{ "^b", 0 }, //
+							{ "c", 2 }, //
+							{ "^c", 0 }, //
+							{ "c$", 1 }, //
+							{ "a.c", 2 }, //
+							{ "a.c$", 1 }, //
+							{ "^a.c$", 1 }, //
+							{ "a(b,c)", 2 }, //
+							{ "^a(b,c)", 1 }, //
+							{ "a.a", 1 }, //
+							{ "^a.a", 1 }, //
+					}, //
+					{ { "=1" }, //
+							{ "=1", 1 }, //
+							{ "^=1", 0 }, //
+							{ "=1$", 0 }, //
+							{ "^=1$", 0 }, //
+							{ "=2", 0 }, //
+					}, //
+					{ { "^=1$" }, //
+							{ "=1", 1 }, //
+							{ "^=1", 1 }, //
+							{ "=1$", 1 }, //
+							{ "^=1$", 1 }, //
+							{ "=2", 0 }, //
+					}, //
+					{ { "^=1.(b=2,c=1(a,b=2,x=1))" }, //
+							{ "=1", 3 }, //
+							{ "=2", 2 }, //
+							{ "=3", 0 }, //
+							{ "^=1", 1 }, //
+							{ "b=2", 2 }, //
+							{ "^b=2", 1 }, //
+							{ "b=1", 0 }, //
+					}, //
+			});
 
-		tree.setRooted(false) //
-			.child("a") //
-			.child("b", added).end() //
-			.child("c", added).end(); //
+		List<Object[]> ret = new ArrayList<>();
 
-		IBUFTA<Object, String> bufta = new BUBuilder<>(tree).create();
-
-		for (IEdge<Object, String> edge : added)
-			tree.setCurrentNode(edge.getChild()).child("xx");
-
-		tree.parent("pp");
-		assertEquals(true, bufta.matcher(tree).matches());
+		for (Object[][] item : a)
+		{
+			Object[] tree = item[0];
+			ret.addAll(mergeParameters(Collections.singletonList(tree), Arrays.asList(ArrayUtils.subarray(item, 1, item.length))));
+		}
+		return ret;
 	}
 
-	@Test
-	void match()
+	@ParameterizedTest
+	@MethodSource
+	void find(String searchIn, String searchFor, int nb) throws ParseException
 	{
-		ITreeBuilder<KVValue, KVLabel> tree = new TreeBuilder<>();
+		ITree<String, String> pattern, element;
+		element = Trees.treeFromString(searchIn);
+		pattern = Trees.treeFromString(searchFor);
 
-		tree.setRooted(true) //
-			.child(KVLabels.create("a")) //
-			.child(KVLabels.create("aa")) //
-			.endTerminal(KVValues.create(5)) //
-			.child(KVLabels.create("ab")) //
-			.end().end() //
-			.child(KVLabels.create("b")) //
-			.endTerminal();
-
-		IBUFTA<KVValue, KVLabel> bufta = new BUBuilder<>(tree).create();
-
-		assertEquals(true, bufta.matcher(tree).matches());
-
-		tree.child(KVLabels.create("c")).end();
-		assertEquals(true, bufta.matcher(tree).matches());
-
-		tree.setRooted(false);
-		assertEquals(false, bufta.matcher(tree).matches());
-
-		tree.reset().setRooted(true) //
-			.child(KVLabels.create("a")) //
-			.child(KVLabels.create("aa")) //
-			.endTerminal(KVValues.create(5)) //
-			.child(KVLabels.create("ab")) //
-			.end().end() //
-			.child(KVLabels.create("b")) //
-			.end();
-		assertEquals(false, bufta.matcher(tree).matches());
-
-		tree.reset().setRooted(true) //
-			.child(KVLabels.create("a")) //
-			.child(KVLabels.create("aa")) //
-			.endTerminal(KVValues.create(5)) //
-			.child(KVLabels.create("ab")) //
-			.end().end() //
-			.child(KVLabels.create("b")) //
-			.endTerminal(KVValues.create(50));
-		assertEquals(true, bufta.matcher(tree).matches());
-	}
-
-	@Test
-	void find()
-	{
-		ITreeBuilder<Number, String> builder = new TreeBuilder<>();
-		ITree<Number, String>        pattern, element;
-
-//		builder.setRooted(true) //
-//			.child("a").end().child("b").endTerminal(5) //
-//			.child("x") //
-//			.child("a").end().child("b").end().end() //
-//			.child("z").child("a").end() //
-//			.child("b") //
-//		;
-		builder.setRooted(true) //
-			.child("a").end().child("b").endTerminal(5) //
-			.child("x") //
-			.child("a").end().child("b").child("c").endTerminal().end().end() //
-			.child("z") //
-			.child("a").end() //
-			.child("b") //
-			.child("c") //
-			.child("d").end().child("e") //
-		;
-//		builder.setRooted(true) //
-//			.child("z"). //
-//			child("a").end() //
-//			.child("b").end() //
-//			.child("b").end() //
-//			.child("a").endTerminal(1) //
-//		;
-		element = Trees.create(builder);
-
-		builder.reset().setRooted(false) //
-			.child("a").end().child("b");
-		pattern = Trees.create(builder);
-
-		System.out.println(element);
-
-		IBUFTA<Number, String>       bufta   = new BUBuilder<>(pattern).create();
-		ITreeMatcher<Number, String> matcher = bufta.matcher(element);
-
-		System.out.println(TreeOp.bottomUpOrder(element));
+		IBUFTA<String, String>       bufta   = new BUBuilder<>(pattern).create();
+		ITreeMatcher<String, String> matcher = bufta.matcher(element);
 
 		int i = 0;
 
+		assertEquals(nb > 0, matcher.matches());
 		while (matcher.find())
 		{
 			i++;
-			System.out.println(matcher.toMatchResult().group());
-//			assertEquals(pattern, matcher.group());
+			ITree<String, String> group = matcher.toMatchResult().group();
+
+			assertTrue(ITree.projectEquals(pattern, group), //
+				String.format("Expected \n%s; but have\n%s", ITree.toString(pattern), ITree.toString(group)));
+			assertTrue(ITree.isSubTreeOf(matcher.toMatchResult().group(), element), //
+				String.format("Expected\n%s to be a subtree of\n %s", ITree.toString(group), element));
 		}
-		assertEquals(3, i);
+		assertEquals(nb, i);
 	}
 }

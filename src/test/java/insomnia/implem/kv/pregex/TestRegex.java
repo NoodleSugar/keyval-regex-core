@@ -22,8 +22,7 @@ class TestRegex
 	static List<Object> error()
 	{
 		List<Object> a = Arrays.asList( //
-			"a$.", //
-			"(a.b)$", //
+			"a$._", //
 			"(a.b$).v", //
 			"(a$).v", //
 			"(a|(a$)).v", //
@@ -35,7 +34,15 @@ class TestRegex
 			"a.b.(c", //
 			"(a))", //
 			"/a", //
-			"a.\"b" //
+			"a.\"b", //
+
+			"(a,b)(c,d)", //
+			",,", //
+			"(a,)", //
+			"(,$).", //
+			".(,^)", //
+			"^{2}", //
+			"^${2}" //
 		);
 		return a;
 	}
