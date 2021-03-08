@@ -3,11 +3,16 @@ package insomnia.data;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -161,6 +166,190 @@ public interface ITree<VAL, LBL>
 		}
 		return ret;
 	}
+
+	/**
+	 * Check if the first tree is a sub tree of the second one.
+	 * <p>
+	 * A sub tree is a tree with its nodes/edges objects are from another tree.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     the tree to search for
+	 * @param b     the tree to search in
+	 * @return true if {@code a } is a sub tree of {@code b}
+	 * @see IEdge#sameAs(IEdge, IEdge)
+	 */
+	public static <VAL, LBL> boolean isSubTreeOf(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		return isSubTreeOf(a, a.getRoot(), b, b.getRoot());
+	}
+
+	/**
+	 * Check if the first tree is a sub tree of the second one considering two starting nodes.
+	 * <p>
+	 * A sub tree is a tree with its nodes/edges objects are from another tree.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     the tree to search for
+	 * @param anode the node of a to consider as a root
+	 * @param b     the tree to search in
+	 * @param bnode the node of b to consider as a root
+	 * @return true if {@code a } is a sub tree of {@code b}
+	 * @see IEdge#sameAs(IEdge, IEdge)
+	 */
+	public static <VAL, LBL> boolean isSubTreeOf(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
+	{
+		Set<IEdge<VAL, LBL>> as = new TreeSet<>(IEdge::compareSameAs), //
+			bs = new TreeSet<>(IEdge::compareSameAs);
+		as.addAll(a.getEdges(anode));
+		bs.addAll(b.getEdges(bnode));
+		return bs.containsAll(as);
+	}
+
+	/**
+	 * Check if two trees are equals.
+	 * <p>
+	 * Two trees are equals if they represent the same tree.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     first tree
+	 * @param b     second tree
+	 * @return true if a and b are equals
+	 * @see IEdge#equals(IEdge, IEdge)
+	 * @see INode#equals(INode, INode)
+	 */
+	public static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		return equals(a, a.getRoot(), b, b.getRoot());
+	}
+
+	/**
+	 * Check if a tree project on a second one.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     first tree
+	 * @param b     second tree
+	 * @return true if a project on b
+	 * @see IEdge#projectEquals(IEdge, IEdge)
+	 * @see INode#projectEquals(INode, INode)
+	 */
+	public static <VAL, LBL> boolean projectEquals(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		return projectEquals(a, a.getRoot(), b, b.getRoot());
+	}
+
+	/**
+	 * Check if two trees have the same structure.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     first tree
+	 * @param b     second tree
+	 * @return true if a and b are structurally equivalent
+	 * @see IEdge#structEquals(IEdge, IEdge)
+	 * @see INode#structEquals(INode, INode)
+	 */
+	public static <VAL, LBL> boolean structEquals(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		return structEquals(a, a.getRoot(), b, b.getRoot());
+	}
+
+	/**
+	 * Check if two trees are equals below two nodes.
+	 * <p>
+	 * Two trees are equals if they represent the same tree.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     first tree
+	 * @param anode node of a to consider to be the root
+	 * @param b     second tree
+	 * @param bnode node of b to consider to be the root
+	 * @return true if a and b are equals
+	 */
+	public static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
+	{
+		return equals(a, anode, b, bnode, IEdge::compareEquals);
+	}
+
+	/**
+	 * Check if a from anode project to b from bnode.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     first tree
+	 * @param anode node of a to consider to be the root
+	 * @param b     second tree
+	 * @param bnode node of b to consider to be the root
+	 * @return true if anode tree project on the bnode tree
+	 * @see IEdge#projectEquals(IEdge, IEdge)
+	 * @see INode#projectEquals(INode, INode)
+	 */
+	public static <VAL, LBL> boolean projectEquals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
+	{
+		return equals(a, anode, b, bnode, IEdge::compareProjectEquals);
+	}
+
+	/**
+	 * Check if two trees have the same structure from two nodes.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     first tree
+	 * @param anode node of a to consider to be the root
+	 * @param b     second tree
+	 * @param bnode node of b to consider to be the root
+	 * @return true if anode and bnode tree have the same structure
+	 * @see IEdge#structEquals(IEdge, IEdge)
+	 * @see INode#structEquals(INode, INode)
+	 */
+	public static <VAL, LBL> boolean structEquals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
+	{
+		return equals(a, anode, b, bnode, IEdge::compareStructEquals);
+	}
+
+	/**
+	 * Check if two trees are equal below two nodes considering an edge {@link Comparator}.
+	 * 
+	 * @param <VAL>          type of node value
+	 * @param <LBL>          type of edge label
+	 * @param a              the tree to search for
+	 * @param anode          the node of a to consider as a root
+	 * @param b              the tree to search in
+	 * @param bnode          the node of b to consider as a root
+	 * @param edgeComparator a comparator of {@link IEdge}
+	 * @return
+	 */
+	static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode, Comparator<IEdge<VAL, LBL>> edgeComparator)
+	{
+		Map<IEdge<VAL, LBL>, IEdge<VAL, LBL>> bs     = new TreeMap<>(edgeComparator);
+		Queue<IEdge<VAL, LBL>>                aedges = new LinkedList<>();
+		aedges.addAll(a.getChildren(anode));
+
+		for (IEdge<VAL, LBL> bchild : b.getChildren(bnode))
+			bs.put(bchild, bchild);
+
+		while (!aedges.isEmpty())
+		{
+			IEdge<VAL, LBL> achild = aedges.poll(), //
+				bchild = bs.get(achild);
+
+			if (null == bchild)
+				return false;
+
+			bs.remove(achild);
+			aedges.addAll(a.getChildren(achild.getChild()));
+
+			for (IEdge<VAL, LBL> bsubchild : b.getChildren(bchild.getChild()))
+				bs.put(bsubchild, bsubchild);
+		}
+		return true;
+	}
+
+	// =========================================================================
 
 	public static <VAL, LBL> String treeOrPathToString(ITree<VAL, LBL> tree)
 	{
