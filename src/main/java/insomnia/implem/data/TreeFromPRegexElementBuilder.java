@@ -7,7 +7,6 @@ import insomnia.data.ITree;
 import insomnia.data.creational.ITreeBuilder;
 import insomnia.implem.data.creational.TreeBuilder;
 import insomnia.implem.data.regex.parser.IPRegexElement;
-import insomnia.implem.data.regex.parser.IPRegexElement.Type;
 
 /**
  * Build a tree from a {@link IPRegexElement}.
@@ -48,27 +47,25 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 			throw new IllegalArgumentException(String.format("Can't handle a size of %s for %s", size, element));
 
 		treeBuilder.setRooted(element.isRooted());
-		doit(element, true, false);
+		doit(element);
 		return Trees.create(treeBuilder);
 	}
 
-	private void doit(IPRegexElement element, boolean canBeTerminal, boolean mustBeTerminal)
+	private void doit(IPRegexElement element)
 	{
-		mustBeTerminal |= element.isTerminal();
-
 		switch (element.getType())
 		{
 		case EMPTY:
-			empty(element, canBeTerminal, mustBeTerminal);
+			empty(element);
 			break;
 		case SEQUENCE:
-			sequence(element, canBeTerminal, mustBeTerminal);
+			sequence(element);
 			break;
 		case NODE:
-			node(element, canBeTerminal, mustBeTerminal);
+			node(element);
 			break;
 		case KEY:
-			key(element, canBeTerminal, mustBeTerminal);
+			key(element);
 			break;
 		case DISJUNCTION:
 		{
@@ -76,7 +73,7 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 			if (nb == 0)
 				break;
 			if (nb == 1)
-				doit(element.getElements().get(0), canBeTerminal, mustBeTerminal);
+				doit(element.getElements().get(0));
 			else
 				throw new IllegalArgumentException(String.format("%s represents %s trees", element, element.size()));
 			break;
@@ -86,7 +83,7 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 		}
 	}
 
-	private void empty(IPRegexElement empty, boolean canBeTerminal, boolean mustBeTerminal)
+	private void empty(IPRegexElement empty)
 	{
 		VAL value = mapValue.apply(empty.getValue());
 
@@ -95,16 +92,19 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 
 		if (empty.isRooted())
 			treeBuilder.setRooted(true);
-		if (canBeTerminal && mustBeTerminal)
+		if (empty.isTerminal())
 			treeBuilder.setTerminal(true);
 	}
 
-	private void key(IPRegexElement key, boolean canBeTerminal, boolean mustBeTerminal)
+	private void key(IPRegexElement key)
 	{
 		int i = key.getQuantifier().getInf();
 
 		if (i == 0)
 			return;
+
+		if (treeBuilder.getCurrentNode().isTerminal())
+			treeBuilder.setTerminal(false);
 
 		LBL label = mapLabel.apply(key.getLabel());
 		VAL value = mapValue.apply(key.getValue());
@@ -112,11 +112,11 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 		while (i-- != 0)
 			treeBuilder.addChildDown(label, value);
 
-		if (canBeTerminal && mustBeTerminal)
+		if (key.isTerminal())
 			treeBuilder.setTerminal(true);
 	}
 
-	private void node(IPRegexElement node, boolean canBeTerminal, boolean mustBeTerminal)
+	private void node(IPRegexElement node)
 	{
 		int i = node.getQuantifier().getInf();
 
@@ -128,12 +128,12 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 		while (i-- != 0)
 			for (IPRegexElement e : node.getElements())
 			{
-				doit(e, canBeTerminal && e.getType() != Type.EMPTY, mustBeTerminal);
+				doit(e);
 				treeBuilder.setCurrentCoordinates(coords);
 			}
 	}
 
-	private void sequence(IPRegexElement sequence, boolean canBeTerminal, boolean mustBeTerminal)
+	private void sequence(IPRegexElement sequence)
 	{
 		int i = sequence.getQuantifier().getInf();
 
@@ -151,10 +151,10 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 
 			while (it.hasNext())
 			{
-				doit(e, false, false);
+				doit(e);
 				e = it.next();
 			}
-			doit(e, canBeTerminal && i == 0, mustBeTerminal);
+			doit(e);
 			it = sequence.getElements().iterator();
 		}
 	}
