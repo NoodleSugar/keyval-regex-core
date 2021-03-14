@@ -1,6 +1,7 @@
 package insomnia.implem.fsa.fpa;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -10,59 +11,58 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.data.IPath;
-import insomnia.data.regex.ITreeMatcher;
+import insomnia.data.ITree;
+import insomnia.data.regex.IPathMatcher;
 import insomnia.fsa.fpa.IFPA;
 import insomnia.implem.data.Paths;
+import insomnia.implem.data.Trees;
 import insomnia.implem.data.regex.parser.IPRegexElement;
 import insomnia.implem.data.regex.parser.PRegexParser;
 import insomnia.implem.fsa.fpa.creational.FPAFactory;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.GCPathRuleApplierSimple;
-import insomnia.implem.kv.data.KVLabel;
-import insomnia.implem.kv.data.KVLabels;
-import insomnia.implem.kv.data.KVPaths;
-import insomnia.implem.kv.data.KVValue;
-import insomnia.implem.kv.data.KVValues;
-import insomnia.implem.kv.rule.KVPathRules;
-import insomnia.implem.kv.unifier.KVPathUnifiers;
+import insomnia.implem.rule.PathRules;
 import insomnia.implem.rule.dependency.BetaDependencyValidation;
 import insomnia.implem.rule.grd.creational.GRDFactory;
+import insomnia.implem.unifier.PathUnifier;
 import insomnia.lib.help.HelpLists;
 import insomnia.rule.IRule;
 import insomnia.rule.grd.IGRD;
+import insomnia.unifier.PathUnifiers;
 
 public class TestAutomaton
 {
-	static FPAFactory<KVValue, KVLabel> fpaFactory(IPRegexElement e)
+	static FPAFactory<String, String> fpaFactory(IPRegexElement e)
 	{
-		return new FPAFactory<>(e, KVLabels::mapLabel, KVValues::mapValue);
+		return new FPAFactory<>(e, s -> s, s -> s);
 	}
 
-	static FPAFactory<KVValue, KVLabel> fpaFactory(IPath<KVValue, KVLabel> path)
+	static FPAFactory<String, String> fpaFactory(IPath<String, String> path)
 	{
-		return new FPAFactory<>(path, KVLabels::mapLabel, KVValues::mapValue);
+		return new FPAFactory<>(path, s -> s, s -> s);
 	}
 
-	static IPath<KVValue, KVLabel> pathFromString(String path)
+	static IPath<String, String> pathFromString(String path)
 	{
 		PRegexParser parser = new PRegexParser(Collections.emptyMap());
 		try
 		{
-			return Paths.pathFromPRegexElement(parser.parse(path), KVValues::mapValue, KVLabels::mapLabel);
+			return Paths.pathFromPRegexElement(parser.parse(path), s -> s, s -> s);
 		}
 		catch (ParseException e)
 		{
@@ -70,11 +70,11 @@ public class TestAutomaton
 		}
 	}
 
-	static IRule<KVValue, KVLabel> ruleFromStrings(String body, String head)
+	static IRule<String, String> ruleFromStrings(String body, String head)
 	{
 		try
 		{
-			return KVPathRules.fromString(body, head);
+			return PathRules.fromString(body, head);
 		}
 		catch (ParseException e)
 		{
@@ -82,11 +82,11 @@ public class TestAutomaton
 		}
 	}
 
-	static IRule<KVValue, KVLabel> ruleFromStrings(String body, String head, boolean isExistential)
+	static IRule<String, String> ruleFromStrings(String body, String head, boolean isExistential)
 	{
 		try
 		{
-			return KVPathRules.fromString(body, head, isExistential);
+			return PathRules.fromString(body, head, isExistential);
 		}
 		catch (ParseException e)
 		{
@@ -156,307 +156,444 @@ public class TestAutomaton
 		return merged;
 	}
 
-	private static IFPA<KVValue, KVLabel> parse(String regex, Function<IPRegexElement, IFPA<KVValue, KVLabel>> automatonFactoryProvider) throws IOException, ParseException
+	private static IFPA<String, String> parse(String regex, Function<IPRegexElement, IFPA<String, String>> automatonFactoryProvider) throws IOException, ParseException
 	{
 		IPRegexElement rparsed = parser.parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
 		return automatonFactoryProvider.apply(rparsed);
 	}
 
-	private static IFPA<KVValue, KVLabel> automatonFromPath(IPath<KVValue, KVLabel> path)
-	{
-		return fpaFactory(path).create();
-	}
-
 	// =========================================================================
 
-	public static Object[][][] matchData()
+	public static Object[][][] searchForIn_extended()
 	{
-		/*
-		 * searchFor -> { searchIn }
-		 */
 		return new Object[][][] { //
+				{ { "^.x.a+|y.b+" }, //
+						{ "^.x.b", 0 }, //
+						{ "^.x.a.b", 1 }, //
+						{ "^.y.b{1,10}", 1 }, //
+						{ "^.y.a", 0 }, //
+				}, //
+				{ { "^a?$" }, //
+						{ "^$", 1 }, //
+						{ "^a$", 1 }, //
+						{ "^a", 0 }, //
+						{ "a$", 0 }, //
+						{ "^a.a$", 0 }, //
+						{ "a", 0 }, //
+						{ "", 0 }, //
+						{ "^", 0 }, //
+						{ "$", 0 }, //
+				}, //
+				{ { "^a*.b|^x" }, { "^a.x", 0 } }, //
+				{ { "a*.b?.c*.c$|(^d.(e|f){2,5}).~r*e?g+~$" }, //
+						{ "a.d", 0 }, //
+						{ "a.b.c", 0 }, //
+						{ "(^)?.a{0,2}.b?.c{1,2}", 0 }, //
+						{ "(^)?.a{0,2}.b?.c{1,2}$", 1 }, //
+
+						{ "(^d.e{5}).reg$", 1 }, //
+						{ "(^d.e{6}).reg$", 0 }, //
+
+						{ "(^d.(e|f){2}).(reg|rrgg|g|egg)$", 1 }, //
+
+						{ "a.b.b.c$", 1 }, //
+						{ "a.b", 0 }, //
+						{ "d.e.reg", 0 }, //
+						{ "e.e.reg", 0 }, //
+						{ "d.f.f.re", 0 }, //
+						{ "c.e", 0 }, //
+						{ "a.b.c.e$", 0 }, //
+				}, //
+		};
+	}
+
+	public static Object[][][] searchForIn()
+	{
+		// SearchFor -> { searchIn }
+		return new Object[][][] { //
+				// ====================================================================
+				// Empty
 				{ { "" }, //
-						{ "", true }, //
-						{ "a", true }, //
+						{ "(=99)?", 1 }, //
+						{ "a.(=99)?", 2 }, //
 				}, //
 				{ { "^" }, //
-						{ "", false }, //
-						{ "$", false }, //
-						{ "a", false }, //
-						{ "a$", false }, //
-						{ "^", true }, //
-						{ "^$", true }, //
-						{ "^.a", true }, //
-						{ "^.a.b.c", true }, //
-						{ "^.a.b.c$", true }, //
+						{ "X?.($)?", 0 }, //
+						{ "^.(=99)?.X?.($)?", 1 }, //
 				}, //
 				{ { "$" }, //
-						{ "", false }, //
-						{ "^", false }, //
-						{ "a", false }, //
-						{ "^.a", false }, //
-						{ "$", true }, //
-						{ "^$", true }, //
-						{ "a$", true }, //
-						{ "a.b.c$", true }, //
-						{ "^.a.b.c$", true }, //
+						{ "(^)?.X?", 0 }, //
+						{ "(^)?.X?.($).(=99)", 1 }, //
 				}, //
 				{ { "^$" }, //
-						{ "", false }, //
-						{ "^", false }, //
-						{ "$", false }, //
-						{ "^$", true }, //
-						{ "^=1$", true }, //
+						{ "^$", 1 }, //
+						{ "^.X?.(=99)?", 0 }, //
+						{ "X?.(=99)?.$", 0 }, //
+						{ "X?.(=99)?", 0 }, //
 				}, //
-				{ { "^=1$" }, //
-						{ "^=1$", true }, //
-						{ "^=2$", false }, //
+				// ====================================================================
+				// Value
+				{ { "=99" }, //
+						{ "(^)?.=99.(X=0)?.($)?", 1 }, //
+						{ "(^)?.=99.(_)?.X=99.($)?", 2 }, //
+						{ "(^)?.(=0)?.($)?", 0 }, //
 				}, //
+				{ { "^=99" }, //
+						{ "^=99.(X=0)?.($)?", 1 }, //
+						{ "^=99.(_)?.X=99.($)?", 1 }, //
+						{ "^.(=0)?.($)?", 0 }, //
+				}, //
+				{ { "=99$" }, //
+						{ "(^)?.X?.=99$", 1 }, //
+						{ "(^)?.=99.(_)?.X=99$", 1 }, //
+						{ "(^)?.(=0)?.X?.$", 0 }, //
+				}, //
+				{ { "^=99$" }, //
+						{ "^=99$", 1 }, //
+						{ "^=99.(X=99){1,2}.($)?", 0 }, //
+						{ "(^)?.(X=99){1,2}$", 0 }, //
+				}, //
+				// ====================================================================
+				// Key
 				{ { "a" }, //
-						{ "a", true }, //
-						{ "b", false }, //
-						{ "^a", true }, //
-						{ "a$", true }, //
-						{ "^a$", true }, //
-						{ "a=1", true }, //
-						{ "^x.x.a=1.y.y$", true }, //
+						{ "(^)?.X?.a.(=99)?.X?.($)?", 1 }, //
+						{ "(^)?.X?.a.(=99)?.X?.a.(=99)?.($)?", 2 }, //
+						{ "(^)?.X?.($)?", 0 }, //
+						{ "X(X?.a,X.b)", 1 }, //
 				}, //
-				{ { "a.b" }, //
-						{ "a.b", true }, //
-						{ "a.c", false }, //
+				{ { "a=99" }, //
+						{ "(^)?.X?.a=99.X?.($)?", 1 }, //
+						{ "(^)?.X?.a=99.X?.a.(=0)?.($)?", 1 }, //
+						{ "(^)?.X?.a=99.X?.a=99.($)?", 2 }, //
+						{ "(^)?.X=99?.($)?", 0 }, //
 				}, //
-				{ { "a|b" }, //
-						{ "a", true }, //
-						{ "b", true }, //
-						{ "c", false }, //
+				{ { "^a" }, //
+						{ "^a.(=99)?.X?.($)?", 1 }, //
+						{ "^a.(=99)?.X?.a.(=99)?.($)?", 1 }, //
+						{ "(^)?.X?.($)?", 0 }, //
+						{ "X(X.a,X.b)", 0 }, //
+						{ "a(X.a,X.b)", 0 }, //
 				}, //
-				{ { "a|b.c" }, //
-						{ "a", true }, //
-						{ "b.c", true }, //
-						{ "b", false }, //
+				{ { "a$" }, //
+						{ "(^)?.X?.a.(=99)?.$", 1 }, //
+						{ "(^)?.a.(=99)?.X?.a.(=99)?.$", 1 }, //
+						{ "(^)?.X?.($)?", 0 }, //
+						{ "X(X?.a$,X.b)", 1 }, //
 				}, //
-				{ { "(a|b).c" }, //
-						{ "a.c", true }, //
-						{ "b.c", true }, //
-						{ "a", false }, //
-						{ "b", false }, //
-						{ "c", false }, //
-						{ "a.b", false }, //
-				}, //
+				// ====================================================================
+				// Quantifier
 				{ { "a{3}" }, //
-						{ "a.a.a", true }, //
-						{ "b.a.a.a", true }, //
-						{ "a", false }, //
+						{ "a.a.a", 1 }, //
+						{ "a.a.a.a", 2 }, //
+						{ "a.a.a.a.a", 3 }, //
+						{ "a{0,2}.(X.a)?", 0 }, //
 				}, //
 				{ { "a{1,2}" }, //
-						{ "a", true }, //
-						{ "a.a", true }, //
-						{ "a.a.a", true }, //
-				}, //
-				{ { "a{0,1}" }, //
-						{ "", true }, //
-						{ "a", true }, //
-						{ "a.a", true }, //
-				}, //
-				{ { "a*" }, //
-						{ "", true }, //
-						{ "a", true }, //
-						{ "a.a", true }, //
-						{ "a" + StringUtils.repeat(".a", 100), true }, //
-						{ "a.b.a.a.a", true }, //
-				}, //
-				{ { "^.a*$" }, //
-						{ "^.a.b.a.a.a", false }, //
-				}, { { "a+" }, //
-						{ "", false }, //
-						{ "a", true }, //
-						{ "a" + StringUtils.repeat(".a", 100), true }, //
+						{ "a", 1 }, //
+						{ "a.a", 3 }, //
+						{ "a.a.a", 5 }, //
+						{ "a.a.a.a", 7 }, //
 				}, //
 				{ { "a?" }, //
-						{ "", true }, //
-						{ "a", true }, //
-						{ "a.a", true }, //
+						{ "", 1 }, //
+						{ "a", 3 }, //
+						{ "a.a", 5 }, //
+						{ "a.a.a", 7 }, //
+						{ "a.a.a.a", 9 }, //
 				}, //
-				{ { "^.x.a+|y.b+" }, //
-						{ "^.x.b", false }, //
-						{ "^.x.a.b", true }, //
-						{ "^.y.b", true }, //
-						{ "^.y.b.b.b.b", true }, //
-						{ "^.y.a", false }, //
+				{ { "a*" }, //
+						{ "", 1 }, //
+						{ "a", 3 }, //
+						{ "a.a", 6 }, //
+						{ "a.a.a", 10 }, //
+						{ "a.a.a.a", 15 }, //
+						{ "a" + StringUtils.repeat(".a", 10), 78 }, //
 				}, //
-				{ { "=15" }, //
-						{ "=15", true }, //
-						{ "=16", false }, //
-						{ "x=15", true }, //
-						{ "x=16", false }, //
-						{ "a.b=15", true }, //
-						{ "a.b=15.c=16", true }, //
+				{ { "^a*" }, //
+						{ "^", 1 }, //
+						{ "^a", 2 }, //
+						{ "^a.a", 6 }, //
+						{ "X?.a{0,3}", 0 }, //
 				}, //
-				{ { "x=15" }, //
-						{ "=15", false }, //
-						{ "=16", false }, //
-						{ "x=15", true }, //
-						{ "x=16", false }, //
-						{ "a.x=15", true }, //
-						{ "a.x=15.c=16", true }, //
+				{ { "a+" }, //
+						{ "", 0 }, //
+						{ "a", 1 }, //
+						{ "a.a", 3 }, //
+						{ "a.a.a", 6 }, //
+						{ "a" + StringUtils.repeat(".a", 10), 66 }, //
 				}, //
-				{ { "a.b=15" }, //
-						{ "a.b=15", true }, //
-						{ "a.b=16", false }, //
-						{ "a.b", false }, //
+				// ====================================================================
+				// Sequence
+				{ { "a.b" }, //
+						{ "(^)?.X?.a.b.(=99)?.X?.($)?", 1 }, //
+						{ "(^)?.X?.a.b.X?.a.b.X?.($)?", 2 }, //
+						{ "(^)?.X?.a.X.b.X?.($)?", 0 }, //
 				}, //
-				{ { "^.a?$" }, //
-						{ "^$", true }, //
-						{ "^a$", true }, //
-						{ "^a", false }, //
-						{ "a$", false }, //
-						{ "^a.a$", false }, //
-						{ "a", false }, //
-						{ "", false }, //
-						{ "^", false }, //
-						{ "$", false }, //
+				{ { "^a.b" }, //
+						{ "^a.b.X?.(a.b)?.($)?", 1 }, //
+						{ "a.b.X?.(a.b)?.($)?", 0 }, //
 				}, //
-				{ { "^.a*.b|^.x" }, { "^.a.x", false } }, //
-				{ { "a*.b?.c*.c$|(^.d.(e|f){2,5}).~r*e?g+~$" }, //
-						{ "a.d", false }, //
-						{ "a.b.c", false }, //
-						{ "a.b.c$", true }, //
-						{ "b.c.c.c.c.c", false }, //
-						{ "b.c.c.c.c.c$", true }, //
-						{ "a.a.a.c.c$", true }, //
-						{ "c", false }, //
-						{ "c$", true }, //
-						{ "^.c$", true }, //
-
-						{ "^.d.e.e.e.e.e.reg$", true }, //
-						{ "^.d.e.f.e.e.f.reg$", true }, //
-						{ "^.d.f.f.gggg$", true }, //
-						{ "^.d.e.e.rrrrrrreg$", true }, //
-
-						{ "a.b.b.c$", true }, //
-						{ "a.b", false }, //
-						{ "d.e.reg", false }, //
-						{ "e.e.reg", false }, //
-						{ "d.f.f.re", false }, //
-						{ "c.e", false }, //
-						{ "a.b.c.e$", false }, //
-				} };
+				{ { "a.b$" }, //
+						{ "(^)?.(a.b)?.X?.a.b$", 1 }, //
+						{ "(^)?.(a.b)?.X?.a.b", 0 }, //
+				}, //
+				{ { "^a.b$" }, //
+						{ "^a.b$", 1 }, //
+						{ "((^)?.X)?.a.b.(X.($)?)?", 0 }, //
+				}, //
+				{ { "a=99.b" }, //
+						{ "a=99.b.a.b", 1 }, //
+						{ "(a=99.b){3}", 3 }, //
+						{ "(a.b=99){3}", 0 }, //
+				}, //
+				{ { "^a=99.b" }, //
+						{ "(^a=99.b){3}", 1 }, //
+						{ "(a=99.b){3}", 0 }, //
+				}, //
+				{ { "a.b=99" }, //
+						{ "a.b=99.a.b", 1 }, //
+						{ "(a.b=99){3}", 3 }, //
+						{ "(a=99.b){3}", 0 }, //
+				}, //
+				{ { "a.b=99$" }, //
+						{ "(a.b=99){3}$", 1 }, //
+						{ "(a.b=99){3}", 0 }, //
+				}, //
+					 // ====================================================================
+					 // Disjunction
+				{ { "a|b" }, //
+						{ "(^)?.X?.(a|b).X?.($)?", 1 }, //
+						{ "(^)?.X?.($)?", 0 }, //
+				}, //
+				{ { "a=88|b=99" }, //
+						{ "(^)?.X?.(a|b).X?.($)?", 0 }, //
+						{ "(^)?.X?.(a=88|b=99).X?.($)?", 1 }, //
+				}, //
+				{ { "(^a=88)|(b=99$)" }, //
+						{ "^a=88.X?.b=99$", 2 }, //
+						{ "a=88.X?.b=99$", 1 }, //
+						{ "^a=88.X?.b=99", 1 }, //
+						{ "a=88.X?.b=99", 0 }, //
+						{ "^a.X?.b=99$", 1 }, //
+						{ "^a=88.X?.b$", 1 }, //
+						{ "^a.X?.b$", 0 }, //
+				}, //
+				// ====================================================================
+				// Compound
+				{ { "a|b.c" }, //
+						{ "(^)?.X?.(a|b.c).X?.($)?", 1 }, //
+						{ "(^)?.X?.(b|c).X?.($)?", 0 }, //
+				}, //
+				{ { "(a|b).c" }, //
+						{ "(^)?.X?.((a|b).c).X?.($)?", 1 }, //
+						{ "(^)?.X?.(a|b|c).X?.($)?", 0 }, //
+				}, //
+				// ====================================================================
+				// Trees
+				{ { "a(b,c)" }, //
+						{ "(^)?.X?.a.(=1)?.(b.(=1)?.(X)?.($)?,c.(=1)?.X?.($)?)", 1 }, //
+						{ "a(b|c,X)", 0 }, //
+				}, //
+				{ { "^a(b,c)" }, //
+						{ "^a(b,c)", 1 }, //
+						{ "((^)?.X)?.a(b,c)", 0 }, //
+				}, //
+				{ { "a(b,c$)" }, //
+						{ "(^)?.X?.a(b.X?.($)?,c.(=1)?.$)", 1 }, //
+						{ "a(b,c)", 0 }, //
+						{ "a(X,c$)", 0 }, //
+				}, //
+				{ { "^a(aa,ab=5$),b$" }, //
+						{ "^a(aa.(=0)?.X,ab=5$),b$", 1 }, //
+						{ "^a(aa.(=0)?.X?.($)?,ab=5$),b$", 1 }, //
+						{ "^a(aa.X?,ab$),b$", 0 }, //
+						{ "^a(aa.X?,ab=6$),b$", 0 }, //
+						{ ".a(aa.X?,ab=5$),b$", 0 }, //
+						{ "^a(aa.X?,ab=5$),b.X?", 0 }, //
+				}, //
+		};
 	}
 
-	static List<Object[]> match()
+	public static Object[][][] searchInFor()
 	{
-		List<Object[][]> a   = Arrays.asList(matchData());
-		List<Object[]>   ret = new ArrayList<>();
+		// SearchIn -> SearchFor
+		return new Object[][][] { //
+				{ { "X.a(b.X,c.X)" }, //
+						{ "a", 1 }, //
+						{ "a.b", 1 }, //
+						{ "a.d", 0 }, //
+						{ "^a", 0 }, //
+						{ "b$", 0 }, //
+				}, //
+				{ { "a.X,b.X" }, //
+						{ "a", 1 }, //
+						{ "a,b", 1 }, //
+						{ "^a", 0 }, //
+				}, //
+				{ { "(a(a(a,b),b))" }, //
+						{ "a", 3 }, //
+						{ "a,b", 2 }, //
+						{ "a.b", 2 }, //
+						{ "a.a.a", 1 }, //
+						{ "a.a.b", 1 }, //
+						{ "a.a.c", 0 }, //
+						{ "^a", 0 }, //
+				}, //
+				{ { "^a(a(b,c),b,c$)" }, //
+						{ "a", 2 }, //
+						{ "^a", 1 }, //
+						{ "b", 2 }, //
+						{ "^b", 0 }, //
+						{ "c", 2 }, //
+						{ "^c", 0 }, //
+						{ "c$", 1 }, //
+						{ "a.c", 2 }, //
+						{ "a.c$", 1 }, //
+						{ "^a.c$", 1 }, //
+						{ "a(b,c)", 2 }, //
+						{ "^a(b,c)", 1 }, //
+						{ "a.a", 1 }, //
+						{ "^a.a", 1 }, //
+				}, //
+				{ { "^=1.(b=2,c=1(a,b=2,x=1))" }, //
+						{ "=1", 3 }, //
+						{ "=2", 2 }, //
+						{ "=3", 0 }, //
+						{ "^=1", 1 }, //
+						{ "b=2", 2 }, //
+						{ "^b=2", 1 }, //
+						{ "b=1", 0 }, //
+				}, //
+		};
+	}
 
-		for (Object[][] item : a)
+	// ==========================================================================
+
+	public static Object[][][] allSearchForIn()
+	{
+		return ArrayUtils.addAll( //
+			ArrayUtils.addAll(searchForIn(), searchForIn_extended() //
+			), searchInFor_reverse(searchInFor()) //
+		);
+	}
+
+	private static Stream<Object[]> searchForIn(Object[][][] arrays) throws ParseException
+	{
+		return Arrays.stream(ArrayUtils.addAll(arrays)) //
+			.flatMap((item) -> {
+				List<Object[]>   ret       = new ArrayList<>();
+				Iterator<Object[]> it      = IteratorUtils.arrayIterator(item);
+				String           searchFor = (String) it.next()[0];
+				try
+				{
+					if (!Trees.getParser().parse(searchFor).isPath())
+						return Stream.empty();
+
+					while (it.hasNext())
+					{
+						Object[]                  subItem = it.next();
+						List<IPath<String, String>> paths;
+
+						IPRegexElement e = Trees.getParser().parse((String) subItem[0]);
+						if (!e.isPath())
+							continue;
+
+						paths = Paths.pathsFromPRegexElement(e);
+
+						for (IPath<?, ?> path : paths)
+							ret.add(new Object[] { searchFor, path, subItem[1] });
+					}
+					return mergeParameters(factories(), ret).stream();
+				}
+				catch (ParseException e)
+				{
+					throw new AssertionError(e);
+				}
+			});
+	}
+
+	private static Object[][][] searchInFor_reverse(Object[][][] searchInFor)
+	{
+		Map<String, List<Object[]>> datas = new HashMap<>();
+
+		Iterator<Object[][]> itemIterator = IteratorUtils.arrayIterator(searchInFor);
+
+		while (itemIterator.hasNext())
 		{
-			Object[] regex = item[0];
-			ret.addAll(mergeParameters(Collections.singletonList(regex), Arrays.asList(ArrayUtils.subarray(item, 1, item.length))));
+			Iterator<Object[]> subItemIterator = IteratorUtils.arrayIterator(itemIterator.next());
+
+			String searchIn = (String) subItemIterator.next()[0];
+
+			while (subItemIterator.hasNext())
+			{
+				Object[]       subItem   = subItemIterator.next();
+				String         searchFor = (String) subItem[0];
+				List<Object[]> objs      = datas.computeIfAbsent(searchFor, (k) -> new ArrayList<>(Collections.singleton(new Object[] { searchFor })));
+				Object[]       newItem   = new Object[] { searchIn, subItem[1] };
+				objs.add(newItem);
+			}
 		}
-		return mergeParameters(factories(), ret);
+		Object ret[][][] = new Object[datas.size()][][];
+		int    i         = 0;
+		for (String k : datas.keySet())
+		{
+			List<Object[]> data = datas.get(k);
+			ret[i++] = data.toArray(new Object[0][]);
+		}
+		return ret;
+	}
+
+	// ==========================================================================
+
+	static Stream<Object[]> arguments() throws ParseException
+	{
+		return searchForIn(allSearchForIn());
 	}
 
 	@ParameterizedTest
-	@MethodSource
-	void match(String fname, Function<IPRegexElement, IFPA<KVValue, KVLabel>> fprovider, String regex, String pathSubject, boolean match) throws IOException, ParseException
+	@MethodSource("arguments")
+	void match(String fname, Function<IPRegexElement, IFPA<String, String>> fprovider, String searchFor, IPath<String, String> psearchIn, int nb) throws IOException, ParseException
 	{
-		IFPA<KVValue, KVLabel> automaton = parse(regex, fprovider);
-		assertEquals(match, automaton.matcher(KVPaths.pathFromString(pathSubject)).matches());
+		boolean match = nb > 0;
+
+		IFPA<String, String> automaton = parse(searchFor, fprovider);
+		assertEquals(match, automaton.matcher(psearchIn).matches());
 	}
 
-	// =========================================================================
-
-	static List<Object[]> matchPath()
-	{
-		List<Object[]> a = Arrays.asList(new Object[][] { //
-				{ "a.b", "a.b=15", true }, //
-				{ "a.b", "a.b", true }, //
-				{ "a.b", "a.a.b", true }, //
-				{ "a.b", "a.b.c", true }, //
-				{ "a.b", "a.a.b.c", true }, //
-				{ "a.b", "a", false }, //
-
-				// Prefix
-				{ "^.a.b", "^.a.b=15", true }, //
-				{ "^.a.b", "^.a.b.c=15", true }, //
-				{ "^.a.b", "^.a.b", true }, //
-				{ "^.a.b", "^.a.b.c", true }, //
-				{ "^.a.b", "^.a.a.b", false }, //
-				{ "^.a.b", "^.a", false }, //
-				{ "^.a.b", "a.b", false }, //
-
-				// Suffix
-				{ "a.b=15", "a.b=15", true }, //
-				{ "a.b=15", "a.b", false }, //
-				{ "a.b$", "a.b=15$", true }, //
-				{ "a.b$", "a.b$", true }, //
-				{ "a.b$", "a.a.b$", true }, //
-				{ "a.b$", "a.a.b$", true }, //
-
-				{ "a.b$", "a.b.c$", false }, //
-				{ "a.b$", "a", false }, //
-				{ "a.b$", "a.b", false }, //
-
-				// Complete
-				{ "^.a.b=15", "^.a.b=15", true }, //
-				{ "^.a.b=15", "^.a.b", false }, //
-		});
-		return a;
-	}
+	// ==========================================================================
 
 	@ParameterizedTest
-	@MethodSource
-	void matchPath(String spath, String squery, boolean match) throws ParseException
+	@MethodSource("arguments")
+	void find(String fname, Function<IPRegexElement, IFPA<String, String>> fprovider, String searchFor, IPath<String, String> psearchIn, int nb) throws ParseException, IOException
 	{
-		IFPA<KVValue, KVLabel> automaton = automatonFromPath(KVPaths.pathFromString(spath));
-		assertEquals(match, automaton.matcher(KVPaths.pathFromString(squery)).matches());
-	}
+		List<IPath<String, String>> psearchFor = null;
+		try
+		{
+			psearchFor = Paths.pathsFromString(searchFor);
+		}
+		catch (Exception e)
+		{
+		}
+		IFPA<String, String>         automaton = parse(searchFor, fprovider);
+		IPathMatcher<String, String> matcher   = automaton.matcher(psearchIn);
 
-	static List<Object[]> findPath()
-	{
-		return Arrays.asList(new Object[][] { //
-				{ "a.b", "a.b.c.a.b.a", new int[] { 0, 3 } }, //
-				{ "a.b", "^.a.b.c.a.b.a", new int[] { 1, 4 } }, //
-				{ "a.b", "a.b.c.a.b.a.b$", new int[] { 0, 3, 5 } }, //
-				{ "a.b", "^.a.b.c.a.b.a.b$", new int[] { 1, 4, 6 } }, //
-
-				{ "^.a.b", "a.b.c.a.b.a", new int[] {} }, //
-				{ "^.a.b", "^.a.b.c.a.b.a", new int[] { 0 } }, //
-				{ "^.a.b", "a.b.c.a.b.a.b$", new int[] {} }, //
-				{ "^.a.b", "^.a.b.c.a.b.a.b$", new int[] { 0 } }, //
-
-				{ "a.b$", "a.b.c.a.b.a.b", new int[] {} }, //
-				{ "a.b$", "a.b.c.a.b.a.b$", new int[] { 5 } }, //
-				{ "a.b$", "^.a.b.c.a.b.a.b", new int[] {} }, //
-				{ "a.b$", "^.a.b.c.a.b.a.b$", new int[] { 6 } }, //
-
-				{ "^.a.b$", "a.b", new int[] {} }, //
-				{ "^.a.b$", "^.a.b", new int[] {} }, //
-				{ "^.a.b$", "a.b$", new int[] {} }, //
-				{ "^.a.b$", "^.a.b$", new int[] { 0 } }, //
-
-				{ "^.a.b$", "^.a.b.b$", new int[] {} }, //
-				{ "^.a.b$", "^.a.a.b$", new int[] {} }, //
-		});
-	}
-
-	@ParameterizedTest
-	@MethodSource
-	void findPath(String spath, String squery, int groups[]) throws ParseException
-	{
-		IPath<KVValue, KVLabel>        path      = KVPaths.pathFromString(spath);
-		IPath<KVValue, KVLabel>        query     = KVPaths.pathFromString(squery);
-		IFPA<KVValue, KVLabel>         automaton = automatonFromPath(path);
-		ITreeMatcher<KVValue, KVLabel> matcher   = automaton.matcher(query);
-		int                            rooted    = BooleanUtils.toInteger(path.isRooted());
-		int                            i         = 0;
-
+		int i = 0;
 		while (matcher.find())
 		{
-			assertEquals(query.subPath(groups[i], groups[i] + path.nbLabels() + rooted), matcher.toMatchResult().group());
+			IPath<String, String> group = matcher.toMatchResult().group();
+
+			if (null != psearchFor)
+				assertTrue(psearchFor.stream().anyMatch(sFor -> ITree.projectEquals(sFor, group)), //
+					String.format("Expected \n%s; but have\n%s", psearchFor, ITree.toString(group)));
+
+			assertTrue(ITree.isSubTreeOf(group, psearchIn), //
+				String.format("Expected\n%s to be a subtree of\n %s", ITree.toString(group), ITree.toString(psearchIn)));
 			i++;
 		}
-		assertEquals(groups.length, i);
+		if (nb == 0)
+			assertEquals(0, i);
+		else// TODO: equality if possible
+			assertTrue(nb <= i, String.format("Expected %d <= %d", nb, i));
 	}
 
 	// =========================================================================
@@ -468,7 +605,7 @@ public class TestAutomaton
 	 */
 	private interface PathRewriting_data
 	{
-		Collection<IRule<KVValue, KVLabel>> getRules();
+		Collection<IRule<String, String>> getRules();
 
 		List<Object[]> getTestObjects();
 
@@ -479,7 +616,7 @@ public class TestAutomaton
 		return new PathRewriting_data()
 		{
 			@Override
-			public Collection<IRule<KVValue, KVLabel>> getRules()
+			public Collection<IRule<String, String>> getRules()
 			{
 				return Arrays.asList( //
 					ruleFromStrings("x", "c"), //
@@ -559,15 +696,15 @@ public class TestAutomaton
 
 	@ParameterizedTest
 	@MethodSource
-	void pathRewriting(Collection<IRule<KVValue, KVLabel>> rules, int maxDepth, String regex, String query, boolean expected) throws ParseException
+	void pathRewriting(Collection<IRule<String, String>> rules, int maxDepth, String regex, String query, boolean expected) throws ParseException, NoSuchMethodException, SecurityException
 	{
-		GCPathRuleApplierSimple<KVValue, KVLabel> modifier = new GCPathRuleApplierSimple<>(maxDepth);
-		IGRD<KVValue, KVLabel>                    grd      = new GRDFactory<>(rules, new BetaDependencyValidation<>(KVPathUnifiers.get())).create();
+		GCPathRuleApplierSimple<String, String> modifier = new GCPathRuleApplierSimple<>(maxDepth);
+		IGRD<String, String>                    grd      = new GRDFactory<>(rules, new BetaDependencyValidation<>(new PathUnifiers(PathUnifier.class))).create();
 
-		IFPA<KVValue, KVLabel> automaton = fpaFactory(KVPaths.pathFromString(regex)) //
+		IFPA<String, String> automaton = fpaFactory(Paths.pathFromString(regex)) //
 			.setGraphChunkModifier(modifier.getGraphChunkModifier(grd)) //
 			.create();
 
-		assertEquals(expected, automaton.matcher(KVPaths.pathFromString(query)).matches());
+		assertEquals(expected, automaton.matcher(Paths.pathFromString(query)).matches());
 	}
 }
