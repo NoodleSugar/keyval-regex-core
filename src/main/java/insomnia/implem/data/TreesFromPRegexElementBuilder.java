@@ -97,7 +97,7 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 				{
 					Data ret = new Data();
 					ret.element  = src.element;
-					ret.nbRepeat = 1;                                                                    //element.getQuantifier().getInf();
+					ret.nbRepeat = 1;
 					ret.datas    = src.datas.stream().map(d -> new Data(d)).collect(Collectors.toList());
 					ret.seqDatas = Collections.emptyList();
 					return ret;
@@ -164,12 +164,13 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 				case EMPTY:
 				{
 					VAL value = mapValue.apply(e.getValue());
-					treeBuilder.setValue(value);
 
-					if (e.isTerminal())
-						treeBuilder.setTerminal(true);
+					if (null != value)
+						treeBuilder.setValue(value);
 					if (e.isRooted() && treeBuilder.isEmpty())
 						treeBuilder.setRooted(true);
+					if (e.isTerminal())
+						treeBuilder.setTerminal(true);
 					break;
 				}
 				case KEY:
