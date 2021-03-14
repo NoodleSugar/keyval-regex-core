@@ -17,7 +17,6 @@ import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.data.regex.parser.IPRegexElement;
-import insomnia.implem.data.regex.parser.PRegexParser;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 
 public final class Paths
@@ -85,15 +84,27 @@ public final class Paths
 		return CollectionUtils.collect(new TreesFromPRegexElementBuilder<>(element, mapValue, mapLabel), e -> (IPath<VAL, LBL>) e, new ArrayList<>(element.size()));
 	}
 
+	static public IPath<String, String> pathFromPRegexElement(IPRegexElement element)
+	{
+		return pathFromPRegexElement(element, Function.identity(), Function.identity());
+	}
+
+	static public List<IPath<String, String>> pathsFromPRegexElement(IPRegexElement element)
+	{
+		return pathsFromPRegexElement(element, Function.identity(), Function.identity());
+	}
+
 	public static IPath<String, String> pathFromString(String p) throws ParseException
 	{
-		PRegexParser parser = new PRegexParser("''\"\"");
-		return Paths.pathFromPRegexElement(parser.parse(p), s -> s, s -> s);
+		return pathFromPRegexElement(Trees.getParser().parse(p), Function.identity(), Function.identity());
+	}
+
+	public static List<IPath<String, String>> pathsFromString(String p) throws ParseException
+	{
+		return pathsFromPRegexElement(Trees.getParser().parse(p), Function.identity(), Function.identity());
 	}
 
 	// =========================================================================
-
-//	private final static IPath<?, ?> emptyPath = new Path<>();
 
 	/**
 	 * @return an empty path

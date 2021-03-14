@@ -19,6 +19,19 @@ public final class Trees
 	}
 
 	// =========================================================================
+	private final static PRegexParser parser = new PRegexParser("''\"\"~~");
+
+	/**
+	 * Get the default parser of the package.
+	 * <p>
+	 * This parser has for delimiters <code>''</code>, <code>""</code> and <code>~~</code>.
+	 * 
+	 * @return the parser of the package
+	 */
+	static public <VAL, LBL> PRegexParser getParser()
+	{
+		return parser;
+	}
 
 	/**
 	 * A path to compare to other path types
@@ -80,10 +93,6 @@ public final class Trees
 
 	/**
 	 * Create a tree from a tree regular expression.
-	 * <br>
-	 * The method consider
-	 * <q>"</q> and
-	 * <q>'</q> as label/value delimiters.
 	 * 
 	 * @see insomnia.implem.data.regex.parser
 	 * @param tregex   The tree regular expression
@@ -95,16 +104,11 @@ public final class Trees
 	 */
 	public static <VAL, LBL> ITree<VAL, LBL> treeFromString(String tregex, Function<String, VAL> mapValue, Function<String, LBL> mapLabel) throws ParseException
 	{
-		PRegexParser parser = new PRegexParser("''\"\"");
 		return treeFromPRegexElement(parser.parse(tregex), mapValue, mapLabel);
 	}
 
 	/**
 	 * Get all the trees from a tree regular expression.
-	 * <br>
-	 * The method consider
-	 * <q>"</q> and
-	 * <q>'</q> as label/value delimiters.
 	 * 
 	 * @see insomnia.implem.data.regex.parser
 	 * @param tregex   The tree regular expression
@@ -116,16 +120,11 @@ public final class Trees
 	 */
 	public static <VAL, LBL> List<ITree<VAL, LBL>> treesFromString(String tregex, Function<String, VAL> mapValue, Function<String, LBL> mapLabel) throws ParseException
 	{
-		PRegexParser parser = new PRegexParser("''\"\"");
 		return treesFromPRegexElement(parser.parse(tregex), mapValue, mapLabel);
 	}
 
 	/**
 	 * Create a tree from a tree regular expression.
-	 * <br>
-	 * The method consider
-	 * <q>"</q> and
-	 * <q>'</q> as label/value delimiters.
 	 * 
 	 * @see insomnia.implem.data.regex.parser
 	 * @param tregex The tree regular expression
@@ -135,15 +134,11 @@ public final class Trees
 	 */
 	public static ITree<String, String> treeFromString(String tregex) throws ParseException
 	{
-		return treeFromString(tregex, s -> s, s -> s);
+		return treeFromString(tregex, Function.identity(), Function.identity());
 	}
 
 	/**
 	 * Get all the trees from a tree regular expression.
-	 * <br>
-	 * The method consider
-	 * <q>"</q> and
-	 * <q>'</q> as label/value delimiters.
 	 * 
 	 * @see insomnia.implem.data.regex.parser
 	 * @param tregex The tree regular expression
@@ -153,7 +148,7 @@ public final class Trees
 	 */
 	public static List<ITree<String, String>> treesFromString(String tregex) throws ParseException
 	{
-		return treesFromString(tregex, s -> s, s -> s);
+		return treesFromString(tregex, Function.identity(), Function.identity());
 	}
 
 	// =========================================================================
@@ -162,5 +157,4 @@ public final class Trees
 	{
 		return Tree.map(src, fmapVal, fmapLabel);
 	}
-
 }
