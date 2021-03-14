@@ -1,6 +1,5 @@
 package insomnia.fsa.fta;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,15 +31,38 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 
 	// =========================================================================
 
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getInitials(IBUFTA<VAL, LBL> automaton, INode<VAL, LBL> node)
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getInitials(IGFPA<VAL, LBL> automaton, INode<VAL, LBL> node)
 	{
-		Collection<IFSAState<VAL, LBL>> states = new ArrayList<>(automaton.getGFPA().getInitialStates());
+		VAL                         value = node.getValue();
+		Stream<IFSAState<VAL, LBL>> ret   = automaton.getInitialStates().stream();
 
-		Stream<IFSAState<VAL, LBL>> stream = states.stream().filter( //
-			s -> !automaton.getGFPA().isTerminal(s) //
-				&& (GFPAOp.testValue(s.getValueCondition(), node.getValue())) //
-		);
-		return stream.collect(Collectors.toList());
+		if (!node.isTerminal())
+			ret = ret.filter(s -> !automaton.isTerminal(s));
+
+		return automaton.getEpsilonClosure(ret.filter(s -> (GFPAOp.testValue(s.getValueCondition(), value))).collect(Collectors.toList()));
 	}
 
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> internalGetInitials(IGFPA<VAL, LBL> automaton, INode<VAL, LBL> node)
+	{
+		VAL value = node.getValue();
+		return automaton.getInitialStates().stream().filter( //
+			s -> !automaton.isTerminal(s) //
+				&& (GFPAOp.testValue(s.getValueCondition(), value) //
+				)).collect(Collectors.toList());
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> internalFilterNewStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> newStates, boolean nodeIsRoot, boolean nodeIsRooted)
+	{
+		Stream<IFSAState<VAL, LBL>> ret = newStates.stream();
+
+		if (nodeIsRoot)
+		{
+			if (!nodeIsRooted)
+				ret = ret.filter(s -> !automaton.isRooted(s));
+		}
+		else
+			ret = ret.filter(s -> !automaton.isRooted(s));
+
+		return ret.collect(Collectors.toList());
+	}
 }

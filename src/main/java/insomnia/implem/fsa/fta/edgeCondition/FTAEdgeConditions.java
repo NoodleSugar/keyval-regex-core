@@ -111,15 +111,17 @@ public class FTAEdgeConditions
 		@Override
 		public Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<Collection<IFSAState<VAL, LBL>>> multiStates)
 		{
-			int           parentSize = parentStates.size();
-			List<Integer> deletedPos = orderedDeleteBadStates(multiStates);
+			List<Collection<IFSAState<VAL, LBL>>> multiStatesBuffer = new ArrayList<>(multiStates);
 
-			if (multiStates.size() < parentSize)
+			int           parentSize = parentStates.size();
+			List<Integer> deletedPos = orderedDeleteBadStates(multiStatesBuffer);
+
+			if (multiStatesBuffer.size() < parentSize)
 				return Collections.emptyList();
 
 			Collection<List<IFSAState<VAL, LBL>>> ret = new ArrayList<>();
 
-			for (List<IFSAState<VAL, LBL>> states : new IteratorIterable<>(HelpLists.cartesianProduct(multiStates)))
+			for (List<IFSAState<VAL, LBL>> states : new IteratorIterable<>(HelpLists.cartesianProduct(multiStatesBuffer)))
 				ret.addAll(p_validStates(states));
 			if (ret.isEmpty())
 				return Collections.emptyList();

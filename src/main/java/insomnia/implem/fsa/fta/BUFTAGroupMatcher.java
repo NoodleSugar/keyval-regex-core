@@ -20,6 +20,7 @@ import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.data.creational.ISubTreeBuilder;
 import insomnia.data.regex.ITreeMatchResult;
+import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
@@ -214,7 +215,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 
 	private void addInitials(INode<VAL, LBL> node, NodeData nodeData)
 	{
-		Collection<IFSAState<VAL, LBL>> initialStates = IBUFTA.getInitials(automaton, node);
+		Collection<IFSAState<VAL, LBL>> initialStates = IBUFTA.internalGetInitials(gfpa, node);
 
 		if (initialStates.isEmpty())
 			return;
@@ -241,9 +242,6 @@ class BUFTAGroupMatcher<VAL, LBL>
 			}
 			for (From from : nodeData.getFroms(state))
 				currentResults.add(from.builder);
-
-			if (!fpa.isRooted(state) || fpa.getAllEdgesOf(state).size() > 1)
-				toClean.add(state);
 		}
 		nodeData.reset(toClean);
 		return true;
@@ -255,24 +253,35 @@ class BUFTAGroupMatcher<VAL, LBL>
 		{
 			List<Pair<INode<VAL, LBL>, NodeData>> childsSubStates = new ArrayList<>();
 
-			NodeData              nodeData   = null;
 			INode<VAL, LBL>       node       = bottomUpNodes.next();
+			boolean               nodeIsRoot = !bottomUpNodes.hasNext();
 			List<IEdge<VAL, LBL>> edgeChilds = element.getChildren(node);
 
-			/*
-			 * Compute the states from the child edges and update the builder of each parent giving new states
-			 */
+			// Compute the states from the child edges and update the builder of each parent giving new states
 			for (IEdge<VAL, LBL> childEdge : edgeChilds)
 			{
-				INode<VAL, LBL> childNode = childEdge.getChild();
-				nodeData = nodeStatesMap.get(childNode);
+				LBL             label       = childEdge.getLabel();
+				VAL             value       = node.getValue();
+				INode<VAL, LBL> childNode   = childEdge.getChild();
+				NodeData        nodeData    = nodeStatesMap.get(childNode);
+				NodeData        newNodeData = new NodeData(Collections.emptyList());
+
 				Collection<IFSAState<VAL, LBL>> childStates = nodeData.getStates();
-				NodeData                        newNodeData = new NodeData(Collections.emptyList());
 
 				// Scan each child state to know new states origin
 				for (IFSAState<VAL, LBL> childState : childStates)
 				{
-					Collection<IFSAState<VAL, LBL>> childNextStates = GFPAOp.getNextValidStates(gfpa, Collections.singleton(childState), childEdge.getLabel(), childEdge.getChild().getValue());
+					Collection<IFSAState<VAL, LBL>> childNextStates = new HashSet<>();// GFPAOp.getNextValidStates(gfpa, Collections.singleton(childState), childEdge.getLabel(), childEdge.getChild().getValue());
+
+					for (IFSAEdge<VAL, LBL> edge : gfpa.getReachableEdges(childState))
+					{
+						IFSAState<VAL, LBL> nextState = edge.getChild();
+
+						if (!GFPAOp.testLabel(edge.getLabelCondition(), label) || !GFPAOp.testValue(nextState.getValueCondition(), value))
+							continue;
+
+						childNextStates.addAll(IBUFTA.internalFilterNewStates(gfpa, Collections.singleton(nextState), nodeIsRoot, node.isRooted()));
+					}
 
 					if (!childNextStates.isEmpty())
 					{
@@ -288,6 +297,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 				childsSubStates.add(Pair.of(childNode, newNodeData));
 			}
 
+			NodeData nodeData = null;
 			// If one child node: nothing more to do by construction because no hyper edge exists.
 			if (edgeChilds.size() <= 1)
 				nodeData = childsSubStates.get(0).getRight();
@@ -310,7 +320,12 @@ class BUFTAGroupMatcher<VAL, LBL>
 					if (validChildsStates.isEmpty())
 						continue;
 
-					newStates.add(hEdge.getChild());
+					IFSAState<VAL, LBL> newState = hEdge.getChild();
+
+					if (IBUFTA.internalFilterNewStates(gfpa, Collections.singleton(newState), nodeIsRoot, node.isRooted()).isEmpty())
+						continue;
+
+					newStates.add(newState);
 
 					// Take each valid combination and merge builders
 					for (List<IFSAState<VAL, LBL>> validStates : validChildsStates)
@@ -331,7 +346,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 									newFrom.builder.addTree(from.builder, from.builder.getRoot());
 							}
 						}
-						nodeData.add(hEdge.getChild(), newFrom);
+						nodeData.add(newState, newFrom);
 					}
 				}
 			}
