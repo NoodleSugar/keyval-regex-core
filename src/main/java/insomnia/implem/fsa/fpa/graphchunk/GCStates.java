@@ -227,7 +227,7 @@ final class GCStates
 
 		if (dest.getValueCondition().equals(FSAValueConditions.createAny()))
 			GCStates.setValueCondition(dest, src.getValueCondition());
-		else if (!src.getValueCondition().equals(dest.getValueCondition()))
+		else if (!src.getValueCondition().equals(FSAValueConditions.createAny()) && !src.getValueCondition().equals(dest.getValueCondition()))
 			throw new AssertionError();
 
 		if (src.isRooted())

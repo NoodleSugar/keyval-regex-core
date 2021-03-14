@@ -12,6 +12,8 @@ class From
 		this.from     = offset;
 	}
 
+	// ==========================================================================
+
 	public boolean isRooted()
 	{
 		return isRooted;
@@ -22,9 +24,27 @@ class From
 		return from;
 	}
 
+	// ==========================================================================
+
+	@Override
+	public int hashCode()
+	{
+		return Boolean.valueOf(isRooted).hashCode() + from * 31;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (!(obj instanceof From))
+			return false;
+
+		From from = (From) obj;
+		return isRooted == from.isRooted && this.from == from.from;
+	}
+
 	@Override
 	public String toString()
 	{
-		return new StringBuilder().append(isRooted).append(", ").append(from).toString();
+		return new StringBuilder().append("(").append(isRooted).append(", ").append(from).append(")").toString();
 	}
 }

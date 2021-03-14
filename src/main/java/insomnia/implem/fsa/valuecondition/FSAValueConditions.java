@@ -28,12 +28,17 @@ public final class FSAValueConditions
 		}
 	}
 
-	static IFSAValueCondition<Object> any = new FSAValueAny<>();
+	static final IFSAValueCondition<Object> any = new FSAValueAny<>();
 
 	@SuppressWarnings("unchecked")
 	public static <VAL> IFSAValueCondition<VAL> createAny()
 	{
 		return (IFSAValueCondition<VAL>) any;
+	}
+
+	public static <VAL> boolean isAny(IFSAValueCondition<VAL> vcond)
+	{
+		return vcond == any;
 	}
 
 	// =========================================================================

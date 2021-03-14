@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -45,12 +47,28 @@ public final class GFPAOp
 	 * @param states     the reached states from the automaton
 	 * @param theElement the path to validate
 	 */
-	public static <VAL, LBL> void initStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, IPath<VAL, LBL> theElement)
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getInitials(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> theElement)
 	{
-		if (!theElement.isRooted())
-			states.removeIf((state) -> automaton.isRooted(state));
+		Stream<IFSAState<VAL, LBL>> ret = automaton.getInitialStates().stream();
 
-		states.removeIf(state -> !testValue(state.getValueCondition(), theElement.getRoot().getValue()));
+		if (!theElement.isRooted())
+			ret = ret.filter(s -> !automaton.isRooted(s));
+
+		return automaton.getEpsilonClosure( //
+			ret.filter(s -> testValue(s.getValueCondition(), theElement.getRoot().getValue())).collect(Collectors.toList()) //
+		);
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> internalGetPersistentFinals(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
+	{
+		return states.stream().filter(s -> automaton.isFinal(s) && !automaton.isTerminal(s)).collect(Collectors.toList());
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> internalGetInitials(IGFPA<VAL, LBL> automaton, VAL value)
+	{
+		return automaton.getEpsilonClosure( //
+			automaton.getInitialStates().stream().filter(s -> !automaton.isRooted(s) && testValue(s.getValueCondition(), value)).collect(Collectors.toList()) //
+		);
 	}
 
 	/**
@@ -60,7 +78,7 @@ public final class GFPAOp
 	 * @param state     the final state to check
 	 * @return {@code true} if valid or {@code false}
 	 */
-	public static <VAL, LBL> boolean checkFinalState(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	public static <VAL, LBL> boolean internalCheckFinalState(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
 	{
 		assert (automaton.isFinal(state));
 
@@ -97,19 +115,24 @@ public final class GFPAOp
 		return cond.test(value);
 	}
 
+	// ==========================================================================
+
 	public static <VAL, LBL> void nextValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label, VAL value)
 	{
-		if (states.isEmpty())
-			return;
-
-		Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(states);
-		states.clear();
-
-		for (IFSAEdge<VAL, LBL> edge : automaton.getReachableEdges(buffStates))
+		if (!states.isEmpty())
 		{
-			if (testLabel(edge.getLabelCondition(), label) && testValue(edge.getChild().getValueCondition(), value))
-				states.add(edge.getChild());
+			Collection<IFSAState<VAL, LBL>> persistentFinals = internalGetPersistentFinals(automaton, states);
+			Collection<IFSAState<VAL, LBL>> buffStates       = new ArrayList<>(states);
+			states.clear();
+
+			for (IFSAEdge<VAL, LBL> edge : automaton.getReachableEdges(buffStates))
+			{
+				if (testLabel(edge.getLabelCondition(), label) && testValue(edge.getChild().getValueCondition(), value))
+					states.add(edge.getChild());
+			}
+			states.addAll(persistentFinals);
 		}
+		states.addAll(internalGetInitials(automaton, value));
 	}
 
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getNextValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label, VAL value)
@@ -123,8 +146,7 @@ public final class GFPAOp
 	{
 		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(automaton.getStates().size() * 2);
 
-		ret.addAll(automaton.getInitialStates());
-		GFPAOp.initStates(automaton, ret, element);
+		ret.addAll(getInitials(automaton, element));
 
 		Iterator<LBL> labels = element.getLabels().iterator();
 		Iterator<VAL> values = element.getValues().iterator();

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -51,14 +52,15 @@ class GFPAGroupMatcher<VAL, LBL>
 
 	private IGFPA<VAL, LBL> automaton;
 	private IPath<VAL, LBL> element;
-	private Queue<LBL>      labels;
+	private Iterator<LBL>   labels;
+	private Iterator<VAL>   values;
 
-	private boolean end        = false;
-	private int     labelIndex = 0;
+	private int labelIndex = 0;
 
 	private Queue<Result<VAL, LBL>>                    currentResults;
-	private Collection<IFSAState<VAL, LBL>>            currentStates;
 	private Map<IFSAState<VAL, LBL>, Collection<From>> groupsOffset;
+
+	boolean hasNonRootedInitials;
 
 	// =========================================================================
 
@@ -75,6 +77,7 @@ class GFPAGroupMatcher<VAL, LBL>
 	{
 		return new GFPAGroupMatcher<>(automaton, element);
 	}
+
 	// =========================================================================
 
 	private GFPAGroupMatcher(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> element)
@@ -84,20 +87,24 @@ class GFPAGroupMatcher<VAL, LBL>
 
 		this.currentResults = new LinkedList<>();
 		this.groupsOffset   = new HashMap<>();
-		this.labels         = new LinkedList<>(element.getLabels());
-		this.currentStates  = new ArrayList<>(automaton.getStates().size());
-		this.currentStates.addAll(automaton.getInitialStates());
+		this.labels         = element.getLabels().iterator();
+		this.values         = element.getValues().iterator();
 
-		GFPAOp.initStates(automaton, currentStates, element);
+		hasNonRootedInitials = automaton.getInitialStates().stream().anyMatch(s -> !automaton.isRooted(s));
+		values.next();
 
 		// Create a group for each initial state
-		for (IFSAState<VAL, LBL> state : currentStates)
+		for (IFSAState<VAL, LBL> state : GFPAOp.getInitials(automaton, element))
 			addOffset(groupsOffset, state, 0);
+
+		finalStatesCheck();
 	}
 
-	private void setEnd()
+	// ==========================================================================
+
+	private Collection<IFSAState<VAL, LBL>> currentStates()
 	{
-		this.end = true;
+		return groupsOffset.keySet();
 	}
 
 	private void addOffsets(Map<IFSAState<VAL, LBL>, Collection<From>> groupsOffset, IFSAState<VAL, LBL> state, Collection<From> srcOffsets)
@@ -106,10 +113,26 @@ class GFPAGroupMatcher<VAL, LBL>
 		offsets.addAll(srcOffsets);
 	}
 
+	/**
+	 * Add an offset for a state.
+	 */
 	private void addOffset(Map<IFSAState<VAL, LBL>, Collection<From>> groupsOffset, IFSAState<VAL, LBL> state, int offset)
 	{
 		Collection<From> offsets = groupsOffset.computeIfAbsent(state, s -> new HashSet<>());
 		offsets.add(new From(automaton.isRooted(state), offset));
+	}
+
+	/**
+	 * Check if there is some final states in this.currentStates and add results if needed
+	 */
+	private void finalStatesCheck()
+	{
+		// Add new results
+		for (IFSAState<VAL, LBL> pfinal : (Iterable<IFSAState<VAL, LBL>>) currentStates().stream().filter(automaton::isFinal)::iterator)
+		{
+			for (From from : groupsOffset.getOrDefault(pfinal, Collections.emptyList()))
+				addResult(pfinal, from, labelIndex);
+		}
 	}
 
 	private void addResult(IFSAState<VAL, LBL> state, From from, int lastOffset)
@@ -117,6 +140,14 @@ class GFPAGroupMatcher<VAL, LBL>
 		int start = from.getFrom();
 		int end   = lastOffset;
 
+		if (automaton.isTerminal(state) && values.hasNext())
+			return;
+		// Last automaton process: check element terminal case
+		if (!values.hasNext())
+		{
+			if (automaton.isTerminal(state) && !element.isTerminal())
+				return;
+		}
 		if (!from.isRooted())
 		{
 			if (element.isRooted())
@@ -127,30 +158,26 @@ class GFPAGroupMatcher<VAL, LBL>
 		}
 		else if (element.isRooted())
 			end++;
+
 		currentResults.add(new Result<>(state, Pair.of(start, end)));
 	}
 
-	private void checkResults()
+	private boolean ended()
 	{
-		currentResults.removeIf(r -> !GFPAOp.checkFinalState(automaton, r.finalState));
+		return !labels.hasNext() || !mayContinue();
 	}
 
-	private void finalizeResults()
+	private boolean mayContinue()
 	{
-		GFPAOp.finalizeStates(automaton, currentStates, element);
-		Queue<Result<VAL, LBL>> ret = new LinkedList<>();
+		return hasNonRootedInitials || !currentStates().isEmpty();
+	}
 
-		for (Result<VAL, LBL> result : currentResults)
-		{
-			if (!currentStates.contains(result.finalState))
-				continue;
+	// ==========================================================================
 
-			if (automaton.isTerminal(result.finalState))
-				result.limits = Pair.of(result.limits.getLeft(), result.limits.getRight() + 1);
-
-			ret.add(result);
-		}
-		this.currentResults = ret;
+	private IPathMatchResult<VAL, LBL> nextResult()
+	{
+		Result<VAL, LBL> result = currentResults.poll();
+		return PathMatchResults.create(element.subPath(result.limits.getLeft(), result.limits.getRight()));
 	}
 
 	/**
@@ -158,94 +185,68 @@ class GFPAGroupMatcher<VAL, LBL>
 	 */
 	public IPathMatchResult<VAL, LBL> nextMatch()
 	{
-		if (end)
+		if (!currentResults.isEmpty())
+			return nextResult();
+
+		if (ended())
 			return PathMatchResults.empty();
 
-		while (!end && currentResults.isEmpty())
-			nextValidStep();
+		nextValidStep();
 
 		if (currentResults.isEmpty())
 			return PathMatchResults.empty();
-
-		Result<VAL, LBL> result = currentResults.poll();
-		return PathMatchResults.create(element.subPath(result.limits.getLeft(), result.limits.getRight()));
+		else
+			return nextResult();
 	}
 
 	private void nextValidStep()
 	{
-		boolean hasMatch = false;
-
-		Map<IFSAState<VAL, LBL>, Collection<From>> nextGroupsOffsets = new HashMap<>();
-
-		while (true)
+		while (labels.hasNext())
 		{
-			LBL label = labels.poll();
+			LBL label = labels.next();
+			VAL value = values.next();
 			labelIndex++;
 
-			if (currentStates.isEmpty())
-				break;
-
-			Collection<IFSAState<VAL, LBL>> buffStates = new ArrayList<>(currentStates);
-			currentStates.clear();
+			Collection<IFSAState<VAL, LBL>>                buffStates       = new ArrayList<>(groupsOffset.keySet());
+			HashMap<IFSAState<VAL, LBL>, Collection<From>> buffGroupsOffset = new HashMap<>(groupsOffset);
+			groupsOffset.clear();
 
 			for (IFSAState<VAL, LBL> currentState : buffStates)
 			{
-				Collection<From> groupOffsets = groupsOffset.getOrDefault(currentState, Collections.emptyList());
+				Collection<From> groupOffsets = buffGroupsOffset.get(currentState);
 
 				if (groupOffsets.isEmpty())
 					continue;
 
 				for (IFSAEdge<VAL, LBL> edge : automaton.getReachableEdges(currentState))
 				{
-					if (!edge.getLabelCondition().test(label))
+					if (!GFPAOp.testLabel(edge.getLabelCondition(), label))
 						continue;
 
-					IFSAState<VAL, LBL> nextState         = edge.getChild();
-					boolean             isInitial         = automaton.isInitial(nextState);
-					boolean             isFinal           = automaton.isFinal(nextState);
-					boolean             isTerminal        = automaton.isTerminal(nextState);
-					int                 nextState_nbEdges = automaton.getEdgesOf(nextState).size();
+					IFSAState<VAL, LBL> nextState = edge.getChild();
 
-					if (isInitial && !GFPAOp.checkInitialState(automaton, nextState))
+					if (!GFPAOp.testValue(nextState.getValueCondition(), value))
 						continue;
 
-					currentStates.add(nextState);
-
-					if (!isInitial //
-						&& (!isFinal || (false //
-							|| (isTerminal && nextState_nbEdges > 0) //
-							|| (!isTerminal && nextState_nbEdges > 1) //
-						)) //
-					)
-						addOffsets(nextGroupsOffsets, nextState, groupOffsets);
-					if (isInitial)
-						addOffset(nextGroupsOffsets, nextState, labelIndex);
-					if (isFinal)
+					for (IFSAState<VAL, LBL> s : automaton.getEpsilonClosure(nextState))
 					{
-						for (From from : groupOffsets)
-							addResult(nextState, from, labelIndex);
+						addOffsets(groupsOffset, s, groupOffsets);
 
-						hasMatch = true;
+						if (automaton.isInitial(s))
+							addOffset(groupsOffset, s, labelIndex);
 					}
 				}
 			}
-			{
-				Map<IFSAState<VAL, LBL>, Collection<From>> tmp = groupsOffset;
-				groupsOffset      = nextGroupsOffsets;
-				nextGroupsOffsets = tmp;
-				nextGroupsOffsets.clear();
+			{	// Add new initials
+				Collection<IFSAState<VAL, LBL>> initials = GFPAOp.internalGetInitials(automaton, value);
+
+				for (IFSAState<VAL, LBL> initial : initials)
+					addOffset(groupsOffset, initial, labelIndex);
 			}
-			if (labels.isEmpty())
-			{
-				finalizeResults();
-				break;
-			}
-			else if (hasMatch)
-			{
-				checkResults();
+			finalStatesCheck();
+
+			if (!currentResults.isEmpty() || !mayContinue())
 				return;
-			}
 		}
-		setEnd();
 	}
 }

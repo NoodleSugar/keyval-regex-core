@@ -18,7 +18,6 @@ import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier.Environment;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
-import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 
 /**
  * The factory to create an automaton from a parsed regex or a path.
@@ -62,36 +61,10 @@ public class FPAFactory<VAL, LBL>
 	{
 		{
 			IFSAState<VAL, LBL> start = automaton.getStart();
-
-			if (!automaton.isRooted(start))
-			{
-				if (!start.getValueCondition().equals(FSAValueConditions.createAny()))
-				{
-					automaton.setInitial(start, true);
-					IFSAState<VAL, LBL> newStart = automaton.createState();
-					automaton.addEdge(newStart, start, FSALabelConditions.trueCondition());
-					automaton.setStart(newStart);
-					start = newStart;
-				}
-				automaton.addEdge(start, start, FSALabelConditions.trueCondition());
-			}
 			automaton.setInitial(start, true);
 		}
 		{
 			IFSAState<VAL, LBL> end = automaton.getEnd();
-
-			if (!automaton.isTerminal(end))
-			{
-				if (/* automaton.isRooted(end) || */ !end.getValueCondition().equals(FSAValueConditions.createAny()))
-				{
-					automaton.setFinal(end, true);
-					IFSAState<VAL, LBL> newEnd = automaton.createState();
-					automaton.addEdge(end, newEnd, FSALabelConditions.trueCondition());
-					automaton.setEnd(newEnd);
-					end = newEnd;
-				}
-				automaton.addEdge(end, end, FSALabelConditions.trueCondition());
-			}
 			automaton.setFinal(end, true);
 		}
 	}
