@@ -143,7 +143,8 @@ public final class PRegexParser
 
 	public IPRegexElement parse(InputStream regexStream) throws IOException, ParseException
 	{
-		PLexer lexer = new PLexer(regexStream, allDelimiters);
+		StringBuilder parsed = new StringBuilder();
+		PLexer        lexer  = new PLexer(regexStream, allDelimiters);
 
 		Stack<ReaderState>   readerStateStack = new Stack<>();
 		Stack<PRegexElement> elementStack     = new Stack<>();
@@ -172,6 +173,11 @@ public final class PRegexParser
 				v     = lexer.nextToken();
 				token = v.getToken();
 				data  = v.getData();
+
+				if (null != data)
+					parsed.append(data).append(" ");
+				else
+					parsed.append(token).append(" ");
 			}
 			switch (state)
 			{
@@ -476,7 +482,7 @@ public final class PRegexParser
 			case END:
 			{
 				if (token != Token.END)
-					throw new ParseException("Invalid regex", lexer.getOffset());
+					throw new ParseException(String.format("Invalid regex: %s", parsed), lexer.getOffset());
 
 				assert (elementStack.size() == 1);
 				PRegexElement element = elementStack.pop();
