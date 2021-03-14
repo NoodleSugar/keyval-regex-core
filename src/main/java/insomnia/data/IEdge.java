@@ -1,7 +1,6 @@
 package insomnia.data;
 
 import java.util.Objects;
-import java.util.function.BiPredicate;
 
 /**
  * An edge in a data.
@@ -21,97 +20,58 @@ public interface IEdge<VAL, LBL>
 	// =========================================================================
 
 	/**
-	 * Compare two edges with some predicates.
+	 * Check if a is the same edge as b;
+	 * that is the two edges contains the same parent/child {@link Object} node, and labels are equal.
 	 * 
-	 * @param a              first edge
-	 * @param b              second edge
-	 * @param nodePredicate  predicate for edges's nodes
-	 * @param labelPredicate predicate for edges's labels
-	 * @return 0 if a = b following the predicates, positive if a > 0, or negative if a < b
-	 */
-	static <VAL, LBL> int compare(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b, BiPredicate<INode<VAL, LBL>, INode<VAL, LBL>> nodePredicate, BiPredicate<LBL, LBL> labelPredicate)
-	{
-		if (!nodePredicate.test(a.getParent(), b.getParent()))
-			return a.getParent().hashCode() - b.getParent().hashCode();
-		if (!nodePredicate.test(a.getChild(), b.getChild()))
-			return a.getChild().hashCode() - b.getChild().hashCode();
-		if (!labelPredicate.test(a.getLabel(), b.getLabel()))
-			return a.getLabel().hashCode() - b.getLabel().hashCode();
-		return 0;
-	}
-
-	/**
-	 * @return 0 if edges have the same child/parent objects and equals label, negative value if a < b, or positive value if a > b
-	 */
-	static <VAL, LBL> int compareSameAs(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
-	{
-		return compare(a, b, (x, y) -> x == y, Objects::equals);
-	}
-
-	/**
 	 * @return true if a is the same edge as b
-	 * @see #compareSameAs(IEdge, IEdge)
 	 */
 	static <VAL, LBL> boolean sameAs(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
-		return 0 == compareSameAs(a, b);
+		return a.getChild() == b.getChild() //
+			&& a.getParent() == b.getParent() //
+			&& Objects.equals(a.getLabel(), b.getLabel());
 	}
 
 	/**
-	 * @return 0 if edges are equals
-	 * @see INode#equals(INode, INode)
-	 */
-	static <VAL, LBL> int compareEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
-	{
-		return compare(a, b, (x, y) -> INode.equals(x, y), Object::equals);
-	}
-
-	/**
+	 * Check if a and b are equal edges;
+	 * that is a.parent/a.child node equals b.parent/b.child ({@link INode#equals(INode, INode)}) , and labels are equal.
+	 * 
 	 * @return true if a and b are equal edges
-	 * @see #compareEquals(IEdge, IEdge)
 	 * @see INode#equals(INode, INode)
 	 */
 	static <VAL, LBL> boolean equals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
-		return 0 == compareEquals(a, b);
+		return INode.equals(a.getChild(), b.getChild()) //
+			&& INode.equals(a.getParent(), b.getParent()) //
+			&& Objects.equals(a.getLabel(), b.getLabel());
 	}
 
 	/**
-	 * @return 0 if a and b have the same tree structure
-	 * @see INode#structEquals(INode, INode)
-	 */
-	static <VAL, LBL> int compareStructEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
-	{
-		return compare(a, b, INode::structEquals, Object::equals);
-	}
-
-	/**
+	 * Check if a and b have the same tree structure;
+	 * that is a.parent/a.child node is structurally equal to b.parent/b.child, and labels are equal.
+	 * 
 	 * @return true if a and b have the same tree structure
-	 * @see #compareStructEquals(IEdge, IEdge)
 	 * @see INode#structEquals(INode, INode)
 	 */
 	static <VAL, LBL> boolean structEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
-		return 0 == compareStructEquals(a, b);
+		return INode.structEquals(a.getChild(), b.getChild()) //
+			&& INode.structEquals(a.getParent(), b.getParent()) //
+			&& Objects.equals(a.getLabel(), b.getLabel());
 	}
 
 	/**
-	 * @return 0 if a can be projected on b
-	 * @see INode#projectEquals(INode, INode)
-	 */
-	static <VAL, LBL> int compareProjectEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
-	{
-		return compare(a, b, INode::projectEquals, (x, y) -> x == null || Objects.equals(x, y));
-	}
-
-	/**
+	 * Check if a can be projected on b;
+	 * that is a.parent/a.child node can be projected on b.parent/b.child, and a.label == null or a.label is equal to b.label.
+	 * 
 	 * @return true if a can be projected to b
-	 * @see #compareProjectEquals(IEdge, IEdge)
 	 * @see INode#projectEquals(INode, INode)
 	 */
 	static <VAL, LBL> boolean projectEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
-		return 0 == compareProjectEquals(a, b);
+		return INode.projectEquals(a.getChild(), b.getChild()) //
+			&& INode.projectEquals(a.getParent(), b.getParent()) //
+			&& (null == a.getLabel() || Objects.equals(a.getLabel(), b.getLabel()));
 	}
 
 	// =========================================================================

@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -170,13 +170,13 @@ public interface ITree<VAL, LBL>
 	/**
 	 * Check if the first tree is a sub tree of the second one.
 	 * <p>
-	 * A sub tree is a tree with its nodes/edges objects are from another tree.
+	 * A sub tree is a tree where all its nodes/edges are the same as another tree ({@link IEdge#sameAs(IEdge, IEdge)}
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
 	 * @param a     the tree to search for
 	 * @param b     the tree to search in
-	 * @return true if {@code a } is a sub tree of {@code b}
+	 * @return true if {@code a} is a sub tree of {@code b}
 	 * @see IEdge#sameAs(IEdge, IEdge)
 	 */
 	public static <VAL, LBL> boolean isSubTreeOf(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
@@ -187,7 +187,7 @@ public interface ITree<VAL, LBL>
 	/**
 	 * Check if the first tree is a sub tree of the second one considering two starting nodes.
 	 * <p>
-	 * A sub tree is a tree with its nodes/edges objects are from another tree.
+	 * A sub tree is a tree where all its nodes/edges are the same as another tree ({@link IEdge#sameAs(IEdge, IEdge)}
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
@@ -200,17 +200,23 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean isSubTreeOf(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
 	{
-		Set<IEdge<VAL, LBL>> as = new TreeSet<>(IEdge::compareSameAs), //
-			bs = new TreeSet<>(IEdge::compareSameAs);
-		as.addAll(a.getEdges(anode));
-		bs.addAll(b.getEdges(bnode));
-		return bs.containsAll(as);
+		LinkedList<IEdgeEquals<VAL, LBL>> bedges = new LinkedList<>();
+
+		for (IEdge<VAL, LBL> bedge : b.getEdges())
+			bedges.add(IEdgeEquals.create(bedge, (x, y) -> x == y, (e) -> 0));
+
+		for (IEdge<VAL, LBL> aedge : a.getEdges())
+		{
+			if (!bedges.removeFirstOccurrence(IEdgeEquals.create(aedge, IEdge::sameAs, (e) -> 0)))
+				return false;
+		}
+		return true;
 	}
 
 	/**
-	 * Check if two trees are equals.
+	 * Check if two trees are equal.
 	 * <p>
-	 * Two trees are equals if they represent the same tree.
+	 * Two trees are equal if they represent the same tree.
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
@@ -226,7 +232,7 @@ public interface ITree<VAL, LBL>
 	}
 
 	/**
-	 * Check if a tree project on a second one.
+	 * Check if a tree can be projected on a second one.
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
@@ -258,9 +264,9 @@ public interface ITree<VAL, LBL>
 	}
 
 	/**
-	 * Check if two trees are equals below two nodes.
+	 * Check if two trees are equal below two nodes.
 	 * <p>
-	 * Two trees are equals if they represent the same tree.
+	 * Two trees are equal if they represent the same tree.
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
@@ -272,11 +278,11 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
 	{
-		return equals(a, anode, b, bnode, IEdge::compareEquals);
+		return equals(a, anode, b, bnode, (x, y) -> IEdge.equals(x, y));
 	}
 
 	/**
-	 * Check if a from anode project to b from bnode.
+	 * Check if the tree rooted on {@code a} from {@code anode} an be projected on the tree rooted on {@code b} from {@code bnode}
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
@@ -290,11 +296,11 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean projectEquals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
 	{
-		return equals(a, anode, b, bnode, IEdge::compareProjectEquals);
+		return equals(a, anode, b, bnode, IEdge::projectEquals);
 	}
 
 	/**
-	 * Check if two trees have the same structure from two nodes.
+	 * Check if two trees rooted on some nodes have the same structure.
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
@@ -308,7 +314,7 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean structEquals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
 	{
-		return equals(a, anode, b, bnode, IEdge::compareStructEquals);
+		return equals(a, anode, b, bnode, IEdge::structEquals);
 	}
 
 	/**
@@ -323,14 +329,16 @@ public interface ITree<VAL, LBL>
 	 * @param edgeComparator a comparator of {@link IEdge}
 	 * @return
 	 */
-	static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode, Comparator<IEdge<VAL, LBL>> edgeComparator)
+	static <VAL, LBL> boolean equalsMap(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode, //
+		BiPredicate<IEdge<VAL, LBL>, IEdge<VAL, LBL>> fequals, //
+		Function<IEdge<VAL, LBL>, Integer> fhashCode)
 	{
-		Map<IEdge<VAL, LBL>, IEdge<VAL, LBL>> bs     = new TreeMap<>(edgeComparator);
+		Map<IEdge<VAL, LBL>, IEdge<VAL, LBL>> bs     = new HashMap<>();
 		Queue<IEdge<VAL, LBL>>                aedges = new LinkedList<>();
 		aedges.addAll(a.getChildren(anode));
 
 		for (IEdge<VAL, LBL> bchild : b.getChildren(bnode))
-			bs.put(bchild, bchild);
+			bs.put(IEdgeEquals.create(bchild, fequals, fhashCode), bchild);
 
 		while (!aedges.isEmpty())
 		{
@@ -344,7 +352,62 @@ public interface ITree<VAL, LBL>
 			aedges.addAll(a.getChildren(achild.getChild()));
 
 			for (IEdge<VAL, LBL> bsubchild : b.getChildren(bchild.getChild()))
-				bs.put(bsubchild, bsubchild);
+				bs.put(IEdgeEquals.create(bchild, fequals, fhashCode), bsubchild);
+		}
+		return true;
+	}
+
+	static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode, //
+		BiPredicate<IEdge<VAL, LBL>, IEdge<VAL, LBL>> fequals)
+	{
+		Queue<List<IEdgeEquals<VAL, LBL>>> bedges        = new LinkedList<>();
+		Queue<IEdgeEquals<VAL, LBL>>       aedges        = new LinkedList<>();
+		List<IEdge<VAL, LBL>>              achilds, bchilds;
+		List<IEdgeEquals<VAL, LBL>>        bcurrentEdges = null, tmp;
+
+		achilds = a.getChildren(anode);
+		bchilds = b.getChildren(bnode);
+
+		if (achilds.size() != bchilds.size())
+			return false;
+
+		for (IEdge<VAL, LBL> achild : achilds)
+			aedges.add(IEdgeEquals.create(achild, fequals, (e) -> 0));
+
+		bcurrentEdges = new ArrayList<>(bchilds.size());
+		for (IEdge<VAL, LBL> bchild : bchilds)
+			bcurrentEdges.add(IEdgeEquals.create(bchild, fequals, (e) -> 0));
+
+		while (!aedges.isEmpty())
+		{
+			IEdgeEquals<VAL, LBL> achild = aedges.poll() //
+				, bchild;
+
+			int bindex = bcurrentEdges.indexOf(achild);
+
+			if (-1 == bindex)
+				return false;
+
+			bchild = bcurrentEdges.get(bindex);
+			bcurrentEdges.remove(bindex);
+
+			achilds = a.getChildren(achild.getChild());
+			bchilds = b.getChildren(bchild.getChild());
+
+			if (achilds.size() != bchilds.size())
+				return false;
+			if (achilds.size() > 0)
+			{
+				for (IEdge<VAL, LBL> asubchild : achilds)
+					aedges.add(IEdgeEquals.create(asubchild, fequals, (e) -> 0));
+
+				tmp = new ArrayList<>(bchilds.size());
+				for (IEdge<VAL, LBL> bsubchild : bchilds)
+					tmp.add(IEdgeEquals.create(bsubchild, fequals, (e) -> 0));
+				bedges.add(tmp);
+			}
+			if (bcurrentEdges.isEmpty() && !bedges.isEmpty())
+				bcurrentEdges = bedges.poll();
 		}
 		return true;
 	}

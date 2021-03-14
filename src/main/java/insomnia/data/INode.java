@@ -64,7 +64,8 @@ public interface INode<VAL, LBL>
 	/**
 	 * Check if a node project on a second one.
 	 * <p>
-	 * A node project on another if it is less constrain for its value and its rooted/terminal nature; that is its value is null or equals the second one, and rooted/terminal is false, or equals the second node's own.
+	 * A node project on another if it is less constrain for its value and its rooted/terminal nature;
+	 * that is its value is null or equals the second one, and rooted/terminal is false, or equals the second one.
 	 * 
 	 * @param a the first node
 	 * @param b the second node
