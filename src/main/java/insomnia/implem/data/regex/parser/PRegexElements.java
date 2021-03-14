@@ -154,7 +154,6 @@ public final class PRegexElements
 		{
 			return "|";
 		}
-
 	}
 
 	public static Disjunction createDisjunction()
@@ -220,6 +219,15 @@ public final class PRegexElements
 		public boolean isRooted()
 		{
 			return getElements().size() > 0 && getElements().get(0).isRooted();
+		}
+
+		@Override
+		void setTerminal(boolean terminal)
+		{
+			assert (elements.isEmpty() || terminal == true);
+
+			((PRegexElement) elements.get(elements.size() - 1)).setTerminal(terminal);
+			this.terminal = terminal;
 		}
 
 		@Override
@@ -294,6 +302,7 @@ public final class PRegexElements
 
 	static abstract class PRegexElement implements IPRegexElement
 	{
+		boolean    terminal;
 		Quantifier quantifier;
 		String     labelDelimiters, valueDelimiters;
 
@@ -301,10 +310,21 @@ public final class PRegexElements
 
 		abstract void setValue(String value);
 
-		abstract void setTerminal(boolean terminal);
+		void setTerminal(boolean terminal)
+		{
+			this.terminal = terminal;
+		}
+
+		@Override
+		public boolean isTerminal()
+		{
+			return terminal;
+		}
 
 		public PRegexElement(Type type)
 		{
+			terminal = false;
+
 			labelDelimiters = "";
 			valueDelimiters = "";
 			this.type       = type;
@@ -352,7 +372,7 @@ public final class PRegexElements
 	static abstract class SimpleElement extends PRegexElement
 	{
 		String  value;
-		boolean rooted, terminal;
+		boolean rooted;
 
 		public SimpleElement(Type type)
 		{
@@ -368,11 +388,6 @@ public final class PRegexElements
 		public void setRooted(boolean rooted)
 		{
 			this.rooted = rooted;
-		}
-
-		public void setTerminal(boolean terminal)
-		{
-			this.terminal = terminal;
 		}
 
 		@Override
@@ -391,12 +406,6 @@ public final class PRegexElements
 		public boolean isRooted()
 		{
 			return rooted;
-		}
-
-		@Override
-		public boolean isTerminal()
-		{
-			return terminal;
 		}
 
 		@Override
@@ -449,7 +458,6 @@ public final class PRegexElements
 	 */
 	static abstract class MultipleElement extends PRegexElement
 	{
-		boolean              terminal;
 		List<IPRegexElement> elements;
 
 		abstract String toString_separator();
@@ -467,6 +475,17 @@ public final class PRegexElements
 				if (!e.isPath())
 					return false;
 			return true;
+		}
+
+		@Override
+		void setTerminal(boolean terminal)
+		{
+			assert (elements.isEmpty() || terminal == true);
+
+			for (IPRegexElement ie : elements)
+				((PRegexElement) ie).setTerminal(terminal);
+
+			this.terminal = terminal;
 		}
 
 		@Override
@@ -512,18 +531,6 @@ public final class PRegexElements
 		public String getLabel()
 		{
 			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		void setTerminal(boolean terminal)
-		{
-			this.terminal = terminal;
-		}
-
-		@Override
-		public boolean isTerminal()
-		{
-			return terminal;
 		}
 
 		@Override
