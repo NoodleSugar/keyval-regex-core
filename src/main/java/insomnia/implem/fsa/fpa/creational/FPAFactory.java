@@ -120,7 +120,7 @@ public class FPAFactory<VAL, LBL>
 					gchunk.setTerminal(end, path.isTerminal());
 
 					if (!path.isTerminal())
-						gchunk.addEdge(end, end, FSALabelConditions.trueCondition());
+						gchunk.addEdge(end, end, FSALabelConditions.createAny());
 
 					return gluePath(gchunk, start, end, path);
 				}

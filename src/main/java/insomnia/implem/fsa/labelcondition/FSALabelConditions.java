@@ -15,7 +15,7 @@ public final class FSALabelConditions
 
 	// =========================================================================
 
-	private final static IFSALabelCondition<?> trueCondition;
+	private final static IFSALabelCondition<?> any;
 
 	private abstract static class AbstractLabelCondition<LBL> implements IFSALabelCondition<LBL>
 	{
@@ -59,7 +59,7 @@ public final class FSALabelConditions
 
 	static
 	{
-		trueCondition = new IFSALabelCondition<Object>()
+		any = new IFSALabelCondition<Object>()
 		{
 			@Override
 			public boolean test(Object element)
@@ -88,9 +88,9 @@ public final class FSALabelConditions
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <LBL> IFSALabelCondition<LBL> trueCondition()
+	public static <LBL> IFSALabelCondition<LBL> createAny()
 	{
-		return (IFSALabelCondition<LBL>) trueCondition;
+		return (IFSALabelCondition<LBL>) any;
 	}
 
 	public static <LBL> IFSALabelCondition<LBL> epsilonCondition()
@@ -119,7 +119,7 @@ public final class FSALabelConditions
 	public static <LBL> IFSALabelCondition<LBL> createAnyOrEq(LBL label)
 	{
 		if (label == null)
-			return trueCondition();
+			return createAny();
 
 		return createEq(label);
 	}
@@ -138,8 +138,8 @@ public final class FSALabelConditions
 		};
 	}
 
-	public static boolean isTrueCondition(IFSALabelCondition<?> labelCondition)
+	public static boolean isAny(IFSALabelCondition<?> labelCondition)
 	{
-		return labelCondition == trueCondition;
+		return labelCondition == any;
 	}
 }

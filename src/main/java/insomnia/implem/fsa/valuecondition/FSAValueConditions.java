@@ -28,7 +28,7 @@ public final class FSAValueConditions
 		}
 	}
 
-	static final IFSAValueCondition<Object> any = new FSAValueAny<>();
+	private static final IFSAValueCondition<Object> any = new FSAValueAny<>();
 
 	@SuppressWarnings("unchecked")
 	public static <VAL> IFSAValueCondition<VAL> createAny()
