@@ -12,7 +12,7 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import insomnia.data.INode;
 import insomnia.data.IPath;
-import insomnia.data.PathOp.RealLimits;
+import insomnia.data.IPath.RealLimits;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;

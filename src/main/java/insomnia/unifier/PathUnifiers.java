@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 
 import insomnia.data.IPath;
-import insomnia.data.PathOp;
 import insomnia.rule.IPathRule;
 
 /**
@@ -119,7 +118,7 @@ public final class PathUnifiers<VAL, LBL>
 		 * head : y.A
 		 * body : (∃)? B.y
 		 */
-		tmp = PathOp.findOverlappedPossiblePrefixes(body, head, firstFind);
+		tmp = IPath.findOverlappedPossiblePrefixes(body, head, firstFind);
 
 		for (i = 0; i < tmp.length; i++)
 		{
@@ -133,7 +132,7 @@ public final class PathUnifiers<VAL, LBL>
 		 * head : y
 		 * body : (∃)? B.y
 		 */
-		if (PathOp.isProperSuffix(head, body))
+		if (IPath.isProperSuffix(head, body))
 		{
 			ret.add(unifierFactory.create( //
 				body.subPath(0, b_size - h_size), null, //
@@ -147,7 +146,7 @@ public final class PathUnifiers<VAL, LBL>
 			 * head : A.y
 			 * body : y.B
 			 */
-			tmp = PathOp.findOverlappedPossiblePrefixes(head, body, firstFind);
+			tmp = IPath.findOverlappedPossiblePrefixes(head, body, firstFind);
 
 			for (i = 0; i < tmp.length; i++)
 			{
@@ -161,7 +160,7 @@ public final class PathUnifiers<VAL, LBL>
 			 * head : y
 			 * body : y.B
 			 */
-			if (PathOp.isProperPrefix(head, body))
+			if (IPath.isProperPrefix(head, body))
 			{
 				ret.add(unifierFactory.create( //
 					null, body.subPath(h_size, b_size), //
@@ -172,7 +171,7 @@ public final class PathUnifiers<VAL, LBL>
 			 * head : y
 			 * body : B1.y.B2
 			 */
-			tmp = PathOp.findInclusions(head, body, firstFind, true);
+			tmp = IPath.findInclusions(head, body, firstFind, true);
 
 			for (i = 0; i < tmp.length; i++)
 			{
@@ -221,7 +220,7 @@ public final class PathUnifiers<VAL, LBL>
 		 * head : A.y
 		 * body : y
 		 */
-		if (PathOp.isSuffix(body, head, false))
+		if (IPath.isSuffix(body, head, false))
 		{
 			ret.add(unifierFactory.create( //
 				null, null, //
@@ -232,7 +231,7 @@ public final class PathUnifiers<VAL, LBL>
 		 * head : y.A
 		 * body : y
 		 */
-		if (PathOp.isPrefix(body, head, true))
+		if (IPath.isPrefix(body, head, true))
 		{
 			ret.add(unifierFactory.create( //
 				null, null, //
@@ -244,7 +243,7 @@ public final class PathUnifiers<VAL, LBL>
 		 * body : y
 		 */
 		{
-			tmp = PathOp.findInclusions(body, head, firstFind, true);
+			tmp = IPath.findInclusions(body, head, firstFind, true);
 
 			for (i = 0; i < tmp.length; i++)
 			{

@@ -13,7 +13,6 @@ import insomnia.data.AbstractPath;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.IPath;
-import insomnia.data.PathOp.RealLimits;
 import insomnia.lib.Side;
 import insomnia.lib.help.HelpLists;
 

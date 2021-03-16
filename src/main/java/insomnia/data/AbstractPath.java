@@ -146,7 +146,7 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 
 		if (nbLabels() != path.nbLabels())
 			return false;
-		if (!PathOp.areEquals(this, path))
+		if (!IPath.areEquals(this, path))
 			return false;
 
 		Iterator<?> a = IteratorUtils.transformedIterator(getNodes().iterator(), INode::getValue);
