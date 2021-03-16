@@ -11,7 +11,6 @@ import java.util.Map;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
-import insomnia.data.TreeOp;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
@@ -118,7 +117,7 @@ public final class BUBuilder<VAL, LBL>
 	{
 		Map<INode<VAL, LBL>, IFSAState<VAL, LBL>> stateOf = new HashMap<>();
 
-		ListIterator<INode<VAL, LBL>> nodes = TreeOp.bottomUpOrder(tree).listIterator();
+		ListIterator<INode<VAL, LBL>> nodes = ITree.bottomUpOrder(tree).listIterator();
 
 		// Process Leaves
 		while (nodes.hasNext())

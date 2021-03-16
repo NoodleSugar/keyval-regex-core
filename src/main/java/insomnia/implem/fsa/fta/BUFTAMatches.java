@@ -17,7 +17,6 @@ import org.apache.commons.collections4.IterableUtils;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
-import insomnia.data.TreeOp;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.GFPAOp;
@@ -74,7 +73,7 @@ class BUFTAMatches<VAL, LBL>
 	 */
 	static <VAL, LBL> Iterator<INode<VAL, LBL>> processLeaves(IGFPA<VAL, LBL> gfpa, ITree<VAL, LBL> element, BiConsumer<INode<VAL, LBL>, Collection<IFSAState<VAL, LBL>>> consume)
 	{
-		ListIterator<INode<VAL, LBL>> bottomUpNodes = TreeOp.bottomUpOrder(element).listIterator();
+		ListIterator<INode<VAL, LBL>> bottomUpNodes = ITree.bottomUpOrder(element).listIterator();
 
 		while (bottomUpNodes.hasNext())
 		{

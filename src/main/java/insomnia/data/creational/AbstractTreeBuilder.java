@@ -9,7 +9,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
-import insomnia.data.TreeOp;
 
 public abstract class AbstractTreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 {
@@ -156,7 +155,7 @@ public abstract class AbstractTreeBuilder<VAL, LBL> implements ITreeBuilder<VAL,
 	@Override
 	public ITreeBuilder<VAL, LBL> goDown(int... coordinates)
 	{
-		setCurrentNode(TreeOp.followIndex(this, getCurrentNode(), coordinates));
+		setCurrentNode(ITree.followIndex(this, getCurrentNode(), coordinates));
 		return this;
 	}
 

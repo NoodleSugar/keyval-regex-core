@@ -14,7 +14,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
-import insomnia.data.TreeOp;
 import insomnia.data.creational.AbstractTreeBuilder;
 import insomnia.data.creational.ITreeBuilder;
 
@@ -92,7 +91,7 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	public ITreeBuilder<VAL, LBL> setCurrentCoordinates(int... coordinates)
 	{
 		this.coordinates = coordinates.clone();
-		currentNode      = (Node<VAL, LBL>) TreeOp.followIndex(this, coordinates);
+		currentNode      = (Node<VAL, LBL>) ITree.followIndex(this, coordinates);
 		return this;
 	}
 
