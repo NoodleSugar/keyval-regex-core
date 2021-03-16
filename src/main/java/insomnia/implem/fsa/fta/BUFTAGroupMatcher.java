@@ -22,7 +22,6 @@ import insomnia.data.creational.ISubTreeBuilder;
 import insomnia.data.regex.ITreeMatchResult;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
@@ -271,13 +270,13 @@ class BUFTAGroupMatcher<VAL, LBL>
 				// Scan each child state to know new states origin
 				for (IFSAState<VAL, LBL> childState : childStates)
 				{
-					Collection<IFSAState<VAL, LBL>> childNextStates = new HashSet<>();// GFPAOp.getNextValidStates(gfpa, Collections.singleton(childState), childEdge.getLabel(), childEdge.getChild().getValue());
+					Collection<IFSAState<VAL, LBL>> childNextStates = new HashSet<>();// IGFPA.getNextValidStates(gfpa, Collections.singleton(childState), childEdge.getLabel(), childEdge.getChild().getValue());
 
 					for (IFSAEdge<VAL, LBL> edge : gfpa.getReachableEdges(childState))
 					{
 						IFSAState<VAL, LBL> nextState = edge.getChild();
 
-						if (!GFPAOp.testLabel(edge.getLabelCondition(), label) || !GFPAOp.testValue(nextState.getValueCondition(), value))
+						if (!IGFPA.testLabel(edge.getLabelCondition(), label) || !IGFPA.testValue(nextState.getValueCondition(), value))
 							continue;
 
 						childNextStates.addAll(IBUFTA.internalFilterNewStates(gfpa, Collections.singleton(nextState), nodeIsRoot, node.isRooted()));

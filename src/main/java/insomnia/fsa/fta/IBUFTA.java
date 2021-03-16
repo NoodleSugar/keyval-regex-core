@@ -7,7 +7,6 @@ import java.util.stream.Stream;
 
 import insomnia.data.INode;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
 
 /**
@@ -39,7 +38,7 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 		if (!node.isTerminal())
 			ret = ret.filter(s -> !automaton.isTerminal(s));
 
-		return automaton.getEpsilonClosure(ret.filter(s -> (GFPAOp.testValue(s.getValueCondition(), value))).collect(Collectors.toList()));
+		return automaton.getEpsilonClosure(ret.filter(s -> (IGFPA.testValue(s.getValueCondition(), value))).collect(Collectors.toList()));
 	}
 
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> internalGetInitials(IGFPA<VAL, LBL> automaton, INode<VAL, LBL> node)
@@ -47,7 +46,7 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 		VAL value = node.getValue();
 		return automaton.getInitialStates().stream().filter( //
 			s -> !automaton.isTerminal(s) //
-				&& (GFPAOp.testValue(s.getValueCondition(), value) //
+				&& (IGFPA.testValue(s.getValueCondition(), value) //
 				)).collect(Collectors.toList());
 	}
 

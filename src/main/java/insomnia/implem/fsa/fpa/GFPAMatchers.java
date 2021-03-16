@@ -5,7 +5,6 @@ import java.util.Collections;
 import insomnia.data.IPath;
 import insomnia.data.regex.IPathMatchResult;
 import insomnia.data.regex.IPathMatcher;
-import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.data.regex.PathMatchResults;
 import insomnia.implem.data.regex.TreeMatchResults;
@@ -44,7 +43,7 @@ public class GFPAMatchers
 			if (null != matches)
 				return matches;
 
-			return matches = !Collections.disjoint(GFPAOp.getNextValidStates(automaton, element), automaton.getFinalStates());
+			return matches = !Collections.disjoint(IGFPA.getNextValidStates(automaton, element), automaton.getFinalStates());
 		}
 
 		@Override

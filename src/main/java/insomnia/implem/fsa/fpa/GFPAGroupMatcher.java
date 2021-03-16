@@ -16,7 +16,6 @@ import insomnia.data.IPath;
 import insomnia.data.regex.IPathMatchResult;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.data.regex.PathMatchResults;
 import insomnia.implem.data.regex.TreeMatchResults;
@@ -94,7 +93,7 @@ class GFPAGroupMatcher<VAL, LBL>
 		values.next();
 
 		// Create a group for each initial state
-		for (IFSAState<VAL, LBL> state : GFPAOp.getInitials(automaton, element))
+		for (IFSAState<VAL, LBL> state : IGFPA.getInitials(automaton, element))
 			addOffset(groupsOffset, state, 0);
 
 		finalStatesCheck();
@@ -220,12 +219,12 @@ class GFPAGroupMatcher<VAL, LBL>
 
 				for (IFSAEdge<VAL, LBL> edge : automaton.getReachableEdges(currentState))
 				{
-					if (!GFPAOp.testLabel(edge.getLabelCondition(), label))
+					if (!IGFPA.testLabel(edge.getLabelCondition(), label))
 						continue;
 
 					IFSAState<VAL, LBL> nextState = edge.getChild();
 
-					if (!GFPAOp.testValue(nextState.getValueCondition(), value))
+					if (!IGFPA.testValue(nextState.getValueCondition(), value))
 						continue;
 
 					for (IFSAState<VAL, LBL> s : automaton.getEpsilonClosure(nextState))
@@ -238,7 +237,7 @@ class GFPAGroupMatcher<VAL, LBL>
 				}
 			}
 			{	// Add new initials
-				Collection<IFSAState<VAL, LBL>> initials = GFPAOp.internalGetInitials(automaton, value);
+				Collection<IFSAState<VAL, LBL>> initials = IGFPA.internalGetInitials(automaton, value);
 
 				for (IFSAState<VAL, LBL> initial : initials)
 					addOffset(groupsOffset, initial, labelIndex);

@@ -19,7 +19,6 @@ import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.fpa.GFPAOp;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
@@ -115,7 +114,7 @@ class BUFTAMatches<VAL, LBL>
 				{
 					IFSAState<VAL, LBL> nextState = edge.getChild();
 
-					if (!GFPAOp.testLabel(edge.getLabelCondition(), label) || !GFPAOp.testValue(nextState.getValueCondition(), value))
+					if (!IGFPA.testLabel(edge.getLabelCondition(), label) || !IGFPA.testValue(nextState.getValueCondition(), value))
 						continue;
 
 					newStates.addAll(IBUFTA.internalFilterNewStates(gfpa, gfpa.getEpsilonClosure(nextState), nodeIsRoot, nodeIsRoot));

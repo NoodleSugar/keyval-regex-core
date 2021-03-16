@@ -148,7 +148,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 		ret.addAll(states);
 
 		if (!properties.isSynchronous())
-			GFPAOp.epsilonClosureOf(this, ret);
+			IGFPA.epsilonClosureOf(this, ret);
 
 		return ret;
 	}

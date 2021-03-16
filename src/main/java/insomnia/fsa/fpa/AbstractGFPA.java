@@ -64,7 +64,7 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 		if (getProperties().isSynchronous())
 			return;
 
-		GFPAOp.epsilonClosureOf(this, states);
+		IGFPA.epsilonClosureOf(this, states);
 	}
 
 	@SuppressWarnings("unchecked")
