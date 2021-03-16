@@ -13,7 +13,7 @@
  * <p>
  * A value or a label may be delimited by <em>delimiters</em>, which are pair of characters (begin/end) that can enclose them.
  * Delimiters can be set at the creation of the parser (see. {@link #PRegexParser(Map)}, {@link #PRegexParser(String)}).
- * When no delimiters are presents, the {@link PLexer} consider that a char belongs to a word if it verify {@code (c == '_' || Character.isLetterOrDigit(c) || Character.isSpaceChar(c))}.
+ * When no delimiters are presents, the {@link Lexer} consider that a char belongs to a word if it verify {@code (c == '_' || Character.isLetterOrDigit(c) || Character.isSpaceChar(c))}.
  * </p>
  * <p>
  * As said before, an element without label represents an empty element that refer to the last defined node.

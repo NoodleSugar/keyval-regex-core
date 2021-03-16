@@ -16,7 +16,7 @@ import insomnia.data.IPath.RealLimits;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
-import insomnia.implem.data.regex.parser.IPRegexElement;
+import insomnia.implem.data.regex.parser.IRegexElement;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 
 public final class Paths
@@ -70,26 +70,26 @@ public final class Paths
 		}
 	}
 
-	static public <VAL, LBL> IPath<VAL, LBL> pathFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
+	static public <VAL, LBL> IPath<VAL, LBL> pathFromPRegexElement(IRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
 		if (!element.isPath())
 			throw new InvalidParameterException(String.format("'%s' does not represent a path", element));
 		return (IPath<VAL, LBL>) Trees.treeFromPRegexElement(element, mapValue, mapLabel);
 	}
 
-	static public <VAL, LBL> List<IPath<VAL, LBL>> pathsFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
+	static public <VAL, LBL> List<IPath<VAL, LBL>> pathsFromPRegexElement(IRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
 		if (!element.isPath())
 			throw new InvalidParameterException(String.format("'%s' does not represent paths", element));
 		return CollectionUtils.collect(new TreesFromPRegexElementBuilder<>(element, mapValue, mapLabel), e -> (IPath<VAL, LBL>) e, new ArrayList<>(element.size()));
 	}
 
-	static public IPath<String, String> pathFromPRegexElement(IPRegexElement element)
+	static public IPath<String, String> pathFromPRegexElement(IRegexElement element)
 	{
 		return pathFromPRegexElement(element, Function.identity(), Function.identity());
 	}
 
-	static public List<IPath<String, String>> pathsFromPRegexElement(IPRegexElement element)
+	static public List<IPath<String, String>> pathsFromPRegexElement(IRegexElement element)
 	{
 		return pathsFromPRegexElement(element, Function.identity(), Function.identity());
 	}

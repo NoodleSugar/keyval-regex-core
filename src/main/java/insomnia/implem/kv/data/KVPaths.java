@@ -4,7 +4,7 @@ import java.text.ParseException;
 
 import insomnia.data.IPath;
 import insomnia.implem.data.Paths;
-import insomnia.implem.data.regex.parser.PRegexParser;
+import insomnia.implem.data.regex.parser.RegexParser;
 
 public final class KVPaths
 {
@@ -17,7 +17,7 @@ public final class KVPaths
 
 	public static IPath<KVValue, KVLabel> pathFromString(String p) throws ParseException
 	{
-		PRegexParser parser = new PRegexParser("''\"\"~~");
+		RegexParser parser = new RegexParser("''\"\"~~");
 		return Paths.pathFromPRegexElement(parser.parse(p), KVValues::mapValue, KVLabels::mapLabel);
 	}
 }

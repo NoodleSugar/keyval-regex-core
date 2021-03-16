@@ -14,11 +14,11 @@ import java.util.Stack;
 
 import org.apache.commons.io.IOUtils;
 
-import insomnia.implem.data.regex.parser.IPRegexElement.Type;
-import insomnia.implem.data.regex.parser.PLexer.LexerValue;
-import insomnia.implem.data.regex.parser.PLexer.Token;
-import insomnia.implem.data.regex.parser.PRegexElements.MultipleElement;
-import insomnia.implem.data.regex.parser.PRegexElements.PRegexElement;
+import insomnia.implem.data.regex.parser.IRegexElement.Type;
+import insomnia.implem.data.regex.parser.Lexer.LexerValue;
+import insomnia.implem.data.regex.parser.Lexer.Token;
+import insomnia.implem.data.regex.parser.RegexElements.MultipleElement;
+import insomnia.implem.data.regex.parser.RegexElements.PRegexElement;
 
 /**
  * A parser able to read tree regular expressions.
@@ -27,7 +27,7 @@ import insomnia.implem.data.regex.parser.PRegexElements.PRegexElement;
  * @author zuri
  * @author noodle
  */
-public final class PRegexParser
+public final class RegexParser
 {
 	private enum ReaderState
 	{
@@ -52,7 +52,7 @@ public final class PRegexParser
 	 * Construct with empty delimiters and nullLabels contains
 	 * <q>{@code _}</q>
 	 */
-	public PRegexParser()
+	public RegexParser()
 	{
 		allDelimiters = Collections.emptyMap();
 		nullLabels    = Collections.singleton("_");
@@ -63,7 +63,7 @@ public final class PRegexParser
 	 * 
 	 * @param delimiters contains pairs of char delimiters: <begin,end>.
 	 */
-	public PRegexParser(String delimiters)
+	public RegexParser(String delimiters)
 	{
 		this();
 		setDelimiters(delimiters);
@@ -74,7 +74,7 @@ public final class PRegexParser
 	 * 
 	 * @param valueDelimiters delimiters where a start char delimiter is associated with its end char delimiter
 	 */
-	public PRegexParser(Map<String, String> valueDelimiters)
+	public RegexParser(Map<String, String> valueDelimiters)
 	{
 		this();
 		setDelimiters(valueDelimiters);
@@ -87,7 +87,7 @@ public final class PRegexParser
 	 * 
 	 * @param delimiters contains pairs of char delimiters: <begin,end>.
 	 */
-	public PRegexParser setDelimiters(String delimiters)
+	public RegexParser setDelimiters(String delimiters)
 	{
 		assert (delimiters.length() % 2 == 0);
 		this.allDelimiters = new HashMap<>();
@@ -104,13 +104,13 @@ public final class PRegexParser
 	 * 
 	 * @param valueDelimiters delimiters where a start char delimiter is associated with its end char delimiter
 	 */
-	public PRegexParser setDelimiters(Map<String, String> delimiters)
+	public RegexParser setDelimiters(Map<String, String> delimiters)
 	{
 		this.allDelimiters = new HashMap<>(delimiters);
 		return this;
 	}
 
-	public PRegexParser setNullLabels(Collection<String> labels)
+	public RegexParser setNullLabels(Collection<String> labels)
 	{
 		nullLabels = new HashSet<>(labels);
 		return this;
@@ -128,7 +128,7 @@ public final class PRegexParser
 
 	// ==========================================================================
 
-	public IPRegexElement parse(String regex) throws ParseException
+	public IRegexElement parse(String regex) throws ParseException
 	{
 		try
 		{
@@ -141,10 +141,10 @@ public final class PRegexParser
 		}
 	}
 
-	public IPRegexElement parse(InputStream regexStream) throws IOException, ParseException
+	public IRegexElement parse(InputStream regexStream) throws IOException, ParseException
 	{
 		StringBuilder parsed = new StringBuilder();
-		PLexer        lexer  = new PLexer(regexStream, allDelimiters);
+		Lexer        lexer  = new Lexer(regexStream, allDelimiters);
 
 		Stack<ReaderState>   readerStateStack = new Stack<>();
 		Stack<PRegexElement> elementStack     = new Stack<>();
@@ -182,17 +182,17 @@ public final class PRegexParser
 			switch (state)
 			{
 			case NODE_INIT:
-				elementStack.push(PRegexElements.createNode());
+				elementStack.push(RegexElements.createNode());
 				readerStateStack.push(ReaderState.NODE_ELEMENT);
 				skipLexer = true;
 				break;
 			case OR_INIT:
-				elementStack.push(PRegexElements.createDisjunction());
+				elementStack.push(RegexElements.createDisjunction());
 				readerStateStack.push(ReaderState.OR_ELEMENT);
 				skipLexer = true;
 				break;
 			case ELEMENT_INIT:
-				elementStack.push(PRegexElements.createSequence());
+				elementStack.push(RegexElements.createSequence());
 				readerStateStack.push(ReaderState.ELEMENT);
 				skipLexer = true;
 				break;
@@ -214,7 +214,7 @@ public final class PRegexParser
 				{
 					if (nullLabels.contains(data))
 						data = null;
-					PRegexElement element = PRegexElements.createKey(data);
+					PRegexElement element = RegexElements.createKey(data);
 					element.labelDelimiters = v.getDelimiters();
 					elementStack.push(element);
 
@@ -225,13 +225,13 @@ public final class PRegexParser
 					break;
 				}
 				case TERMINAL:
-					elementStack.push(PRegexElements.createEmpty());
+					elementStack.push(RegexElements.createEmpty());
 					readerStateStack.push(ReaderState.ADD_IN_SEQUENCE);
 					readerStateStack.push(ReaderState.TERMINAL);
 					skipLexer = true;
 					break;
 				case ROOTED:
-					elementStack.push(PRegexElements.createEmpty(true, false));
+					elementStack.push(RegexElements.createEmpty(true, false));
 					readerStateStack.push(ReaderState.ELEMENT_END);
 					readerStateStack.push(ReaderState.TERMINAL);
 					readerStateStack.push(ReaderState.VALUE);
@@ -245,7 +245,7 @@ public final class PRegexParser
 					readerStateStack.push(ReaderState.NODE_INIT);
 					break;
 				default:
-					elementStack.push(PRegexElements.createEmpty());
+					elementStack.push(RegexElements.createEmpty());
 					readerStateStack.push(ReaderState.ELEMENT_END);
 					readerStateStack.push(ReaderState.TERMINAL);
 					readerStateStack.push(ReaderState.QUANTIFIER);
@@ -428,7 +428,7 @@ public final class PRegexParser
 
 				if (csize > 0)
 				{
-					if (IPRegexElement.isEmpty(element))
+					if (IRegexElement.isEmpty(element))
 						throw new ParseException(String.format("A node can only have one empty element at the first place, have %s", container), lexer.getOffset());
 				}
 				break;

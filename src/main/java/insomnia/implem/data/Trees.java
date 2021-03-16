@@ -8,8 +8,8 @@ import org.apache.commons.collections4.IterableUtils;
 
 import insomnia.data.ITree;
 import insomnia.implem.data.creational.TreeBuilder;
-import insomnia.implem.data.regex.parser.IPRegexElement;
-import insomnia.implem.data.regex.parser.PRegexParser;
+import insomnia.implem.data.regex.parser.IRegexElement;
+import insomnia.implem.data.regex.parser.RegexParser;
 
 public final class Trees
 {
@@ -19,7 +19,7 @@ public final class Trees
 	}
 
 	// =========================================================================
-	private final static PRegexParser parser = new PRegexParser("''\"\"~~");
+	private final static RegexParser parser = new RegexParser("''\"\"~~");
 
 	/**
 	 * Get the default parser of the package.
@@ -28,7 +28,7 @@ public final class Trees
 	 * 
 	 * @return the parser of the package
 	 */
-	static public <VAL, LBL> PRegexParser getParser()
+	static public <VAL, LBL> RegexParser getParser()
 	{
 		return parser;
 	}
@@ -64,7 +64,7 @@ public final class Trees
 	}
 
 	/**
-	 * Create a tree from an {@link IPRegexElement}.
+	 * Create a tree from an {@link IRegexElement}.
 	 * 
 	 * @param element  the tree regex element
 	 * @param mapValue the map function for values
@@ -72,13 +72,13 @@ public final class Trees
 	 * @return The represented tree
 	 * @throws IllegalArgumentException if element does not represent a unique tree
 	 */
-	static public <VAL, LBL> ITree<VAL, LBL> treeFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
+	static public <VAL, LBL> ITree<VAL, LBL> treeFromPRegexElement(IRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
 		return new TreeFromPRegexElementBuilder<>(mapValue, mapLabel).create(element);
 	}
 
 	/**
-	 * Get all the trees from an {@link IPRegexElement}.
+	 * Get all the trees from an {@link IRegexElement}.
 	 * 
 	 * @param element  the tree regex element
 	 * @param mapValue the map function for values
@@ -86,7 +86,7 @@ public final class Trees
 	 * @return The represented trees
 	 * @throws IllegalArgumentException if the list is infinite
 	 */
-	static public <VAL, LBL> List<ITree<VAL, LBL>> treesFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
+	static public <VAL, LBL> List<ITree<VAL, LBL>> treesFromPRegexElement(IRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
 		return IterableUtils.toList(new TreesFromPRegexElementBuilder<>(element, mapValue, mapLabel));
 	}

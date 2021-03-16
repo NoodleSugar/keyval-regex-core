@@ -6,10 +6,10 @@ import java.util.function.Function;
 import insomnia.data.ITree;
 import insomnia.data.creational.ITreeBuilder;
 import insomnia.implem.data.creational.TreeBuilder;
-import insomnia.implem.data.regex.parser.IPRegexElement;
+import insomnia.implem.data.regex.parser.IRegexElement;
 
 /**
- * Build a tree from a {@link IPRegexElement}.
+ * Build a tree from a {@link IRegexElement}.
  * 
  * @author zuri
  * @param <VAL> type of a node value
@@ -22,8 +22,8 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 	ITreeBuilder<VAL, LBL>        treeBuilder;
 
 	/**
-	 * @param mapValue a function to map each {@link String} value from an {@link IPRegexElement} to a VAL
-	 * @param mapLabel a function to map each {@link String} label from an {@link IPRegexElement} to a LBL
+	 * @param mapValue a function to map each {@link String} value from an {@link IRegexElement} to a VAL
+	 * @param mapLabel a function to map each {@link String} label from an {@link IRegexElement} to a LBL
 	 */
 	public TreeFromPRegexElementBuilder(Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
@@ -33,13 +33,13 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 	}
 
 	/**
-	 * Create a tree from an {@link IPRegexElement}
+	 * Create a tree from an {@link IRegexElement}
 	 * 
 	 * @param element the element representing a path
 	 * @return the represented tree
 	 * @throws IllegalArgumentException if element does not represent a {@link ITree}
 	 */
-	public ITree<VAL, LBL> create(IPRegexElement element)
+	public ITree<VAL, LBL> create(IRegexElement element)
 	{
 		long size = element.longSize();
 
@@ -51,7 +51,7 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 		return Trees.create(treeBuilder);
 	}
 
-	private void doit(IPRegexElement element)
+	private void doit(IRegexElement element)
 	{
 		switch (element.getType())
 		{
@@ -83,7 +83,7 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 		}
 	}
 
-	private void empty(IPRegexElement empty)
+	private void empty(IRegexElement empty)
 	{
 		VAL value = mapValue.apply(empty.getValue());
 
@@ -96,7 +96,7 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 			treeBuilder.setTerminal(true);
 	}
 
-	private void key(IPRegexElement key)
+	private void key(IRegexElement key)
 	{
 		int i = key.getQuantifier().getInf();
 
@@ -116,7 +116,7 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 			treeBuilder.setTerminal(true);
 	}
 
-	private void node(IPRegexElement node)
+	private void node(IRegexElement node)
 	{
 		int i = node.getQuantifier().getInf();
 
@@ -126,28 +126,28 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 		int coords[] = treeBuilder.getCurrentCoordinates();
 
 		while (i-- != 0)
-			for (IPRegexElement e : node.getElements())
+			for (IRegexElement e : node.getElements())
 			{
 				doit(e);
 				treeBuilder.setCurrentCoordinates(coords);
 			}
 	}
 
-	private void sequence(IPRegexElement sequence)
+	private void sequence(IRegexElement sequence)
 	{
 		int i = sequence.getQuantifier().getInf();
 
 		if (i == 0)
 			return;
 
-		Iterator<IPRegexElement> it = sequence.getElements().iterator();
+		Iterator<IRegexElement> it = sequence.getElements().iterator();
 
 		if (!it.hasNext())
 			return;
 
 		while (i-- != 0)
 		{
-			IPRegexElement e = it.next();
+			IRegexElement e = it.next();
 
 			while (it.hasNext())
 			{

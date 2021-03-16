@@ -32,8 +32,8 @@ import insomnia.data.regex.IPathMatcher;
 import insomnia.fsa.fpa.IFPA;
 import insomnia.implem.data.Paths;
 import insomnia.implem.data.Trees;
-import insomnia.implem.data.regex.parser.IPRegexElement;
-import insomnia.implem.data.regex.parser.PRegexParser;
+import insomnia.implem.data.regex.parser.IRegexElement;
+import insomnia.implem.data.regex.parser.RegexParser;
 import insomnia.implem.fsa.fpa.creational.FPAFactory;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.GCPathRuleApplierSimple;
 import insomnia.implem.rule.PathRules;
@@ -47,7 +47,7 @@ import insomnia.unifier.PathUnifiers;
 
 public class TestAutomaton
 {
-	static FPAFactory<String, String> fpaFactory(IPRegexElement e)
+	static FPAFactory<String, String> fpaFactory(IRegexElement e)
 	{
 		return new FPAFactory<>(e, s -> s, s -> s);
 	}
@@ -59,7 +59,7 @@ public class TestAutomaton
 
 	static IPath<String, String> pathFromString(String path)
 	{
-		PRegexParser parser = new PRegexParser(Collections.emptyMap());
+		RegexParser parser = new RegexParser(Collections.emptyMap());
 		try
 		{
 			return Paths.pathFromPRegexElement(parser.parse(path), s -> s, s -> s);
@@ -103,7 +103,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return fpaFactory((IPRegexElement) obj).create();
+						return fpaFactory((IRegexElement) obj).create();
 					}
 
 				} }, //
@@ -113,7 +113,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return fpaFactory((IPRegexElement) obj).createBuilder().create();
+						return fpaFactory((IRegexElement) obj).createBuilder().create();
 					}
 
 				} }, //
@@ -122,7 +122,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return fpaFactory((IPRegexElement) obj).createBuilder().createNewStates(true).create();
+						return fpaFactory((IRegexElement) obj).createBuilder().createNewStates(true).create();
 					}
 
 				} }, //
@@ -132,7 +132,7 @@ public class TestAutomaton
 					@Override
 					public Object apply(Object obj)
 					{
-						return fpaFactory((IPRegexElement) obj).createBuilder().mustBeSync(true).create();
+						return fpaFactory((IRegexElement) obj).createBuilder().mustBeSync(true).create();
 					}
 
 				} } //
@@ -140,13 +140,13 @@ public class TestAutomaton
 		return Stream.of(ret).collect(Collectors.toList());
 	}
 
-	static PRegexParser parser;
+	static RegexParser parser;
 
 	{
 		Map<String, String> valueDelimiters = new HashMap<>();
 		valueDelimiters.put("'", "'");
 		valueDelimiters.put("~", "~");
-		parser = new PRegexParser(valueDelimiters);
+		parser = new RegexParser(valueDelimiters);
 	}
 
 	static List<Object[]> mergeParameters(List<Object[]> a, List<Object[]> b)
@@ -156,9 +156,9 @@ public class TestAutomaton
 		return merged;
 	}
 
-	private static IFPA<String, String> parse(String regex, Function<IPRegexElement, IFPA<String, String>> automatonFactoryProvider) throws IOException, ParseException
+	private static IFPA<String, String> parse(String regex, Function<IRegexElement, IFPA<String, String>> automatonFactoryProvider) throws IOException, ParseException
 	{
-		IPRegexElement rparsed = parser.parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
+		IRegexElement rparsed = parser.parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
 		return automatonFactoryProvider.apply(rparsed);
 	}
 
@@ -494,7 +494,7 @@ public class TestAutomaton
 						Object[]                  subItem = it.next();
 						List<IPath<String, String>> paths;
 
-						IPRegexElement e = Trees.getParser().parse((String) subItem[0]);
+						IRegexElement e = Trees.getParser().parse((String) subItem[0]);
 						if (!e.isPath())
 							continue;
 
@@ -552,7 +552,7 @@ public class TestAutomaton
 
 	@ParameterizedTest
 	@MethodSource("arguments")
-	void match(String fname, Function<IPRegexElement, IFPA<String, String>> fprovider, String searchFor, IPath<String, String> psearchIn, int nb) throws IOException, ParseException
+	void match(String fname, Function<IRegexElement, IFPA<String, String>> fprovider, String searchFor, IPath<String, String> psearchIn, int nb) throws IOException, ParseException
 	{
 		boolean match = nb > 0;
 
@@ -564,7 +564,7 @@ public class TestAutomaton
 
 	@ParameterizedTest
 	@MethodSource("arguments")
-	void find(String fname, Function<IPRegexElement, IFPA<String, String>> fprovider, String searchFor, IPath<String, String> psearchIn, int nb) throws ParseException, IOException
+	void find(String fname, Function<IRegexElement, IFPA<String, String>> fprovider, String searchFor, IPath<String, String> psearchIn, int nb) throws ParseException, IOException
 	{
 		List<IPath<String, String>> psearchFor = null;
 		try

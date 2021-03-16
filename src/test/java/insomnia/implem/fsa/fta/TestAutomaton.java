@@ -20,7 +20,7 @@ import insomnia.data.ITree;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.implem.data.Trees;
-import insomnia.implem.data.regex.parser.PRegexParser;
+import insomnia.implem.data.regex.parser.RegexParser;
 import insomnia.implem.fsa.fta.creational.BUFTABuilder;
 
 public class TestAutomaton
@@ -64,7 +64,7 @@ public class TestAutomaton
 	@MethodSource("arguments")
 	void match(String searchFor, ITree<String, String> tsearchIn, int nb) throws ParseException
 	{
-		assumeTrue(new PRegexParser("''\"\"~~").parse(searchFor).size() == 1);
+		assumeTrue(new RegexParser("''\"\"~~").parse(searchFor).size() == 1);
 		boolean match = nb > 0;
 
 		ITree<String, String>  tsearchFor = Trees.treeFromString(searchFor);
@@ -76,7 +76,7 @@ public class TestAutomaton
 	@MethodSource("arguments")
 	void find(String searchFor, ITree<String, String> tsearchIn, int nb) throws ParseException
 	{
-		assumeTrue(new PRegexParser("''\"\"~~").parse(searchFor).size() == 1);
+		assumeTrue(new RegexParser("''\"\"~~").parse(searchFor).size() == 1);
 		ITree<String, String> tsearchFor;
 		tsearchFor = Trees.treeFromString(searchFor);
 

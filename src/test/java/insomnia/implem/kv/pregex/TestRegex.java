@@ -10,13 +10,13 @@ import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import insomnia.implem.data.regex.parser.PRegexParser;
+import insomnia.implem.data.regex.parser.RegexParser;
 
 class TestRegex
 {
 	public static void pathFromString(String regex) throws ParseException, IOException
 	{
-		new PRegexParser("''\"\"").parse(regex);
+		new RegexParser("''\"\"").parse(regex);
 	}
 
 	static List<Object> error()

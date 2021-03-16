@@ -13,7 +13,7 @@ import org.apache.commons.collections4.IteratorUtils;
 import insomnia.data.ITree;
 import insomnia.data.creational.ITreeBuilder;
 import insomnia.implem.data.creational.TreeBuilder;
-import insomnia.implem.data.regex.parser.IPRegexElement;
+import insomnia.implem.data.regex.parser.IRegexElement;
 
 final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VAL, LBL>>
 {
@@ -22,9 +22,9 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 
 	List<LBL>              labels = new ArrayList<>();
 	List<VAL>              values = new ArrayList<>();
-	private IPRegexElement element;
+	private IRegexElement element;
 
-	public TreesFromPRegexElementBuilder(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
+	public TreesFromPRegexElementBuilder(IRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
 		this.mapLabel = mapLabel;
 		this.mapValue = mapValue;
@@ -35,7 +35,7 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 			throw new IllegalArgumentException(String.format("Can't handle the infinity size of %s", element));
 	}
 
-	public void resetElement(IPRegexElement element)
+	public void resetElement(IRegexElement element)
 	{
 		this.element = element;
 	}
@@ -47,7 +47,7 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 		{
 			class Data
 			{
-				IPRegexElement element;
+				IRegexElement element;
 
 				List<Data> datas;
 				List<Data> seqDatas;
@@ -58,7 +58,7 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 				{
 				}
 
-				Data(IPRegexElement element)
+				Data(IRegexElement element)
 				{
 					this.element  = element;
 					this.nbRepeat = element.getQuantifier().getInf();
@@ -75,7 +75,7 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 					case NODE:
 						datas = new ArrayList<>();
 
-						for (IPRegexElement e : element.getElements())
+						for (IRegexElement e : element.getElements())
 							datas.add(new Data(e));
 
 						initSeqDatas(element.getQuantifier().getSup());
@@ -153,7 +153,7 @@ final class TreesFromPRegexElementBuilder<VAL, LBL> implements Iterable<ITree<VA
 
 			public void makeTree(Data data)
 			{
-				IPRegexElement e        = data.element;
+				IRegexElement e        = data.element;
 				int            nbRepeat = data.nbRepeat;
 
 				if (nbRepeat == 0)

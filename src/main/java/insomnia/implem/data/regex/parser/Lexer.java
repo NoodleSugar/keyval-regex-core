@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Map;
 
-class PLexer
+class Lexer
 {
 	/**
 	 * Represents the type of element that the Lexer will send to the Parser
@@ -72,7 +72,7 @@ class PLexer
 
 	private Map<String, String> delimiters;
 
-	public PLexer(InputStream input, Map<String, String> delimiters) throws IOException
+	public Lexer(InputStream input, Map<String, String> delimiters) throws IOException
 	{
 		this.regexStream = input;
 		this.delimiters  = delimiters;

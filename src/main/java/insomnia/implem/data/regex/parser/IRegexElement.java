@@ -8,7 +8,7 @@ import java.util.List;
  * @author noodle
  * @author zuri
  */
-public interface IPRegexElement
+public interface IRegexElement
 {
 	public enum Type
 	{
@@ -62,16 +62,16 @@ public interface IPRegexElement
 
 	Type getType();
 
-	List<IPRegexElement> getElements();
+	List<IRegexElement> getElements();
 
 	// ==========================================================================
 
-	static boolean isEmpty(IPRegexElement element)
+	static boolean isEmpty(IRegexElement element)
 	{
 		return element.getType() == Type.EMPTY;
 	}
 
-	static boolean isFullEmpty(IPRegexElement element)
+	static boolean isFullEmpty(IRegexElement element)
 	{
 		return element.getType() == Type.EMPTY && !element.isRooted() && !element.isTerminal() && null == element.getValue();
 	}

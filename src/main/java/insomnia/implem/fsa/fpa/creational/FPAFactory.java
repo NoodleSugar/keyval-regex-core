@@ -12,7 +12,7 @@ import insomnia.data.IPath;
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
-import insomnia.implem.data.regex.parser.IPRegexElement;
+import insomnia.implem.data.regex.parser.IRegexElement;
 import insomnia.implem.data.regex.parser.Quantifier;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier;
@@ -33,7 +33,7 @@ public class FPAFactory<VAL, LBL>
 	private Function<String, LBL> mapLabel;
 	private Function<String, VAL> mapValue;
 
-	public FPAFactory(IPRegexElement elements, Function<String, LBL> mapLabel, Function<String, VAL> mapValue)// throws BuilderException
+	public FPAFactory(IRegexElement elements, Function<String, LBL> mapLabel, Function<String, VAL> mapValue)// throws BuilderException
 	{
 		this.mapLabel = mapLabel;
 		this.mapValue = mapValue;
@@ -185,7 +185,7 @@ public class FPAFactory<VAL, LBL>
 		return currentAutomaton;
 	}
 
-	private GraphChunk<VAL, LBL> recursiveConstruct(IPRegexElement element, boolean initialElements)// throws BuilderException
+	private GraphChunk<VAL, LBL> recursiveConstruct(IRegexElement element, boolean initialElements)// throws BuilderException
 	{
 		Quantifier           q = element.getQuantifier();
 		GraphChunk<VAL, LBL> currentAutomaton;
@@ -222,7 +222,7 @@ public class FPAFactory<VAL, LBL>
 		{
 			List<GraphChunk<VAL, LBL>> chunks = new ArrayList<>(element.getElements().size());
 
-			for (IPRegexElement ie : element.getElements())
+			for (IRegexElement ie : element.getElements())
 			{
 				GraphChunk<VAL, LBL> chunk = recursiveConstruct(ie, false);
 				chunks.add(chunk);
@@ -239,7 +239,7 @@ public class FPAFactory<VAL, LBL>
 
 		case SEQUENCE:
 		{
-			Iterator<IPRegexElement> iterator = element.getElements().iterator();
+			Iterator<IRegexElement> iterator = element.getElements().iterator();
 
 			if (!iterator.hasNext())
 				currentAutomaton = GraphChunk.createOneState(false, false, null);

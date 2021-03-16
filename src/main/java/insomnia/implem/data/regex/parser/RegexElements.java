@@ -9,9 +9,9 @@ import org.apache.commons.collections4.IterableUtils;
 /**
  * @author zuri
  */
-public final class PRegexElements
+public final class RegexElements
 {
-	private PRegexElements()
+	private RegexElements()
 	{
 		throw new AssertionError();
 	}
@@ -82,7 +82,7 @@ public final class PRegexElements
 		}
 	}
 
-	public static Key createKey(IPRegexElement e)
+	public static Key createKey(IRegexElement e)
 	{
 		Key ret = new Key(null);
 		ret.setRooted(e.isRooted());
@@ -112,7 +112,7 @@ public final class PRegexElements
 	 */
 	private static class Disjunction extends MultipleElement
 	{
-		public Disjunction(List<IPRegexElement> elements)
+		public Disjunction(List<IRegexElement> elements)
 		{
 			super(Type.DISJUNCTION, elements);
 		}
@@ -125,7 +125,7 @@ public final class PRegexElements
 
 			long base = 0;
 			// Sum of each element size
-			for (IPRegexElement e : getElements())
+			for (IRegexElement e : getElements())
 			{
 				long esize = e.longSize();
 
@@ -140,13 +140,13 @@ public final class PRegexElements
 		@Override
 		public boolean isRooted()
 		{
-			return IterableUtils.matchesAll(getElements(), IPRegexElement::isRooted);
+			return IterableUtils.matchesAll(getElements(), IRegexElement::isRooted);
 		}
 
 		@Override
 		public boolean isTerminal()
 		{
-			return super.isTerminal() || IterableUtils.matchesAll(getElements(), IPRegexElement::isTerminal);
+			return super.isTerminal() || IterableUtils.matchesAll(getElements(), IRegexElement::isTerminal);
 		}
 
 		@Override
@@ -161,7 +161,7 @@ public final class PRegexElements
 		return createDisjunction(new ArrayList<>());
 	}
 
-	public static Disjunction createDisjunction(List<IPRegexElement> elements)
+	public static Disjunction createDisjunction(List<IRegexElement> elements)
 	{
 		return new Disjunction(elements);
 	}
@@ -210,7 +210,7 @@ public final class PRegexElements
 
 	private static class Sequence extends MultipleElement
 	{
-		public Sequence(List<IPRegexElement> elements)
+		public Sequence(List<IRegexElement> elements)
 		{
 			super(Type.SEQUENCE, elements);
 		}
@@ -249,7 +249,7 @@ public final class PRegexElements
 		return createSequence(new ArrayList<>());
 	}
 
-	public static Sequence createSequence(List<IPRegexElement> elements)
+	public static Sequence createSequence(List<IRegexElement> elements)
 	{
 		return new Sequence(elements);
 	}
@@ -258,7 +258,7 @@ public final class PRegexElements
 
 	private static class Node extends MultipleElement
 	{
-		public Node(List<IPRegexElement> elements)
+		public Node(List<IRegexElement> elements)
 		{
 			super(Type.NODE, elements);
 		}
@@ -266,7 +266,7 @@ public final class PRegexElements
 		@Override
 		public boolean isPath()
 		{
-			return getElements().stream().filter(e -> !IPRegexElement.isEmpty(e)).count() <= 1;
+			return getElements().stream().filter(e -> !IRegexElement.isEmpty(e)).count() <= 1;
 		}
 
 		@Override
@@ -278,7 +278,7 @@ public final class PRegexElements
 		@Override
 		public boolean isTerminal()
 		{
-			return super.isTerminal() || IterableUtils.matchesAll(getElements(), IPRegexElement::isTerminal);
+			return super.isTerminal() || IterableUtils.matchesAll(getElements(), IRegexElement::isTerminal);
 		}
 
 		@Override
@@ -293,14 +293,14 @@ public final class PRegexElements
 		return createNode(new ArrayList<>());
 	}
 
-	public static Node createNode(List<IPRegexElement> elements)
+	public static Node createNode(List<IRegexElement> elements)
 	{
 		return new Node(elements);
 	}
 
 	// =========================================================================
 
-	static abstract class PRegexElement implements IPRegexElement
+	static abstract class PRegexElement implements IRegexElement
 	{
 		boolean    terminal;
 		Quantifier quantifier;
@@ -421,7 +421,7 @@ public final class PRegexElements
 		}
 
 		@Override
-		public List<IPRegexElement> getElements()
+		public List<IRegexElement> getElements()
 		{
 			return Collections.emptyList();
 		}
@@ -458,11 +458,11 @@ public final class PRegexElements
 	 */
 	static abstract class MultipleElement extends PRegexElement
 	{
-		List<IPRegexElement> elements;
+		List<IRegexElement> elements;
 
 		abstract String toString_separator();
 
-		public MultipleElement(Type type, List<IPRegexElement> elements)
+		public MultipleElement(Type type, List<IRegexElement> elements)
 		{
 			super(type);
 			this.elements = new ArrayList<>(elements);
@@ -471,7 +471,7 @@ public final class PRegexElements
 		@Override
 		public boolean isPath()
 		{
-			for (IPRegexElement e : getElements())
+			for (IRegexElement e : getElements())
 				if (!e.isPath())
 					return false;
 			return true;
@@ -482,7 +482,7 @@ public final class PRegexElements
 		{
 			assert (elements.isEmpty() || terminal == true);
 
-			for (IPRegexElement ie : elements)
+			for (IRegexElement ie : elements)
 				((PRegexElement) ie).setTerminal(terminal);
 
 			this.terminal = terminal;
@@ -497,7 +497,7 @@ public final class PRegexElements
 			long base = 1;
 
 			// Product of each element
-			for (IPRegexElement e : getElements())
+			for (IRegexElement e : getElements())
 			{
 				long esize = e.longSize();
 
@@ -512,13 +512,13 @@ public final class PRegexElements
 		@Override
 		public boolean hasRootedElement()
 		{
-			return IterableUtils.matchesAny(getElements(), IPRegexElement::hasRootedElement);
+			return IterableUtils.matchesAny(getElements(), IRegexElement::hasRootedElement);
 		}
 
 		@Override
 		public boolean hasTerminalElement()
 		{
-			return terminal || IterableUtils.matchesAny(getElements(), IPRegexElement::hasTerminalElement);
+			return terminal || IterableUtils.matchesAny(getElements(), IRegexElement::hasTerminalElement);
 		}
 
 		@Override
@@ -543,7 +543,7 @@ public final class PRegexElements
 		 * @return The modifiable {@link ArrayList} of elements.
 		 */
 		@Override
-		public List<IPRegexElement> getElements()
+		public List<IRegexElement> getElements()
 		{
 			return elements;
 		}
@@ -562,7 +562,7 @@ public final class PRegexElements
 			sb.append("(");
 
 			boolean first = true;
-			for (IPRegexElement e : this.elements)
+			for (IRegexElement e : this.elements)
 			{
 				if (first)
 					first = false;
