@@ -31,7 +31,7 @@ import insomnia.implem.fsa.labelcondition.FSALabelConditions;
  * @param <VAL> type of node value
  * @param <LBL> type of edge label
  */
-public final class BUBuilder<VAL, LBL>
+public final class BUFTABuilder<VAL, LBL>
 {
 	private Collection<IFTAEdge<VAL, LBL>> ftaEdges;
 	private GraphChunk<VAL, LBL>           gchunk;
@@ -43,7 +43,7 @@ public final class BUBuilder<VAL, LBL>
 	 * 
 	 * @param tree the tree to represent
 	 */
-	public BUBuilder(ITree<VAL, LBL> tree)
+	public BUFTABuilder(ITree<VAL, LBL> tree)
 	{
 		this.gchunk   = new GraphChunk<>();
 		this.ftaEdges = new ArrayList<>();
@@ -65,7 +65,7 @@ public final class BUBuilder<VAL, LBL>
 
 		private Collection<IFTAEdge<VAL, LBL>> ftaEdges;
 
-		BUFTA(BUBuilder<VAL, LBL> builder)
+		BUFTA(BUFTABuilder<VAL, LBL> builder)
 		{
 			this.gfpa     = new FPABuilder<>(builder.gchunk).mustBeSync(false).create();
 			this.ftaEdges = new ArrayList<>(builder.ftaEdges);

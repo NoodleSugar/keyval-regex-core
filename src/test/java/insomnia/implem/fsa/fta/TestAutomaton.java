@@ -21,7 +21,7 @@ import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.implem.data.Trees;
 import insomnia.implem.data.regex.parser.PRegexParser;
-import insomnia.implem.fsa.fta.creational.BUBuilder;
+import insomnia.implem.fsa.fta.creational.BUFTABuilder;
 
 public class TestAutomaton
 {
@@ -68,7 +68,7 @@ public class TestAutomaton
 		boolean match = nb > 0;
 
 		ITree<String, String>  tsearchFor = Trees.treeFromString(searchFor);
-		IBUFTA<String, String> bufta      = new BUBuilder<>(tsearchFor).create();
+		IBUFTA<String, String> bufta      = new BUFTABuilder<>(tsearchFor).create();
 		assertEquals(match, bufta.matcher(tsearchIn).matches(), String.format("Search for=\n%sSearch in=\n%s", ITree.toString(tsearchFor), ITree.toString(tsearchIn)));
 	}
 
@@ -80,7 +80,7 @@ public class TestAutomaton
 		ITree<String, String> tsearchFor;
 		tsearchFor = Trees.treeFromString(searchFor);
 
-		IBUFTA<String, String>       bufta   = new BUBuilder<>(tsearchFor).create();
+		IBUFTA<String, String>       bufta   = new BUFTABuilder<>(tsearchFor).create();
 		ITreeMatcher<String, String> matcher = bufta.matcher(tsearchIn);
 
 		int i = 0;
