@@ -61,19 +61,19 @@ public class TestGRD<E, V>
 		// =====================================================================
 
 		// =====================================================================
-		a = KVPathRules.fromString(".a", ".b.a");
+		a = KVPathRules.fromString("^a", "^b.a");
 		ret.add(new Object[] { //
 				new Object[] { a }, //
 				new Object[][] {}, //
 		});
 		// =====================================================================
-		a = KVPathRules.fromString(".a", ".a.b");
+		a = KVPathRules.fromString("^a", "^a.b");
 		ret.add(new Object[] { //
 				new Object[] { a }, //
 				new Object[][] { { a, a } }, //
 		});
 		// =====================================================================
-		a = KVPathRules.fromString(".a", ".a.b");
+		a = KVPathRules.fromString("^a", "^a.b");
 		ret.add(new Object[] { //
 				new Object[] { a }, //
 				new Object[][] { { a, a } }, //

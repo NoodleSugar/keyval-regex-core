@@ -12,13 +12,12 @@ import insomnia.data.IPath;
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
-import insomnia.implem.data.regex.parser.IPRegexElement;
+import insomnia.implem.data.regex.parser.IRegexElement;
 import insomnia.implem.data.regex.parser.Quantifier;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier.Environment;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
-import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 
 /**
  * The factory to create an automaton from a parsed regex or a path.
@@ -34,7 +33,7 @@ public class FPAFactory<VAL, LBL>
 	private Function<String, LBL> mapLabel;
 	private Function<String, VAL> mapValue;
 
-	public FPAFactory(IPRegexElement elements, Function<String, LBL> mapLabel, Function<String, VAL> mapValue)// throws BuilderException
+	public FPAFactory(IRegexElement elements, Function<String, LBL> mapLabel, Function<String, VAL> mapValue)// throws BuilderException
 	{
 		this.mapLabel = mapLabel;
 		this.mapValue = mapValue;
@@ -62,36 +61,10 @@ public class FPAFactory<VAL, LBL>
 	{
 		{
 			IFSAState<VAL, LBL> start = automaton.getStart();
-
-			if (!automaton.isRooted(start))
-			{
-				if (!start.getValueCondition().equals(FSAValueConditions.createAny()))
-				{
-					automaton.setInitial(start, true);
-					IFSAState<VAL, LBL> newStart = automaton.createState();
-					automaton.addEdge(newStart, start, FSALabelConditions.trueCondition());
-					automaton.setStart(newStart);
-					start = newStart;
-				}
-				automaton.addEdge(start, start, FSALabelConditions.trueCondition());
-			}
 			automaton.setInitial(start, true);
 		}
 		{
 			IFSAState<VAL, LBL> end = automaton.getEnd();
-
-			if (!automaton.isTerminal(end))
-			{
-				if (/* automaton.isRooted(end) || */ !end.getValueCondition().equals(FSAValueConditions.createAny()))
-				{
-					automaton.setFinal(end, true);
-					IFSAState<VAL, LBL> newEnd = automaton.createState();
-					automaton.addEdge(end, newEnd, FSALabelConditions.trueCondition());
-					automaton.setEnd(newEnd);
-					end = newEnd;
-				}
-				automaton.addEdge(end, end, FSALabelConditions.trueCondition());
-			}
 			automaton.setFinal(end, true);
 		}
 	}
@@ -147,7 +120,7 @@ public class FPAFactory<VAL, LBL>
 					gchunk.setTerminal(end, path.isTerminal());
 
 					if (!path.isTerminal())
-						gchunk.addEdge(end, end, FSALabelConditions.trueCondition());
+						gchunk.addEdge(end, end, FSALabelConditions.createAny());
 
 					return gluePath(gchunk, start, end, path);
 				}
@@ -212,7 +185,7 @@ public class FPAFactory<VAL, LBL>
 		return currentAutomaton;
 	}
 
-	private GraphChunk<VAL, LBL> recursiveConstruct(IPRegexElement element, boolean initialElements)// throws BuilderException
+	private GraphChunk<VAL, LBL> recursiveConstruct(IRegexElement element, boolean initialElements)// throws BuilderException
 	{
 		Quantifier           q = element.getQuantifier();
 		GraphChunk<VAL, LBL> currentAutomaton;
@@ -249,7 +222,7 @@ public class FPAFactory<VAL, LBL>
 		{
 			List<GraphChunk<VAL, LBL>> chunks = new ArrayList<>(element.getElements().size());
 
-			for (IPRegexElement ie : element.getElements())
+			for (IRegexElement ie : element.getElements())
 			{
 				GraphChunk<VAL, LBL> chunk = recursiveConstruct(ie, false);
 				chunks.add(chunk);
@@ -266,7 +239,7 @@ public class FPAFactory<VAL, LBL>
 
 		case SEQUENCE:
 		{
-			Iterator<IPRegexElement> iterator = element.getElements().iterator();
+			Iterator<IRegexElement> iterator = element.getElements().iterator();
 
 			if (!iterator.hasNext())
 				currentAutomaton = GraphChunk.createOneState(false, false, null);

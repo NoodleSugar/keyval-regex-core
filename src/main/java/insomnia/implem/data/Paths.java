@@ -7,14 +7,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Triple;
 
+import insomnia.data.INode;
 import insomnia.data.IPath;
+import insomnia.data.IPath.RealLimits;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
-import insomnia.implem.data.regex.parser.IPRegexElement;
-import insomnia.implem.data.regex.parser.PRegexParser;
+import insomnia.implem.data.regex.parser.IRegexElement;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 
 public final class Paths
@@ -68,25 +70,41 @@ public final class Paths
 		}
 	}
 
-	static public <VAL, LBL> IPath<VAL, LBL> pathFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
+	static public <VAL, LBL> IPath<VAL, LBL> pathFromPRegexElement(IRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
-		return new PathFromPRegexElementBuilder<>(mapValue, mapLabel).create(element);
+		if (!element.isPath())
+			throw new InvalidParameterException(String.format("'%s' does not represent a path", element));
+		return (IPath<VAL, LBL>) Trees.treeFromPRegexElement(element, mapValue, mapLabel);
 	}
 
-	static public <VAL, LBL> List<IPath<VAL, LBL>> pathsFromPRegexElement(IPRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
+	static public <VAL, LBL> List<IPath<VAL, LBL>> pathsFromPRegexElement(IRegexElement element, Function<String, VAL> mapValue, Function<String, LBL> mapLabel)
 	{
-		return IterableUtils.toList(new PathsFromPRegexElementBuilder<>(element, mapValue, mapLabel));
+		if (!element.isPath())
+			throw new InvalidParameterException(String.format("'%s' does not represent paths", element));
+		return CollectionUtils.collect(new TreesFromPRegexElementBuilder<>(element, mapValue, mapLabel), e -> (IPath<VAL, LBL>) e, new ArrayList<>(element.size()));
+	}
+
+	static public IPath<String, String> pathFromPRegexElement(IRegexElement element)
+	{
+		return pathFromPRegexElement(element, Function.identity(), Function.identity());
+	}
+
+	static public List<IPath<String, String>> pathsFromPRegexElement(IRegexElement element)
+	{
+		return pathsFromPRegexElement(element, Function.identity(), Function.identity());
 	}
 
 	public static IPath<String, String> pathFromString(String p) throws ParseException
 	{
-		PRegexParser parser = new PRegexParser("''\"\"");
-		return Paths.pathFromPRegexElement(parser.parse(p), s -> s, s -> s);
+		return pathFromPRegexElement(Trees.getParser().parse(p), Function.identity(), Function.identity());
+	}
+
+	public static List<IPath<String, String>> pathsFromString(String p) throws ParseException
+	{
+		return pathsFromPRegexElement(Trees.getParser().parse(p), Function.identity(), Function.identity());
 	}
 
 	// =========================================================================
-
-//	private final static IPath<?, ?> emptyPath = new Path<>();
 
 	/**
 	 * @return an empty path
@@ -100,6 +118,17 @@ public final class Paths
 	public static <VAL, LBL> IPath<VAL, LBL> create(IPath<VAL, LBL> src)
 	{
 		return new Path<>(src);
+	}
+
+	public static <VAL, LBL> IPath<VAL, LBL> create(IPath<VAL, LBL> src, int from, int to)
+	{
+		Triple<RealLimits, List<LBL>, List<INode<VAL, LBL>>> infos = IPath.subPathInfos(src, from, to);
+
+		if (null == infos)
+			return empty();
+
+		RealLimits limits = infos.getLeft();
+		return create(limits.isRooted(), limits.isTerminal(), infos.getMiddle());
 	}
 
 	/**

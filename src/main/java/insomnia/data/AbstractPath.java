@@ -27,6 +27,30 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	}
 
 	@Override
+	public List<INode<VAL, LBL>> getNodes()
+	{
+		return getNodes(getRoot());
+	}
+
+	@Override
+	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
+	{
+		return ITree.getNodes(this, node);
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges()
+	{
+		return getEdges(getRoot());
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
+	{
+		return ITree.getEdges(this, node);
+	}
+
+	@Override
 	public IEdge<VAL, LBL> getChild(INode<VAL, LBL> node)
 	{
 		List<? extends IEdge<VAL, LBL>> childs = getChildren(node);
@@ -74,6 +98,12 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	}
 
 	@Override
+	public boolean isPath()
+	{
+		return true;
+	}
+
+	@Override
 	public boolean isRooted()
 	{
 		return getRoot().isRooted();
@@ -116,7 +146,7 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 
 		if (nbLabels() != path.nbLabels())
 			return false;
-		if (!PathOp.areEquals(this, path))
+		if (!IPath.areEquals(this, path))
 			return false;
 
 		Iterator<?> a = IteratorUtils.transformedIterator(getNodes().iterator(), INode::getValue);
@@ -133,56 +163,9 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 		return getLabels().hashCode() + getValues().hashCode() + BooleanUtils.toInteger(isRooted()) + BooleanUtils.toInteger(isTerminal());
 	}
 
-	private boolean nodeToString(StringBuilder sb, INode<VAL, LBL> node)
-	{
-		VAL value = node.getValue();
-
-		if (value == null)
-			return false;
-
-		sb.append("=").append(value);
-		return true;
-	}
-
 	@Override
 	public String toString()
 	{
-		StringBuilder sb = new StringBuilder();
-		nodeToString(sb, getRoot());
-
-		if (0 < sb.length())
-		{
-			sb.insert(0, "(");
-			sb.append(")");
-		}
-		sb.insert(0, getRoot().isRooted() ? "[R]" : "");
-
-		if (0 < sb.length() && getLabels().size() > 0)
-			sb.append(".");
-
-		if (getLabels().size() > 0)
-		{
-			Iterator<INode<VAL, LBL>> nodes = getNodes().iterator();
-			nodes.next();
-
-			for (LBL label : getLabels())
-			{
-				int builderLastLen = sb.length();
-
-				if (null != label)
-					sb.append(label);
-
-				if (nodeToString(sb, nodes.next()))
-					sb.insert(builderLastLen, "(").append(")");
-
-				sb.append(".");
-			}
-			sb.deleteCharAt(sb.length() - 1);
-		}
-
-		if (getLeaf().isTerminal())
-			sb.append("[T]");
-
-		return sb.toString();
+		return IPath.toString(this);
 	}
 }

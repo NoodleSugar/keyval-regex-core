@@ -117,7 +117,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		{
 			for (IGCEdge<VAL, LBL> edge : gc_getEdgesOf(state))
 			{
-				if (FSALabelConditions.isTrueCondition(edge.getLabelCondition()) && this.graph.getEdgeTarget(edge).equals(state))
+				if (FSALabelConditions.isAny(edge.getLabelCondition()) && this.graph.getEdgeTarget(edge).equals(state))
 					gchunk.graph.removeEdge(edge);
 			}
 		}

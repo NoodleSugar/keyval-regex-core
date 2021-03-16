@@ -88,7 +88,7 @@ public final class HelpLists
 	public static <A, B> List<Pair<A, B>> product(List<A> a, List<B> b)
 	{
 		int  nb    = a.size() * b.size();
-		Base base  = new Base(a.size(), b.size());
+		Base base  = Base.from(a.size(), b.size());
 		int  num[] = new int[2];
 		Arrays.fill(num, 0);
 
@@ -130,13 +130,13 @@ public final class HelpLists
 				num = new int[nb];
 				ret = new ArrayList<>(nb);
 
-				base = new Base(ibase);
+				base = Base.from(ibase);
 			}
 
 			@Override
 			public boolean hasNext()
 			{
-				if (i >= base.max())
+				if (i >= base.size())
 					return false;
 
 				i++;

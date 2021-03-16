@@ -5,6 +5,7 @@ import java.util.Objects;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
+import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 
 public final class FSAEdge<VAL, LBL> implements IFSAEdge<VAL, LBL>
 {
@@ -14,6 +15,11 @@ public final class FSAEdge<VAL, LBL> implements IFSAEdge<VAL, LBL>
 
 	public FSAEdge(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child, IFSALabelCondition<LBL> labelCondition)
 	{
+		// Child must not define another valueCondition
+		assert (!IFSALabelCondition.isEpsilon(labelCondition) //
+			|| FSAValueConditions.isAny(child.getValueCondition()) //
+			|| !Objects.equals(parent.getValueCondition(), child.getValueCondition()) //
+		);
 		this.parent         = parent;
 		this.child          = child;
 		this.labelCondition = labelCondition;

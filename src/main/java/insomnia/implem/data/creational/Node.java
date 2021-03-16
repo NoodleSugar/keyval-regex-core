@@ -6,6 +6,13 @@ import java.util.List;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 
+/**
+ * A node of a data.
+ * 
+ * @author zuri
+ * @param <VAL> type of a node value
+ * @param <LBL> type of an edge label
+ */
 class Node<VAL, LBL> implements INode<VAL, LBL>
 {
 	private VAL value;
@@ -23,6 +30,12 @@ class Node<VAL, LBL> implements INode<VAL, LBL>
 		isTerminal = false;
 	}
 
+	Node(VAL val)
+	{
+		this();
+		value = val;
+	}
+
 	List<IEdge<VAL, LBL>> getChildren()
 	{
 		return children;
@@ -36,6 +49,11 @@ class Node<VAL, LBL> implements INode<VAL, LBL>
 	void addEdge(Edge<VAL, LBL> edge)
 	{
 		children.add(edge);
+	}
+
+	void removeEdge(Edge<VAL, LBL> edge)
+	{
+		children.remove(edge);
 	}
 
 	void setParent(Edge<VAL, LBL> parent)
@@ -55,8 +73,7 @@ class Node<VAL, LBL> implements INode<VAL, LBL>
 
 	void setValue(VAL value)
 	{
-		this.value      = value;
-		this.isTerminal = true;
+		this.value = value;
 	}
 
 	@Override

@@ -80,6 +80,30 @@ public final class PathBuilder<VAL, LBL> extends AbstractPathBuilder<VAL, LBL>
 	}
 
 	@Override
+	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
+	{
+		int pos = nodes.indexOf(node);
+		return HelpLists.staticList(nodes.subList(pos, nodes.size()));
+	}
+
+	@Override
+	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
+	{
+		List<IEdge<VAL, LBL>> ret = new ArrayList<>();
+		INode<VAL, LBL>       a, b;
+		a = node;
+
+		int pos = nodes.indexOf(node) + 1;
+		for (int i = pos; i < nodes.size(); i++)
+		{
+			b = nodes.get(i);
+			ret.add(Edges.create(a, b, getLabels().get(i - 1)));
+			a = b;
+		}
+		return ret;
+	}
+
+	@Override
 	public List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
 	{
 		int i = nodes.indexOf(node);

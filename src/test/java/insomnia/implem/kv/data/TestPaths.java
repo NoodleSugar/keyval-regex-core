@@ -11,7 +11,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.data.IPath;
-import insomnia.data.PathOp;
 import insomnia.lib.help.HelpLists;
 
 class TestPaths
@@ -143,7 +142,7 @@ class TestPaths
 	{
 		IPath<KVValue, KVLabel> needle   = pathFromString(sneedle);
 		IPath<KVValue, KVLabel> haystack = pathFromString(shaystack);
-		assertEquals(isPrefix, PathOp.isPrefix(needle, haystack, proper));
+		assertEquals(isPrefix, IPath.isPrefix(needle, haystack, proper));
 	}
 
 	static List<Object[]> isSimpleSuffixSource()
@@ -251,7 +250,7 @@ class TestPaths
 	{
 		IPath<KVValue, KVLabel> needle   = pathFromString(sneedle);
 		IPath<KVValue, KVLabel> haystack = pathFromString(shaystack);
-		assertEquals(isSuffix, PathOp.isSuffix(needle, haystack, proper));
+		assertEquals(isSuffix, IPath.isSuffix(needle, haystack, proper));
 	}
 
 	static List<Object[]> findSimpleInclusionsSource()
@@ -338,7 +337,7 @@ class TestPaths
 	{
 		IPath<KVValue, KVLabel> needle   = pathFromString(sneedle);
 		IPath<KVValue, KVLabel> haystack = pathFromString(shaystack);
-		assertArrayEquals(result, PathOp.findInclusions(needle, haystack, noSuffOrPref));
+		assertArrayEquals(result, IPath.findInclusions(needle, haystack, noSuffOrPref));
 	}
 
 	static List<Object[]> findSimpleSuffixPrefixSource()
@@ -486,7 +485,7 @@ class TestPaths
 	{
 		IPath<KVValue, KVLabel> needle   = pathFromString(sneedle);
 		IPath<KVValue, KVLabel> haystack = pathFromString(shaystack);
-		assertArrayEquals(result, PathOp.findPossiblePrefixes(needle, haystack, proper));
+		assertArrayEquals(result, IPath.findPossiblePrefixes(needle, haystack, proper));
 	}
 
 	static List<Object[]> findPossibleSuffixesSource()
@@ -552,6 +551,6 @@ class TestPaths
 	{
 		IPath<KVValue, KVLabel> needle   = pathFromString(sneedle);
 		IPath<KVValue, KVLabel> haystack = pathFromString(shaystack);
-		assertArrayEquals(result, PathOp.findPossibleSuffixes(needle, haystack, proper));
+		assertArrayEquals(result, IPath.findPossibleSuffixes(needle, haystack, proper));
 	}
 }
