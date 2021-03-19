@@ -164,6 +164,12 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 		}
 
 		@Override
+		public Object getID()
+		{
+			return this;
+		}
+
+		@Override
 		public VAL getValue()
 		{
 			return value;

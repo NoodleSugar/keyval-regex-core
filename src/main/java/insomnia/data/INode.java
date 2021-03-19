@@ -17,6 +17,14 @@ import org.apache.commons.collections4.CollectionUtils;
 public interface INode<VAL, LBL>
 {
 	/**
+	 * Get the identifier of the node.
+	 * If two nodes have the same identifier based on the reference equality {@code ==}, then they are the same.
+	 * 
+	 * @return the ID of the node
+	 */
+	Object getID();
+
+	/**
 	 * @return the value if set or {@code null}
 	 */
 	VAL getValue();
@@ -48,6 +56,19 @@ public interface INode<VAL, LBL>
 	}
 
 	// =========================================================================
+
+	/**
+	 * Check if two nodes represents the same node;
+	 * that is they have the same {@link #getID()} object in memory
+	 * 
+	 * @param a the first node
+	 * @param b the second node
+	 * @return {@code true} if a equals b
+	 */
+	public static boolean sameAs(INode<?, ?> a, INode<?, ?> b)
+	{
+		return a == b || a.getID() == b.getID();
+	}
 
 	/**
 	 * Check if two nodes are equal.

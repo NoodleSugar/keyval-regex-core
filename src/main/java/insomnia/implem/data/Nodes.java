@@ -9,7 +9,7 @@ public final class Nodes
 		throw new AssertionError();
 	}
 
-	// =========================================================================
+	// ==========================================================================
 
 	private static abstract class Node<VAL, LBL> implements INode<VAL, LBL>
 	{
@@ -33,7 +33,7 @@ public final class Nodes
 		}
 	}
 
-	// =========================================================================
+	// ==========================================================================
 
 	/**
 	 * Create a new node.
@@ -46,6 +46,12 @@ public final class Nodes
 	{
 		return new Node<VAL, LBL>(value)
 		{
+			@Override
+			public Object getID()
+			{
+				return this;
+			}
+
 			@Override
 			public boolean isTerminal()
 			{

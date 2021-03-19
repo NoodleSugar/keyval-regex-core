@@ -28,14 +28,15 @@ public interface IEdge<VAL, LBL>
 
 	/**
 	 * Check if a is the same edge as b;
-	 * that is the two edges contains the same parent/child {@link Object} node, and labels are equal.
+	 * that is the two edges contain the same parent/child {@link Object} node, and labels are equal.
 	 * 
-	 * @return true if a is the same edge as b
+	 * @return {@code true} if a is the same edge as b
+	 * @see INode#sameAs(INode, INode)
 	 */
-	static <VAL, LBL> boolean sameAs(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
+	public static <VAL, LBL> boolean sameAs(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
-		return a.getChild() == b.getChild() //
-			&& a.getParent() == b.getParent() //
+		return INode.sameAs(a.getChild(), b.getChild()) //
+			&& INode.sameAs(a.getParent(), b.getParent()) //
 			&& Objects.equals(a.getLabel(), b.getLabel());
 	}
 
