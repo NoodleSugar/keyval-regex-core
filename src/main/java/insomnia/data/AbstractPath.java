@@ -137,33 +137,6 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	// Object Override
 
 	@Override
-	public boolean equals(Object o)
-	{
-		if (o == null || !(o instanceof IPath))
-			return false;
-
-		IPath<?, ?> path = (IPath<?, ?>) o;
-
-		if (nbLabels() != path.nbLabels())
-			return false;
-		if (!IPath.areEquals(this, path))
-			return false;
-
-		Iterator<?> a = IteratorUtils.transformedIterator(getNodes().iterator(), INode::getValue);
-		Iterator<?> b = IteratorUtils.transformedIterator(path.getNodes().iterator(), INode::getValue);
-
-		while (a.hasNext() && a.next() == b.next())
-			;
-		return !a.hasNext();
-	}
-
-	@Override
-	public int hashCode()
-	{
-		return getLabels().hashCode() + getValues().hashCode() + BooleanUtils.toInteger(isRooted()) + BooleanUtils.toInteger(isTerminal());
-	}
-
-	@Override
 	public String toString()
 	{
 		return IPath.toString(this);
