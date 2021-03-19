@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.lang3.tuple.Pair;
 
 import insomnia.lib.help.HelpLists;
 
@@ -108,21 +108,23 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	 * @param path the path to consider
 	 * @param from the inclusive index
 	 * @param to   the exclusive index
-	 * @return the limits, values and nodes to get to the new path; or null if an empty path must be create
+	 * @return the limits, and edges to get to the new path
+	 * @throws IndexOutOfBoundsException if invalid from/to
 	 */
-	public static <VAL, LBL> Triple<RealLimits, List<LBL>, List<INode<VAL, LBL>>> subPathInfos(IPath<VAL, LBL> path, int from, int to)
+	public static <VAL, LBL> Pair<RealLimits, List<IEdge<VAL, LBL>>> subPathInfos(IPath<VAL, LBL> path, int from, int to)
 	{
 		assert (from >= 0 && to >= from);
 
-		if (from == to)
-			return null;
+		if (to > path.size())
+			throw new IndexOutOfBoundsException();
 
 		RealLimits limits = realLimits(path, from, to);
-		return Triple.of(limits, path.getLabels().subList(limits.getFrom(), limits.getTo()), path.getNodes().subList(limits.getFrom(), limits.getTo() + 1));
+		return Pair.of(limits, path.getEdges().subList(limits.getFrom(), limits.getTo()));
 	}
 
 	// =========================================================================
-	static boolean nodeToString(StringBuilder sb, INode<?, ?> node)
+
+	private static boolean nodeToString(StringBuilder sb, INode<?, ?> node)
 	{
 		Object value = node.getValue();
 
@@ -228,7 +230,7 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	 */
 	static public RealLimits realLimits(IPath<?, ?> path, int from, int to)
 	{
-		assert (0 <= from && from < to);
+		assert (0 <= from && from <= to);
 		boolean isRooted   = false;
 		boolean isTerminal = false;
 
@@ -655,5 +657,4 @@ public interface IPath<VAL, LBL> extends ITree<VAL, LBL>
 	{
 		return findPossiblePrefixes(haystack, needle, firstFind, properSuffix);
 	}
-
 }
