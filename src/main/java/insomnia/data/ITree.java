@@ -15,7 +15,6 @@ import java.util.Stack;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -136,6 +135,44 @@ public interface ITree<VAL, LBL>
 		return ret;
 	}
 
+	/**
+	 * Order the state in a way that the higher states (from root) appears before the lower states.
+	 * 
+	 * @param tree the tree to scan
+	 * @return a list of nodes such as a node at a position has all its ascendants on the previous part of the list
+	 */
+	public static <VAL, LBL> List<INode<VAL, LBL>> topDownOrder(ITree<VAL, LBL> tree)
+	{
+		return topDownOrder(tree, tree.getRoot());
+	}
+
+	/**
+	 * Order the state in a way that the higher states (from root) appears before the lower states.
+	 * 
+	 * @param tree     the reference tree
+	 * @param treeRoot root of the sub-tree to scan
+	 * @return a list of nodes such as a node at a position has all its ascendants on the previous part of the list
+	 */
+	public static <VAL, LBL> List<INode<VAL, LBL>> topDownOrder(ITree<VAL, LBL> tree, INode<VAL, LBL> treeRoot)
+	{
+		Queue<INode<VAL, LBL>> nodeQueue = new LinkedList<>();
+		var                    ret       = new ArrayList<INode<VAL, LBL>>(tree.getNodes().size());
+
+		nodeQueue.add(treeRoot);
+
+		while (!nodeQueue.isEmpty())
+		{
+			INode<VAL, LBL>       node  = nodeQueue.poll();
+			List<IEdge<VAL, LBL>> edges = tree.getChildren(node);
+			ret.add(node);
+
+			for (IEdge<VAL, LBL> edge : edges)
+				nodeQueue.add(edge.getChild());
+		}
+		return ret;
+	}
+
+	// =========================================================================
 	// =========================================================================
 
 	/**
@@ -168,6 +205,93 @@ public interface ITree<VAL, LBL>
 		return ret;
 	}
 
+	/**
+	 * Get the parent reached going through {@code nb} parent nodes.
+	 * 
+	 * @param tree the tree to go through
+	 * @param node the node from which to scan
+	 * @param nb   the number of parent nodes to reached
+	 * @return the reached {@link INode}
+	 * @throws IndexOutOfBoundsException if there is not {@code nb} parent nodes to go through
+	 */
+	public static <VAL, LBL> INode<VAL, LBL> parentNode(ITree<VAL, LBL> tree, INode<VAL, LBL> node, int nb)
+	{
+		INode<VAL, LBL> ret = node;
+
+		for (int i = 0; i < nb; i++)
+		{
+			var parentEdge = tree.getParent(ret);
+
+			if (parentEdge.isEmpty())
+				throw new IndexOutOfBoundsException(String.format("nb=%d size=%d", nb, i));
+
+			ret = parentEdge.get().getParent();
+		}
+		return ret;
+	}
+
+	/**
+	 * Get all the edges reached going through {@code nb} parent nodes.
+	 * 
+	 * @param tree the tree to go through
+	 * @param node the node from which to scan
+	 * @param nb   the number of parent nodes to reached
+	 * @return the list of reached {@link IEdge}s during the scan
+	 * @throws IndexOutOfBoundsException if there is not {@code nb} parent nodes to go through
+	 */
+	public static <VAL, LBL> List<IEdge<VAL, LBL>> parentEdges(ITree<VAL, LBL> tree, INode<VAL, LBL> node, int nb)
+	{
+		if (nb == 0)
+			return Collections.emptyList();
+
+		List<IEdge<VAL, LBL>> ret = new ArrayList<>();
+
+		for (int i = 0; i < nb; i++)
+		{
+			var parentEdge = tree.getParent(node);
+
+			if (parentEdge.isEmpty())
+				throw new IndexOutOfBoundsException(String.format("nb=%d size=%d", nb, i));
+
+			ret.add(parentEdge.get());
+			node = parentEdge.get().getParent();
+		}
+		return ret;
+	}
+
+	/**
+	 * Get all the edges reached going from {@code node} to {@code parent}.
+	 * 
+	 * @param tree the tree to go through
+	 * @param node the node from which to scan
+	 * @param nb   the number of parent nodes to reached
+	 * @return the list of reached {@link IEdge}s during the scan
+	 * @throws IndexOutOfBoundsException if there is not {@code nb} parent nodes to go through
+	 */
+	public static <VAL, LBL> List<IEdge<VAL, LBL>> parentEdges(ITree<VAL, LBL> tree, INode<VAL, LBL> node, INode<VAL, LBL> parent)
+	{
+		if (node == parent)
+			return Collections.emptyList();
+
+		List<IEdge<VAL, LBL>> ret = new ArrayList<>();
+
+		for (;;)
+		{
+			var parentEdge = tree.getParent(node);
+
+			if (parentEdge.isEmpty())
+				throw new IndexOutOfBoundsException(String.format("node=%s parent=%s in %s", node, parent, ITree.toString(tree)));
+
+			ret.add(parentEdge.get());
+
+			if (parentEdge.get().getParent() == parent)
+				break;
+
+			node = parentEdge.get().getParent();
+		}
+		return ret;
+	}
+
 	// =========================================================================
 
 	/**
@@ -194,18 +318,44 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> List<INode<VAL, LBL>> getNodes(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
 	{
-		return Stream.concat(Stream.of(tree.getRoot()), getEdges(tree, root).stream().map(e -> e.getChild())).collect(Collectors.toList());
+		return IEdge.getNodes(tree.getEdges(root));
 	}
 
 	/**
-	 * Get all the edges of a tree from its root.
+	 * Scan the entire tree to get its leaves.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param tree  the tree to consider
+	 * @return the list of leaves
+	 */
+	public static <VAL, LBL> List<INode<VAL, LBL>> getLeaves(ITree<VAL, LBL> tree)
+	{
+		return getLeaves(tree, tree.getRoot());
+	}
+
+	/**
+	 * Scan the entire tree to get its nodes.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param tree  the tree to consider
+	 * @param root  the node from which to scan
+	 * @return the list of leaves
+	 */
+	public static <VAL, LBL> List<INode<VAL, LBL>> getLeaves(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
+	{
+		return tree.getNodes(root).stream().filter(n -> tree.getChildren(n).isEmpty()).collect(Collectors.toList());
+	}
+
+	/**
+	 * Get all the edges of a tree from its root
 	 * <p>
 	 * This is a standard implementation that scan the entire tree.
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
 	 * @param tree  the tree to scan
-	 * @param root  the root to consider
 	 * @return
 	 */
 	public static <VAL, LBL> List<IEdge<VAL, LBL>> getEdges(ITree<VAL, LBL> tree)
@@ -240,6 +390,35 @@ public interface ITree<VAL, LBL>
 		}
 		return ret;
 	}
+
+	/**
+	 * Get the vocabulary of a tree
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param tree  the tree to scan
+	 * @return the unique labels of the tree
+	 */
+	public static <VAL, LBL> Collection<LBL> getVocabulary(ITree<VAL, LBL> tree)
+	{
+		return getVocabulary(tree, tree.getRoot());
+	}
+
+	/**
+	 * Get the vocabulary of a sub-tree
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param tree  the tree to scan
+	 * @param root  the root of the sub-tree to scan
+	 * @return the unique labels of the tree
+	 */
+	public static <VAL, LBL> Collection<LBL> getVocabulary(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
+	{
+		return CollectionUtils.collect(getEdges(tree, root), IEdge::getLabel);
+	}
+
+	// =========================================================================
 
 	/**
 	 * Check if the first tree is a sub tree of the second one.
@@ -286,6 +465,7 @@ public interface ITree<VAL, LBL>
 		}
 		return true;
 	}
+	// ==========================================================================
 
 	/**
 	 * Check if two trees are equal.

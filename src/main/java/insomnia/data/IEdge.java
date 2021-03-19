@@ -1,6 +1,13 @@
 package insomnia.data;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 /**
  * An edge in a data.
@@ -76,7 +83,74 @@ public interface IEdge<VAL, LBL>
 
 	// =========================================================================
 
-	static String toString(IEdge<?, ?> edge)
+	private static <VAL, LBL> List<INode<VAL, LBL>> getNodes(Iterable<? extends IEdge<VAL, LBL>> edges, Supplier<List<INode<VAL, LBL>>> createList)
+	{
+		var it = edges.iterator();
+
+		if (!it.hasNext())
+			return Collections.emptyList();
+
+		List<INode<VAL, LBL>> ret  = createList.get();
+		var                   edge = it.next();
+		ret.add(edge.getParent());
+
+		for (;;)
+		{
+			ret.add(edge.getChild());
+			if (!it.hasNext())
+				break;
+			edge = it.next();
+		}
+		return ret;
+	}
+
+	/**
+	 * Get {@link INode}s from a {@link List} of edges conserving the order.
+	 * 
+	 * @param edges the list of edges
+	 * @return the nodes from the edges in order
+	 */
+	public static <VAL, LBL> List<INode<VAL, LBL>> getNodes(Iterable<? extends IEdge<VAL, LBL>> edges)
+	{
+		return getNodes(edges, ArrayList::new);
+	}
+
+	/**
+	 * Get {@link INode}s from a {@link List} of edges conserving the order.
+	 * 
+	 * @param edges the list of edges
+	 * @return the nodes from the edges in order
+	 */
+	public static <VAL, LBL> List<INode<VAL, LBL>> getNodes(Collection<? extends IEdge<VAL, LBL>> edges)
+	{
+		return getNodes(edges, () -> new ArrayList<>(edges.size()));
+	}
+
+	/**
+	 * Get labels from a {@link List} of edges conserving the order.
+	 * 
+	 * @param edges the list of edges
+	 * @return the nodes from the edges in order
+	 */
+	public static <VAL, LBL> List<LBL> getLabels(Iterable<? extends IEdge<VAL, LBL>> edges)
+	{
+		return CollectionUtils.collect(edges, IEdge::getLabel, new ArrayList<>());
+	}
+
+	/**
+	 * Get labels from a {@link List} of edges conserving the order.
+	 * 
+	 * @param edges the list of edges
+	 * @return the nodes from the edges in order
+	 */
+	public static <VAL, LBL> List<LBL> getLabels(Collection<? extends IEdge<VAL, LBL>> edges)
+	{
+		return CollectionUtils.collect(edges, IEdge::getLabel, new ArrayList<>(edges.size()));
+	}
+
+	// =========================================================================
+
+	public static String toString(IEdge<?, ?> edge)
 	{
 		return new StringBuilder() //
 			.append(edge.getParent()) //

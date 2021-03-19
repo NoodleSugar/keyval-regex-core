@@ -1,6 +1,11 @@
 package insomnia.data;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 /**
  * A node in a data.
@@ -27,6 +32,20 @@ public interface INode<VAL, LBL>
 	 * This information belongs to the node, and do not change even if the node belongs to many trees.
 	 */
 	boolean isTerminal();
+
+	// =========================================================================
+
+	/**
+	 * Check if the node is empty;
+	 * that is it is nor rooted nor terminal.
+	 * 
+	 * @param node the node to check
+	 * @return {@code true} if the node is empty, or {@code false}
+	 */
+	public static boolean isEmpty(INode<?, ?> node)
+	{
+		return !node.isRooted() && !node.isTerminal();
+	}
 
 	// =========================================================================
 
@@ -78,6 +97,30 @@ public interface INode<VAL, LBL>
 				&& (!a.isRooted() || b.isRooted()) //
 				&& (!a.isTerminal() || b.isTerminal()) //
 			);
+	}
+
+	// =========================================================================
+
+	/**
+	 * Get the values from a sequence of nodes
+	 * 
+	 * @param nodes the node sequence
+	 * @return the values of the nodes in order
+	 */
+	public static <VAL, LBL> List<VAL> getValues(Iterable<? extends INode<VAL, LBL>> nodes)
+	{
+		return CollectionUtils.collect(nodes, INode::getValue, new ArrayList<>());
+	}
+
+	/**
+	 * Get the values from a sequence of nodes
+	 * 
+	 * @param nodes the node sequence
+	 * @return the values of the nodes in order
+	 */
+	public static <VAL, LBL> List<VAL> getValues(Collection<? extends INode<VAL, LBL>> nodes)
+	{
+		return CollectionUtils.collect(nodes, INode::getValue, new ArrayList<>(nodes.size()));
 	}
 
 	// =========================================================================
