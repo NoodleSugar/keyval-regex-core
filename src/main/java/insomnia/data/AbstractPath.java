@@ -2,11 +2,8 @@ package insomnia.data;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.collections4.IterableUtils;
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.BooleanUtils;
 
 public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
@@ -76,13 +73,13 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	@Override
 	public boolean isEmpty()
 	{
-		return getLabels().isEmpty();
+		return getLabels().isEmpty() && INode.isEmpty(getRoot());
 	}
 
 	@Override
 	public List<VAL> getValues()
 	{
-		return IterableUtils.toList(IterableUtils.transformedIterable(getNodes(), INode::getValue));
+		return INode.getValues(getNodes());
 	}
 
 	@Override
