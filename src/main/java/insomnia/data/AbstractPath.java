@@ -6,8 +6,16 @@ import java.util.List;
 
 import org.apache.commons.lang3.BooleanUtils;
 
+import insomnia.implem.data.Paths;
+
 public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 {
+
+	@Override
+	public IPath<VAL, LBL> subPath(int from, int to)
+	{
+		return Paths.subPath(this, from, to);
+	}
 
 	// =========================================================================o
 

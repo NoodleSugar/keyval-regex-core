@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,19 +30,6 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 	{
 	}
 
-	Tree(ITree<VAL, LBL> src)
-	{
-		childrenOf = new HashMap<>();
-		parentOf   = new HashMap<>();
-
-		INode<VAL, LBL> srcNode = src.getRoot();
-		root = Nodes.create(srcNode.isRooted(), srcNode.isTerminal(), srcNode.getValue());
-
-		vocabulary = new HashSet<>();
-		recursiveConstruct(root, src, srcNode);
-		vocabulary = Collections.unmodifiableList(new ArrayList<>(vocabulary));
-	}
-
 	private static <VAL, LBL> Tree<VAL, LBL> mutable()
 	{
 		Tree<VAL, LBL> ret = new Tree<>();
@@ -50,90 +39,95 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 		return ret;
 	}
 
-	static <VAL, LBL> ITree<VAL, LBL> empty()
-	{
-		Tree<VAL, LBL> ret = new Tree<>();
-
-		ret.root       = Nodes.create(false, false, null);
-		ret.childrenOf = Collections.emptyMap();
-		ret.parentOf   = Collections.emptyMap();
-		ret.vocabulary = Collections.emptyList();
-		return ret;
-	}
-
 	// =========================================================================
 
-	private IEdge<VAL, LBL> createEdge(INode<VAL, LBL> parent, INode<VAL, LBL> child, LBL label, List<IEdge<VAL, LBL>> childrenOf)
+	private IEdge<VAL, LBL> createEdge(INode<VAL, LBL> parent, INode<VAL, LBL> child, LBL label)
 	{
 		IEdge<VAL, LBL> newEdge = Edges.create(parent, child, label);
 		parentOf.put(child, newEdge);
-		childrenOf.add(newEdge);
+		childrenOf.get(parent).add(newEdge);
 		return newEdge;
-	}
-
-	private void recursiveConstruct(INode<VAL, LBL> tNode, ITree<VAL, LBL> src, INode<VAL, LBL> srcNode)
-	{
-		List<? extends IEdge<VAL, LBL>> srcChildren = src.getChildren(srcNode);
-		List<IEdge<VAL, LBL>>           childrenOf  = new ArrayList<>(srcChildren.size());
-
-		for (IEdge<VAL, LBL> srcEdge : srcChildren)
-		{
-			vocabulary.add(srcEdge.getLabel());
-			INode<VAL, LBL> srcChild = srcEdge.getChild();
-			INode<VAL, LBL> tChild   = Nodes.create(srcChild);
-
-			createEdge(tNode, tChild, srcEdge.getLabel(), childrenOf);
-			recursiveConstruct(tChild, src, srcChild);
-		}
-		this.childrenOf.put(tNode, Collections.unmodifiableList(childrenOf));
 	}
 
 	// =========================================================================
 
-	public <RVAL, RLBL> Tree<RVAL, RLBL> map(Function<VAL, RVAL> mapVal, Function<LBL, RLBL> mapLabel)
+	static <VAL, LBL> Tree<VAL, LBL> copy(ITree<VAL, LBL> tree)
 	{
-		return map(this, mapVal, mapLabel);
+		return copy(tree, tree.getRoot());
 	}
 
-	private <SVAL, SLBL> INode<VAL, LBL> mapNode(INode<SVAL, SLBL> srcNode, Function<SVAL, VAL> mapVal)
+	static <VAL, LBL> Tree<VAL, LBL> copy(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
 	{
-		SVAL srcNodeValue = srcNode.getValue();
-
-		if (srcNodeValue == null)
-			return Nodes.create(srcNode, null);
-
-		return Nodes.create(srcNode, mapVal.apply(srcNodeValue));
-
+		return map(tree, root, Nodes::create, Function.identity());
 	}
 
-	private <SLBL> LBL mapLabel(SLBL srcLabel, Function<SLBL, LBL> mapLabel)
+	static <VAL, LBL> Tree<VAL, LBL> subTree(ITree<VAL, LBL> tree)
 	{
-		return mapLabel.apply(srcLabel);
+		return subTree(tree, tree.getRoot());
 	}
 
-	static <RVAL, RLBL, SVAL, SLBL> Tree<RVAL, RLBL> map(ITree<SVAL, SLBL> src, Function<SVAL, RVAL> fmapVal, Function<SLBL, RLBL> fmapLabel)
+	static <VAL, LBL> Tree<VAL, LBL> subTree(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
 	{
-		Tree<RVAL, RLBL> ret = mutable();
-		ret.root = ret.mapNode(src.getRoot(), fmapVal);
-		ret.recursiveMap(ret.root, src, src.getRoot(), fmapVal, fmapLabel);
+		return map(tree, root, Function.identity(), Function.identity());
+	}
+
+	// =========================================================================
+
+	private static <VAL, LBL, TOVAL, TOLBL> Tree<TOVAL, TOLBL> map( //
+		ITree<VAL, LBL> tree, //
+		INode<VAL, LBL> root, //
+		Function<INode<VAL, LBL>, INode<TOVAL, TOLBL>> fmapNode, //
+		Function<LBL, TOLBL> fmapLabel //
+	)
+	{
+		Tree<TOVAL, TOLBL> ret   = mutable();
+		Queue<INode<?, ?>> nodes = new LinkedList<>();
+
+		ret.root = fmapNode.apply(root);
+
+		if (tree.getChildren(root).isEmpty())
+			return ret;
+
+		nodes.add(root);
+		nodes.add(ret.root);
+
+		while (!nodes.isEmpty())
+		{
+			@SuppressWarnings("unchecked")
+			INode<VAL, LBL>     node    = (INode<VAL, LBL>) nodes.poll();
+			@SuppressWarnings("unchecked")
+			INode<TOVAL, TOLBL> newNode = (INode<TOVAL, TOLBL>) nodes.poll();
+
+			var nodeChilds = tree.getChildren(node);
+			ret.childrenOf.put(newNode, new ArrayList<>(nodeChilds.size()));
+
+			for (var edge : nodeChilds)
+			{
+				var nodeChild    = edge.getChild();
+				var edgeChilds   = tree.getChildren(nodeChild);
+				var newNodeChild = fmapNode.apply(nodeChild);
+				ret.createEdge(newNode, newNodeChild, fmapLabel.apply(edge.getLabel()));
+
+				if (edgeChilds.isEmpty())
+					continue;
+
+				nodes.add(nodeChild);
+				nodes.add(newNodeChild);
+			}
+		}
 		return ret;
 	}
 
-	private <SVAL, SLBL> void recursiveMap( //
-		INode<VAL, LBL> tNode, ITree<SVAL, SLBL> src, INode<SVAL, SLBL> srcNode, //
-		Function<SVAL, VAL> fmapVal, Function<SLBL, LBL> fmapLabel //
-	)
-	{
-		List<? extends IEdge<SVAL, SLBL>> srcChildren = src.getChildren(srcNode);
-		List<IEdge<VAL, LBL>>             childrenOf  = new ArrayList<>(srcChildren.size());
+	// =========================================================================
 
-		for (IEdge<SVAL, SLBL> srcEdge : srcChildren)
-		{
-			INode<VAL, LBL> childNode = mapNode(srcEdge.getChild(), fmapVal);
-			createEdge(tNode, childNode, mapLabel(srcEdge.getLabel(), fmapLabel), childrenOf);
-			recursiveMap(childNode, src, srcEdge.getChild(), fmapVal, fmapLabel);
-		}
-		this.childrenOf.put(tNode, Collections.unmodifiableList(childrenOf));
+	public <TOVAL, TOLBL> Tree<TOVAL, TOLBL> map(INode<VAL, LBL> root, Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel)
+	{
+		return Tree.map(this, root, n -> Nodes.create(n, mapVal.apply(n.getValue())), mapLabel);
+	}
+
+	public <TOVAL, TOLBL> Tree<TOVAL, TOLBL> map(Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel)
+	{
+		return map(getRoot(), mapVal, mapLabel);
 	}
 
 	// =========================================================================
@@ -152,13 +146,14 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 	@Override
 	public boolean isPath()
 	{
+		assert (!ITree.isPath(this));
 		return false;
 	}
 
 	@Override
 	public boolean isEmpty()
 	{
-		return childrenOf.isEmpty();
+		return childrenOf.isEmpty() && INode.isEmpty(root);
 	}
 
 	@Override

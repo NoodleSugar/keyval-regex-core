@@ -8,11 +8,10 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Triple;
 
 import insomnia.data.INode;
 import insomnia.data.IPath;
-import insomnia.data.IPath.RealLimits;
+import insomnia.data.ITree;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
@@ -26,7 +25,7 @@ public final class Paths
 		throw new AssertionError();
 	}
 
-	// =========================================================================
+	// ==========================================================================
 
 	/**
 	 * Get the paths validated by a {@link GraphChunk}.
@@ -104,7 +103,7 @@ public final class Paths
 		return pathsFromPRegexElement(Trees.getParser().parse(p), Function.identity(), Function.identity());
 	}
 
-	// =========================================================================
+	// ==========================================================================
 
 	/**
 	 * @return an empty path
@@ -115,33 +114,21 @@ public final class Paths
 		return (IPath<VAL, LBL>) Trees.empty();
 	}
 
+	public static <VAL, LBL> IPath<VAL, LBL> emptySubPath(ITree<VAL, LBL> path, INode<VAL, LBL> root)
+	{
+		return Path.emptySubPath(path, root);
+	}
+
+	// ==========================================================================
+
 	public static <VAL, LBL> IPath<VAL, LBL> create(IPath<VAL, LBL> src)
 	{
-		return new Path<>(src);
+		return Path.copy(src);
 	}
 
 	public static <VAL, LBL> IPath<VAL, LBL> create(IPath<VAL, LBL> src, int from, int to)
 	{
-		Triple<RealLimits, List<LBL>, List<INode<VAL, LBL>>> infos = IPath.subPathInfos(src, from, to);
-
-		if (null == infos)
-			return empty();
-
-		RealLimits limits = infos.getLeft();
-		return create(limits.isRooted(), limits.isTerminal(), infos.getMiddle());
-	}
-
-	/**
-	 * Create a path ended by a value.
-	 * 
-	 * @param isRooted   the path is rooted
-	 * @param isTerminal the path is terminal
-	 * @param labels     labels of the path
-	 * @param value      the value for the last node
-	 */
-	private static <VAL, LBL> IPath<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels, VAL value)
-	{
-		return new Path<>(isRooted, isTerminal, labels, value);
+		return create(subPath(src, from, to));
 	}
 
 	/**
@@ -153,8 +140,49 @@ public final class Paths
 	 */
 	public static <VAL, LBL> IPath<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels)
 	{
-		return create(isRooted, isTerminal, labels, null);
+		return Path.create(isRooted, isTerminal, labels);
 	}
+
+	// ==========================================================================
+
+	public static <VAL, LBL> IPath<VAL, LBL> subPath(IPath<VAL, LBL> path, int from, int to)
+	{
+		return Path.subPath(path, from, to);
+	}
+
+	/**
+	 * View the tree as a sub-path.
+	 * <p>
+	 * The returned path is a snapshot of the sub-path.
+	 * 
+	 * @param tree the parent tree
+	 * @return the selected sub-path
+	 * @throws IllegalArgumentException if the tree does not represent a tree
+	 */
+	public static <VAL, LBL> IPath<VAL, LBL> subPath(ITree<VAL, LBL> tree)
+	{
+		return subPath(tree, tree.getRoot());
+	}
+
+	/**
+	 * Get a sub-path of the tree.
+	 * <p>
+	 * The returned path is a snapshot of the sub-path.
+	 * 
+	 * @param tree the parent tree
+	 * @param root the root of the sub-path
+	 * @return the selected sub-path
+	 * @throws IllegalArgumentException if the sub-tree does not represent a tree
+	 */
+	public static <VAL, LBL> IPath<VAL, LBL> subPath(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
+	{
+		if (!tree.isPath())
+			throw new IllegalArgumentException();
+
+		return Path.subPath(tree, root, tree.getEdges(root));
+	}
+
+	// ==========================================================================
 
 	/**
 	 * Concatenate some paths.

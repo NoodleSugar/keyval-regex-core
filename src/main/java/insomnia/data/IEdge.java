@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import org.apache.commons.collections4.CollectionUtils;
 
 /**
- * An edge in a data.
+ * An oriented edge in a data.
  * 
  * @author zuri
  * @param <VAL> Type of the value (store in a node)
@@ -44,10 +44,10 @@ public interface IEdge<VAL, LBL>
 	 * Check if a and b are equal edges;
 	 * that is a.parent/a.child node equals b.parent/b.child ({@link INode#equals(INode, INode)}) , and labels are equal.
 	 * 
-	 * @return true if a and b are equal edges
+	 * @return {@code true} if a and b are equal edges
 	 * @see INode#equals(INode, INode)
 	 */
-	static <VAL, LBL> boolean equals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
+	public static <VAL, LBL> boolean equals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
 		return INode.equals(a.getChild(), b.getChild()) //
 			&& INode.equals(a.getParent(), b.getParent()) //
@@ -58,10 +58,10 @@ public interface IEdge<VAL, LBL>
 	 * Check if a and b have the same tree structure;
 	 * that is a.parent/a.child node is structurally equal to b.parent/b.child, and labels are equal.
 	 * 
-	 * @return true if a and b have the same tree structure
+	 * @return {@code true} if a and b have the same tree structure
 	 * @see INode#structEquals(INode, INode)
 	 */
-	static <VAL, LBL> boolean structEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
+	public static <VAL, LBL> boolean structEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
 		return INode.structEquals(a.getChild(), b.getChild()) //
 			&& INode.structEquals(a.getParent(), b.getParent()) //
@@ -72,10 +72,10 @@ public interface IEdge<VAL, LBL>
 	 * Check if a can be projected on b;
 	 * that is a.parent/a.child node can be projected on b.parent/b.child, and a.label == null or a.label is equal to b.label.
 	 * 
-	 * @return true if a can be projected to b
+	 * @return {@code true} if a can be projected to b
 	 * @see INode#projectEquals(INode, INode)
 	 */
-	static <VAL, LBL> boolean projectEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
+	public static <VAL, LBL> boolean projectEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
 		return INode.projectEquals(a.getChild(), b.getChild()) //
 			&& INode.projectEquals(a.getParent(), b.getParent()) //

@@ -25,7 +25,7 @@ import insomnia.lib.help.HelpLists;
  * Representation of an immutable Tree.
  * <p>
  * A tree possesses nodes and edges that may be shared between some other trees.
- * Thus, that is the tree that is in charged of obtaining informations about nodes (eg. getChildren()) in its context.
+ * Thus, that is the tree that is in charged of obtaining informations about nodes (eg. {@link #getChildren(INode)}) in its context.
  * <br>
  * <em>A tree must have at least a root node.</em>
  * 
@@ -97,13 +97,23 @@ public interface ITree<VAL, LBL>
 	// =========================================================================
 
 	/**
-	 * Order the state in a way that the lowest states (from leaves) appears before the higher states.
+	 * Order the states in a way that the lowest states (from leaves) appears before the higher states.
+	 * 
+	 * @param tree the tree to scan
+	 * @return a list of nodes such as a node at a position is a node ascendant of the previous nodes in the list
 	 */
 	public static <VAL, LBL> List<INode<VAL, LBL>> bottomUpOrder(ITree<VAL, LBL> tree)
 	{
 		return bottomUpOrder(tree, tree.getRoot());
 	}
 
+	/**
+	 * Order the states in a way that the lowest states (from leaves) appears before the higher states.
+	 * 
+	 * @param tree     the reference tree
+	 * @param treeRoot root of the sub-tree to scan
+	 * @return a list of nodes such as a node at a position is a node ascendant of the previous nodes in the list
+	 */
 	public static <VAL, LBL> List<INode<VAL, LBL>> bottomUpOrder(ITree<VAL, LBL> tree, INode<VAL, LBL> treeRoot)
 	{
 		List<INode<VAL, LBL>>  a, b;
@@ -176,17 +186,31 @@ public interface ITree<VAL, LBL>
 	// =========================================================================
 
 	/**
-	 * Follow the path given by 'indexes'.
-	 * 'indexes' contain the position of the edge to be follow.
-	 * An empty 'indexes' refer to the root node.
+	 * Follow the path given by {@code indexes}
+	 * <p>
+	 * {@code indexes} contain the position of the edge to be follow.
+	 * An empty {@code indexes} refer to the root node.
 	 * 
-	 * @return the node of 'tree' if exists or {@code null}
+	 * @param tree    the tree to go through
+	 * @param indexes the sequence of child positions to follow from the root of the tree
+	 * @return the reached node if the path exists, or {@code null}
 	 */
 	public static <VAL, LBL> INode<VAL, LBL> followIndex(ITree<VAL, LBL> tree, int... indexes)
 	{
 		return followIndex(tree, tree.getRoot(), indexes);
 	}
 
+	/**
+	 * Follow the path given by {@code indexes}
+	 * <p>
+	 * {@code indexes} contain the position of the edge to be follow.
+	 * An empty {@code indexes} refer to the root node.
+	 * 
+	 * @param tree    the tree to go through
+	 * @param node    the node from which scan
+	 * @param indexes the sequence of child positions to follow from {@code node}
+	 * @return the reached node if the path exists, or {@code null}
+	 */
 	public static <VAL, LBL> INode<VAL, LBL> followIndex(ITree<VAL, LBL> tree, INode<VAL, LBL> node, int... indexes)
 	{
 		INode<VAL, LBL> ret = node;
@@ -364,14 +388,14 @@ public interface ITree<VAL, LBL>
 	}
 
 	/**
-	 * Get all the edges of a tree from one of its nodes.
+	 * Get all the edges of a sub-tree
 	 * <p>
 	 * This is a standard implementation that scan the entire tree from the given node.
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
 	 * @param tree  the tree to scan
-	 * @param root  the root to consider
+	 * @param root  the root of the sub-tree to scan
 	 * @return
 	 */
 	public static <VAL, LBL> List<IEdge<VAL, LBL>> getEdges(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
@@ -486,7 +510,7 @@ public interface ITree<VAL, LBL>
 	}
 
 	/**
-	 * Check if a tree can be projected on a second one.
+	 * Check if a tree can be projected on a second one from the root.
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
@@ -671,7 +695,7 @@ public interface ITree<VAL, LBL>
 	public static <VAL, LBL> String treeOrPathToString(ITree<VAL, LBL> tree)
 	{
 		if (tree.isPath())
-			return IPath.toString(asPath(tree));
+			return IPath.toString(Paths.subPath(tree));
 
 		return toString(tree);
 	}
@@ -732,7 +756,7 @@ public interface ITree<VAL, LBL>
 		toString(sb, prefixBuilder, tree, current.getChild());
 	}
 
-	static <VAL, LBL> void prettyNode(StringBuilder sb, IEdge<VAL, LBL> edge)
+	private static <VAL, LBL> void prettyNode(StringBuilder sb, IEdge<VAL, LBL> edge)
 	{
 		sb.append(edge.getLabel());
 		VAL value = edge.getChild().getValue();

@@ -1,12 +1,18 @@
 package insomnia.implem.data;
 
 import java.text.ParseException;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.function.Function;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 
+import insomnia.data.INode;
 import insomnia.data.ITree;
+import insomnia.data.creational.ITreeBuilder;
+import insomnia.implem.data.creational.SubTreeBuilder;
 import insomnia.implem.data.creational.TreeBuilder;
 import insomnia.implem.data.regex.parser.IRegexElement;
 import insomnia.implem.data.regex.parser.RegexParser;
@@ -19,6 +25,7 @@ public final class Trees
 	}
 
 	// =========================================================================
+
 	private final static RegexParser parser = new RegexParser("''\"\"~~");
 
 	/**
@@ -58,10 +65,107 @@ public final class Trees
 	public static <VAL, LBL> ITree<VAL, LBL> create(ITree<VAL, LBL> src)
 	{
 		if (src.isPath())
-			return Paths.create(ITree.asPath(src));
+			return Paths.create(Paths.subPath(src));
 
-		return new Tree<VAL, LBL>(src);
+		return Tree.copy(src, src.getRoot());
 	}
+
+	// =========================================================================
+
+	/**
+	 * Create a one-node tree.
+	 * 
+	 * @param tree the parent tree
+	 * @param root the node
+	 * @return
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> emptySubTree(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
+	{
+		return Path.emptySubPath(tree, root);
+	}
+
+	/**
+	 * Create a snapshot of a tree.
+	 * The returned subtree will not be modified if the original subtree changes; that can happens in the case of a {@link ITreeBuilder}.
+	 * 
+	 * @param tree the parent tree
+	 * @return a sub-tree of {@code tree} rooted on {@code node}
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> subTree(ITree<VAL, LBL> tree)
+	{
+		return subTree(tree, tree.getRoot());
+	}
+
+	/**
+	 * Create a snapshot of a subtree.
+	 * The returned subtree will not be modified if the original subtree changes; that can happens in the case of a {@link ITreeBuilder}.
+	 * 
+	 * @param tree the parent tree
+	 * @param node the root node of the sub-tree
+	 * @return a sub-tree of {@code tree} rooted on {@code node}
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> subTree(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
+	{
+		if (ITree.isPath(tree, node))
+			return emptySubTree(tree, node);
+
+		return Tree.subTree(tree, node);
+	}
+
+	/**
+	 * Create a view on a tree.
+	 * If the subtree changes, the view changes too.
+	 * 
+	 * @param tree the parent tree
+	 * @return a sub-tree view of {@code tree} rooted on {@code node}
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> subTreeView(ITree<VAL, LBL> tree)
+	{
+		return subTreeView(tree, tree.getRoot(), 0);
+	}
+
+	/**
+	 * Create a view on a sub-tree.
+	 * If the subtree changes, the view changes too.
+	 * 
+	 * @param tree the parent tree
+	 * @param node the root node of the sub-tree
+	 * @return a sub-tree view of {@code tree} rooted on {@code node}
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> subTreeView(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
+	{
+		return subTreeView(tree, node, 0);
+	}
+
+	/**
+	 * Create a view on a sub-tree.
+	 * If the subtree changes, the view changes too.
+	 * 
+	 * @param tree      the parent tree
+	 * @param node      the root node of the sub-tree
+	 * @param nbParents the number of parent nodes to add to the view
+	 * @return a sub-tree view of {@code tree} rooted on {@code node}
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> subTreeView(ITree<VAL, LBL> tree, INode<VAL, LBL> node, int nbParents)
+	{
+		return new SubTreeView<>(tree, node, nbParents);
+	}
+
+	/**
+	 * Create a view on a sub-tree.
+	 * If the subtree changes, the view changes too.
+	 * 
+	 * @param tree the parent tree
+	 * @param node the root base of the sub-tree to consider
+	 * @param root the root node
+	 * @return a sub-tree view of {@code tree} rooted on {@code node}
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> subTreeView(ITree<VAL, LBL> tree, INode<VAL, LBL> node, INode<VAL, LBL> root)
+	{
+		return new SubTreeView<>(tree, node, root);
+	}
+
+	// =========================================================================
 
 	/**
 	 * Create a tree from an {@link IRegexElement}.
@@ -149,12 +253,5 @@ public final class Trees
 	public static List<ITree<String, String>> treesFromString(String tregex) throws ParseException
 	{
 		return treesFromString(tregex, Function.identity(), Function.identity());
-	}
-
-	// =========================================================================
-
-	public static <RVAL, RLBL, VAL, LBL> ITree<RVAL, RLBL> map(ITree<VAL, LBL> src, Function<VAL, RVAL> fmapVal, Function<LBL, RLBL> fmapLabel)
-	{
-		return Tree.map(src, fmapVal, fmapLabel);
 	}
 }

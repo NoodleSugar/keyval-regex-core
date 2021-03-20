@@ -1,56 +1,159 @@
 package insomnia.implem.data;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.IntStream;
-
-import org.apache.commons.lang3.tuple.Triple;
 
 import insomnia.data.AbstractPath;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.IPath;
+import insomnia.data.ITree;
 import insomnia.lib.Side;
 import insomnia.lib.help.HelpLists;
 
 final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 {
-	private final List<PathNode> nodes;
-	private final List<LBL>      labels;
-
-	/**
-	 * Real offset of a node.
-	 * Serve in the subPath creation to make sure that the subNodes are the same that the parent path nodes.
-	 */
-	private int realNodeOffset = 0;
+	private List<INode<VAL, LBL>> nodes;
+	private List<LBL>             labels;
 
 	Path()
 	{
 		super();
-		nodes  = Collections.singletonList(new PathNode(0, null));
+		nodes  = Collections.singletonList(decorate(Nodes.create(), 0));
 		labels = Collections.emptyList();
 	}
 
-	Path(IPath<VAL, LBL> src)
+	private Path(ITree<VAL, LBL> parent, INode<VAL, LBL> root)
 	{
-		super();
-		List<PathNode> tmpNodes = new ArrayList<>();
+		this.nodes  = Collections.singletonList(decorate(root, 0));
+		this.labels = Collections.emptyList();
+	}
 
-		int pos = 0;
-		for (INode<VAL, LBL> node : src.getNodes())
-			tmpNodes.add(new PathNode(pos++, node.getValue()));
+	private Path(ITree<VAL, LBL> parent, List<IEdge<VAL, LBL>> edges)
+	{
+		assert (!edges.isEmpty());
 
-		if (src.isRooted())
-			tmpNodes.get(0).isRooted = true;
+		List<INode<VAL, LBL>> nodes = new ArrayList<>();
+		int                   i     = 0;
+		for (var node : IEdge.getNodes(edges))
+			nodes.add(decorate(node, i++));
 
-		if (src.isTerminal())
-			tmpNodes.get(tmpNodes.size() - 1).isTerminal = true;
+		this.nodes  = List.copyOf(nodes);
+		this.labels = HelpLists.staticList(IEdge.getLabels(edges));
+	}
 
-		nodes  = HelpLists.staticList(tmpNodes);
-		labels = HelpLists.staticList(src.getLabels());
+	private static <VAL, LBL> Path<VAL, LBL> mutable()
+	{
+		Path<VAL, LBL> ret = new Path<>();
+		ret.nodes  = new ArrayList<>();
+		ret.labels = new ArrayList<>();
+		return ret;
+	}
+
+	private void freeze()
+	{
+		nodes  = List.copyOf(nodes);
+		labels = labels.isEmpty() ? Collections.emptyList() : HelpLists.staticList(labels);
+	}
+
+	// ==========================================================================
+
+	private static class PNode<VAL, LBL> implements INode<VAL, LBL>
+	{
+		INode<VAL, LBL> ref;
+		int             index;
+
+		PNode(INode<VAL, LBL> ref, int pos)
+		{
+			this.ref   = ref;
+			this.index = pos;
+		}
+
+		@Override
+		public Object getID()
+		{
+			return ref.getID();
+		}
+
+		@Override
+		public VAL getValue()
+		{
+			return ref.getValue();
+		}
+
+		@Override
+		public boolean isRooted()
+		{
+			return ref.isRooted();
+		}
+
+		@Override
+		public boolean isTerminal()
+		{
+			return ref.isTerminal();
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			return ref == getRef((INode<?, ?>) obj);
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return ref.hashCode();
+		}
+
+		@Override
+		public String toString()
+		{
+			return new StringBuilder().append(ref).append("@").append(index).toString();
+		}
+
+		public int getIndex()
+		{
+			return index;
+		}
+	}
+
+	private static <VAL, LBL> PNode<VAL, LBL> decorate(INode<VAL, LBL> node, int index)
+	{
+		int nindex = getIndex(node);
+
+		if (index == nindex)
+			return (PNode<VAL, LBL>) node;
+
+		if (node instanceof PNode<?, ?>)
+			node = ((PNode<VAL, LBL>) node).ref;
+
+		return new PNode<>(node, index);
+	}
+
+	private static <VAL, LBL> int getIndex(INode<VAL, LBL> node)
+	{
+		if (!(node instanceof PNode<?, ?>))
+			return -1;
+
+		return ((PNode<?, ?>) node).getIndex();
+	}
+
+	private static <VAL, LBL> INode<VAL, LBL> getRef(INode<VAL, LBL> node)
+	{
+		return ((PNode<VAL, LBL>) node).ref;
+	}
+
+	// ==========================================================================
+
+	static <VAL, LBL> Path<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels)
+	{
+		return create(isRooted, isTerminal, labels, Collections.emptyList(), 0);
 	}
 
 	/**
@@ -63,13 +166,13 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 	 * @param values       the starting values of the path
 	 * @param valuesOffset the node offset from which values will begin to be writen
 	 */
-	private Path(boolean isRooted, boolean isTerminal, List<LBL> labels, List<VAL> values, int valuesOffset)
+	private static <VAL, LBL> Path<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels, List<VAL> values, int valuesOffset)
 	{
-		super();
-		this.labels = HelpLists.staticList(labels);
-		int            nbNodes  = labels.size() + 1;
-		int            nbValues = values.size();
-		List<PathNode> nodes    = new ArrayList<>(nbNodes);
+		Path<VAL, LBL> ret = mutable();
+		ret.labels = List.copyOf(labels);
+		int                   nbNodes  = labels.size() + 1;
+		int                   nbValues = values.size();
+		List<INode<VAL, LBL>> nodes    = new ArrayList<>(nbNodes);
 
 		Iterator<VAL> valuesIterator = IntStream.range(0, nbNodes).mapToObj( //
 			i -> {
@@ -81,24 +184,20 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 				return values.get(i);
 			}).iterator();
 
-		for (int i = 0; i < nbNodes; i++)
-			nodes.add(new PathNode(i, valuesIterator.next()));
+		if (nbNodes == 1)
+			nodes.add(decorate(Nodes.create(isRooted, isTerminal, valuesIterator.next()), 0));
+		else
+		{
+			nodes.add(decorate(Nodes.create(isRooted, false, valuesIterator.next()), 0));
 
-		this.nodes = HelpLists.staticList(nodes);
+			for (int i = 1; i < nbNodes - 1; i++)
+				nodes.add(decorate(Nodes.create(valuesIterator.next()), i));
 
-		if (isRooted)
-			getRoot().isRooted = true;
-		if (isTerminal)
-			getLeaf().isTerminal = true;
-	}
-
-	@SuppressWarnings("unchecked")
-	private Path(boolean isRooted, boolean isTerminal, List<LBL> labels, List<? extends INode<VAL, LBL>> nodes)
-	{
-		super();
-		assert (labels.size() == nodes.size() - 1);
-		this.labels = HelpLists.staticList(labels);
-		this.nodes  = HelpLists.staticList((List<PathNode>) nodes);
+			nodes.add(decorate(Nodes.create(false, isTerminal, valuesIterator.next()), nbNodes - 1));
+		}
+		ret.nodes = nodes;
+		ret.freeze();
+		return ret;
 	}
 
 	/**
@@ -110,9 +209,9 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 	 * @param values     values of the path, can contains more or less elements than needed. If less values are given, remaining values of the path will be replaced by {@code null}.
 	 * @param valueSide  the side from which values will be added in order
 	 */
-	Path(boolean isRooted, boolean isTerminal, List<LBL> labels, List<VAL> values, Side valueSide)
+	public static <VAL, LBL> Path<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels, List<VAL> values, Side valueSide)
 	{
-		this(isRooted, isTerminal, labels, values, valueSide == Side.LEFT ? 0 : labels.size() - values.size() + 1);
+		return create(isRooted, isTerminal, labels, values, valueSide == Side.LEFT ? 0 : labels.size() - values.size() + 1);
 	}
 
 	/**
@@ -123,75 +222,81 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 	 * @param labels     labels of the path
 	 * @param value      the value for the last node
 	 */
-	Path(boolean isRooted, boolean isTerminal, List<LBL> labels, VAL value)
+	public static <VAL, LBL> Path<VAL, LBL> create(boolean isRooted, boolean isTerminal, List<LBL> labels, VAL value)
 	{
-		this(isRooted, isTerminal, labels, Collections.singletonList(value), Side.RIGHT);
+		return create(isRooted, isTerminal, labels, Collections.singletonList(value), Side.RIGHT);
 	}
 
-	@Override
-	public Path<VAL, LBL> subPath(int from, int to)
+	// ==========================================================================
+
+	static <VAL, LBL> Path<VAL, LBL> copy(IPath<VAL, LBL> path)
 	{
-		Triple<RealLimits, List<LBL>, List<INode<VAL, LBL>>> infos = IPath.subPathInfos(this, from, to);
+		return copy(path, path.getRoot());
+	}
 
-		if (null == infos)
-			return new Path<>();
+	static <VAL, LBL> Path<VAL, LBL> copy(IPath<VAL, LBL> path, INode<VAL, LBL> root)
+	{
+		return map(path, root, Nodes::create, Function.identity());
+	}
 
-		RealLimits     limits = infos.getLeft();
-		Path<VAL, LBL> ret    = new Path<VAL, LBL>(limits.isRooted(), limits.isTerminal(), infos.getMiddle(), infos.getRight());
-		ret.realNodeOffset = limits.getFrom();
+	static <VAL, LBL> Path<VAL, LBL> subPath(IPath<VAL, LBL> path)
+	{
+		return subPath(path, path.getRoot());
+	}
+
+	static <VAL, LBL> Path<VAL, LBL> subPath(IPath<VAL, LBL> path, INode<VAL, LBL> root)
+	{
+		return map(path, root, Function.identity(), Function.identity());
+	}
+
+	static <VAL, LBL> Path<VAL, LBL> subPath(ITree<VAL, LBL> parent, INode<VAL, LBL> root, List<IEdge<VAL, LBL>> edges)
+	{
+		assert (null != root);
+		assert (edges.isEmpty() || edges.get(0).getParent() == root);
+
+		if (edges.isEmpty())
+			return emptySubPath(parent, root);
+
+		return new Path<>(parent, edges);
+	}
+
+	static <VAL, LBL> IPath<VAL, LBL> subPath(IPath<VAL, LBL> path, int from, int to)
+	{
+		var        infos  = IPath.subPathInfos(path, from, to);
+		RealLimits limits = infos.getLeft();
+		var        edges  = path.getEdges();
+		var        root   = path.getNodes().get(limits.getFrom());
+		return subPath(path, root, edges.subList(limits.getFrom(), limits.getTo()));
+	}
+
+	static <VAL, LBL> Path<VAL, LBL> emptySubPath(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
+	{
+		return new Path<>(tree, root);
+	}
+
+	// ==========================================================================
+
+	private static <VAL, LBL, TOVAL, TOLBL> Path<TOVAL, TOLBL> map( //
+		ITree<VAL, LBL> tree, //
+		INode<VAL, LBL> root, //
+		Function<INode<VAL, LBL>, INode<TOVAL, TOLBL>> fmapNode, //
+		Function<LBL, TOLBL> fmapLabel //
+	)
+	{
+		if (!tree.isPath())
+			throw new InvalidParameterException(String.format("%s must be a path", tree));
+
+		Path<TOVAL, TOLBL> ret = mutable();
+		ret.nodes.add(decorate(fmapNode.apply(root), 0));
+
+		int i = 1;
+		for (var edge : tree.getEdges(root))
+		{
+			ret.nodes.add(decorate(fmapNode.apply(edge.getChild()), i++));
+			ret.labels.add(fmapLabel.apply(edge.getLabel()));
+		}
+		ret.freeze();
 		return ret;
-	}
-
-	// =========================================================================
-
-	private class PathNode implements INode<VAL, LBL>
-	{
-		private int pos;
-
-		private boolean isRooted, isTerminal;
-
-		private VAL value;
-
-		PathNode(int pos, VAL value)
-		{
-			this.pos   = pos;
-			this.value = value;
-		}
-
-		public int getPos()
-		{
-			return pos;
-		}
-
-		@Override
-		public Object getID()
-		{
-			return this;
-		}
-
-		@Override
-		public VAL getValue()
-		{
-			return value;
-		}
-
-		@Override
-		public boolean isRooted()
-		{
-			return isRooted;
-		}
-
-		@Override
-		public boolean isTerminal()
-		{
-			return isTerminal;
-		}
-
-		@Override
-		public String toString()
-		{
-			return INode.toString(this);
-		}
 	}
 
 	// =========================================================================
@@ -203,77 +308,57 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 	}
 
 	@Override
-	public PathNode getRoot()
-	{
-		return nodes.get(0);
-	}
-
-	@Override
-	public PathNode getLeaf()
-	{
-		return nodes.get(nodes.size() - 1);
-	}
-
-	@Override
 	public List<LBL> getLabels()
 	{
 		return labels;
 	}
 
 	@Override
+	public INode<VAL, LBL> getRoot()
+	{
+		return nodes.get(0);
+	}
+
+	@Override
+	public INode<VAL, LBL> getLeaf()
+	{
+		return nodes.get(nodes.size() - 1);
+	}
+
+	@Override
 	public List<INode<VAL, LBL>> getNodes()
 	{
-		return HelpLists.downcast(nodes);
+		return nodes;
 	}
 
 	@Override
 	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
 	{
-		assert (node instanceof Path.PathNode);
-		PathNode a = (PathNode) node;
-		return HelpLists.staticList(nodes.subList(a.pos - realNodeOffset, nodes.size()));
-	}
-
-	@Override
-	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
-	{
-		assert (node instanceof Path.PathNode);
-		List<IEdge<VAL, LBL>> ret = new ArrayList<>();
-		PathNode              a, b;
-		a = (PathNode) node;
-
-		for (int i = a.pos - realNodeOffset + 1; i < nodes.size(); i++)
-		{
-			b = nodes.get(i);
-			ret.add(Edges.create(a, b, getLabels().get(i - 1)));
-			a = b;
-		}
-		return ret;
+		int index = getIndex(node);
+		if (index == -1)
+			return Collections.emptyList();
+		return nodes.subList(index + 1, nodes.size());
 	}
 
 	@Override
 	public List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
 	{
-		assert (node instanceof Path.PathNode);
-		Path<VAL, LBL>.PathNode pathNode = (Path<VAL, LBL>.PathNode) node;
-		int                     pos      = pathNode.getPos() - realNodeOffset + 1;
+		int index = getIndex(node);
 
-		if (pos > nbLabels())
+		if (index < 0 || index >= labels.size())
 			return Collections.emptyList();
 
-		return Collections.singletonList(Edges.create(node, nodes.get(pos), getLabels().get(pos - 1)));
+		return Collections.singletonList(Edges.create(node, nodes.get(index + 1), labels.get(index)));
 	}
 
 	@Override
 	public Optional<IEdge<VAL, LBL>> getParent(INode<VAL, LBL> node)
 	{
-		assert (node instanceof Path.PathNode);
-		Path<VAL, LBL>.PathNode pathNode = (Path<VAL, LBL>.PathNode) node;
-		int                     pos      = pathNode.getPos() - realNodeOffset;
+		int index = getIndex(node);
 
-		if (pos == 0)
+		if (index <= 0 || index > labels.size())
 			return Optional.empty();
 
-		return Optional.of(Edges.create(nodes.get(pos), pathNode, getLabels().get(pos)));
+		return Optional.of(Edges.create(nodes.get(index - 1), node, labels.get(index - 1)));
 	}
 }

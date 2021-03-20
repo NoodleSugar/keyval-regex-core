@@ -77,9 +77,9 @@ public interface INode<VAL, LBL>
 	 * 
 	 * @param a the first node
 	 * @param b the second node
-	 * @return true if a equals b
+	 * @return {@code true} if a equals b
 	 */
-	static boolean equals(INode<?, ?> a, INode<?, ?> b)
+	public static boolean equals(INode<?, ?> a, INode<?, ?> b)
 	{
 		return a == b || //
 			(Objects.equals(a.getValue(), b.getValue()) //
@@ -94,9 +94,9 @@ public interface INode<VAL, LBL>
 	 * 
 	 * @param a the first node
 	 * @param b the second node
-	 * @return true if a and b are structurally equal
+	 * @return {@code true} if a and b are structurally equal
 	 */
-	static boolean structEquals(INode<?, ?> a, INode<?, ?> b)
+	public static boolean structEquals(INode<?, ?> a, INode<?, ?> b)
 	{
 		return a == b || (Objects.equals(a.getValue(), b.getValue()));
 	}
@@ -105,13 +105,13 @@ public interface INode<VAL, LBL>
 	 * Check if a node project on a second one.
 	 * <p>
 	 * A node project on another if it is less constrain for its value and its rooted/terminal nature;
-	 * that is its value is null or equals the second one, and rooted/terminal is false, or equals the second one.
+	 * that is its value is null or equals the second one, and rooted/terminal is {@code false}, or equals the second one.
 	 * 
 	 * @param a the first node
 	 * @param b the second node
-	 * @return true if a project on b
+	 * @return {@code true} if a project on b
 	 */
-	static boolean projectEquals(INode<?, ?> a, INode<?, ?> b)
+	public static boolean projectEquals(INode<?, ?> a, INode<?, ?> b)
 	{
 		return a == b ||//
 			(a.getValue() == null || Objects.equals(a.getValue(), b.getValue()) //
