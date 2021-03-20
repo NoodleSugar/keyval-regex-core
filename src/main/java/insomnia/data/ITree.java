@@ -17,7 +17,6 @@ import org.apache.commons.collections4.ListValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 import insomnia.implem.data.Paths;
-import insomnia.lib.help.HelpLists;
 import insomnia.implem.data.Trees;
 import insomnia.implem.data.creational.TreeBuilder;
 import insomnia.implem.fsa.fta.creational.BUFTABuilder;
@@ -757,101 +756,5 @@ public interface ITree<VAL, LBL>
 				return false;
 			root = children.get(0).getChild();
 		}
-	}
-
-	/**
-	 * Transform a tree to a Path.
-	 * <p>
-	 * Note: nothing guarantee that the returned path is a view or not, so the returned path is safe to use if the tree is not modified.
-	 * 
-	 * @param tree the tree to transform
-	 * @return a path equivalent to tree
-	 * @throws IllegalArgumentException if tree does not represent a tree
-	 */
-	// TODO ensure that it's a view ?
-	static <VAL, LBL> IPath<VAL, LBL> asPath(ITree<VAL, LBL> tree)
-	{
-		if (!tree.isPath())
-			throw new IllegalArgumentException();
-
-		if (tree instanceof IPath<?, ?>)
-			return (IPath<VAL, LBL>) tree;
-
-		ITree<VAL, LBL> safeTree = tree;
-
-		return new AbstractPath<VAL, LBL>()
-		{
-			ITree<VAL, LBL>       tree;
-			List<IEdge<VAL, LBL>> edges;
-
-			// Init
-			{
-				edges = new ArrayList<>();
-				tree  = safeTree;
-				INode<VAL, LBL> current = tree.getRoot();
-
-				for (;;)
-				{
-					List<IEdge<VAL, LBL>> child = tree.getChildren(current);
-
-					if (child.isEmpty())
-						break;
-
-					edges.add(child.get(0));
-					current = child.get(0).getChild();
-				}
-				edges = HelpLists.staticList(edges);
-			}
-
-			@Override
-			public IPath<VAL, LBL> subPath(int from, int to)
-			{
-				return Paths.create(this, from, to);
-			}
-
-			@Override
-			public List<IEdge<VAL, LBL>> getEdges()
-			{
-				return Collections.unmodifiableList(edges);
-			}
-
-			@Override
-			public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
-			{
-				return ITree.getEdges(this, node);
-			}
-
-			@Override
-			public List<LBL> getLabels()
-			{
-				return CollectionUtils.collect(edges, e -> e.getLabel(), new ArrayList<>());
-			}
-
-			@Override
-			public List<INode<VAL, LBL>> getNodes()
-			{
-				List<INode<VAL, LBL>> ret = new ArrayList<>();
-				ret.add(tree.getRoot());
-				return CollectionUtils.collect(edges, e -> e.getChild(), ret);
-			}
-
-			@Override
-			public boolean isPath()
-			{
-				return true;
-			}
-
-			@Override
-			public List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
-			{
-				return tree.getChildren(node);
-			}
-
-			@Override
-			public Optional<IEdge<VAL, LBL>> getParent(INode<VAL, LBL> node)
-			{
-				return tree.getParent(node);
-			}
-		};
 	}
 }
