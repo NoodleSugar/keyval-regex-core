@@ -39,6 +39,39 @@ public abstract class AbstractTreeBuilder<VAL, LBL> implements ITreeBuilder<VAL,
 	// ==========================================================================
 
 	@Override
+	public ITreeBuilder<VAL, LBL> setComplete()
+	{
+		return setRooted().setLeavesTerminal();
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> setRooted()
+	{
+		return setRooted(true);
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> setLeavesTerminal()
+	{
+		return setLeavesTerminal(true);
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> setLeavesTerminal(boolean terminal)
+	{
+		var currentNode = getCurrentNode();
+
+		for (var node : ITree.getLeaves(this))
+		{
+			setCurrentNode(node);
+			setTerminal(terminal);
+		}
+		setCurrentNode(currentNode);
+		return this;
+	}
+	// ==========================================================================
+
+	@Override
 	public int[] getCurrentCoordinates()
 	{
 		List<Integer>   coordinates = new LinkedList<>();

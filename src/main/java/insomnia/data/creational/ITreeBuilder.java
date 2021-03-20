@@ -37,6 +37,35 @@ public interface ITreeBuilder<VAL, LBL> extends ITree<VAL, LBL>
 	 */
 	ITreeBuilder<VAL, LBL> setRooted(boolean rooted);
 
+	/**
+	 * Set the tree to be rooted
+	 * 
+	 * @return the builder
+	 */
+	ITreeBuilder<VAL, LBL> setRooted();
+
+	/**
+	 * Change the rooted nature of the leaves
+	 * 
+	 * @param terminal the terminal value
+	 * @return the builder
+	 */
+	ITreeBuilder<VAL, LBL> setLeavesTerminal(boolean terminal);
+
+	/**
+	 * Set the leaves to be rooted
+	 * 
+	 * @return the builder
+	 */
+	ITreeBuilder<VAL, LBL> setLeavesTerminal();
+
+	/**
+	 * Set the root to be rooted and the leaves to be terminal
+	 * 
+	 * @return the builder
+	 */
+	ITreeBuilder<VAL, LBL> setComplete();
+
 	// ==========================================================================
 
 	/**
