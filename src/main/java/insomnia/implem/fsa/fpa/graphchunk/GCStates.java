@@ -139,7 +139,7 @@ final class GCStates
 	 * 
 	 * @return
 	 */
-	private static <VAL, LBL> IGCState<VAL, LBL> createNullableValueEq(boolean isRooted, boolean isTerminal, boolean isInitial, boolean isFinal, VAL value)
+	private static <VAL, LBL> IGCState<VAL, LBL> createAnyOrEq(boolean isRooted, boolean isTerminal, boolean isInitial, boolean isFinal, VAL value)
 	{
 		if (null == value)
 			return create(isRooted, isTerminal, isInitial, isFinal, FSAValueConditions.createAny());
@@ -148,14 +148,24 @@ final class GCStates
 
 	}
 
-	public static <VAL, LBL> IGCState<VAL, LBL> create(VAL value)
+	public static <VAL, LBL> IGCState<VAL, LBL> create(IFSAValueCondition<VAL> valueCondition)
 	{
-		return createNullableValueEq(false, false, false, false, value);
+		return create(false, false, false, false, valueCondition);
+	}
+
+	public static <VAL, LBL> IGCState<VAL, LBL> createrEq(VAL value)
+	{
+		return create(false, false, false, false, FSAValueConditions.createEq(value));
+	}
+
+	public static <VAL, LBL> IGCState<VAL, LBL> createAnyOrEq(VAL value)
+	{
+		return createAnyOrEq(false, false, false, false, value);
 	}
 
 	public static <VAL, LBL> IGCState<VAL, LBL> create()
 	{
-		return create(null);
+		return createAnyOrEq(null);
 	}
 
 	// =========================================================================

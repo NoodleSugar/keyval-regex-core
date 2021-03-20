@@ -25,6 +25,7 @@ import insomnia.data.regex.IPathMatcher;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
+import insomnia.fsa.IFSAValueCondition;
 import insomnia.fsa.fpa.AbstractGFPA;
 import insomnia.fsa.fpa.IFPAProperties;
 import insomnia.fsa.fpa.IGFPA;
@@ -137,7 +138,13 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		@Override
 		public IFSAState<VAL, LBL> create(VAL value)
 		{
-			return GCStates.create(value);
+			return GCStates.createAnyOrEq(value);
+		}
+
+		@Override
+		public IFSAState<VAL, LBL> create(IFSAValueCondition<VAL> valueCondition)
+		{
+			return GCStates.create(valueCondition);
 		}
 
 		@Override
@@ -333,6 +340,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	public IFSAState<VAL, LBL> createState(VAL value)
 	{
 		return getAFactory().create(value);
+	}
+
+	public IFSAState<VAL, LBL> createState(IFSAValueCondition<VAL> valueCondition)
+	{
+		return getAFactory().create(valueCondition);
 	}
 
 	// =========================================================================
