@@ -25,6 +25,14 @@ public interface ISubTreeBuilder<VAL, LBL> extends ITree<VAL, LBL>
 	 * Add the edge to the tree
 	 */
 //	ISubTreeBuilder<VAL, LBL> add(IEdge<VAL, LBL> edge);
+	/**
+	 * Reset the builder with the new {@link ITree} {@code parentTree}, taking a node to be the root
+	 * 
+	 * @param parentTree the new parent tree
+	 * @param root       the new internal root
+	 * @return the builder
+	 */
+	ISubTreeBuilder<VAL, LBL> reset(ITree<VAL, LBL> parentTree, INode<VAL, LBL> root);
 
 	/**
 	 * Add the sub tree rooted by the current node and stay on the current node.

@@ -148,6 +148,15 @@ public final class SubTreeBuilder<VAL, LBL> implements ISubTreeBuilder<VAL, LBL>
 		return this;
 	}
 
+	@Override
+	public ISubTreeBuilder<VAL, LBL> reset(ITree<VAL, LBL> parentTree, INode<VAL, LBL> root)
+	{
+		reset();
+		setParentTree(parentTree);
+		setRoot(root);
+		return this;
+	}
+
 	private void addEdge(IEdge<VAL, LBL> child)
 	{
 		if (edges.contains(child))
