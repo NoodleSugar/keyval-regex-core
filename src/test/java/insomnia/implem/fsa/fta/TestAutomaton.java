@@ -67,8 +67,9 @@ public class TestAutomaton
 		assumeTrue(new RegexParser("''\"\"~~").parse(searchFor).size() == 1);
 		boolean match = nb > 0;
 
-		ITree<String, String>  tsearchFor = Trees.treeFromString(searchFor);
-		IBUFTA<String, String> bufta      = new BUFTABuilder<>(tsearchFor).create();
+		ITree<String, String> tsearchFor = Trees.treeFromString(searchFor);
+		tsearchFor = Trees.removeRedundancies(tsearchFor);
+		IBUFTA<String, String> bufta = new BUFTABuilder<>(tsearchFor).create();
 		assertEquals(match, bufta.matcher(tsearchIn).matches(), String.format("Search for=\n%sSearch in=\n%s", ITree.toString(tsearchFor), ITree.toString(tsearchIn)));
 	}
 
@@ -79,6 +80,7 @@ public class TestAutomaton
 		assumeTrue(new RegexParser("''\"\"~~").parse(searchFor).size() == 1);
 		ITree<String, String> tsearchFor;
 		tsearchFor = Trees.treeFromString(searchFor);
+		tsearchFor = Trees.removeRedundancies(tsearchFor);
 
 		IBUFTA<String, String>       bufta   = new BUFTABuilder<>(tsearchFor).create();
 		ITreeMatcher<String, String> matcher = bufta.matcher(tsearchIn);

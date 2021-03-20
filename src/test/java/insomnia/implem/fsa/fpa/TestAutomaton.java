@@ -411,6 +411,9 @@ public class TestAutomaton
 						{ ".a(aa.X?,ab=5$),b$", 0 }, //
 						{ "^a(aa.X?,ab=5$),b.X?", 0 }, //
 				}, //
+				{ { "(a,a)" }, //
+						{ "a", 1 }, //
+				}, //
 		};
 	}
 
