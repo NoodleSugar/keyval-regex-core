@@ -1,9 +1,11 @@
 package insomnia.implem.rule;
 
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashSet;
 
 import insomnia.data.IPath;
+import insomnia.implem.data.Paths;
 import insomnia.rule.IPathRule;
 
 public final class PathRules<VAL, LBL>
@@ -28,6 +30,9 @@ public final class PathRules<VAL, LBL>
 
 			if (!isExistential && body.isTerminal() != head.isTerminal())
 				throw new IllegalArgumentException("body and head must have the same isTerminal value for non existential rule");
+
+			if (null != body.getLeaf().getValue())
+				throw new IllegalArgumentException("body cannot have a value");
 
 			this.body          = body;
 			this.head          = head;
@@ -85,5 +90,15 @@ public final class PathRules<VAL, LBL>
 	public static <VAL, LBL> IPathRule<VAL, LBL> create(IPath<VAL, LBL> body, IPath<VAL, LBL> head, boolean isExistential)
 	{
 		return new PathRule<>(body, head, isExistential);
+	}
+
+	public static IPathRule<String, String> fromString(String body, String head) throws ParseException
+	{
+		return PathRules.create(Paths.pathFromString(body), Paths.pathFromString(head));
+	}
+
+	public static IPathRule<String, String> fromString(String body, String head, boolean isExistential) throws ParseException
+	{
+		return PathRules.create(Paths.pathFromString(body), Paths.pathFromString(head), isExistential);
 	}
 }
