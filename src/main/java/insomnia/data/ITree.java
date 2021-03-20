@@ -3,23 +3,22 @@ package insomnia.data;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Stack;
-import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 
 import insomnia.implem.data.Paths;
 import insomnia.lib.help.HelpLists;
+import insomnia.implem.data.Trees;
+import insomnia.implem.data.creational.TreeBuilder;
+import insomnia.implem.fsa.fta.creational.BUFTABuilder;
+import insomnia.implem.fsa.fta.creational.BUFTABuilder.Mode;
 
 /**
  * Representation of an immutable Tree.
@@ -506,7 +505,8 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
-		return equals(a, a.getRoot(), b, b.getRoot());
+		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setComplete()).setMode(Mode.EQUALITY).create();
+		return automaton.matcher(new TreeBuilder<>(b).setComplete()).matches();
 	}
 
 	/**
@@ -520,9 +520,44 @@ public interface ITree<VAL, LBL>
 	 * @see IEdge#projectEquals(IEdge, IEdge)
 	 * @see INode#projectEquals(INode, INode)
 	 */
-	public static <VAL, LBL> boolean projectEquals(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	public static <VAL, LBL> boolean project(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
-		return projectEquals(a, a.getRoot(), b, b.getRoot());
+		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setRooted()).setMode(Mode.PROJECTION).create();
+		return automaton.matcher(new TreeBuilder<>(b).setRooted()).matches();
+	}
+
+	/**
+	 * Check if a tree can be projected on a second one which has the same tree structure.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     first tree
+	 * @param b     second tree
+	 * @return true if a project on b
+	 * @see IEdge#projectEquals(IEdge, IEdge)
+	 * @see INode#projectEquals(INode, INode)
+	 */
+	public static <VAL, LBL> boolean structProject(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setComplete()).setMode(Mode.STRUCTURE_PROJECTION).create();
+		return automaton.matcher(new TreeBuilder<>(b).setComplete()).matches();
+	}
+
+	/**
+	 * Check if a tree can be projected on a sub-tree of another tree.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param a     first tree
+	 * @param b     second tree
+	 * @return true if a project on b
+	 * @see IEdge#projectEquals(IEdge, IEdge)
+	 * @see INode#projectEquals(INode, INode)
+	 */
+	public static <VAL, LBL> boolean included(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		var automaton = new BUFTABuilder<>(a).setMode(Mode.PROJECTION).create();
+		return automaton.matcher(new TreeBuilder<>(b).setRooted()).matches();
 	}
 
 	/**
@@ -538,156 +573,8 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean structEquals(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
-		return structEquals(a, a.getRoot(), b, b.getRoot());
-	}
-
-	/**
-	 * Check if two trees are equal below two nodes.
-	 * <p>
-	 * Two trees are equal if they represent the same tree.
-	 * 
-	 * @param <VAL> type of node value
-	 * @param <LBL> type of edge label
-	 * @param a     first tree
-	 * @param anode node of a to consider to be the root
-	 * @param b     second tree
-	 * @param bnode node of b to consider to be the root
-	 * @return true if a and b are equals
-	 */
-	public static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
-	{
-		return equals(a, anode, b, bnode, (x, y) -> IEdge.equals(x, y));
-	}
-
-	/**
-	 * Check if the tree rooted on {@code a} from {@code anode} an be projected on the tree rooted on {@code b} from {@code bnode}
-	 * 
-	 * @param <VAL> type of node value
-	 * @param <LBL> type of edge label
-	 * @param a     first tree
-	 * @param anode node of a to consider to be the root
-	 * @param b     second tree
-	 * @param bnode node of b to consider to be the root
-	 * @return true if anode tree project on the bnode tree
-	 * @see IEdge#projectEquals(IEdge, IEdge)
-	 * @see INode#projectEquals(INode, INode)
-	 */
-	public static <VAL, LBL> boolean projectEquals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
-	{
-		return equals(a, anode, b, bnode, IEdge::projectEquals);
-	}
-
-	/**
-	 * Check if two trees rooted on some nodes have the same structure.
-	 * 
-	 * @param <VAL> type of node value
-	 * @param <LBL> type of edge label
-	 * @param a     first tree
-	 * @param anode node of a to consider to be the root
-	 * @param b     second tree
-	 * @param bnode node of b to consider to be the root
-	 * @return true if anode and bnode tree have the same structure
-	 * @see IEdge#structEquals(IEdge, IEdge)
-	 * @see INode#structEquals(INode, INode)
-	 */
-	public static <VAL, LBL> boolean structEquals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
-	{
-		return equals(a, anode, b, bnode, IEdge::structEquals);
-	}
-
-	/**
-	 * Check if two trees are equal below two nodes considering an edge {@link Comparator}.
-	 * 
-	 * @param <VAL>          type of node value
-	 * @param <LBL>          type of edge label
-	 * @param a              the tree to search for
-	 * @param anode          the node of a to consider as a root
-	 * @param b              the tree to search in
-	 * @param bnode          the node of b to consider as a root
-	 * @param edgeComparator a comparator of {@link IEdge}
-	 * @return
-	 */
-	static <VAL, LBL> boolean equalsMap(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode, //
-		BiPredicate<IEdge<VAL, LBL>, IEdge<VAL, LBL>> fequals, //
-		Function<IEdge<VAL, LBL>, Integer> fhashCode)
-	{
-		Map<IEdge<VAL, LBL>, IEdge<VAL, LBL>> bs     = new HashMap<>();
-		Queue<IEdge<VAL, LBL>>                aedges = new LinkedList<>();
-		aedges.addAll(a.getChildren(anode));
-
-		for (IEdge<VAL, LBL> bchild : b.getChildren(bnode))
-			bs.put(IEdgeEquals.create(bchild, fequals, fhashCode), bchild);
-
-		while (!aedges.isEmpty())
-		{
-			IEdge<VAL, LBL> achild = aedges.poll(), //
-				bchild = bs.get(achild);
-
-			if (null == bchild)
-				return false;
-
-			bs.remove(achild);
-			aedges.addAll(a.getChildren(achild.getChild()));
-
-			for (IEdge<VAL, LBL> bsubchild : b.getChildren(bchild.getChild()))
-				bs.put(IEdgeEquals.create(bchild, fequals, fhashCode), bsubchild);
-		}
-		return true;
-	}
-
-	static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode, //
-		BiPredicate<IEdge<VAL, LBL>, IEdge<VAL, LBL>> fequals)
-	{
-		Queue<List<IEdgeEquals<VAL, LBL>>> bedges        = new LinkedList<>();
-		Queue<IEdgeEquals<VAL, LBL>>       aedges        = new LinkedList<>();
-		List<IEdge<VAL, LBL>>              achilds, bchilds;
-		List<IEdgeEquals<VAL, LBL>>        bcurrentEdges = null, tmp;
-
-		achilds = a.getChildren(anode);
-		bchilds = b.getChildren(bnode);
-
-		if (achilds.size() != bchilds.size())
-			return false;
-
-		for (IEdge<VAL, LBL> achild : achilds)
-			aedges.add(IEdgeEquals.create(achild, fequals, (e) -> 0));
-
-		bcurrentEdges = new ArrayList<>(bchilds.size());
-		for (IEdge<VAL, LBL> bchild : bchilds)
-			bcurrentEdges.add(IEdgeEquals.create(bchild, fequals, (e) -> 0));
-
-		while (!aedges.isEmpty())
-		{
-			IEdgeEquals<VAL, LBL> achild = aedges.poll() //
-				, bchild;
-
-			int bindex = bcurrentEdges.indexOf(achild);
-
-			if (-1 == bindex)
-				return false;
-
-			bchild = bcurrentEdges.get(bindex);
-			bcurrentEdges.remove(bindex);
-
-			achilds = a.getChildren(achild.getChild());
-			bchilds = b.getChildren(bchild.getChild());
-
-			if (achilds.size() != bchilds.size())
-				return false;
-			if (achilds.size() > 0)
-			{
-				for (IEdge<VAL, LBL> asubchild : achilds)
-					aedges.add(IEdgeEquals.create(asubchild, fequals, (e) -> 0));
-
-				tmp = new ArrayList<>(bchilds.size());
-				for (IEdge<VAL, LBL> bsubchild : bchilds)
-					tmp.add(IEdgeEquals.create(bsubchild, fequals, (e) -> 0));
-				bedges.add(tmp);
-			}
-			if (bcurrentEdges.isEmpty() && !bedges.isEmpty())
-				bcurrentEdges = bedges.poll();
-		}
-		return true;
+		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setComplete()).setMode(Mode.STRUCTURE).create();
+		return automaton.matcher(new TreeBuilder<>(b).setComplete()).matches();
 	}
 
 	// =========================================================================

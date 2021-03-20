@@ -90,7 +90,7 @@ public class TestAutomaton
 			i++;
 			ITree<String, String> group = matcher.toMatchResult().group();
 
-			assertTrue(ITree.projectEquals(tsearchFor, group), //
+			assertTrue(ITree.structProject(tsearchFor, group), //
 				String.format("Expected \n%s; but have\n%s", ITree.toString(tsearchFor), ITree.toString(group)));
 			assertTrue(ITree.isSubTreeOf(group, tsearchIn), //
 				String.format("Expected\n%s to be a subtree of\n %s", ITree.toString(group), ITree.toString(tsearchIn)));

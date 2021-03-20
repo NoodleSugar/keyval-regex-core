@@ -583,7 +583,7 @@ public class TestAutomaton
 			IPath<String, String> group = matcher.toMatchResult().group();
 
 			if (null != psearchFor)
-				assertTrue(psearchFor.stream().anyMatch(sFor -> ITree.projectEquals(sFor, group)), //
+				assertTrue(psearchFor.stream().anyMatch(sFor -> ITree.structProject(sFor, group)), //
 					String.format("Expected \n%s; but have\n%s", psearchFor, ITree.toString(group)));
 
 			assertTrue(ITree.isSubTreeOf(group, psearchIn), //
