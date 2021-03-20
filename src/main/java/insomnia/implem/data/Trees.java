@@ -70,6 +70,38 @@ public final class Trees
 		return Tree.copy(src, src.getRoot());
 	}
 
+	/**
+	 * Remove redundancies from a tree.
+	 * 
+	 * @param tree the tree to consider
+	 * @return a tree without redundancies.
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> removeRedundancies(ITree<VAL, LBL> tree)
+	{
+		var tbuilder       = new SubTreeBuilder<>(tree);
+		var redundantNodes = CollectionUtils.collect(ITree.getRedondantSubTrees(tree), t -> t.getRoot());
+
+		Queue<INode<VAL, LBL>> nodes = new LinkedList<>();
+		nodes.add(tree.getRoot());
+
+		while (!nodes.isEmpty())
+		{
+			var node = nodes.poll();
+
+			for (var childEdge : tree.getChildren(node))
+			{
+				var childNode = childEdge.getChild();
+
+				if (redundantNodes.remove(childNode))
+					continue;
+
+				tbuilder.add(childEdge);
+				nodes.add(childNode);
+			}
+		}
+		return subTree(tbuilder);
+	}
+
 	// =========================================================================
 
 	/**

@@ -12,6 +12,9 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.ListValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 import insomnia.implem.data.Paths;
 import insomnia.lib.help.HelpLists;
@@ -182,6 +185,68 @@ public interface ITree<VAL, LBL>
 	}
 
 	// =========================================================================
+
+	/**
+	 * Get all the redondant sub-trees of a {@link ITree};
+	 * that is sub-trees that can be projected to another sub-tree from their root
+	 * 
+	 * @param tree the tree to scan
+	 * @return the redundant sub-trees of {@code tree}
+	 */
+	public static <VAL, LBL> Collection<ITree<VAL, LBL>> getRedondantSubTrees(ITree<VAL, LBL> tree)
+	{
+		return getRedondantSubTrees(tree, tree.getRoot());
+	}
+
+	/**
+	 * Get all the redondant sub-trees of a sub-tree.
+	 * 
+	 * @param tree the reference tree
+	 * @param root the root of the sub-tree to scan
+	 * @return the redundant sub-trees of the sub-tree from {@code root}
+	 * @see #getRedondantSubTrees(ITree)
+	 */
+	public static <VAL, LBL> Collection<ITree<VAL, LBL>> getRedondantSubTrees(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
+	{
+		Collection<ITree<VAL, LBL>>         ret       = new ArrayList<>();
+		Queue<INode<VAL, LBL>>              nodeQueue = new LinkedList<>();
+		ListValuedMap<LBL, ITree<VAL, LBL>> labelMMap = new ArrayListValuedHashMap<>(tree.getNodes().size());
+		nodeQueue.add(root);
+
+		while (!nodeQueue.isEmpty())
+		{
+			var node = nodeQueue.poll();
+
+			for (IEdge<VAL, LBL> childEdge : tree.getChildren(node))
+				labelMMap.put(childEdge.getLabel(), Trees.subTreeView(tree, childEdge.getChild()));
+
+			for (LBL key : labelMMap.keySet())
+			{
+				var childNodes = labelMMap.get(key);
+				if (childNodes.size() <= 1)
+					continue;
+
+				var childNodesIt = childNodes.iterator();
+
+				while (childNodesIt.hasNext())
+				{
+					var child = childNodesIt.next();
+
+					if (IterableUtils.matchesAny(childNodes, c -> c != child && ITree.project(child, c)))
+					{
+						childNodesIt.remove();
+						ret.add(child);
+						continue;
+					}
+					var childNode = child.getRoot();
+					nodeQueue.add(childNode);
+				}
+			}
+			labelMMap.clear();
+		}
+		return ret;
+	}
+
 	// =========================================================================
 
 	/**
