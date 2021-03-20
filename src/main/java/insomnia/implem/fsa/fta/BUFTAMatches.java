@@ -133,10 +133,30 @@ class BUFTAMatches<VAL, LBL>
 			else
 			{
 				newStates = new HashSet<>();
+				{
+					var     hEdges        = automaton.getOneHyperEdges(childsSubStates);
+					boolean checkOneEdges = false;
 
-				// Each child states must belong to the node states
-				for (Collection<IFSAState<VAL, LBL>> subStates : childsSubStates)
-					newStates.addAll(subStates);
+					if (hEdges.isEmpty())
+						checkOneEdges = true;
+					else
+					{
+						// One hedge validation
+						for (IFTAEdge<VAL, LBL> hEdge : hEdges)
+						{
+							if (!hEdge.getCondition().testND(childsSubStates))
+							{
+								checkOneEdges = false;
+								break;
+							}
+						}
+					}
+					if (checkOneEdges)
+					{
+						for (Collection<IFSAState<VAL, LBL>> subStates : childsSubStates)
+							newStates.addAll(subStates);
+					}
+				}
 
 				// Check hyper transitions
 				Collection<IFTAEdge<VAL, LBL>> hEdges = automaton.getHyperEdges(childsSubStates);
