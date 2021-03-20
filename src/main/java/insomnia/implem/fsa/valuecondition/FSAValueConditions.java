@@ -1,6 +1,6 @@
 package insomnia.implem.fsa.valuecondition;
 
-import java.util.Optional;
+import java.util.Objects;
 
 import insomnia.fsa.IFSAValueCondition;
 
@@ -55,12 +55,15 @@ public final class FSAValueConditions
 		@Override
 		public boolean test(VAL element)
 		{
-			return value.equals(element);
+			return Objects.equals(value, element);
 		}
 
 		@Override
 		public String toString()
 		{
+			if (null == value)
+				return "=`null`";
+
 			return "=" + value.toString();
 		}
 	}
@@ -73,11 +76,11 @@ public final class FSAValueConditions
 	/**
 	 * Create any if value is absent, or eq if present.
 	 */
-	public static <VAL> IFSAValueCondition<VAL> createAnyOrEq(Optional<VAL> value)
+	public static <VAL> IFSAValueCondition<VAL> createAnyOrEq(VAL value)
 	{
-		if (value.isPresent())
-			return createEq(value.get());
+		if (null == value)
+			return createAny();
 
-		return createAny();
+		return createEq(value);
 	}
 }

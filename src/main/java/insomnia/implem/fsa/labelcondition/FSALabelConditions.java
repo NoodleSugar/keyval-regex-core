@@ -2,6 +2,7 @@ package insomnia.implem.fsa.labelcondition;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import insomnia.fsa.IFSALabelCondition;
@@ -41,19 +42,19 @@ public final class FSALabelConditions
 			if (!(obj instanceof AbstractLabelCondition))
 				return false;
 
-			return this.obj.equals(((AbstractLabelCondition<LBL>) obj).obj);
+			return Objects.equals(this.obj, ((AbstractLabelCondition<LBL>) obj).obj);
 		}
 
 		@Override
 		public int hashCode()
 		{
-			return obj.hashCode();
+			return Objects.hashCode(obj);
 		}
 
 		@Override
 		public String toString()
 		{
-			return obj.toString();
+			return Objects.toString(obj);
 		}
 	}
 
@@ -105,7 +106,7 @@ public final class FSALabelConditions
 			@Override
 			public boolean test(LBL element)
 			{
-				return label.equals(element);
+				return Objects.equals(label, element);
 			}
 
 			@Override
