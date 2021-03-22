@@ -1,35 +1,32 @@
 package insomnia.implem.fsa.fpa;
 
+import static org.junit.Assume.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.apache.commons.collections4.IteratorUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import insomnia.HelpTests;
 import insomnia.data.IPath;
 import insomnia.data.ITree;
 import insomnia.data.regex.IPathMatcher;
 import insomnia.fsa.fpa.IFPA;
+import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.data.Paths;
 import insomnia.implem.data.Trees;
 import insomnia.implem.data.regex.parser.IRegexElement;
@@ -40,7 +37,6 @@ import insomnia.implem.rule.PathRules;
 import insomnia.implem.rule.dependency.BetaDependencyValidation;
 import insomnia.implem.rule.grd.creational.GRDFactory;
 import insomnia.implem.unifier.PathUnifier;
-import insomnia.lib.help.HelpLists;
 import insomnia.rule.IRule;
 import insomnia.rule.grd.IGRD;
 import insomnia.unifier.PathUnifiers;
@@ -94,50 +90,100 @@ public class TestAutomaton
 		}
 	}
 
-	static List<Object[]> factories()
+	static private interface ITestFPAFactory
 	{
-		@SuppressWarnings("rawtypes")
-		Object ret[][] = { //
-				{ "FPAFactory", new Function()
+		IGFPA<String, String> parse(IRegexElement e);
+
+		IGFPA<String, String> parse(IPath<String, String> e);
+	}
+
+	static Stream<ITestFPAFactory> factories()
+	{
+		ITestFPAFactory ret[] = { //
+				new ITestFPAFactory()
 				{
 					@Override
-					public Object apply(Object obj)
+					public IGFPA<String, String> parse(IRegexElement e)
 					{
-						return fpaFactory((IRegexElement) obj).create();
+						return fpaFactory(e).create();
 					}
 
-				} }, //
-				{ "FromBuilder", new Function()
+					@Override
+					public IGFPA<String, String> parse(IPath<String, String> e)
+					{
+						return fpaFactory(e).create();
+					}
+
+					public String toString()
+					{
+						return "Direct";
+					}
+				}, //
+				new ITestFPAFactory()
+				{
+					@Override
+					public IGFPA<String, String> parse(IRegexElement e)
+					{
+						return fpaFactory(e).createBuilder().create();
+					}
+
+					@Override
+					public IGFPA<String, String> parse(IPath<String, String> e)
+					{
+						return fpaFactory(e).createBuilder().create();
+					}
+
+					public String toString()
+					{
+						return "Builder";
+					}
+				}, //
+				new ITestFPAFactory()
+				{
+					@Override
+					public IGFPA<String, String> parse(IRegexElement e)
+					{
+						return fpaFactory(e).createBuilder().createNewStates(true).create();
+					}
+
+					@Override
+					public IGFPA<String, String> parse(IPath<String, String> e)
+					{
+						return fpaFactory(e).createBuilder().createNewStates(true).create();
+					}
+
+					public String toString()
+					{
+						return "Builder new states";
+					}
+				}, //
+				new ITestFPAFactory()
 				{
 
 					@Override
-					public Object apply(Object obj)
+					public IGFPA<String, String> parse(IRegexElement e)
 					{
-						return fpaFactory((IRegexElement) obj).createBuilder().create();
+						return fpaFactory(e).createBuilder().mustBeSync(true).create();
 					}
 
-				} }, //
-				{ "FromBuilder newStates", new Function()
-				{
 					@Override
-					public Object apply(Object obj)
+					public IGFPA<String, String> parse(IPath<String, String> e)
 					{
-						return fpaFactory((IRegexElement) obj).createBuilder().createNewStates(true).create();
+						return fpaFactory(e).createBuilder().mustBeSync(true).create();
 					}
 
-				} }, //
-
-				{ "FromBuilderSync", new Function()
-				{
-					@Override
-					public Object apply(Object obj)
+					public String toString()
 					{
-						return fpaFactory((IRegexElement) obj).createBuilder().mustBeSync(true).create();
+						return "Builder sync";
 					}
-
-				} } //
+				}, //
 		};
-		return Stream.of(ret).collect(Collectors.toList());
+		return Stream.of(ret);
+	}
+
+	static Stream<Object[]> mergeFactories(Supplier<Stream<Object[]>> data)
+	{
+		return factories().flatMap(f -> data.get().map(d -> ArrayUtils.insert(0, d, (Object) f)));
 	}
 
 	static RegexParser parser;
@@ -149,445 +195,109 @@ public class TestAutomaton
 		parser = new RegexParser(valueDelimiters);
 	}
 
-	static List<Object[]> mergeParameters(List<Object[]> a, List<Object[]> b)
-	{
-		List<Pair<Object[], Object[]>> ret    = HelpLists.product(a, b);
-		List<Object[]>                 merged = HelpLists.mergePairsArrays(ret);
-		return merged;
-	}
-
-	private static IFPA<String, String> parse(String regex, Function<IRegexElement, IFPA<String, String>> automatonFactoryProvider) throws IOException, ParseException
-	{
-		IRegexElement rparsed = parser.parse(IOUtils.toInputStream(regex, Charset.defaultCharset()));
-		return automatonFactoryProvider.apply(rparsed);
-	}
-
 	// =========================================================================
 
-	public static Object[][][] searchForIn_extended()
+	static Stream<Object[]> arguments()
 	{
-		return new Object[][][] { //
-				{ { "^.x.a+|y.b+" }, //
-						{ "^.x.b", 0 }, //
-						{ "^.x.a.b", 1 }, //
-						{ "^.y.b{1,10}", 1 }, //
-						{ "^.y.a", 0 }, //
-				}, //
-				{ { "^a?$" }, //
-						{ "^$", 1 }, //
-						{ "^a$", 1 }, //
-						{ "^a", 0 }, //
-						{ "a$", 0 }, //
-						{ "^a.a$", 0 }, //
-						{ "a", 0 }, //
-						{ "", 0 }, //
-						{ "^", 0 }, //
-						{ "$", 0 }, //
-				}, //
-				{ { "^a*.b|^x" }, { "^a.x", 0 } }, //
-				{ { "a*.b?.c*.c$|(^d.(e|f){2,5}).~r*e?g+~$" }, //
-						{ "a.d", 0 }, //
-						{ "a.b.c", 0 }, //
-						{ "(^)?.a{0,2}.b?.c{1,2}", 0 }, //
-						{ "(^)?.a{0,2}.b?.c{1,2}$", 1 }, //
-
-						{ "(^d.e{5}).reg$", 1 }, //
-						{ "(^d.e{6}).reg$", 0 }, //
-
-						{ "(^d.(e|f){2}).(reg|rrgg|g|egg)$", 1 }, //
-
-						{ "a.b.b.c$", 1 }, //
-						{ "a.b", 0 }, //
-						{ "d.e.reg", 0 }, //
-						{ "e.e.reg", 0 }, //
-						{ "d.f.f.re", 0 }, //
-						{ "c.e", 0 }, //
-						{ "a.b.c.e$", 0 }, //
-				}, //
-		};
-	}
-
-	public static Object[][][] searchForIn()
-	{
-		// SearchFor -> { searchIn }
-		return new Object[][][] { //
-				// ====================================================================
-				// Empty
-				{ { "" }, //
-						{ "(=99)?", 1 }, //
-						{ "a.(=99)?", 2 }, //
-				}, //
-				{ { "^" }, //
-						{ "X?.($)?", 0 }, //
-						{ "^.(=99)?.X?.($)?", 1 }, //
-				}, //
-				{ { "$" }, //
-						{ "(^)?.X?", 0 }, //
-						{ "(^)?.X?.($).(=99)", 1 }, //
-				}, //
-				{ { "^$" }, //
-						{ "^$", 1 }, //
-						{ "^.X?.(=99)?", 0 }, //
-						{ "X?.(=99)?.$", 0 }, //
-						{ "X?.(=99)?", 0 }, //
-				}, //
-				// ====================================================================
-				// Value
-				{ { "=99" }, //
-						{ "(^)?.=99.(X=0)?.($)?", 1 }, //
-						{ "(^)?.=99.(_)?.X=99.($)?", 2 }, //
-						{ "(^)?.(=0)?.($)?", 0 }, //
-				}, //
-				{ { "^=99" }, //
-						{ "^=99.(X=0)?.($)?", 1 }, //
-						{ "^=99.(_)?.X=99.($)?", 1 }, //
-						{ "^.(=0)?.($)?", 0 }, //
-				}, //
-				{ { "=99$" }, //
-						{ "(^)?.X?.=99$", 1 }, //
-						{ "(^)?.=99.(_)?.X=99$", 1 }, //
-						{ "(^)?.(=0)?.X?.$", 0 }, //
-				}, //
-				{ { "^=99$" }, //
-						{ "^=99$", 1 }, //
-						{ "^=99.(X=99){1,2}.($)?", 0 }, //
-						{ "(^)?.(X=99){1,2}$", 0 }, //
-				}, //
-				// ====================================================================
-				// Key
-				{ { "a" }, //
-						{ "(^)?.X?.a.(=99)?.X?.($)?", 1 }, //
-						{ "(^)?.X?.a.(=99)?.X?.a.(=99)?.($)?", 2 }, //
-						{ "(^)?.X?.($)?", 0 }, //
-						{ "X(X?.a,X.b)", 1 }, //
-				}, //
-				{ { "a=99" }, //
-						{ "(^)?.X?.a=99.X?.($)?", 1 }, //
-						{ "(^)?.X?.a=99.X?.a.(=0)?.($)?", 1 }, //
-						{ "(^)?.X?.a=99.X?.a=99.($)?", 2 }, //
-						{ "(^)?.X=99?.($)?", 0 }, //
-				}, //
-				{ { "^a" }, //
-						{ "^a.(=99)?.X?.($)?", 1 }, //
-						{ "^a.(=99)?.X?.a.(=99)?.($)?", 1 }, //
-						{ "(^)?.X?.($)?", 0 }, //
-						{ "X(X.a,X.b)", 0 }, //
-						{ "a(X.a,X.b)", 0 }, //
-				}, //
-				{ { "a$" }, //
-						{ "(^)?.X?.a.(=99)?.$", 1 }, //
-						{ "(^)?.a.(=99)?.X?.a.(=99)?.$", 1 }, //
-						{ "(^)?.X?.($)?", 0 }, //
-						{ "X(X?.a$,X.b)", 1 }, //
-				}, //
-				// ====================================================================
-				// Quantifier
-				{ { "a{3}" }, //
-						{ "a.a.a", 1 }, //
-						{ "a.a.a.a", 2 }, //
-						{ "a.a.a.a.a", 3 }, //
-						{ "a{0,2}.(X.a)?", 0 }, //
-				}, //
-				{ { "a{1,2}" }, //
-						{ "a", 1 }, //
-						{ "a.a", 3 }, //
-						{ "a.a.a", 5 }, //
-						{ "a.a.a.a", 7 }, //
-				}, //
-				{ { "a?" }, //
-						{ "", 1 }, //
-						{ "a", 3 }, //
-						{ "a.a", 5 }, //
-						{ "a.a.a", 7 }, //
-						{ "a.a.a.a", 9 }, //
-				}, //
-				{ { "a*" }, //
-						{ "", 1 }, //
-						{ "a", 3 }, //
-						{ "a.a", 6 }, //
-						{ "a.a.a", 10 }, //
-						{ "a.a.a.a", 15 }, //
-						{ "a" + StringUtils.repeat(".a", 10), 78 }, //
-				}, //
-				{ { "^a*" }, //
-						{ "^", 1 }, //
-						{ "^a", 2 }, //
-						{ "^a.a", 6 }, //
-						{ "X?.a{0,3}", 0 }, //
-				}, //
-				{ { "a+" }, //
-						{ "", 0 }, //
-						{ "a", 1 }, //
-						{ "a.a", 3 }, //
-						{ "a.a.a", 6 }, //
-						{ "a" + StringUtils.repeat(".a", 10), 66 }, //
-				}, //
-				// ====================================================================
-				// Sequence
-				{ { "a.b" }, //
-						{ "(^)?.X?.a.b.(=99)?.X?.($)?", 1 }, //
-						{ "(^)?.X?.a.b.X?.a.b.X?.($)?", 2 }, //
-						{ "(^)?.X?.a.X.b.X?.($)?", 0 }, //
-				}, //
-				{ { "^a.b" }, //
-						{ "^a.b.X?.(a.b)?.($)?", 1 }, //
-						{ "a.b.X?.(a.b)?.($)?", 0 }, //
-				}, //
-				{ { "a.b$" }, //
-						{ "(^)?.(a.b)?.X?.a.b$", 1 }, //
-						{ "(^)?.(a.b)?.X?.a.b", 0 }, //
-				}, //
-				{ { "^a.b$" }, //
-						{ "^a.b$", 1 }, //
-						{ "((^)?.X)?.a.b.(X.($)?)?", 0 }, //
-				}, //
-				{ { "a=99.b" }, //
-						{ "a=99.b.a.b", 1 }, //
-						{ "(a=99.b){3}", 3 }, //
-						{ "(a.b=99){3}", 0 }, //
-				}, //
-				{ { "^a=99.b" }, //
-						{ "(^a=99.b){3}", 1 }, //
-						{ "(a=99.b){3}", 0 }, //
-				}, //
-				{ { "a.b=99" }, //
-						{ "a.b=99.a.b", 1 }, //
-						{ "(a.b=99){3}", 3 }, //
-						{ "(a=99.b){3}", 0 }, //
-				}, //
-				{ { "a.b=99$" }, //
-						{ "(a.b=99){3}$", 1 }, //
-						{ "(a.b=99){3}", 0 }, //
-				}, //
-					 // ====================================================================
-					 // Disjunction
-				{ { "a|b" }, //
-						{ "(^)?.X?.(a|b).X?.($)?", 1 }, //
-						{ "(^)?.X?.($)?", 0 }, //
-				}, //
-				{ { "a=88|b=99" }, //
-						{ "(^)?.X?.(a|b).X?.($)?", 0 }, //
-						{ "(^)?.X?.(a=88|b=99).X?.($)?", 1 }, //
-				}, //
-				{ { "(^a=88)|(b=99$)" }, //
-						{ "^a=88.X?.b=99$", 2 }, //
-						{ "a=88.X?.b=99$", 1 }, //
-						{ "^a=88.X?.b=99", 1 }, //
-						{ "a=88.X?.b=99", 0 }, //
-						{ "^a.X?.b=99$", 1 }, //
-						{ "^a=88.X?.b$", 1 }, //
-						{ "^a.X?.b$", 0 }, //
-				}, //
-				// ====================================================================
-				// Compound
-				{ { "a|b.c" }, //
-						{ "(^)?.X?.(a|b.c).X?.($)?", 1 }, //
-						{ "(^)?.X?.(b|c).X?.($)?", 0 }, //
-				}, //
-				{ { "(a|b).c" }, //
-						{ "(^)?.X?.((a|b).c).X?.($)?", 1 }, //
-						{ "(^)?.X?.(a|b|c).X?.($)?", 0 }, //
-				}, //
-				// ====================================================================
-				// Trees
-				{ { "a(b,c)" }, //
-						{ "(^)?.X?.a.(=1)?.(b.(=1)?.(X)?.($)?,c.(=1)?.X?.($)?)", 1 }, //
-						{ "a(b|c,X)", 0 }, //
-				}, //
-				{ { "^a(b,c)" }, //
-						{ "^a(b,c)", 1 }, //
-						{ "((^)?.X)?.a(b,c)", 0 }, //
-				}, //
-				{ { "a(b,c$)" }, //
-						{ "(^)?.X?.a(b.X?.($)?,c.(=1)?.$)", 1 }, //
-						{ "a(b,c)", 0 }, //
-						{ "a(X,c$)", 0 }, //
-				}, //
-				{ { "^a(aa,ab=5$),b$" }, //
-						{ "^a(aa.(=0)?.X,ab=5$),b$", 1 }, //
-						{ "^a(aa.(=0)?.X?.($)?,ab=5$),b$", 1 }, //
-						{ "^a(aa.X?,ab$),b$", 0 }, //
-						{ "^a(aa.X?,ab=6$),b$", 0 }, //
-						{ ".a(aa.X?,ab=5$),b$", 0 }, //
-						{ "^a(aa.X?,ab=5$),b.X?", 0 }, //
-				}, //
-				{ { "(a,a)" }, //
-						{ "a", 1 }, //
-				}, //
-		};
-	}
-
-	public static Object[][][] searchInFor()
-	{
-		// SearchIn -> SearchFor
-		return new Object[][][] { //
-				{ { "X.a(b.X,c.X)" }, //
-						{ "a", 1 }, //
-						{ "a.b", 1 }, //
-						{ "a.d", 0 }, //
-						{ "^a", 0 }, //
-						{ "b$", 0 }, //
-				}, //
-				{ { "a.X,b.X" }, //
-						{ "a", 1 }, //
-						{ "a,b", 1 }, //
-						{ "^a", 0 }, //
-				}, //
-				{ { "(a(a(a,b),b))" }, //
-						{ "a", 3 }, //
-						{ "a,b", 2 }, //
-						{ "a.b", 2 }, //
-						{ "a.a.a", 1 }, //
-						{ "a.a.b", 1 }, //
-						{ "a.a.c", 0 }, //
-						{ "^a", 0 }, //
-				}, //
-				{ { "^a(a(b,c),b,c$)" }, //
-						{ "a", 2 }, //
-						{ "^a", 1 }, //
-						{ "b", 2 }, //
-						{ "^b", 0 }, //
-						{ "c", 2 }, //
-						{ "^c", 0 }, //
-						{ "c$", 1 }, //
-						{ "a.c", 2 }, //
-						{ "a.c$", 1 }, //
-						{ "^a.c$", 1 }, //
-						{ "a(b,c)", 2 }, //
-						{ "^a(b,c)", 1 }, //
-						{ "a.a", 1 }, //
-						{ "^a.a", 1 }, //
-				}, //
-				{ { "^=1.(b=2,c=1(a,b=2,x=1))" }, //
-						{ "=1", 3 }, //
-						{ "=2", 2 }, //
-						{ "=3", 0 }, //
-						{ "^=1", 1 }, //
-						{ "b=2", 2 }, //
-						{ "^b=2", 1 }, //
-						{ "b=1", 0 }, //
-				}, //
-		};
-	}
-
-	// ==========================================================================
-
-	public static Object[][][] allSearchForIn()
-	{
-		return ArrayUtils.addAll( //
-			ArrayUtils.addAll(searchForIn(), searchForIn_extended() //
-			), searchInFor_reverse(searchInFor()) //
-		);
-	}
-
-	private static Stream<Object[]> searchForIn(Object[][][] arrays) throws ParseException
-	{
-		return Arrays.stream(ArrayUtils.addAll(arrays)) //
-			.flatMap((item) -> {
-				List<Object[]>   ret       = new ArrayList<>();
-				Iterator<Object[]> it      = IteratorUtils.arrayIterator(item);
-				String           searchFor = (String) it.next()[0];
-				try
-				{
-					if (!Trees.getParser().parse(searchFor).isPath())
-						return Stream.empty();
-
-					while (it.hasNext())
-					{
-						Object[]                  subItem = it.next();
-						List<IPath<String, String>> paths;
-
-						IRegexElement e = Trees.getParser().parse((String) subItem[0]);
-						if (!e.isPath())
-							continue;
-
-						paths = Paths.pathsFromPRegexElement(e);
-
-						for (IPath<?, ?> path : paths)
-							ret.add(new Object[] { searchFor, path, subItem[1] });
-					}
-					return mergeParameters(factories(), ret).stream();
-				}
-				catch (ParseException e)
-				{
-					throw new AssertionError(e);
-				}
-			});
-	}
-
-	private static Object[][][] searchInFor_reverse(Object[][][] searchInFor)
-	{
-		Map<String, List<Object[]>> datas = new HashMap<>();
-
-		Iterator<Object[][]> itemIterator = IteratorUtils.arrayIterator(searchInFor);
-
-		while (itemIterator.hasNext())
-		{
-			Iterator<Object[]> subItemIterator = IteratorUtils.arrayIterator(itemIterator.next());
-
-			String searchIn = (String) subItemIterator.next()[0];
-
-			while (subItemIterator.hasNext())
+		return mergeFactories(() -> HelpTests.loadResourceCSVAsMap(//
+			"/insomnia/implem/fsa/searchForIn.csv" //
+			, "/insomnia/implem/fsa/searchInFor.csv" //
+			, "/insomnia/implem/fsa/searchForIn_extended.csv" //
+		).map(record -> {
+			try
 			{
-				Object[]       subItem   = subItemIterator.next();
-				String         searchFor = (String) subItem[0];
-				List<Object[]> objs      = datas.computeIfAbsent(searchFor, (k) -> new ArrayList<>(Collections.singleton(new Object[] { searchFor })));
-				Object[]       newItem   = new Object[] { searchIn, subItem[1] };
-				objs.add(newItem);
+				String searchFor = record.get("search_for");
+				String searchIn  = record.get("search_in");
+				int    nbMatches = Integer.parseInt(record.get("nb_matches"));
+
+				return new Object[] { searchFor, searchIn, nbMatches };
 			}
-		}
-		Object ret[][][] = new Object[datas.size()][][];
-		int    i         = 0;
-		for (String k : datas.keySet())
-		{
-			List<Object[]> data = datas.get(k);
-			ret[i++] = data.toArray(new Object[0][]);
-		}
-		return ret;
+			catch (Exception e)
+			{
+				throw new AssertionError(e);
+			}
+		}));
 	}
 
-	// ==========================================================================
-
-	static Stream<Object[]> arguments() throws ParseException
+	static Stream<Object[]> match()
 	{
-		return searchForIn(allSearchForIn());
+		return arguments().flatMap(args -> {
+			List<ITree<String, String>> searchIn;
+			try
+			{
+				searchIn = Trees.treesFromString((String) args[2]);
+				return searchIn.stream().map(sin -> {
+					args[2] = sin;
+					return args;
+				});
+			}
+			catch (ParseException e)
+			{
+				throw new AssertionError(e);
+			}
+		});
 	}
 
 	@ParameterizedTest
-	@MethodSource("arguments")
-	void match(String fname, Function<IRegexElement, IFPA<String, String>> fprovider, String searchFor, IPath<String, String> psearchIn, int nb) throws IOException, ParseException
+	@MethodSource
+	void match(ITestFPAFactory fpaFactory, String searchFor, ITree<String, String> tsearchIn, int nb) throws ParseException
 	{
+		IRegexElement esearchFor = Trees.getParser().parse(searchFor);
+		assumeTrue(esearchFor.isPath());
+		assumeTrue(tsearchIn.isPath());
 		boolean match = nb > 0;
 
-		IFPA<String, String> automaton = parse(searchFor, fprovider);
-		assertEquals(match, automaton.matcher(psearchIn).matches());
+		IFPA<String, String> automaton = fpaFactory.parse(esearchFor);
+		assertEquals(match, automaton.matcher((IPath<String, String>) tsearchIn).matches());
 	}
 
 	// ==========================================================================
 
-	@ParameterizedTest
-	@MethodSource("arguments")
-	void find(String fname, Function<IRegexElement, IFPA<String, String>> fprovider, String searchFor, IPath<String, String> psearchIn, int nb) throws ParseException, IOException
+	static Stream<Object[]> find()
 	{
-		List<IPath<String, String>> psearchFor = null;
-		try
-		{
-			psearchFor = Paths.pathsFromString(searchFor);
-		}
-		catch (Exception e)
-		{
-		}
-		IFPA<String, String>         automaton = parse(searchFor, fprovider);
-		IPathMatcher<String, String> matcher   = automaton.matcher(psearchIn);
+		return arguments().flatMap(args -> {
+			List<ITree<String, String>> searchIn;
+			try
+			{
+				IRegexElement esearchFor = Trees.getParser().parse((String) args[1]);
+
+				// Can't handle other size for tests because of 'nb_matches' argument
+				if (esearchFor.size() != 1)
+					return Stream.empty();
+
+				var searchForList = Trees.treesFromPRegexElement(esearchFor, Function.identity(), Function.identity());
+				searchIn = Trees.treesFromString((String) args[2]);
+
+				return searchIn.stream().flatMap(sin -> searchForList.stream().map(sfor -> {
+					args[1] = sfor;
+					args[2] = sin;
+					return args;
+				}));
+			}
+			catch (ParseException e)
+			{
+				throw new AssertionError(e);
+			}
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource
+	void find(ITestFPAFactory fprovider, ITree<String, String> tsearchFor, ITree<String, String> tsearchIn, int nb) throws ParseException, IOException
+	{
+		assumeTrue(tsearchFor.isPath());
+		assumeTrue(tsearchIn.isPath());
+		IPath<String, String>        psearchIn  = (IPath<String, String>) tsearchIn;
+		IPath<String, String>        psearchFor = (IPath<String, String>) tsearchFor;
+		IPathMatcher<String, String> matcher    = fprovider.parse(psearchFor).matcher(psearchIn);
 
 		int i = 0;
 		while (matcher.find())
 		{
 			IPath<String, String> group = matcher.toMatchResult().group();
 
-			if (null != psearchFor)
-				assertTrue(psearchFor.stream().anyMatch(sFor -> ITree.structProject(sFor, group)), //
-					String.format("Expected \n%s; but have\n%s", psearchFor, ITree.toString(group)));
+			assertTrue(ITree.structProject(psearchFor, group), //
+				String.format("Expected\n%s but have\n%s", ITree.toString(psearchFor), ITree.toString(group)));
 
 			assertTrue(ITree.isSubTreeOf(group, psearchIn), //
 				String.format("Expected\n%s to be a subtree of\n %s", ITree.toString(group), ITree.toString(psearchIn)));
@@ -596,7 +306,7 @@ public class TestAutomaton
 		if (nb == 0)
 			assertEquals(0, i);
 		else// TODO: equality if possible
-			assertTrue(nb <= i, String.format("Expected %d <= %d", nb, i));
+			assertTrue(nb == i, String.format("Expected %d <= %d\n", nb, i));
 	}
 
 	// =========================================================================
