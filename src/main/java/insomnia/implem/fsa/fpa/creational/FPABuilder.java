@@ -128,6 +128,10 @@ public final class FPABuilder<VAL, LBL>
 
 	private IGFPA<VAL, LBL> createSync(IGFPA<VAL, LBL> gfpa)
 	{
+		// TODO: review with value conditions
+		if (true)
+			throw new UnsupportedOperationException();
+
 		Collection<IFSAEdge<VAL, LBL>> edges = new ArrayList<>(gfpa.getEdges());
 
 		Collection<IFSAState<VAL, LBL>> rootedStates, terminalStates, initialStates, finalStates;
@@ -139,7 +143,8 @@ public final class FPABuilder<VAL, LBL>
 		// TODO: combine state value condition when needed
 		for (IFSAState<VAL, LBL> state : gfpa.getStates())
 		{
-			Collection<IFSAState<VAL, LBL>> currentStates = new ArrayList<>(gfpa.getEpsilonClosure(state));
+			// TODO bad closure, review with value of states
+			Collection<IFSAState<VAL, LBL>> currentStates = new ArrayList<>(gfpa.getEpsilonClosure(state, null));
 
 			if (gfpa.isInitial(state))
 				initialStates.add(state);

@@ -217,7 +217,7 @@ class GFPAGroupMatcher<VAL, LBL>
 				if (groupOffsets.isEmpty())
 					continue;
 
-				for (IFSAEdge<VAL, LBL> edge : automaton.getReachableEdges(currentState))
+				for (IFSAEdge<VAL, LBL> edge : automaton.getEdgesOf(currentState))
 				{
 					if (!IGFPA.testLabel(edge.getLabelCondition(), label))
 						continue;
@@ -227,7 +227,7 @@ class GFPAGroupMatcher<VAL, LBL>
 					if (!IGFPA.testValue(nextState.getValueCondition(), value))
 						continue;
 
-					for (IFSAState<VAL, LBL> s : automaton.getEpsilonClosure(nextState))
+					for (IFSAState<VAL, LBL> s : automaton.getEpsilonClosure(nextState, value))
 					{
 						addOffsets(groupsOffset, s, groupOffsets);
 

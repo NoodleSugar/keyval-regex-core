@@ -142,13 +142,13 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	}
 
 	@Override
-	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states)
+	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states, VAL value)
 	{
 		Collection<IFSAState<VAL, LBL>> ret = new ArrayList<>();
 		ret.addAll(states);
 
 		if (!properties.isSynchronous())
-			IGFPA.epsilonClosureOf(this, ret);
+			IGFPA.epsilonClosureOf(this, ret, value);
 
 		return ret;
 	}

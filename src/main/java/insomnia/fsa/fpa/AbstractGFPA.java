@@ -59,30 +59,30 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	}
 
 	@Override
-	public void epsilonClosure(Collection<IFSAState<VAL, LBL>> states)
+	public void epsilonClosure(Collection<IFSAState<VAL, LBL>> states, VAL value)
 	{
 		if (getProperties().isSynchronous())
 			return;
 
-		IGFPA.epsilonClosureOf(this, states);
+		IGFPA.epsilonClosureOf(this, states, value);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states)
+	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states, VAL value)
 	{
 		if (getProperties().isSynchronous())
 			return (Collection<IFSAState<VAL, LBL>>) states;
 
 		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(states);
-		epsilonClosure(ret);
+		epsilonClosure(ret, value);
 		return ret;
 	}
 
 	@Override
-	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IFSAState<VAL, LBL> state)
+	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IFSAState<VAL, LBL> state, VAL value)
 	{
-		return getEpsilonClosure(Collections.singletonList(state));
+		return getEpsilonClosure(Collections.singletonList(state), value);
 	}
 
 	// =========================================================================
@@ -157,18 +157,6 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesOf(IFSAState<VAL, LBL> state)
 	{
 		return getAllEdgesOf(Collections.singletonList(state));
-	}
-
-	@Override
-	public Collection<IFSAEdge<VAL, LBL>> getReachableEdges(IFSAState<VAL, LBL> state)
-	{
-		return getReachableEdges(Collections.singletonList(state));
-	}
-
-	@Override
-	public Collection<IFSAEdge<VAL, LBL>> getReachableEdges(Collection<? extends IFSAState<VAL, LBL>> states)
-	{
-		return getEdgesOf(getEpsilonClosure(states));
 	}
 
 	// =========================================================================

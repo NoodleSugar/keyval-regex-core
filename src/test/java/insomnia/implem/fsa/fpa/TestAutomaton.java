@@ -157,26 +157,26 @@ public class TestAutomaton
 						return "Builder new states";
 					}
 				}, //
-				new ITestFPAFactory()
-				{
-
-					@Override
-					public IGFPA<String, String> parse(IRegexElement e)
-					{
-						return fpaFactory(e).createBuilder().mustBeSync(true).create();
-					}
-
-					@Override
-					public IGFPA<String, String> parse(IPath<String, String> e)
-					{
-						return fpaFactory(e).createBuilder().mustBeSync(true).create();
-					}
-
-					public String toString()
-					{
-						return "Builder sync";
-					}
-				}, //
+//				new ITestFPAFactory()
+//				{
+//
+//					@Override
+//					public IGFPA<String, String> parse(IRegexElement e)
+//					{
+//						return fpaFactory(e).createBuilder().mustBeSync(true).create();
+//					}
+//
+//					@Override
+//					public IGFPA<String, String> parse(IPath<String, String> e)
+//					{
+//						return fpaFactory(e).createBuilder().mustBeSync(true).create();
+//					}
+//
+//					public String toString()
+//					{
+//						return "Builder sync";
+//					}
+//				}, //
 		};
 		return Stream.of(ret);
 	}

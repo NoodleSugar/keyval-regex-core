@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,11 +49,11 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	Collection<IFSAState<VAL, LBL>> getTerminalStates();
 
-	void epsilonClosure(Collection<IFSAState<VAL, LBL>> states);
+	void epsilonClosure(Collection<IFSAState<VAL, LBL>> states, VAL value);
 
-	Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states);
+	Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states, VAL value);
 
-	Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IFSAState<VAL, LBL> state);
+	Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IFSAState<VAL, LBL> state, VAL value);
 
 	// =========================================================================
 
@@ -89,13 +90,6 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	Collection<IFSAEdge<VAL, LBL>> getAllEdgesOf(IFSAState<VAL, LBL> state);
 
-	/**
-	 * Get the edges reachable from 'states' through epsilon transitions.
-	 */
-	Collection<IFSAEdge<VAL, LBL>> getReachableEdges(Collection<? extends IFSAState<VAL, LBL>> states);
-
-	Collection<IFSAEdge<VAL, LBL>> getReachableEdges(IFSAState<VAL, LBL> state);
-
 	// =========================================================================
 
 	/**
@@ -111,13 +105,6 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 			states.removeIf(state -> automaton.isTerminal(state));
 	}
 
-	/**
-	 * Remove invalid initial states from 'states' according to 'theElement'.
-	 * 
-	 * @param automaton  the automaton to process in
-	 * @param states     the reached states from the automaton
-	 * @param theElement the path to validate
-	 */
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getInitials(IGFPA<VAL, LBL> automaton, IPath<VAL, LBL> theElement)
 	{
 		Stream<IFSAState<VAL, LBL>> ret = automaton.getInitialStates().stream();
@@ -125,21 +112,21 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 		if (!theElement.isRooted())
 			ret = ret.filter(s -> !automaton.isRooted(s));
 
-		return automaton.getEpsilonClosure( //
-			ret.filter(s -> testValue(s.getValueCondition(), theElement.getRoot().getValue())).collect(Collectors.toList()) //
-		);
+		VAL value = theElement.getRoot().getValue();
+		ret = ret.filter(statePredicate(value));
+		return automaton.getEpsilonClosure(ret.collect(Collectors.toList()), value);
 	}
 
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> internalGetPersistentFinals(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
 	{
-		return states.stream().filter(s -> automaton.isFinal(s) && !automaton.isTerminal(s)).collect(Collectors.toList());
+		return CollectionUtils.select(states, s -> automaton.isFinal(s) && !automaton.isTerminal(s));
 	}
 
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> internalGetInitials(IGFPA<VAL, LBL> automaton, VAL value)
 	{
 		return automaton.getEpsilonClosure( //
-			automaton.getInitialStates().stream().filter(s -> !automaton.isRooted(s) && testValue(s.getValueCondition(), value)).collect(Collectors.toList()) //
-		);
+			CollectionUtils.select(automaton.getInitialStates(), s -> !automaton.isRooted(s) && testValue(s.getValueCondition(), value)), //
+			value);
 	}
 
 	/**
@@ -153,6 +140,14 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 	{
 		assert (automaton.isFinal(state));
 
+		if (automaton.isTerminal(state))
+			return false;
+
+		return true;
+	}
+
+	public static <VAL, LBL> boolean internalCheckState(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
 		if (automaton.isTerminal(state))
 			return false;
 
@@ -186,6 +181,11 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 		return cond.test(value);
 	}
 
+	public static <VAL, LBL> Predicate<IFSAState<VAL, LBL>> statePredicate(VAL value)
+	{
+		return (s) -> testValue(s.getValueCondition(), value);
+	}
+
 	// ==========================================================================
 
 	public static <VAL, LBL> void nextValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, LBL label, VAL value)
@@ -196,10 +196,13 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 			Collection<IFSAState<VAL, LBL>> buffStates       = new ArrayList<>(states);
 			states.clear();
 
-			for (IFSAEdge<VAL, LBL> edge : automaton.getReachableEdges(buffStates))
+			for (IFSAEdge<VAL, LBL> edge : automaton.getEdgesOf(buffStates))
 			{
 				if (testLabel(edge.getLabelCondition(), label) && testValue(edge.getChild().getValueCondition(), value))
-					states.add(edge.getChild());
+				{
+					var newStates = automaton.getEpsilonClosure(edge.getChild(), value);
+					states.addAll(newStates);
+				}
 			}
 			states.addAll(persistentFinals);
 		}
@@ -224,9 +227,9 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 		values.next();
 
 		while (labels.hasNext())
+		{
 			nextValidStates(automaton, ret, labels.next(), values.next());
-
-		automaton.epsilonClosure(ret);
+		}
 		finalizeStates(automaton, ret, element);
 		return ret;
 	}
@@ -235,7 +238,9 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	private static <VAL, LBL> void epsilonClosureTemplate( //
 		IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, //
-		BiFunction<IGFPA<VAL, LBL>, Collection<IFSAState<VAL, LBL>>, Collection<IFSAEdge<VAL, LBL>>> getEpsilonEdges)
+		BiFunction<IGFPA<VAL, LBL>, Collection<IFSAState<VAL, LBL>>, Collection<IFSAEdge<VAL, LBL>>> getEpsilonEdges, //
+		Predicate<IFSAState<VAL, LBL>> fcheckState //
+	)
 	{
 		if (states.isEmpty())
 			return;
@@ -252,8 +257,10 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 		{
 			for (IFSAEdge<VAL, LBL> edge : getEpsilonEdges.apply(automaton, buffStates))
 			{
-				if (IFSALabelCondition.isEpsilon(edge.getLabelCondition()) && !ret.contains(edge.getChild()))
-					addedStates.add(edge.getChild());
+				var newState = edge.getChild();
+
+				if (IFSALabelCondition.isEpsilon(edge.getLabelCondition()) && fcheckState.test(newState) && !ret.contains(newState))
+					addedStates.add(newState);
 			}
 			buffStates.clear();
 			buffStates.addAll(addedStates);
@@ -265,17 +272,29 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	public static <VAL, LBL> void epsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
 	{
-		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e));
+		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), (s) -> true);
+	}
+
+	public static <VAL, LBL> void epsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, VAL value)
+	{
+		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), statePredicate(value));
 	}
 
 	public static <VAL, LBL> void epsilonClosureTo(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
 	{
-		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesTo(e));
+		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesTo(e), (s) -> true);
 	}
 
 	public static <VAL, LBL> void allEpsilonClosure(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
 	{
-		epsilonClosureTemplate(automaton, states, (a, e) -> CollectionUtils.union(a.getEpsilonEdgesTo(e), a.getEpsilonEdgesOf(e)));
+		epsilonClosureTemplate(automaton, states, (a, e) -> CollectionUtils.union(a.getEpsilonEdgesTo(e), a.getEpsilonEdgesOf(e)), (s) -> true);
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getEpsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, VAL value)
+	{
+		List<IFSAState<VAL, LBL>> ret = new ArrayList<>(states);
+		epsilonClosureOf(automaton, ret, value);
+		return ret;
 	}
 
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getEpsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
