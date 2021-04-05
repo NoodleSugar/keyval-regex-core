@@ -5,17 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.commons.collections4.IteratorUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import insomnia.HelpTests;
 import insomnia.data.ITree;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.fta.IBUFTA;
@@ -27,60 +23,68 @@ public class TestAutomaton
 {
 	// ==========================================================================
 
-	static Stream<Object[]> arguments() throws ParseException
+	public static Stream<Object[]> arguments()
 	{
-		return searchForIn(ArrayUtils.addAll(insomnia.implem.fsa.fpa.TestAutomaton.allSearchForIn()));
+		return HelpTests.loadResourceCSVAsMap(//
+			"/insomnia/implem/fsa/searchForIn.csv" //
+			, "/insomnia/implem/fsa/searchInFor.csv" //
+			, "/insomnia/implem/fsa/searchForIn_extended.csv" //
+		).map(record -> {
+			try
+			{
+				String searchFor = record.get("search_for");
+				String searchIn  = record.get("search_in");
+				int    nbMatches = Integer.parseInt(record.get("nb_matches"));
+
+				return new Object[] { searchFor, searchIn, nbMatches };
+			}
+			catch (Exception e)
+			{
+				throw new AssertionError(e);
+			}
+		});
 	}
 
-	public static Stream<Object[]> searchForIn(Object[][][] arrays) throws ParseException
+	public static Stream<Object[]> match()
 	{
-		return Arrays.stream(ArrayUtils.addAll(arrays)) //
-			.flatMap((item) -> {
-				List<Object[]>   ret       = new ArrayList<>();
-				Iterator<Object[]> it      = IteratorUtils.arrayIterator(item);
-				String           searchFor = (String) it.next()[0];
-
-				while (it.hasNext())
-				{
-					Object[]                  subItem = it.next();
-					List<ITree<String, String>> paths;
-					try
-					{
-						paths = Trees.treesFromString((String) subItem[0]);
-
-						for (ITree<?, ?> path : paths)
-							ret.add(new Object[] { searchFor, path, subItem[1] });
-					}
-					catch (ParseException e)
-					{
-						throw new AssertionError(String.format("Error for: %s", subItem[0]), e);
-					}
-				}
-				return ret.stream();
-			});
+		return arguments().flatMap(args -> {
+			List<ITree<String, String>> searchIn;
+			try
+			{
+				searchIn = Trees.treesFromString((String) args[1]);
+				return searchIn.stream().map(sin -> {
+					args[1] = sin;
+					return args;
+				});
+			}
+			catch (ParseException e)
+			{
+				throw new AssertionError(e);
+			}
+		});
 	}
 
 	@ParameterizedTest
-	@MethodSource("arguments")
+	@MethodSource
 	void match(String searchFor, ITree<String, String> tsearchIn, int nb) throws ParseException
 	{
 		assumeTrue(new RegexParser("''\"\"~~").parse(searchFor).size() == 1);
 		boolean match = nb > 0;
 
 		ITree<String, String> tsearchFor = Trees.treeFromString(searchFor);
-		tsearchFor = Trees.removeRedundancies(tsearchFor);
+
 		IBUFTA<String, String> bufta = new BUFTABuilder<>(tsearchFor).create();
+
 		assertEquals(match, bufta.matcher(tsearchIn).matches(), String.format("Search for=\n%sSearch in=\n%s", ITree.toString(tsearchFor), ITree.toString(tsearchIn)));
 	}
 
 	@ParameterizedTest
-	@MethodSource("arguments")
+	@MethodSource("match")
 	void find(String searchFor, ITree<String, String> tsearchIn, int nb) throws ParseException
 	{
 		assumeTrue(new RegexParser("''\"\"~~").parse(searchFor).size() == 1);
 		ITree<String, String> tsearchFor;
 		tsearchFor = Trees.treeFromString(searchFor);
-		tsearchFor = Trees.removeRedundancies(tsearchFor);
 
 		IBUFTA<String, String>       bufta   = new BUFTABuilder<>(tsearchFor).create();
 		ITreeMatcher<String, String> matcher = bufta.matcher(tsearchIn);
