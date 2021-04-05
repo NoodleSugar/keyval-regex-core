@@ -12,6 +12,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 import insomnia.data.IEdge;
 import insomnia.data.INode;
@@ -113,10 +115,21 @@ public final class BUFTABuilder<VAL, LBL>
 
 		private Collection<IFTAEdge<VAL, LBL>> ftaEdges;
 
+		private MultiValuedMap<IFSAState<VAL, LBL>, IFTAEdge<VAL, LBL>> ftaEdgesOf;
+
 		BUFTA(BUFTABuilder<VAL, LBL> builder)
 		{
 			this.gfpa     = new FPABuilder<>(builder.gchunk).mustBeSync(false).create();
-			this.ftaEdges = new ArrayList<>(builder.ftaEdges);
+			this.ftaEdges = List.copyOf(builder.ftaEdges);
+			{
+				ArrayListValuedHashMap<IFSAState<VAL, LBL>, IFTAEdge<VAL, LBL>> ftaOf = new ArrayListValuedHashMap<>();
+
+				for (var edge : ftaEdges)
+					for (var state : edge.getParents())
+						ftaOf.put(state, edge);
+
+				this.ftaEdgesOf = ftaOf;
+			}
 		}
 
 		@Override
@@ -134,8 +147,14 @@ public final class BUFTABuilder<VAL, LBL>
 		@Override
 		public Collection<IFTAEdge<VAL, LBL>> getHyperEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates)
 		{
-			// TODO: better approach
-			return ftaEdges;
+			Collection<IFTAEdge<VAL, LBL>> ret = new HashSet<>();
+
+			var states = parentStates.stream().flatMap(c -> c.stream().map(s -> s)).iterator();
+
+			for (IFSAState<VAL, LBL> state : (Iterable<IFSAState<VAL, LBL>>) () -> states)
+				ret.addAll(ftaEdgesOf.get(state));
+
+			return ret;
 		}
 
 		@Override
