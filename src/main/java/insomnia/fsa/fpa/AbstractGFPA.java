@@ -3,6 +3,7 @@ package insomnia.fsa.fpa;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import insomnia.fsa.IFSAEdge;
@@ -65,6 +66,22 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 			return;
 
 		IGFPA.epsilonClosureOf(this, states, value);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states, Predicate<IFSAState<VAL, LBL>> fcheckState)
+	{
+		if (getProperties().isSynchronous())
+			return (Collection<IFSAState<VAL, LBL>>) states;
+
+		return IGFPA.getEpsilonClosureOf(this, states, fcheckState);
+	}
+
+	@Override
+	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(IFSAState<VAL, LBL> state, Predicate<IFSAState<VAL, LBL>> fcheckState)
+	{
+		return getEpsilonClosure(Collections.singletonList(state), fcheckState);
 	}
 
 	@SuppressWarnings("unchecked")

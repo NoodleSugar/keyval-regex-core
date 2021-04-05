@@ -50,19 +50,9 @@ class BUFTAMatches<VAL, LBL>
 
 	// ==========================================================================
 
-	/**
-	 * Get the final states from states that must persist as next states.
-	 * 
-	 * @param states current valid states
-	 */
-	Collection<IFSAState<VAL, LBL>> getPersistantFinal(Collection<IFSAState<VAL, LBL>> states)
+	private IFSAState<VAL, LBL> internalCheckFinals(Collection<IFSAState<VAL, LBL>> states)
 	{
-		return CollectionUtils.select(states, s -> gfpa.isFinal(s) && !gfpa.isRooted(s));
-	}
-
-	private IFSAState<VAL, LBL> checkFinals(Collection<IFSAState<VAL, LBL>> states)
-	{
-		return IterableUtils.find(states, gfpa::isFinal);
+		return IterableUtils.find(states, s -> gfpa.isFinal(s) && !gfpa.isRooted(s));
 	}
 
 	/**
@@ -98,88 +88,45 @@ class BUFTAMatches<VAL, LBL>
 		{
 			INode<VAL, LBL>       node       = nodes.next();
 			List<IEdge<VAL, LBL>> edgeChilds = element.getChildren(node);
-			boolean               nodeIsRoot = !nodes.hasNext();
 
 			// Edge check
 			for (IEdge<VAL, LBL> childEdge : edgeChilds)
 			{
 				LBL             label     = childEdge.getLabel();
-				VAL             value     = node.getValue();
 				INode<VAL, LBL> childNode = childEdge.getChild();
 
 				Collection<IFSAState<VAL, LBL>> childStates = nodeStatesMap.get(childNode);
 				Collection<IFSAState<VAL, LBL>> newStates   = new HashSet<>();
 
-				for (IFSAEdge<VAL, LBL> edge : gfpa.getReachableEdges(childStates))
+				for (IFSAEdge<VAL, LBL> edge : gfpa.getEdgesOf(childStates))
 				{
-					IFSAState<VAL, LBL> nextState = edge.getChild();
-
-					if (!IGFPA.testLabel(edge.getLabelCondition(), label) || !IGFPA.testValue(nextState.getValueCondition(), value))
+					if (!IGFPA.testLabel(edge.getLabelCondition(), label))
 						continue;
 
-					newStates.addAll(IBUFTA.internalFilterNewStates(gfpa, gfpa.getEpsilonClosure(nextState), nodeIsRoot, nodeIsRoot));
+					IFSAState<VAL, LBL> newState = edge.getChild();
+					newStates.addAll(IGFPA.getValidStates(gfpa, newState, IBUFTA.statePredicate(gfpa, node)));
 				}
-				newStates.addAll(getPersistantFinal(childStates));
 				childsSubStates.add(newStates);
 
 				// No need of that node anymore
 				nodeStatesMap.remove(childNode);
 			}
-			Collection<IFSAState<VAL, LBL>> newStates;
+			Collection<IFSAState<VAL, LBL>> newStates = new HashSet<>();
 
-			// If one child node: nothing more to do by construction because no hyper edge exists.
-			if (edgeChilds.size() <= 1)
-				newStates = childsSubStates.get(0);
-			else
+			// Check hyper transitions
+			for (IFTAEdge<VAL, LBL> hEdge : automaton.getHyperEdges(childsSubStates))
 			{
-				newStates = new HashSet<>();
-				{
-					var     hEdges        = automaton.getOneHyperEdges(childsSubStates);
-					boolean checkOneEdges = false;
+				if (!hEdge.getCondition().testND(childsSubStates))
+					continue;
 
-					if (hEdges.isEmpty())
-						checkOneEdges = true;
-					else
-					{
-						// One hedge validation
-						for (IFTAEdge<VAL, LBL> hEdge : hEdges)
-						{
-							if (!hEdge.getCondition().testND(childsSubStates))
-							{
-								checkOneEdges = false;
-								break;
-							}
-						}
-					}
-					if (checkOneEdges)
-					{
-						for (Collection<IFSAState<VAL, LBL>> subStates : childsSubStates)
-							newStates.addAll(subStates);
-					}
-				}
-
-				// Check hyper transitions
-				Collection<IFTAEdge<VAL, LBL>> hEdges = automaton.getHyperEdges(childsSubStates);
-
-				for (IFTAEdge<VAL, LBL> hEdge : hEdges)
-				{
-					if (hEdge.getCondition().testND(childsSubStates))
-					{
-						IFSAState<VAL, LBL> newState = hEdge.getChild();
-
-						if (IBUFTA.internalFilterNewStates(gfpa, Collections.singleton(newState), nodeIsRoot, node.isRooted()).isEmpty())
-							continue;
-
-						newStates.add(newState);
-					}
-				}
+				IFSAState<VAL, LBL> newState = hEdge.getChild();
+				newStates.addAll(IGFPA.getValidStates(gfpa, newState, IBUFTA.statePredicate(gfpa, node)));
 			}
-			Collection<IFSAState<VAL, LBL>> initials = IBUFTA.internalGetInitials(automaton.getGFPA(), node);
-			nodeStatesMap.put(node, CollectionUtils.union(newStates, initials));
+			nodeStatesMap.put(node, newStates);
 			childsSubStates.clear();
 
 			// Is there a final state in the reached new states ?
-			IFSAState<VAL, LBL> oneFinal = checkFinals(newStates);
+			IFSAState<VAL, LBL> oneFinal = internalCheckFinals(newStates);
 
 			if (null != oneFinal)
 				return Collections.singleton(oneFinal);

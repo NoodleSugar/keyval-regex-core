@@ -51,7 +51,6 @@ public final class BUFTABuilder<VAL, LBL>
 	/**
 	 * If {@code true}: the builder must generate an hyper-arc for a one child node of the tree pattern.
 	 */
-	private boolean checkOneFTAEdges;
 	private boolean builded;
 	private Mode    mode;
 
@@ -136,7 +135,7 @@ public final class BUFTABuilder<VAL, LBL>
 		public Collection<IFTAEdge<VAL, LBL>> getHyperEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates)
 		{
 			// TODO: better approach
-			return ftaEdges.stream().filter(e -> e.getParents().size() > 1).collect(Collectors.toList());
+			return ftaEdges;
 		}
 
 		@Override
@@ -170,11 +169,137 @@ public final class BUFTABuilder<VAL, LBL>
 		return newState;
 	}
 
+	private IFSAState<VAL, LBL> newInitialFrom(INode<VAL, LBL> node)
+	{
+		IFSAState<VAL, LBL> newState = newStateFrom(node);
+		makeInitialFrom(newState, node);
+		return newState;
+	}
+
+	private void addAnyLoop(IFSAState<VAL, LBL> state)
+	{
+		gchunk.addEdge(state, state, FSALabelConditions.createAnyLoop());
+		addFTAEdge(state);
+	}
+
+	private void addFTAEdge(IFSAState<VAL, LBL> state)
+	{
+		var parents = Collections.singletonList(state);
+		ftaEdges.add(new FTAEdge<>(parents, state, fcreateFTAEdgeCondition.apply(parents)));
+	}
+
+	private void makeInitialFrom(IFSAState<VAL, LBL> state, INode<VAL, LBL> node)
+	{
+		if (node.isTerminal())
+		{
+			gchunk.setTerminal(state);
+			gchunk.setInitial(state);
+		}
+		else
+		{
+			if (FSAValueConditions.isAny(state.getValueCondition()))
+			{
+				gchunk.setInitial(state);
+				addAnyLoop(state);
+			}
+			else
+			{
+				var preNewState = gchunk.createState();
+				gchunk.addEdge(preNewState, state, null);
+				gchunk.setInitial(preNewState);
+				addAnyLoop(preNewState);
+				addFTAEdge(state);
+			}
+		}
+	}
+
+	private void makeItFinalFrom(IFSAState<VAL, LBL> state, INode<VAL, LBL> node)
+	{
+		if (node.isRooted())
+		{
+			gchunk.setRooted(state);
+			gchunk.setFinal(state);
+			addFTAEdge(state);
+		}
+		else if (FSAValueConditions.isAny(state.getValueCondition()))
+		{
+			gchunk.setFinal(state);
+			addAnyLoop(state);
+		}
+		else
+		{
+			var newState = gchunk.createState();
+			gchunk.addEdge(state, newState, null);
+			gchunk.setFinal(newState);
+			addAnyLoop(newState);
+		}
+	}
+
+	private void makeItInitialFinalFrom(INode<VAL, LBL> node)
+	{
+		boolean isRooted   = node.isRooted();
+		boolean isTerminal = node.isTerminal();
+
+		var state = gchunk.createState(node.getValue());
+
+		if (isRooted && isTerminal)
+		{
+			gchunk.addState(state);
+			gchunk.setRooted(state);
+			gchunk.setTerminal(state);
+			gchunk.setInitial(state);
+			gchunk.setFinal(state);
+		}
+		else if (isRooted)
+		{
+			var preState = gchunk.createState();
+
+			gchunk.setInitial(preState);
+			gchunk.setRooted(state);
+			gchunk.setFinal(state);
+
+			gchunk.addEdge(preState, state, null);
+			addAnyLoop(preState);
+			addFTAEdge(state);
+		}
+		else if (isTerminal)
+		{
+			var postState = gchunk.createState();
+
+			gchunk.setFinal(postState);
+			gchunk.setTerminal(state);
+			gchunk.setInitial(state);
+
+			gchunk.addEdge(state, postState, null);
+			addAnyLoop(postState);
+		}
+		else
+		{
+			var preState  = gchunk.createState();
+			var postState = gchunk.createState();
+
+			gchunk.addEdge(preState, state, null);
+			gchunk.addEdge(state, postState, null);
+
+			addAnyLoop(preState);
+			addAnyLoop(postState);
+
+			gchunk.setInitial(preState, true);
+			gchunk.setFinal(postState, true);
+		}
+	}
+
 	private void buildFromTree(ITree<VAL, LBL> tree)
 	{
 		if (builded)
 			return;
 
+		if (tree.getNodes().size() == 1)
+		{
+			makeItInitialFinalFrom(tree.getRoot());
+			builded = true;
+			return;
+		}
 		Map<INode<VAL, LBL>, IFSAState<VAL, LBL>> stateOf = new HashMap<>();
 
 		ListIterator<INode<VAL, LBL>> nodes = ITree.bottomUpOrder(tree).listIterator();
@@ -189,40 +314,27 @@ public final class BUFTABuilder<VAL, LBL>
 				nodes.previous();
 				break;
 			}
-
-			IFSAState<VAL, LBL> newState = newStateFrom(node);
-			gchunk.setInitial(newState, true);
-			stateOf.put(node, newState);
-
-			if (node.isTerminal())
-				gchunk.setTerminal(newState, true);
+			stateOf.put(node, newInitialFrom(node));
 		}
 
 		// Process internal nodes
 		while (nodes.hasNext())
 		{
 			INode<VAL, LBL>       node       = nodes.next();
+			IFSAState<VAL, LBL>   newState   = newStateFrom(node);
 			List<IEdge<VAL, LBL>> nodeChilds = tree.getChildren(node);
 
 			if (nodeChilds.size() == 1)
 			{
-				IEdge<VAL, LBL>     edge     = nodeChilds.get(0);
-				IFSAState<VAL, LBL> newState = newStateFrom(node);
-				IFSAState<VAL, LBL> state    = stateOf.get(edge.getChild());
+				IEdge<VAL, LBL>     edge  = nodeChilds.get(0);
+				IFSAState<VAL, LBL> state = stateOf.get(edge.getChild());
 				gchunk.addEdge(state, newState, fcreateLabelCondition.apply(edge.getLabel()));
 				stateOf.put(node, newState);
 				stateOf.remove(edge.getChild());
-
-				if (checkOneFTAEdges)
-				{
-					// add a special hyperEdge checking one edge condition
-					var parents = Collections.singletonList(newState);
-					ftaEdges.add(new FTAEdge<>(parents, newState, fcreateFTAEdgeCondition.apply(parents)));
-				}
+				addFTAEdge(newState);
 			}
 			else
 			{
-				IFSAState<VAL, LBL>             newState        = newStateFrom(node);
 				Collection<IFSAState<VAL, LBL>> nodeChildStates = new HashSet<>();
 				stateOf.put(node, newState);
 
@@ -239,11 +351,7 @@ public final class BUFTABuilder<VAL, LBL>
 			}
 		}
 		IFSAState<VAL, LBL> root = stateOf.get(tree.getRoot());
-		gchunk.setFinal(root, true);
-
-		if (tree.getRoot().isRooted())
-			gchunk.setRooted(root, true);
-
+		makeItFinalFrom(root, tree.getRoot());
 		builded = true;
 	}
 
@@ -261,25 +369,21 @@ public final class BUFTABuilder<VAL, LBL>
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createInclusive;
 			fcreateLabelCondition = FSALabelConditions::createAnyOrEq;
 			fcreateValueCondition = FSAValueConditions::createAnyOrEq;
-			checkOneFTAEdges = false;
 			break;
 		case STRUCTURE_PROJECTION:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
 			fcreateLabelCondition = FSALabelConditions::createAnyOrEq;
 			fcreateValueCondition = FSAValueConditions::createAnyOrEq;
-			checkOneFTAEdges = true;
 			break;
 		case EQUALITY:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
 			fcreateLabelCondition = FSALabelConditions::createEq;
 			fcreateValueCondition = FSAValueConditions::createEq;
-			checkOneFTAEdges = true;
 			break;
 		case STRUCTURE:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
 			fcreateLabelCondition = FSALabelConditions::createEq;
 			fcreateValueCondition = v -> FSAValueConditions.createAny();
-			checkOneFTAEdges = true;
 			break;
 		default:
 			throw new IllegalArgumentException(mode.toString());

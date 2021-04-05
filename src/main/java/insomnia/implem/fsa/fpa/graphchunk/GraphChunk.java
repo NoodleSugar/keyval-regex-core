@@ -315,6 +315,26 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		this.end = (IGCState<VAL, LBL>) end;
 	}
 
+	public void setRooted(IFSAState<VAL, LBL> state)
+	{
+		setRooted(state, true);
+	}
+
+	public void setTerminal(IFSAState<VAL, LBL> state)
+	{
+		setTerminal(state, true);
+	}
+
+	public void setInitial(IFSAState<VAL, LBL> state)
+	{
+		setInitial(state, true);
+	}
+
+	public void setFinal(IFSAState<VAL, LBL> state)
+	{
+		setFinal(state, true);
+	}
+
 	public void setRooted(IFSAState<VAL, LBL> state, boolean v)
 	{
 		getAFactory().setRooted(state, v);
