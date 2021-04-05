@@ -16,7 +16,7 @@ public final class FSALabelConditions
 
 	// =========================================================================
 
-	private final static IFSALabelCondition<?> any;
+	private final static IFSALabelCondition<?> any, anyLoop;
 
 	private abstract static class AbstractLabelCondition<LBL> implements IFSALabelCondition<LBL>
 	{
@@ -58,32 +58,44 @@ public final class FSALabelConditions
 		}
 	}
 
+	private static abstract class Any<LBL> implements IFSALabelCondition<LBL>
+	{
+		@Override
+		public boolean test(Object element)
+		{
+			return true;
+		}
+
+		@Override
+		public Collection<LBL> getLabels()
+		{
+			return Collections.emptyList();
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			return obj == this;
+		}
+	}
+
 	static
 	{
-		any = new IFSALabelCondition<Object>()
+		any = new Any<>()
 		{
-			@Override
-			public boolean test(Object element)
-			{
-				return true;
-			}
-
-			@Override
-			public Collection<Object> getLabels()
-			{
-				return Collections.emptyList();
-			}
-
 			@Override
 			public String toString()
 			{
 				return "*";
 			}
+		};
 
+		anyLoop = new Any<>()
+		{
 			@Override
-			public boolean equals(Object obj)
+			public String toString()
 			{
-				return obj == this;
+				return "[^$]*";
 			}
 		};
 	}
@@ -92,6 +104,12 @@ public final class FSALabelConditions
 	public static <LBL> IFSALabelCondition<LBL> createAny()
 	{
 		return (IFSALabelCondition<LBL>) any;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <LBL> IFSALabelCondition<LBL> createAnyLoop()
+	{
+		return (IFSALabelCondition<LBL>) anyLoop;
 	}
 
 	public static <LBL> IFSALabelCondition<LBL> epsilonCondition()
@@ -142,5 +160,10 @@ public final class FSALabelConditions
 	public static boolean isAny(IFSALabelCondition<?> labelCondition)
 	{
 		return labelCondition == any;
+	}
+
+	public static boolean isAnyLoop(IFSALabelCondition<?> labelCondition)
+	{
+		return labelCondition == anyLoop;
 	}
 }

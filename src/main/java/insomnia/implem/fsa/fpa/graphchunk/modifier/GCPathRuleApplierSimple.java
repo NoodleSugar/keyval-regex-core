@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import insomnia.data.IPath;
 import insomnia.fsa.IFSAState;
+import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.data.Paths;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier.Environment;
@@ -58,7 +59,7 @@ public class GCPathRuleApplierSimple<VAL, LBL>
 		if (null == queryPath)
 			throw new InvalidParameterException("graph chunk does not represent a path");
 
-		IPathRule<VAL, LBL> queryRule = PathRules.create(queryPath, Paths.empty(), false);
+		IPathRule<VAL, LBL> queryRule = PathRules.create(queryPath, queryPath, false);
 
 		Collection<IDependency<VAL, LBL>> dependencies = grd.getDependencies(queryRule);
 
@@ -74,11 +75,13 @@ public class GCPathRuleApplierSimple<VAL, LBL>
 		List<GraphChunk<VAL, LBL>>              newChunks = new ArrayList<>();
 		List<Collection<IDependency<VAL, LBL>>> newDeps   = new ArrayList<>();
 
+		var skipped = skipRootedTerminal(gchunk);
+
 		for (IDependency<VAL, LBL> dependency : dependencies)
 		{
 			IPathRule<VAL, LBL>               rule       = (IPathRule<VAL, LBL>) dependency.getRuleTarget();
 			IPathUnifier<VAL, LBL>            unifier    = (IPathUnifier<VAL, LBL>) dependency.getUnifier();
-			Collection<GraphChunk<VAL, LBL>>  unifiables = getUnifiables(gchunk, dependency);
+			Collection<GraphChunk<VAL, LBL>>  unifiables = getUnifiables(skipped, dependency);
 			Collection<IDependency<VAL, LBL>> deps       = grd.getDependencies(rule);
 
 			for (GraphChunk<VAL, LBL> unifiable : unifiables)
@@ -134,6 +137,22 @@ public class GCPathRuleApplierSimple<VAL, LBL>
 
 			return env.gluePath(mainChunk, start, end, rule.getBody());
 		}
+	}
+
+	private GraphChunk<VAL, LBL> skipRootedTerminal(GraphChunk<VAL, LBL> gchunk)
+	{
+		boolean rooted   = IGFPA.isRooted(gchunk, gchunk.getStart());
+		boolean terminal = IGFPA.isTerminal(gchunk, gchunk.getEnd());
+
+		if (!rooted && !terminal)
+			return gchunk;
+
+		var ret = gchunk.copyClone();
+		if (rooted)
+			ret.setStart(IGFPA.skipRooted(gchunk, gchunk.getStart()));
+		if (terminal)
+			ret.setEnd(IGFPA.skipTerminal(gchunk, gchunk.getEnd()));
+		return ret;
 	}
 
 	private Collection<GraphChunk<VAL, LBL>> getUnifiables(GraphChunk<VAL, LBL> gchunk, IDependency<VAL, LBL> dep)

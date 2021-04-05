@@ -26,6 +26,38 @@ public final class Trees
 
 	// =========================================================================
 
+	private final static Object rootValue = new Object()
+	{
+		@Override
+		public String toString()
+		{
+			return "^";
+		}
+	};
+
+	private final static Object terminalValue = new Object()
+	{
+		@Override
+		public String toString()
+		{
+			return "$";
+		}
+	};
+
+	@SuppressWarnings("unchecked")
+	public static <VAL> VAL getRootValue()
+	{
+		return (VAL) rootValue;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <VAL> VAL getTerminalValue()
+	{
+		return (VAL) terminalValue;
+	}
+
+	// =========================================================================
+
 	private final static RegexParser parser = new RegexParser("''\"\"~~");
 
 	/**

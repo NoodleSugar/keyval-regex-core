@@ -9,7 +9,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import insomnia.data.IPath;
@@ -19,6 +22,7 @@ import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.data.regex.PathMatchResults;
 import insomnia.implem.data.regex.TreeMatchResults;
+import insomnia.implem.fsa.labelcondition.FSALabelConditions;
 
 /**
  * A class to compute the matching groups of a {@link IPath} element in an {@link IGFPA} processing.
@@ -58,6 +62,7 @@ class GFPAGroupMatcher<VAL, LBL>
 
 	private Queue<Result<VAL, LBL>>                    currentResults;
 	private Map<IFSAState<VAL, LBL>, Collection<From>> groupsOffset;
+	private Set<IFSAState<VAL, LBL>>                   initialLooped;
 
 	boolean hasNonRootedInitials;
 
@@ -86,14 +91,17 @@ class GFPAGroupMatcher<VAL, LBL>
 
 		this.currentResults = new LinkedList<>();
 		this.groupsOffset   = new HashMap<>();
-		this.labels         = element.getLabels().iterator();
-		this.values         = element.getValues().iterator();
 
-		hasNonRootedInitials = automaton.getInitialStates().stream().anyMatch(s -> !automaton.isRooted(s));
-		values.next();
+		this.initialLooped = CollectionUtils.select(automaton.getInitialStates(), s -> IGFPA.hasAnyLoop(automaton, s), new HashSet<>());
+
+		var iterators = GFPAMatchers.getIterators(element);
+		this.labels = iterators.getRight();
+		this.values = iterators.getLeft();
+
+		hasNonRootedInitials = IterableUtils.matchesAny(automaton.getInitialStates(), s -> !automaton.isRooted(s));
 
 		// Create a group for each initial state
-		for (IFSAState<VAL, LBL> state : IGFPA.getInitials(automaton, element))
+		for (IFSAState<VAL, LBL> state : IGFPA.getInitials(automaton, values.next()))
 			addOffset(groupsOffset, state, 0);
 
 		finalStatesCheck();
@@ -118,7 +126,11 @@ class GFPAGroupMatcher<VAL, LBL>
 	private void addOffset(Map<IFSAState<VAL, LBL>, Collection<From>> groupsOffset, IFSAState<VAL, LBL> state, int offset)
 	{
 		Collection<From> offsets = groupsOffset.computeIfAbsent(state, s -> new HashSet<>());
-		offsets.add(new From(automaton.isRooted(state), offset));
+
+		if (offset == -1)
+			return;
+
+		offsets.add(new From(state, offset));
 	}
 
 	/**
@@ -138,26 +150,6 @@ class GFPAGroupMatcher<VAL, LBL>
 	{
 		int start = from.getFrom();
 		int end   = lastOffset;
-
-		if (automaton.isTerminal(state) && values.hasNext())
-			return;
-		// Last automaton process: check element terminal case
-		if (!values.hasNext())
-		{
-			if (automaton.isTerminal(state) && !element.isTerminal())
-				return;
-		}
-		if (!from.isRooted())
-		{
-			if (element.isRooted())
-			{
-				start++;
-				end++;
-			}
-		}
-		else if (element.isRooted())
-			end++;
-
 		currentResults.add(new Result<>(state, Pair.of(start, end)));
 	}
 
@@ -212,9 +204,14 @@ class GFPAGroupMatcher<VAL, LBL>
 
 			for (IFSAState<VAL, LBL> currentState : buffStates)
 			{
-				Collection<From> groupOffsets = buffGroupsOffset.get(currentState);
+				Collection<From> groupOffsets, lastGroupOffsets;
 
-				if (groupOffsets.isEmpty())
+				if (initialLooped.contains(currentState))
+					lastGroupOffsets = Collections.singleton(new From(currentState, labelIndex - 1));
+				else
+					lastGroupOffsets = buffGroupsOffset.get(currentState);
+
+				if (lastGroupOffsets.isEmpty())
 					continue;
 
 				for (IFSAEdge<VAL, LBL> edge : automaton.getEdgesOf(currentState))
@@ -223,24 +220,29 @@ class GFPAGroupMatcher<VAL, LBL>
 						continue;
 
 					IFSAState<VAL, LBL> nextState = edge.getChild();
+					boolean             isAnyLoop = FSALabelConditions.isAnyLoop(edge.getLabelCondition());
 
-					if (!IGFPA.testValue(nextState.getValueCondition(), value))
-						continue;
+					if (isAnyLoop)
+					{
+						// Stop if the current State is already a processed final state
+						if (automaton.isFinal(currentState) && !automaton.isInitial(currentState))
+							continue;
+						else
+							groupOffsets = Collections.singleton(new From(currentState, labelIndex));
+					}
+					else
+						groupOffsets = lastGroupOffsets;
 
-					for (IFSAState<VAL, LBL> s : automaton.getEpsilonClosure(nextState, value))
+					var nextIsInitial = automaton.isInitial(nextState);
+
+					for (IFSAState<VAL, LBL> s : IGFPA.getValidStates(automaton, nextState, value))
 					{
 						addOffsets(groupsOffset, s, groupOffsets);
 
-						if (automaton.isInitial(s))
+						if (!isAnyLoop && nextIsInitial)
 							addOffset(groupsOffset, s, labelIndex);
 					}
 				}
-			}
-			{	// Add new initials
-				Collection<IFSAState<VAL, LBL>> initials = IGFPA.internalGetInitials(automaton, value);
-
-				for (IFSAState<VAL, LBL> initial : initials)
-					addOffset(groupsOffset, initial, labelIndex);
 			}
 			finalStatesCheck();
 

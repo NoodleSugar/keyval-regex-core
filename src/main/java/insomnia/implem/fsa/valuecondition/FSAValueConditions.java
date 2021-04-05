@@ -40,7 +40,6 @@ public final class FSAValueConditions
 	{
 		return vcond == any;
 	}
-
 	// =========================================================================
 
 	private static class FSAValueEq<VAL> implements IFSAValueCondition<VAL>
@@ -56,6 +55,19 @@ public final class FSAValueConditions
 		public boolean test(VAL element)
 		{
 			return Objects.equals(value, element);
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (obj == this)
+				return true;
+			if (!(obj instanceof FSAValueEq<?>))
+				return false;
+
+			@SuppressWarnings("unchecked")
+			var veq = (FSAValueEq<VAL>) obj;
+			return Objects.equals(value, veq.value);
 		}
 
 		@Override

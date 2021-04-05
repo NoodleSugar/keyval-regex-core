@@ -305,8 +305,8 @@ public class TestAutomaton
 		}
 		if (nb == 0)
 			assertEquals(0, i);
-		else// TODO: equality if possible
-			assertTrue(nb == i, String.format("Expected %d <= %d\n", nb, i));
+		else
+			assertTrue(nb == i, String.format("Expected %d == %d\n", nb, i));
 	}
 
 	// =========================================================================

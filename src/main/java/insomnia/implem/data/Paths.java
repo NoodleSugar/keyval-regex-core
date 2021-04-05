@@ -17,6 +17,8 @@ import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.data.regex.parser.IRegexElement;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
+import insomnia.implem.fsa.labelcondition.FSALabelConditions;
+import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 
 public final class Paths
 {
@@ -45,9 +47,12 @@ public final class Paths
 		IFSAState<VAL, LBL> state  = states.iterator().next();
 		List<LBL>           labels = new ArrayList<>();
 
-		for (;;)
+		var     rootedCond   = FSAValueConditions.createEq(Trees.getRootValue());
+		var     terminalCond = FSAValueConditions.createEq(Trees.getTerminalValue());
+		boolean isRooted     = false, isTerminal = false;
+
+		for (boolean dofirst = true;; dofirst = false)
 		{
-//			// TODO: rooted path
 			Collection<IFSAEdge<VAL, LBL>> edges = gfpa.getEdgesOf(state);
 
 			int size = edges.size();
@@ -56,16 +61,36 @@ public final class Paths
 				return null;
 
 			if (size == 0)
-				return create(false, false, labels);
+				return create(isRooted, isTerminal, labels);
 
-			IFSAEdge<VAL, LBL> edge        = edges.iterator().next();
-			Collection<LBL>    validLabels = edge.getLabelCondition().getLabels();
+			IFSAEdge<VAL, LBL> edge      = edges.iterator().next();
+			var                nextState = edge.getChild();
+
+			if (dofirst)
+			{
+				if (rootedCond.equals(state.getValueCondition()))
+				{
+					assert FSALabelConditions.isAny(edge.getLabelCondition());
+					isRooted = true;
+					state    = nextState;
+					continue;
+				}
+			}
+			else if (terminalCond.equals(nextState.getValueCondition()))
+			{
+				assert FSALabelConditions.isAny(edge.getLabelCondition());
+				assert gfpa.getEdgesOf(nextState).size() == 0;
+				isTerminal = true;
+				state      = nextState;
+				continue;
+			}
+			Collection<LBL> validLabels = edge.getLabelCondition().getLabels();
 
 			if (validLabels.size() != 1)
 				return null;
 
 			labels.add(validLabels.iterator().next());
-			state = edge.getChild();
+			state = nextState;
 		}
 	}
 

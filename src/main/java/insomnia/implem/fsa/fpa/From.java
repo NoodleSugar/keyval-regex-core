@@ -1,27 +1,30 @@
 package insomnia.implem.fsa.fpa;
 
+import insomnia.fsa.IFSAState;
+
 class From
 {
-	private boolean isRooted;
+	private Object initialState;
 
 	private int from;
 
-	public From(boolean isRooted, int offset)
+	public From(Object initialState, int offset)
 	{
-		this.isRooted = isRooted;
-		this.from     = offset;
+		this.initialState = initialState;
+		this.from         = offset;
 	}
 
 	// ==========================================================================
 
-	public boolean isRooted()
-	{
-		return isRooted;
-	}
-
 	public int getFrom()
 	{
 		return from;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <VAL, LBL> IFSAState<VAL, LBL> getInitialState()
+	{
+		return (IFSAState<VAL, LBL>) initialState;
 	}
 
 	// ==========================================================================
@@ -29,7 +32,7 @@ class From
 	@Override
 	public int hashCode()
 	{
-		return Boolean.valueOf(isRooted).hashCode() + from * 31;
+		return initialState.hashCode() + from * 31;
 	}
 
 	@Override
@@ -39,12 +42,12 @@ class From
 			return false;
 
 		From from = (From) obj;
-		return isRooted == from.isRooted && this.from == from.from;
+		return initialState == from.initialState && this.from == from.from;
 	}
 
 	@Override
 	public String toString()
 	{
-		return new StringBuilder().append("(").append(isRooted).append(", ").append(from).append(")").toString();
+		return new StringBuilder().append("(").append(initialState).append(", ").append(from).append(")").toString();
 	}
 }

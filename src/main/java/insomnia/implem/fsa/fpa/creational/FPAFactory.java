@@ -12,12 +12,14 @@ import insomnia.data.IPath;
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
+import insomnia.implem.data.Trees;
 import insomnia.implem.data.regex.parser.IRegexElement;
 import insomnia.implem.data.regex.parser.Quantifier;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier;
 import insomnia.implem.fsa.fpa.graphchunk.modifier.IGraphChunkModifier.Environment;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
+import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 
 /**
  * The factory to create an automaton from a parsed regex or a path.
@@ -57,16 +59,65 @@ public class FPAFactory<VAL, LBL>
 
 	// =========================================================================
 
+	private void makeItInitial(GraphChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
+		if (automaton.isRooted(state))
+		{
+			automaton.setRooted(state, false);
+
+			var preState = automaton.createState(FSAValueConditions.createEq(Trees.getRootValue()));
+			automaton.addEdge(preState, state, FSALabelConditions.createAny());
+			automaton.setStart(preState);
+			automaton.setInitial(preState, true);
+		}
+		else if (FSAValueConditions.isAny(state.getValueCondition()))
+		{
+			automaton.addEdge(state, state, FSALabelConditions.createAnyLoop());
+			automaton.setInitial(state, true);
+		}
+		else
+		{
+			var preState = automaton.createState();
+			automaton.addEdge(preState, state, null);
+			automaton.addEdge(preState, preState, FSALabelConditions.createAnyLoop());
+			automaton.setInitial(preState, true);
+			automaton.setStart(preState);
+		}
+	}
+
+	private void makeItFinal(GraphChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
+		if (automaton.isTerminal(state))
+		{
+			automaton.setTerminal(state, false);
+
+			var postState = automaton.createState(FSAValueConditions.createEq(Trees.getTerminalValue()));
+			// TODO not add if a loop already here
+			automaton.addEdge(state, postState, FSALabelConditions.createAny());
+			automaton.setEnd(postState);
+			automaton.setFinal(postState, true);
+		}
+		else if (FSAValueConditions.isAny(state.getValueCondition()))
+		{
+			automaton.addEdge(state, state, FSALabelConditions.createAnyLoop());
+			automaton.setFinal(state, true);
+		}
+		else
+		{
+			var postState = automaton.createState();
+			automaton.addEdge(state, postState, null);
+			automaton.addEdge(postState, postState, FSALabelConditions.createAnyLoop());
+			automaton.setFinal(postState, true);
+			automaton.setEnd(postState);
+		}
+	}
+
 	private void finalizeAutomaton(GraphChunk<VAL, LBL> automaton)
 	{
-		{
-			IFSAState<VAL, LBL> start = automaton.getStart();
-			automaton.setInitial(start, true);
-		}
-		{
-			IFSAState<VAL, LBL> end = automaton.getEnd();
-			automaton.setFinal(end, true);
-		}
+		IFSAState<VAL, LBL> start = automaton.getStart();
+		IFSAState<VAL, LBL> end   = automaton.getEnd();
+		makeItInitial(automaton, start);
+		makeItFinal(automaton, end);
 	}
 
 	// =========================================================================
@@ -116,12 +167,8 @@ public class FPAFactory<VAL, LBL>
 				public GraphChunk<VAL, LBL> gluePath(GraphChunk<VAL, LBL> gchunk, IFSAState<VAL, LBL> start, IPath<VAL, LBL> path)
 				{
 					IFSAState<VAL, LBL> end = gchunk.createState(path.getLeaf().getValue());
-					gchunk.setFinal(end, true);
 					gchunk.setTerminal(end, path.isTerminal());
-
-					if (!path.isTerminal())
-						gchunk.addEdge(end, end, FSALabelConditions.createAny());
-
+					makeItFinal(gchunk, end);
 					return gluePath(gchunk, start, end, path);
 				}
 			};
@@ -144,9 +191,6 @@ public class FPAFactory<VAL, LBL>
 	private GraphChunk<VAL, LBL> constructFromPath(IPath<VAL, LBL> path)
 	{
 		GraphChunk<VAL, LBL> currentAutomaton = new GraphChunk<>();
-
-		if (path.isEmpty())
-			return currentAutomaton;
 
 		INode<VAL, LBL>     pNode = path.getRoot();
 		IFSAState<VAL, LBL> lastGCState;
