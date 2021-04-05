@@ -178,7 +178,7 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	{
 		Optional<IEdge<VAL, LBL>> popt = getParent(getCurrentNode());
 		Node<VAL, LBL>            newNode;
-		newNode = new Node<>();
+		newNode = new Node<>(val);
 
 		if (popt.isPresent())
 		{
