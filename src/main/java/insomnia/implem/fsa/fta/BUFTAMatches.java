@@ -2,7 +2,6 @@ package insomnia.implem.fsa.fta;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -11,7 +10,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 
 import insomnia.data.IEdge;
@@ -29,30 +27,25 @@ class BUFTAMatches<VAL, LBL>
 	private IGFPA<VAL, LBL>  gfpa;
 	private ITree<VAL, LBL>  element;
 
-	BUFTAMatches(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element)
+	// ==========================================================================
+
+	private BUFTAMatches(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element)
 	{
 		this.automaton = automaton;
 		this.gfpa      = automaton.getGFPA();
 		this.element   = element;
 	}
 
-	// ==========================================================================
-
-	public Collection<IFSAState<VAL, LBL>> nextValidStates()
+	public static <VAL, LBL> BUFTAMatches<VAL, LBL> create(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element)
 	{
-		Collection<IFSAState<VAL, LBL>> states = nextValidStates_sub();
-
-		if (!element.getRoot().isRooted())
-			states = CollectionUtils.selectRejected(states, gfpa::isRooted);
-
-		return states;
+		return new BUFTAMatches<>(automaton, element);
 	}
 
 	// ==========================================================================
 
-	private IFSAState<VAL, LBL> internalCheckFinals(Collection<IFSAState<VAL, LBL>> states)
+	private boolean hasFinal(Collection<IFSAState<VAL, LBL>> states)
 	{
-		return IterableUtils.find(states, s -> gfpa.isFinal(s) && !gfpa.isRooted(s));
+		return IterableUtils.matchesAny(states, gfpa::isFinal);
 	}
 
 	/**
@@ -78,11 +71,27 @@ class BUFTAMatches<VAL, LBL>
 		return bottomUpNodes;
 	}
 
-	private Collection<IFSAState<VAL, LBL>> nextValidStates_sub()
+	private boolean finalLeaf = false;
+
+	public boolean matches()
 	{
 		Map<INode<VAL, LBL>, Collection<IFSAState<VAL, LBL>>> nodeStatesMap   = new HashMap<>();
 		List<Collection<IFSAState<VAL, LBL>>>                 childsSubStates = new ArrayList<>();
-		Iterator<INode<VAL, LBL>>                             nodes           = processLeaves(gfpa, element, nodeStatesMap::put);
+
+		finalLeaf = false;
+		Iterator<INode<VAL, LBL>> nodes = processLeaves(gfpa, element, //
+			(node, states) -> //
+			{
+				if (hasFinal(states))
+				{
+					finalLeaf = true;
+					return;
+				}
+				nodeStatesMap.put(node, states);
+			});
+
+		if (finalLeaf)
+			return true;
 
 		while (nodes.hasNext())
 		{
@@ -125,12 +134,9 @@ class BUFTAMatches<VAL, LBL>
 			nodeStatesMap.put(node, newStates);
 			childsSubStates.clear();
 
-			// Is there a final state in the reached new states ?
-			IFSAState<VAL, LBL> oneFinal = internalCheckFinals(newStates);
-
-			if (null != oneFinal)
-				return Collections.singleton(oneFinal);
+			if (hasFinal(newStates))
+				return true;
 		}
-		return nodeStatesMap.get(element.getRoot());
+		return hasFinal(nodeStatesMap.get(element.getRoot()));
 	}
 }

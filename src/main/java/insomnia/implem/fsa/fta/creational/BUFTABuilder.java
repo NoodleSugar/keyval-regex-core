@@ -183,7 +183,6 @@ public final class BUFTABuilder<VAL, LBL>
 	private IFSAState<VAL, LBL> newStateFrom(INode<VAL, LBL> node)
 	{
 		IFSAState<VAL, LBL> newState = gchunk.createState(fcreateValueCondition.apply(node.getValue()));
-		gchunk.setRooted(newState, node.isRooted());
 		gchunk.addState(newState);
 		return newState;
 	}
@@ -238,19 +237,17 @@ public final class BUFTABuilder<VAL, LBL>
 		{
 			gchunk.setRooted(state);
 			gchunk.setFinal(state);
-			addFTAEdge(state);
 		}
 		else if (FSAValueConditions.isAny(state.getValueCondition()))
 		{
 			gchunk.setFinal(state);
-			addAnyLoop(state);
 		}
 		else
 		{
 			var newState = gchunk.createState();
 			gchunk.addEdge(state, newState, null);
 			gchunk.setFinal(newState);
-			addAnyLoop(newState);
+			addFTAEdge(newState);
 		}
 	}
 
@@ -290,7 +287,7 @@ public final class BUFTABuilder<VAL, LBL>
 			gchunk.setInitial(state);
 
 			gchunk.addEdge(state, postState, null);
-			addAnyLoop(postState);
+			addFTAEdge(postState);
 		}
 		else
 		{
@@ -301,7 +298,7 @@ public final class BUFTABuilder<VAL, LBL>
 			gchunk.addEdge(state, postState, null);
 
 			addAnyLoop(preState);
-			addAnyLoop(postState);
+			addFTAEdge(postState);
 
 			gchunk.setInitial(preState, true);
 			gchunk.setFinal(postState, true);

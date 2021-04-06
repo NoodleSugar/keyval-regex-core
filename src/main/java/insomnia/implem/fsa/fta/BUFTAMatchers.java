@@ -1,7 +1,5 @@
 package insomnia.implem.fsa.fta;
 
-import java.util.Collections;
-
 import insomnia.data.ITree;
 import insomnia.data.regex.ITreeMatchResult;
 import insomnia.data.regex.ITreeMatcher;
@@ -40,7 +38,7 @@ public final class BUFTAMatchers
 			if (null != matches)
 				return matches;
 
-			return matches = !Collections.disjoint(new BUFTAMatches<>(automaton, element).nextValidStates(), automaton.getGFPA().getFinalStates());
+			return matches = BUFTAMatches.create(automaton, element).matches();
 		}
 
 		@Override
