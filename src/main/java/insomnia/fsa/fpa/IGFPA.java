@@ -12,8 +12,11 @@ import java.util.function.Predicate;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 
+import insomnia.data.INode;
+import insomnia.data.ITree;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSALabelCondition;
+import insomnia.fsa.IFSANodeCondition;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAValueCondition;
 import insomnia.implem.data.Trees;
@@ -107,9 +110,24 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 		return cond.test(value);
 	}
 
-	public static <VAL, LBL> Predicate<IFSAState<VAL, LBL>> statePredicate(VAL value)
+	public static <VAL, LBL> boolean testNode(IFSANodeCondition<VAL, LBL> cond, ITree<VAL, LBL> tree, INode<VAL, LBL> node)
+	{
+		return cond.test(tree, node);
+	}
+
+	public static <VAL, LBL> boolean testStateOnNode(IFSAState<VAL, LBL> state, ITree<VAL, LBL> tree, INode<VAL, LBL> node)
+	{
+		return testValue(state.getValueCondition(), node.getValue()) && testNode(state.getNodeCondition(), tree, node);
+	}
+
+	public static <VAL, LBL> Predicate<IFSAState<VAL, LBL>> stateOnValuePredicate(VAL value)
 	{
 		return (s) -> testValue(s.getValueCondition(), value);
+	}
+
+	public static <VAL, LBL> Predicate<IFSAState<VAL, LBL>> stateOnNodePredicate(IGFPA<VAL, LBL> automaton, ITree<VAL, LBL> element, INode<VAL, LBL> node)
+	{
+		return (s) -> IGFPA.testStateOnNode(s, element, node);
 	}
 
 	// ==========================================================================
@@ -123,8 +141,13 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getInitials(IGFPA<VAL, LBL> automaton, VAL value)
 	{
-		var ret = CollectionUtils.select(automaton.getInitialStates(), s -> IGFPA.<VAL, LBL>statePredicate(value).test(s));
+		var ret = CollectionUtils.select(automaton.getInitialStates(), s -> IGFPA.<VAL, LBL>stateOnValuePredicate(value).test(s));
 		return automaton.getEpsilonClosure(ret, value);
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getInitials(IGFPA<VAL, LBL> automaton, ITree<VAL, LBL> element, INode<VAL, LBL> node)
+	{
+		return getValidStates(automaton, automaton.getInitialStates(), stateOnNodePredicate(automaton, element, node));
 	}
 
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, Predicate<IFSAState<VAL, LBL>> fcheckState)
@@ -236,7 +259,7 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	public static <VAL, LBL> void epsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, VAL value)
 	{
-		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), statePredicate(value));
+		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), stateOnValuePredicate(value));
 	}
 
 	public static <VAL, LBL> void epsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, Predicate<IFSAState<VAL, LBL>> fcheckState)

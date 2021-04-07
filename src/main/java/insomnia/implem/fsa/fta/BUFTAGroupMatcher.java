@@ -257,7 +257,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 						/*
 						 * For each new valid states update the From.builders
 						 */
-						for (var s : IGFPA.getValidStates(gfpa, newState, IBUFTA.statePredicate(gfpa, node)))
+						for (var s : IGFPA.getValidStates(gfpa, newState, IGFPA.stateOnNodePredicate(gfpa, element, node)))
 						{
 							/*
 							 * Generate a new From
@@ -301,7 +301,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 					continue;
 
 				IFSAState<VAL, LBL>             newState  = hEdge.getChild();
-				Collection<IFSAState<VAL, LBL>> newStates = IGFPA.getValidStates(gfpa, newState, IBUFTA.statePredicate(gfpa, node));
+				Collection<IFSAState<VAL, LBL>> newStates = IGFPA.getValidStates(gfpa, newState, IGFPA.stateOnNodePredicate(gfpa, element, node));
 
 				if (newStates.isEmpty())
 					continue;

@@ -24,6 +24,7 @@ import insomnia.data.IPath;
 import insomnia.data.regex.IPathMatcher;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSALabelCondition;
+import insomnia.fsa.IFSANodeCondition;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAValueCondition;
 import insomnia.fsa.fpa.AbstractGFPA;
@@ -173,6 +174,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		{
 			GCStates.setTerminal((IGCState<VAL, LBL>) state, v);
 		}
+
+		public void setNodeCondition(IFSAState<VAL, LBL> state, IFSANodeCondition<VAL, LBL> nodeCondition)
+		{
+			GCStates.setNodeCondition((IGCState<VAL, LBL>) state, nodeCondition);
+		}
 	}
 
 	/**
@@ -182,9 +188,9 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	private static AFactory<?, ?> afactory = new AFactory<>();
 
 	@SuppressWarnings("unchecked")
-	private IGCAFactory<VAL, LBL> getAFactory()
+	private AFactory<VAL, LBL> getAFactory()
 	{
-		return (IGCAFactory<VAL, LBL>) afactory;
+		return (AFactory<VAL, LBL>) afactory;
 	}
 
 	// =========================================================================
@@ -353,6 +359,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	public void setFinal(IFSAState<VAL, LBL> state, boolean v)
 	{
 		getAFactory().setFinal(state, v);
+	}
+
+	public void setNodeCondition(IFSAState<VAL, LBL> state, IFSANodeCondition<VAL, LBL> nodeCondition)
+	{
+		getAFactory().setNodeCondition(state, nodeCondition);
 	}
 
 	public IFSAState<VAL, LBL> createState()

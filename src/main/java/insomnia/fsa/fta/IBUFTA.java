@@ -2,9 +2,7 @@ package insomnia.fsa.fta;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
 
-import insomnia.data.INode;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.fsa.fta.edge.FTAEdge;
@@ -39,18 +37,4 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 
 	// =========================================================================
 
-	public static <VAL, LBL> Predicate<IFSAState<VAL, LBL>> statePredicate(IGFPA<VAL, LBL> automaton, INode<VAL, LBL> node)
-	{
-		VAL value = node.getValue();
-		return s -> //
-		IGFPA.testValue(s.getValueCondition(), value) //
-			&& (!automaton.isTerminal(s) || node.isTerminal()) //
-			&& (!automaton.isRooted(s) || node.isRooted()) //
-		;
-	}
-
-	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getInitials(IGFPA<VAL, LBL> automaton, INode<VAL, LBL> node)
-	{
-		return IGFPA.getValidStates(automaton, automaton.getInitialStates(), statePredicate(automaton, node));
-	}
 }

@@ -32,6 +32,7 @@ import insomnia.implem.fsa.fta.BUFTAMatchers;
 import insomnia.implem.fsa.fta.edge.FTAEdge;
 import insomnia.implem.fsa.fta.edgeCondition.FTAEdgeConditions;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
+import insomnia.implem.fsa.nodecondition.FSANodeConditions;
 import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 
 // TODO: change the name
@@ -59,6 +60,8 @@ public final class BUFTABuilder<VAL, LBL>
 	private Function<LBL, IFSALabelCondition<LBL>>                           fcreateLabelCondition;
 	private Function<VAL, IFSAValueCondition<VAL>>                           fcreateValueCondition;
 	private Function<List<IFSAState<VAL, LBL>>, IFTAEdgeCondition<VAL, LBL>> fcreateFTAEdgeCondition;
+
+	boolean nodeTerminalConditionOnInitialStates, nodeRootedConditionOnFinalStates;
 
 	public enum Mode
 	{
@@ -119,7 +122,7 @@ public final class BUFTABuilder<VAL, LBL>
 
 		BUFTA(BUFTABuilder<VAL, LBL> builder)
 		{
-			this.gfpa     = new FPABuilder<>(builder.gchunk).mustBeSync(false).create();
+			this.gfpa     = new FPABuilder<>(builder.gchunk).mustBeSync(false).createNewStates(!true).create();
 			this.ftaEdges = List.copyOf(builder.ftaEdges);
 			{
 				ArrayListValuedHashMap<IFSAState<VAL, LBL>, IFTAEdge<VAL, LBL>> ftaOf = new ArrayListValuedHashMap<>();
@@ -206,55 +209,95 @@ public final class BUFTABuilder<VAL, LBL>
 		ftaEdges.add(new FTAEdge<>(parents, state, fcreateFTAEdgeCondition.apply(parents)));
 	}
 
+	private void makeItInitial(IFSAState<VAL, LBL> state, boolean isTerminal)
+	{
+		gchunk.setInitial(state);
+
+		if (this.nodeTerminalConditionOnInitialStates)
+			gchunk.setNodeCondition(state, FSANodeConditions.createTerminal(isTerminal));
+		else
+			gchunk.setNodeCondition(state, FSANodeConditions.createProjection(gchunk, state));
+	}
+
+	private void makeItFinal(IFSAState<VAL, LBL> state, boolean isRooted)
+	{
+		gchunk.setFinal(state);
+
+		if (this.nodeRootedConditionOnFinalStates)
+			gchunk.setNodeCondition(state, FSANodeConditions.createRooted(isRooted));
+		else
+			gchunk.setNodeCondition(state, FSANodeConditions.createProjection(gchunk, state));
+	}
+
+	private void makeItInitialFinal(IFSAState<VAL, LBL> state, boolean isRooted, boolean isTerminal)
+	{
+		gchunk.setInitial(state);
+		gchunk.setFinal(state);
+
+		if (nodeRootedConditionOnFinalStates && nodeTerminalConditionOnInitialStates)
+			gchunk.setNodeCondition(state, FSANodeConditions.create(isRooted, isTerminal));
+		else if (nodeRootedConditionOnFinalStates)
+			gchunk.setNodeCondition(state, FSANodeConditions.createRooted(isRooted));
+		else if (nodeTerminalConditionOnInitialStates)
+			gchunk.setNodeCondition(state, FSANodeConditions.createTerminal(isTerminal));
+		else
+			gchunk.setNodeCondition(state, FSANodeConditions.createProjection(gchunk, state));
+	}
+
 	private void makeInitialFrom(IFSAState<VAL, LBL> state, INode<VAL, LBL> node)
 	{
+		IFSAState<VAL, LBL> initialState;
+
 		if (node.isTerminal())
 		{
+			initialState = state;
 			gchunk.setTerminal(state);
-			gchunk.setInitial(state);
 		}
 		else
 		{
 			if (FSAValueConditions.isAny(state.getValueCondition()))
 			{
-				gchunk.setInitial(state);
+				initialState = state;
 				addAnyLoop(state);
 			}
 			else
 			{
 				var preNewState = gchunk.createState();
+				initialState = preNewState;
 				gchunk.addEdge(preNewState, state, null);
-				gchunk.setInitial(preNewState);
 				addAnyLoop(preNewState);
 				addFTAEdge(state);
 			}
 		}
+		makeItInitial(initialState, node.isTerminal());
 	}
 
 	private void makeItFinalFrom(IFSAState<VAL, LBL> state, INode<VAL, LBL> node)
 	{
+		IFSAState<VAL, LBL> finalState;
+
 		if (node.isRooted())
 		{
+			finalState = state;
 			gchunk.setRooted(state);
-			gchunk.setFinal(state);
 		}
 		else if (FSAValueConditions.isAny(state.getValueCondition()))
-		{
-			gchunk.setFinal(state);
-		}
+			finalState = state;
 		else
 		{
 			var newState = gchunk.createState();
+			finalState = newState;
 			gchunk.addEdge(state, newState, null);
-			gchunk.setFinal(newState);
 			addFTAEdge(newState);
 		}
+		makeItFinal(finalState, node.isRooted());
 	}
 
 	private void makeItInitialFinalFrom(INode<VAL, LBL> node)
 	{
-		boolean isRooted   = node.isRooted();
-		boolean isTerminal = node.isTerminal();
+		IFSAState<VAL, LBL> initialState, finalState;
+		boolean             isRooted   = node.isRooted();
+		boolean             isTerminal = node.isTerminal();
 
 		var state = gchunk.createState(node.getValue());
 
@@ -263,16 +306,16 @@ public final class BUFTABuilder<VAL, LBL>
 			gchunk.addState(state);
 			gchunk.setRooted(state);
 			gchunk.setTerminal(state);
-			gchunk.setInitial(state);
-			gchunk.setFinal(state);
+			initialState = state;
+			finalState   = state;
 		}
 		else if (isRooted)
 		{
 			var preState = gchunk.createState();
+			initialState = preState;
+			finalState   = state;
 
-			gchunk.setInitial(preState);
 			gchunk.setRooted(state);
-			gchunk.setFinal(state);
 
 			gchunk.addEdge(preState, state, null);
 			addAnyLoop(preState);
@@ -281,10 +324,10 @@ public final class BUFTABuilder<VAL, LBL>
 		else if (isTerminal)
 		{
 			var postState = gchunk.createState();
+			initialState = state;
+			finalState   = postState;
 
-			gchunk.setFinal(postState);
 			gchunk.setTerminal(state);
-			gchunk.setInitial(state);
 
 			gchunk.addEdge(state, postState, null);
 			addFTAEdge(postState);
@@ -293,15 +336,21 @@ public final class BUFTABuilder<VAL, LBL>
 		{
 			var preState  = gchunk.createState();
 			var postState = gchunk.createState();
+			initialState = preState;
+			finalState   = postState;
 
 			gchunk.addEdge(preState, state, null);
 			gchunk.addEdge(state, postState, null);
 
 			addAnyLoop(preState);
 			addFTAEdge(postState);
-
-			gchunk.setInitial(preState, true);
-			gchunk.setFinal(postState, true);
+		}
+		if (initialState == finalState)
+			makeItInitialFinal(initialState, node.isRooted(), node.isTerminal());
+		else
+		{
+			makeItInitial(initialState, node.isTerminal());
+			makeItFinal(finalState, node.isRooted());
 		}
 	}
 
@@ -389,17 +438,22 @@ public final class BUFTABuilder<VAL, LBL>
 		case STRUCTURE_PROJECTION:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
 			fcreateLabelCondition = FSALabelConditions::createAnyOrEq;
-			fcreateValueCondition = FSAValueConditions::createAnyOrEq;
+			fcreateValueCondition = v -> FSAValueConditions.createAny();
 			break;
 		case EQUALITY:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
 			fcreateLabelCondition = FSALabelConditions::createEq;
 			fcreateValueCondition = FSAValueConditions::createEq;
+			nodeTerminalConditionOnInitialStates = true;
+			nodeRootedConditionOnFinalStates = true;
 			break;
 		case STRUCTURE:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
 			fcreateLabelCondition = FSALabelConditions::createEq;
 			fcreateValueCondition = v -> FSAValueConditions.createAny();
+			nodeTerminalConditionOnInitialStates = true;
+			nodeRootedConditionOnFinalStates = true;
+			break;
 			break;
 		default:
 			throw new IllegalArgumentException(mode.toString());

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
 import org.apache.commons.collections4.IterableUtils;
 
@@ -66,7 +67,7 @@ class BUFTAMatches<VAL, LBL>
 				bottomUpNodes.previous();
 				break;
 			}
-			consume.accept(node, IBUFTA.getInitials(gfpa, node));
+			consume.accept(node, IGFPA.getInitials(gfpa, element, node));
 		}
 		return bottomUpNodes;
 	}
@@ -98,6 +99,8 @@ class BUFTAMatches<VAL, LBL>
 			INode<VAL, LBL>       node       = nodes.next();
 			List<IEdge<VAL, LBL>> edgeChilds = element.getChildren(node);
 
+			Predicate<IFSAState<VAL, LBL>> stateOnNodePredicate = IGFPA.stateOnNodePredicate(gfpa, element, node);
+
 			// Edge check
 			for (IEdge<VAL, LBL> childEdge : edgeChilds)
 			{
@@ -113,7 +116,7 @@ class BUFTAMatches<VAL, LBL>
 						continue;
 
 					IFSAState<VAL, LBL> newState = edge.getChild();
-					newStates.addAll(IGFPA.getValidStates(gfpa, newState, IBUFTA.statePredicate(gfpa, node)));
+					newStates.addAll(IGFPA.getValidStates(gfpa, newState, stateOnNodePredicate));
 				}
 				childsSubStates.add(newStates);
 
@@ -129,7 +132,7 @@ class BUFTAMatches<VAL, LBL>
 					continue;
 
 				IFSAState<VAL, LBL> newState = hEdge.getChild();
-				newStates.addAll(IGFPA.getValidStates(gfpa, newState, IBUFTA.statePredicate(gfpa, node)));
+				newStates.addAll(IGFPA.getValidStates(gfpa, newState, stateOnNodePredicate));
 			}
 			nodeStatesMap.put(node, newStates);
 			childsSubStates.clear();

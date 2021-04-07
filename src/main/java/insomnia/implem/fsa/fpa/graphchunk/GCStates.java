@@ -1,8 +1,11 @@
 package insomnia.implem.fsa.fpa.graphchunk;
 
 import java.security.InvalidParameterException;
+import java.util.Objects;
 
+import insomnia.fsa.IFSANodeCondition;
 import insomnia.fsa.IFSAValueCondition;
+import insomnia.implem.fsa.nodecondition.FSANodeConditions;
 import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 
 final class GCStates
@@ -18,11 +21,13 @@ final class GCStates
 	{
 		private boolean isInitial, isFinal, isRooted, isTerminal;
 
-		private IFSAValueCondition<VAL> valueCondition;
+		private IFSAValueCondition<VAL>     valueCondition;
+		private IFSANodeCondition<VAL, LBL> nodeCondition;
 
 		public AbstractGCState(IFSAValueCondition<VAL> valueCondition)
 		{
 			this.valueCondition = valueCondition;
+			this.nodeCondition  = FSANodeConditions.createAny();
 
 			this.isInitial  = false;
 			this.isFinal    = false;
@@ -34,6 +39,12 @@ final class GCStates
 		public IFSAValueCondition<VAL> getValueCondition()
 		{
 			return valueCondition;
+		}
+
+		@Override
+		public IFSANodeCondition<VAL, LBL> getNodeCondition()
+		{
+			return nodeCondition;
 		}
 
 		AbstractGCState<VAL, LBL> setInitial(boolean isInitial)
@@ -101,6 +112,9 @@ final class GCStates
 
 			if (!valueCondition.toString().isEmpty())
 				sb.append(":").append(valueCondition.toString());
+
+			if (!Objects.equals(nodeCondition, FSANodeConditions.createAny()))
+				sb.append(";N(").append(nodeCondition.toString()).append(")");
 
 			if (isTerminal)
 				sb.append("$");
@@ -228,6 +242,14 @@ final class GCStates
 			throw new InvalidParameterException();
 
 		((AbstractGCState<VAL, LBL>) state).valueCondition = valueCondition;
+	}
+
+	public static <VAL, LBL> void setNodeCondition(IGCState<VAL, LBL> state, IFSANodeCondition<VAL, LBL> nodeCondition)
+	{
+		if (!(state instanceof AbstractGCState))
+			throw new InvalidParameterException();
+
+		((AbstractGCState<VAL, LBL>) state).nodeCondition = nodeCondition;
 	}
 
 	public static <VAL, LBL> void merge(IGCState<VAL, LBL> dest, IGCState<VAL, LBL> src)

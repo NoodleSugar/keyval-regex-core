@@ -102,7 +102,7 @@ public final class FPABuilder<VAL, LBL>
 		// Init states
 		for (IFSAState<VAL, LBL> state : gfpa.getStates())
 		{
-			IFSAState<VAL, LBL> newState = new FSAState<>(state.getValueCondition());
+			IFSAState<VAL, LBL> newState = new FSAState<>(state.getValueCondition(), state.getNodeCondition());
 			newStatesMap.put(state, newState);
 
 			if (gfpa.isInitial(state))
@@ -144,7 +144,7 @@ public final class FPABuilder<VAL, LBL>
 		for (IFSAState<VAL, LBL> state : gfpa.getStates())
 		{
 			// TODO bad closure, review with value of states
-			Collection<IFSAState<VAL, LBL>> currentStates = new ArrayList<>(gfpa.getEpsilonClosure(state, null));
+			Collection<IFSAState<VAL, LBL>> currentStates = new ArrayList<>(gfpa.getEpsilonClosure(state, (VAL) null));
 
 			if (gfpa.isInitial(state))
 				initialStates.add(state);
