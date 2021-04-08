@@ -25,4 +25,9 @@ public class FTAEdgeConditions
 	{
 		return new FTAEqualityCondition<>(states);
 	}
+
+	public static <VAL, LBL> IFTAEdgeCondition<VAL, LBL> createSemiTwig(List<IFSAState<VAL, LBL>> states)
+	{
+		return new FTASemiTwigCondition<>(states);
+	}
 }

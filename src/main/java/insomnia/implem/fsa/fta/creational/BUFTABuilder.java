@@ -60,8 +60,10 @@ public final class BUFTABuilder<VAL, LBL>
 	private Function<LBL, IFSALabelCondition<LBL>>                           fcreateLabelCondition;
 	private Function<VAL, IFSAValueCondition<VAL>>                           fcreateValueCondition;
 	private Function<List<IFSAState<VAL, LBL>>, IFTAEdgeCondition<VAL, LBL>> fcreateFTAEdgeCondition;
+	private Function<List<IFSAState<VAL, LBL>>, IFTAEdgeCondition<VAL, LBL>> fcreateChildFTAEdgeCondition;
 
 	boolean nodeTerminalConditionOnInitialStates, nodeRootedConditionOnFinalStates;
+	boolean internalNodesAreInitial, internalNodesAreFinal;
 
 	public enum Mode
 	{
@@ -81,6 +83,10 @@ public final class BUFTABuilder<VAL, LBL>
 		 * Build an automaton of the trees equals to the initial tree
 		 */
 		EQUALITY,
+		/**
+		 * Build an automaton of the semi-twigs of the initial tree
+		 */
+		SEMI_TWIG,
 	};
 
 	// =========================================================================
@@ -197,16 +203,34 @@ public final class BUFTABuilder<VAL, LBL>
 		return newState;
 	}
 
+	// =========================================================================a
+
 	private void addAnyLoop(IFSAState<VAL, LBL> state)
 	{
 		gchunk.addEdge(state, state, FSALabelConditions.createAnyLoop());
 		addFTAEdge(state, FTAEdgeConditions.createInclusive(state));
 	}
 
-	private void addFTAEdge(IFSAState<VAL, LBL> state)
+	private void addFTAEdge(IFSAState<VAL, LBL> state, IFTAEdgeCondition<VAL, LBL> condition)
 	{
 		var parents = Collections.singletonList(state);
-		ftaEdges.add(new FTAEdge<>(parents, state, fcreateFTAEdgeCondition.apply(parents)));
+		ftaEdges.add(new FTAEdge<>(parents, state, condition));
+	}
+
+	private void addFTAEdge(IFSAState<VAL, LBL> state, Function<List<IFSAState<VAL, LBL>>, IFTAEdgeCondition<VAL, LBL>> createCondition)
+	{
+		var parents = Collections.singletonList(state);
+		ftaEdges.add(new FTAEdge<>(parents, state, createCondition.apply(parents)));
+	}
+
+	private void addChildFTAEdge(IFSAState<VAL, LBL> state)
+	{
+		addFTAEdge(state, fcreateChildFTAEdgeCondition);
+	}
+
+	private void addFTAEdge(IFSAState<VAL, LBL> state)
+	{
+		addFTAEdge(state, fcreateFTAEdgeCondition);
 	}
 
 	// =========================================================================a
@@ -270,7 +294,7 @@ public final class BUFTABuilder<VAL, LBL>
 				initialState = preNewState;
 				gchunk.addEdge(preNewState, state, null);
 				addAnyLoop(preNewState);
-				addFTAEdge(state);
+				addFTAEdge(state, FTAEdgeConditions.createInclusive(state));
 			}
 		}
 		makeItInitial(initialState, node.isTerminal());
@@ -292,7 +316,7 @@ public final class BUFTABuilder<VAL, LBL>
 			var newState = gchunk.createState();
 			finalState = newState;
 			gchunk.addEdge(state, newState, null);
-			addFTAEdge(newState);
+			addFTAEdge(newState, FTAEdgeConditions.createInclusive(newState));
 		}
 		makeItFinal(finalState, node.isRooted());
 	}
@@ -373,7 +397,16 @@ public final class BUFTABuilder<VAL, LBL>
 		}
 		Map<INode<VAL, LBL>, IFSAState<VAL, LBL>> stateOf = new HashMap<>();
 
-		ListIterator<INode<VAL, LBL>> nodes = ITree.bottomUpOrder(tree).listIterator();
+		var                           treeRoot      = tree.getRoot();
+		ListIterator<INode<VAL, LBL>> nodes         = ITree.bottomUpOrder(tree).listIterator();
+		IFSAState<VAL, LBL>           initialLooped = null;
+
+		if (internalNodesAreInitial)
+		{
+			initialLooped = gchunk.createState();
+			gchunk.setInitial(initialLooped);
+			gchunk.addEdge(initialLooped, initialLooped, FSALabelConditions.createAnyLoop());
+		}
 
 		// Process Leaves
 		while (nodes.hasNext())
@@ -402,7 +435,13 @@ public final class BUFTABuilder<VAL, LBL>
 				gchunk.addEdge(state, newState, fcreateLabelCondition.apply(edge.getLabel()));
 				stateOf.put(node, newState);
 				stateOf.remove(edge.getChild());
-				addFTAEdge(newState);
+				addChildFTAEdge(newState);
+
+				if (internalNodesAreFinal)
+				{
+					gchunk.setFinal(newState);
+					gchunk.setNodeCondition(newState, FSANodeConditions.create(false, false));
+				}
 			}
 			else
 			{
@@ -416,13 +455,31 @@ public final class BUFTABuilder<VAL, LBL>
 					gchunk.addEdge(parentState, childState, fcreateLabelCondition.apply(edge.getLabel()));
 					nodeChildStates.add(childState);
 					stateOf.remove(edge.getChild());
+
+					if (internalNodesAreFinal)
+					{
+						gchunk.setFinal(childState);
+						addChildFTAEdge(childState);
+						gchunk.setNodeCondition(childState, FSANodeConditions.create(false, false));
+					}
 				}
 				List<IFSAState<VAL, LBL>> parents = new ArrayList<>(nodeChildStates);
 				ftaEdges.add(new FTAEdge<>(parents, newState, fcreateFTAEdgeCondition.apply(parents)));
 			}
+
+			if (internalNodesAreInitial && node != treeRoot)
+			{
+				gchunk.addEdge(initialLooped, newState, null);
+				gchunk.setNodeCondition(newState, FSANodeConditions.create(false, false));
+			}
 		}
-		IFSAState<VAL, LBL> root = stateOf.get(tree.getRoot());
-		makeItFinalFrom(root, tree.getRoot());
+		var rootState = stateOf.get(treeRoot);
+
+		if (internalNodesAreFinal)
+			gchunk.setNodeCondition(rootState, FSANodeConditions.createAny());
+		else
+			makeItFinalFrom(rootState, treeRoot);
+
 		builded = true;
 	}
 
@@ -438,16 +495,19 @@ public final class BUFTABuilder<VAL, LBL>
 		{
 		case PROJECTION:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createInclusive;
+			fcreateChildFTAEdgeCondition = FTAEdgeConditions::createInclusive;
 			fcreateLabelCondition = FSALabelConditions::createAnyOrEq;
 			fcreateValueCondition = FSAValueConditions::createAnyOrEq;
 			break;
 		case STRUCTURE_PROJECTION:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
+			fcreateChildFTAEdgeCondition = FTAEdgeConditions::createEq;
 			fcreateLabelCondition = FSALabelConditions::createAnyOrEq;
 			fcreateValueCondition = v -> FSAValueConditions.createAny();
 			break;
 		case EQUALITY:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
+			fcreateChildFTAEdgeCondition = FTAEdgeConditions::createEq;
 			fcreateLabelCondition = FSALabelConditions::createEq;
 			fcreateValueCondition = FSAValueConditions::createEq;
 			nodeTerminalConditionOnInitialStates = true;
@@ -455,11 +515,20 @@ public final class BUFTABuilder<VAL, LBL>
 			break;
 		case STRUCTURE:
 			fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
+			fcreateChildFTAEdgeCondition = FTAEdgeConditions::createEq;
 			fcreateLabelCondition = FSALabelConditions::createEq;
 			fcreateValueCondition = v -> FSAValueConditions.createAny();
 			nodeTerminalConditionOnInitialStates = true;
 			nodeRootedConditionOnFinalStates = true;
 			break;
+		case SEMI_TWIG:
+			fcreateFTAEdgeCondition = FTAEdgeConditions::createSemiTwig;
+			fcreateChildFTAEdgeCondition = FTAEdgeConditions::createInclusive;
+			fcreateLabelCondition = FSALabelConditions::createAnyOrEq;
+			fcreateValueCondition = FSAValueConditions::createAnyOrEq;
+			internalNodesAreInitial = true;
+
+			internalNodesAreFinal = true;
 			break;
 		default:
 			throw new IllegalArgumentException(mode.toString());

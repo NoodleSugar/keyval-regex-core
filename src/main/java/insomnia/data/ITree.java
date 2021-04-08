@@ -13,12 +13,14 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.ListValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 import insomnia.implem.data.Paths;
 import insomnia.implem.data.Trees;
 import insomnia.implem.data.creational.TreeBuilder;
+import insomnia.implem.data.regex.TreeMatchResultIterator;
 import insomnia.implem.fsa.fta.creational.BUFTABuilder;
 import insomnia.implem.fsa.fta.creational.BUFTABuilder.Mode;
 
@@ -675,6 +677,25 @@ public interface ITree<VAL, LBL>
 
 		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a)).setMode(Mode.STRUCTURE).create();
 		return automaton.matcher(new TreeBuilder<>(b)).matches();
+	}
+
+	public static <VAL, LBL> boolean hasSemiTwig(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		return semiTwigsIterator(a, b).hasNext();
+	}
+
+	public static <VAL, LBL> Iterator<ITree<VAL, LBL>> semiTwigsIterator(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a)).setMode(Mode.SEMI_TWIG).create();
+		var it        = IteratorUtils.transformedIterator( //
+			new TreeMatchResultIterator<>(automaton.matcher(new TreeBuilder<>(b))), //
+			e -> e.group());
+		return IteratorUtils.filteredIterator(it, e -> !e.isEmpty());
+	}
+
+	public static <VAL, LBL> Collection<ITree<VAL, LBL>> getSemiTwigs(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		return IteratorUtils.toList(semiTwigsIterator(a, b));
 	}
 
 	// =========================================================================

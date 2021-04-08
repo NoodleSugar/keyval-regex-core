@@ -21,6 +21,7 @@ public class TestTree
 			"/insomnia/data/project.csv" //
 			, "/insomnia/data/equals.csv" //
 			, "/insomnia/data/struct.csv" //
+			, "/insomnia/data/semi_twig.csv" //
 		);
 	}
 
@@ -127,5 +128,21 @@ public class TestTree
 	void structEquals(ITree<String, String> from, ITree<String, String> to, boolean val)
 	{
 		assertEquals(val, ITree.structEquals(from, to), String.format("Expected\n%s to%s be structurally equal to\n%s", from, val ? "" : " not", to));
+	}
+
+	// ==========================================================================
+
+	public static Stream<Object[]> hasSemiTwig()
+	{
+		return testOf("semi_twig");
+	}
+
+	@ParameterizedTest
+	@MethodSource
+
+	void hasSemiTwig(ITree<String, String> from, ITree<String, String> stwig, int val)
+	{
+		var semiTwigs = ITree.getSemiTwigs(from, stwig);
+		assertEquals(val, semiTwigs.size(), String.format("from=\n%sstwigs=\n%sFounded %d: %s\n", from, stwig, semiTwigs.size(), semiTwigs));
 	}
 }
