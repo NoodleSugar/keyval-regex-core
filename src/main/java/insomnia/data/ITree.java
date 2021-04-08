@@ -405,6 +405,9 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> List<INode<VAL, LBL>> getNodes(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
 	{
+		if (tree.isEmpty())
+			return Collections.singletonList(root);
+
 		return IEdge.getNodes(tree.getEdges(root));
 	}
 
