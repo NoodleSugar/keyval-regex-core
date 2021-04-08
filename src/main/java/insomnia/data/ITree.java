@@ -572,12 +572,25 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
-		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setComplete()).setMode(Mode.EQUALITY).create();
-		return automaton.matcher(new TreeBuilder<>(b).setComplete()).matches();
+		if (a.isRooted() != b.isRooted())
+			return false;
+
+		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setRooted()).setMode(Mode.EQUALITY).create();
+		return automaton.matcher(new TreeBuilder<>(b).setRooted()).matches();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <VAL, LBL> boolean equals(ITree<VAL, LBL> a, Object b)
+	{
+		if (b == a)
+			return true;
+		if (!(b instanceof ITree<?, ?>))
+			return false;
+		return ITree.equals(a, (ITree<VAL, LBL>) b);
 	}
 
 	/**
-	 * Check if a tree can be projected on a second one from the root.
+	 * Check if a tree can be projected on a second one from their root.
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
@@ -589,6 +602,9 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean project(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
+		if (a.isRooted() && !b.isRooted())
+			return false;
+
 		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setRooted()).setMode(Mode.PROJECTION).create();
 		return automaton.matcher(new TreeBuilder<>(b).setRooted()).matches();
 	}
@@ -606,8 +622,11 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean structProject(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
-		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setComplete()).setMode(Mode.STRUCTURE_PROJECTION).create();
-		return automaton.matcher(new TreeBuilder<>(b).setComplete()).matches();
+		if (a.isRooted() && !b.isRooted())
+			return false;
+
+		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setRooted()).setMode(Mode.STRUCTURE_PROJECTION).create();
+		return automaton.matcher(new TreeBuilder<>(b).setRooted()).matches();
 	}
 
 	/**
@@ -624,7 +643,7 @@ public interface ITree<VAL, LBL>
 	public static <VAL, LBL> boolean included(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
 		var automaton = new BUFTABuilder<>(a).setMode(Mode.PROJECTION).create();
-		return automaton.matcher(new TreeBuilder<>(b).setRooted()).matches();
+		return automaton.matcher(new TreeBuilder<>(b)).matches();
 	}
 
 	/**
@@ -640,8 +659,11 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean structEquals(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
-		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a).setComplete()).setMode(Mode.STRUCTURE).create();
-		return automaton.matcher(new TreeBuilder<>(b).setComplete()).matches();
+		if (a.isEmpty() != b.isEmpty())
+			return false;
+
+		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a)).setMode(Mode.STRUCTURE).create();
+		return automaton.matcher(new TreeBuilder<>(b)).matches();
 	}
 
 	// =========================================================================

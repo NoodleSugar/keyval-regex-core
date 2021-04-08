@@ -200,7 +200,7 @@ public final class BUFTABuilder<VAL, LBL>
 	private void addAnyLoop(IFSAState<VAL, LBL> state)
 	{
 		gchunk.addEdge(state, state, FSALabelConditions.createAnyLoop());
-		addFTAEdge(state);
+		addFTAEdge(state, FTAEdgeConditions.createInclusive(state));
 	}
 
 	private void addFTAEdge(IFSAState<VAL, LBL> state)
@@ -208,6 +208,8 @@ public final class BUFTABuilder<VAL, LBL>
 		var parents = Collections.singletonList(state);
 		ftaEdges.add(new FTAEdge<>(parents, state, fcreateFTAEdgeCondition.apply(parents)));
 	}
+
+	// =========================================================================a
 
 	private void makeItInitial(IFSAState<VAL, LBL> state, boolean isTerminal)
 	{
@@ -243,6 +245,8 @@ public final class BUFTABuilder<VAL, LBL>
 		else
 			gchunk.setNodeCondition(state, FSANodeConditions.createProjection(gchunk, state));
 	}
+
+	// =========================================================================a
 
 	private void makeInitialFrom(IFSAState<VAL, LBL> state, INode<VAL, LBL> node)
 	{
@@ -353,6 +357,8 @@ public final class BUFTABuilder<VAL, LBL>
 			makeItFinal(finalState, node.isRooted());
 		}
 	}
+
+	// =========================================================================a
 
 	private void buildFromTree(ITree<VAL, LBL> tree)
 	{

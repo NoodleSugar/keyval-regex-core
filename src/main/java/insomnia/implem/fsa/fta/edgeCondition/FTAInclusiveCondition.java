@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.iterators.IteratorIterable;
 import org.apache.commons.lang3.tuple.Pair;
@@ -157,7 +156,7 @@ final class FTAInclusiveCondition<VAL, LBL> implements IFTAEdgeCondition<VAL, LB
 		if (states.size() < parentStates.size())
 			return false;
 
-		return test_solve(ListUtils.predicatedList(states, s -> parentStates.contains(s)));
+		return test_solve(CollectionUtils.select(states, s -> parentStates.contains(s), new ArrayList<>()));
 	}
 
 	/**

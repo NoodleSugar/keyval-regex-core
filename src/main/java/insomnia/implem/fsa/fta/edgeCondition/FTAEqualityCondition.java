@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.iterators.IteratorIterable;
 
@@ -56,7 +55,7 @@ final class FTAEqualityCondition<VAL, LBL> implements IFTAEdgeCondition<VAL, LBL
 	@Override
 	public Collection<List<IFSAState<VAL, LBL>>> validStates(List<IFSAState<VAL, LBL>> states)
 	{
-		return validStatesND(states.stream().map(s -> Collections.singleton(s)).collect(Collectors.toList()));
+		return validStatesND(CollectionUtils.collect(states, s -> Collections.singleton(s), new ArrayList<>()));
 	}
 
 	@Override
@@ -87,7 +86,7 @@ final class FTAEqualityCondition<VAL, LBL> implements IFTAEdgeCondition<VAL, LBL
 		if (states.size() != parentStates.size())
 			return false;
 
-		return test_solve(ListUtils.predicatedList(states, s -> parentStates.contains(s)));
+		return test_solve(states);
 	}
 
 	/**
