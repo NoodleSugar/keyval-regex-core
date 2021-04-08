@@ -510,6 +510,17 @@ public interface ITree<VAL, LBL>
 
 	// =========================================================================
 
+	public static <VAL, LBL> boolean sameAs(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		return sameAs(a, a.getRoot(), b, b.getRoot());
+	}
+
+	public static <VAL, LBL> boolean sameAs(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
+	{
+		return isSubTreeOf(a, b) && structEquals(a, b);
+	}
+	// =========================================================================
+
 	/**
 	 * Check if the first tree is a sub tree of the second one.
 	 * <p>
