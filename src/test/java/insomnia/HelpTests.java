@@ -20,13 +20,15 @@ public abstract class HelpTests
 
 	public static Stream<Map<String, String>> loadResourceCSVAsMap(String... paths)
 	{
-		Map<String, String> map = new HashMap<>();
 
 		return Arrays.stream(paths).flatMap(path -> {
+			Map<String, String> map = new HashMap<>();
 			try
 			{
 				var resourceStream = HelpTests.class.getResourceAsStream(path);
 				var records        = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(new InputStreamReader(resourceStream));
+				int nbColumns      = records.getHeaderNames().size();
+
 				return StreamSupport.stream(records.spliterator(), false).map(r -> {
 					var     current = r.toMap();
 					boolean empty   = true;
@@ -39,9 +41,15 @@ public abstract class HelpTests
 						}
 					}
 					if (empty)
+					{
 						map.clear();
+						return null;
+					}
+					else if (map.size() != nbColumns)
+						return null;
+
 					return map;
-				}).filter(r -> !r.isEmpty());
+				}).filter(r -> null != r);
 			}
 			catch (Exception e)
 			{
