@@ -26,6 +26,7 @@ import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
 import insomnia.fsa.fta.IFTAEdgeCondition;
+import insomnia.implem.data.Trees;
 import insomnia.implem.fsa.fpa.creational.FPABuilder;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fta.BUFTAMatchers;
@@ -46,6 +47,11 @@ import insomnia.implem.fsa.valuecondition.FSAValueConditions;
 public final class BUFTABuilder<VAL, LBL>
 {
 	public final static Mode defaultEdgesMode = Mode.PROJECTION;
+
+	/**
+	 * Original nodes of the tree used to construct the automaton each associated to its represented state.
+	 */
+	private Map<IFSAState<VAL, LBL>, INode<VAL, LBL>> originalNodes;
 
 	private Collection<IFTAEdge<VAL, LBL>> ftaEdges;
 	private GraphChunk<VAL, LBL>           gchunk;
@@ -93,9 +99,10 @@ public final class BUFTABuilder<VAL, LBL>
 
 	private BUFTABuilder(ITree<VAL, LBL> tree, Mode mode)
 	{
-		this.tree     = tree;
-		this.gchunk   = new GraphChunk<>();
-		this.ftaEdges = new ArrayList<>();
+		this.tree          = tree;
+		this.gchunk        = new GraphChunk<>();
+		this.ftaEdges      = new ArrayList<>();
+		this.originalNodes = new HashMap<>();
 		setMode(mode);
 	}
 
@@ -126,10 +133,16 @@ public final class BUFTABuilder<VAL, LBL>
 
 		private MultiValuedMap<IFSAState<VAL, LBL>, IFTAEdge<VAL, LBL>> ftaEdgesOf;
 
+		private Map<IFSAState<VAL, LBL>, INode<VAL, LBL>> originalNodes;
+
+		private ITree<VAL, LBL> originalTree;
+
 		BUFTA(BUFTABuilder<VAL, LBL> builder)
 		{
-			this.gfpa     = new FPABuilder<>(builder.gchunk).mustBeSync(false).createNewStates(!true).create();
-			this.ftaEdges = List.copyOf(builder.ftaEdges);
+			this.gfpa          = new FPABuilder<>(builder.gchunk).mustBeSync(false).createNewStates(!true).create();
+			this.ftaEdges      = List.copyOf(builder.ftaEdges);
+			this.originalNodes = new HashMap<>(builder.originalNodes);
+			this.originalTree  = Trees.subTree(builder.tree);
 			{
 				ArrayListValuedHashMap<IFSAState<VAL, LBL>, IFTAEdge<VAL, LBL>> ftaOf = new ArrayListValuedHashMap<>();
 
@@ -172,6 +185,18 @@ public final class BUFTABuilder<VAL, LBL>
 			return ftaEdges.stream() //
 				.filter(e -> e.getParents().size() == 1 && IterableUtils.matchesAny(parentStates, p -> p.contains(e.getParents().get(0)))) //
 				.collect(Collectors.toList());
+		}
+
+		@Override
+		public INode<VAL, LBL> getOriginalNode(IFSAState<VAL, LBL> state)
+		{
+			return originalNodes.get(state);
+		}
+
+		@Override
+		public ITree<VAL, LBL> getOriginalTree()
+		{
+			return originalTree;
 		}
 
 		@Override
@@ -389,6 +414,8 @@ public final class BUFTABuilder<VAL, LBL>
 		if (builded)
 			return;
 
+		originalNodes.clear();
+
 		if (tree.getNodes().size() == 1)
 		{
 			makeItInitialFinalFrom(tree.getRoot());
@@ -418,7 +445,9 @@ public final class BUFTABuilder<VAL, LBL>
 				nodes.previous();
 				break;
 			}
-			stateOf.put(node, newInitialFrom(node));
+			var newState = newInitialFrom(node);
+			stateOf.put(node, newState);
+			originalNodes.put(newState, node);
 		}
 
 		// Process internal nodes
@@ -427,6 +456,7 @@ public final class BUFTABuilder<VAL, LBL>
 			INode<VAL, LBL>       node       = nodes.next();
 			IFSAState<VAL, LBL>   newState   = newStateFrom(node);
 			List<IEdge<VAL, LBL>> nodeChilds = tree.getChildren(node);
+			originalNodes.put(newState, node);
 
 			if (nodeChilds.size() == 1)
 			{
@@ -455,6 +485,7 @@ public final class BUFTABuilder<VAL, LBL>
 					gchunk.addEdge(parentState, childState, fcreateLabelCondition.apply(edge.getLabel()));
 					nodeChildStates.add(childState);
 					stateOf.remove(edge.getChild());
+					originalNodes.put(childState, node);
 
 					if (internalNodesAreFinal)
 					{
@@ -474,6 +505,7 @@ public final class BUFTABuilder<VAL, LBL>
 			}
 		}
 		var rootState = stateOf.get(treeRoot);
+		originalNodes.put(rootState, treeRoot);
 
 		if (internalNodesAreFinal)
 			gchunk.setNodeCondition(rootState, FSANodeConditions.createAny());

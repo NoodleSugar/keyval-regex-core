@@ -12,6 +12,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import insomnia.data.IPath;
 import insomnia.data.regex.IPathMatchResult;
 import insomnia.data.regex.IPathMatcher;
+import insomnia.data.regex.ITreeMatchResult;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
@@ -68,6 +69,19 @@ public class GFPAMatchers
 		public IPathMatchResult<VAL, LBL> toMatchResult()
 		{
 			return matchResult;
+		}
+
+		@Override
+		public ITreeMatchResult<VAL, LBL> originalMatchResult()
+		{
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public ITreeBothResults<VAL, LBL> bothResults()
+		{
+			return TreeMatchResults.createBoth(matchResult, originalMatchResult());
 		}
 	}
 

@@ -20,7 +20,7 @@ import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import insomnia.implem.data.Paths;
 import insomnia.implem.data.Trees;
 import insomnia.implem.data.creational.TreeBuilder;
-import insomnia.implem.data.regex.TreeMatchResultIterator;
+import insomnia.implem.data.regex.TreeBothMatchResultIterator;
 import insomnia.implem.fsa.fta.creational.BUFTABuilder;
 import insomnia.implem.fsa.fta.creational.BUFTABuilder.Mode;
 
@@ -684,16 +684,40 @@ public interface ITree<VAL, LBL>
 		return semiTwigsIterator(a, b).hasNext();
 	}
 
-	public static <VAL, LBL> Iterator<ITree<VAL, LBL>> semiTwigsIterator(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	// =========================================================================
+
+	public final class SemiTwig<VAL, LBL>
 	{
-		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a)).setMode(Mode.SEMI_TWIG).create();
-		var it        = IteratorUtils.transformedIterator( //
-			new TreeMatchResultIterator<>(automaton.matcher(new TreeBuilder<>(b))), //
-			e -> e.group());
-		return IteratorUtils.filteredIterator(it, e -> !e.isEmpty());
+		private final ITree<VAL, LBL> semiTwig, original;
+
+		private SemiTwig(ITree<VAL, LBL> semiTwig, ITree<VAL, LBL> original)
+		{
+			this.semiTwig = semiTwig;
+			this.original = original;
+		}
+
+		public ITree<VAL, LBL> getSemiTwig()
+		{
+			return semiTwig;
+		}
+
+		public ITree<VAL, LBL> getOriginal()
+		{
+			return original;
+		}
 	}
 
-	public static <VAL, LBL> Collection<ITree<VAL, LBL>> getSemiTwigs(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	public static <VAL, LBL> Iterator<SemiTwig<VAL, LBL>> semiTwigsIterator(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		var automaton = new BUFTABuilder<>(a).setMode(Mode.SEMI_TWIG).create();
+		var it        = IteratorUtils.transformedIterator( //
+			new TreeBothMatchResultIterator<>( //
+				automaton.matcher(b)), //
+			e -> new SemiTwig<>(e.standard().group(), e.original().group()));
+		return IteratorUtils.filteredIterator(it, e -> !e.getSemiTwig().isEmpty());
+	}
+
+	public static <VAL, LBL> Collection<SemiTwig<VAL, LBL>> getSemiTwigs(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
 		return IteratorUtils.toList(semiTwigsIterator(a, b));
 	}

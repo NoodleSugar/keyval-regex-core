@@ -20,11 +20,11 @@ public final class BUFTAMatchers
 		private ITree<VAL, LBL>             element;
 		private IBUFTA<VAL, LBL>            automaton;
 		private BUFTAGroupMatcher<VAL, LBL> groupMatcher;
-		private ITreeMatchResult<VAL, LBL>  matchResult;
+		private ITreeBothResults<VAL, LBL>  matchResult;
 
 		Matcher(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element)
 		{
-			this.matchResult  = TreeMatchResults.empty();
+			this.matchResult  = TreeMatchResults.emptyBoth();
 			this.element      = element;
 			this.automaton    = automaton;
 			this.groupMatcher = BUFTAGroupMatcher.create(automaton, element);
@@ -44,11 +44,23 @@ public final class BUFTAMatchers
 		@Override
 		public boolean find()
 		{
-			return (!TreeMatchResults.empty().equals(matchResult = groupMatcher.nextMatch()));
+			return (!TreeMatchResults.emptyBoth().equals(matchResult = groupMatcher.nextMatch()));
 		}
 
 		@Override
 		public ITreeMatchResult<VAL, LBL> toMatchResult()
+		{
+			return matchResult.standard();
+		}
+
+		@Override
+		public ITreeMatchResult<VAL, LBL> originalMatchResult()
+		{
+			return matchResult.original();
+		}
+
+		@Override
+		public ITreeBothResults<VAL, LBL> bothResults()
 		{
 			return matchResult;
 		}

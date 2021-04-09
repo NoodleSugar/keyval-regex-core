@@ -20,7 +20,7 @@ import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.data.creational.ISubTreeBuilder;
-import insomnia.data.regex.ITreeMatchResult;
+import insomnia.data.regex.ITreeMatcher.ITreeBothResults;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
@@ -48,27 +48,19 @@ class BUFTAGroupMatcher<VAL, LBL>
 		{
 		}
 
-		NodeData(Collection<IFSAState<VAL, LBL>> states, From from)
-		{
-			for (IFSAState<VAL, LBL> state : states)
-			{
-				List<From> froms = new ArrayList<>();
-				statesMap.put(state, froms);
-				froms.add(from.cpy());
-			}
-		}
-
 		public void add(IFSAState<VAL, LBL> state, From from)
 		{
 			List<From> froms = statesMap.computeIfAbsent(state, k -> new ArrayList<>());
 
-			if (!initialLooped.contains(state))
-				froms.add(from.cpy());
+			if (initialLooped.contains(state))
+				froms.clear();
+
+			froms.add(from.cpy());
 		}
 
 		public boolean contains(IFSAState<VAL, LBL> state, From from)
 		{
-			Collection<From> froms = getFroms(state, null);
+			Collection<From> froms = getFroms(state);
 
 			if (null == froms)
 				return false;
@@ -81,18 +73,14 @@ class BUFTAGroupMatcher<VAL, LBL>
 			return statesMap.keySet();
 		}
 
-		public List<From> getFroms(IFSAState<VAL, LBL> state, INode<VAL, LBL> currentNodeForInitialCase)
+		public List<From> getFroms(IFSAState<VAL, LBL> state)
 		{
 			var froms = statesMap.get(state);
 
 			if (null == froms)
 				return null;
 
-			if (froms.isEmpty() && null != currentNodeForInitialCase)
-				return Collections.singletonList(new From(currentNodeForInitialCase));
-
 			return froms;
-
 		}
 
 		@Override
@@ -102,6 +90,17 @@ class BUFTAGroupMatcher<VAL, LBL>
 		}
 	}
 
+	public NodeData createInitialNodeData(Collection<IFSAState<VAL, LBL>> states, INode<VAL, LBL> initialNode)
+	{
+		NodeData ret = new NodeData();
+
+		for (IFSAState<VAL, LBL> state : states)
+			ret.add(state, new From(initialNode, state));
+		return ret;
+	}
+
+	// =========================================================================
+
 	/**
 	 * Store the scanned edges before a node.
 	 * 
@@ -110,26 +109,62 @@ class BUFTAGroupMatcher<VAL, LBL>
 	private class From
 	{
 		private ISubTreeBuilder<VAL, LBL> builder;
+		private List<IFSAState<VAL, LBL>> limitStates;
+
+		From(INode<VAL, LBL> from, List<IFSAState<VAL, LBL>> state)
+		{
+			this.builder     = new SubTreeBuilder<>(element).setRoot(from);
+			this.limitStates = new ArrayList<>();
+			this.limitStates.addAll(state);
+		}
+
+		From(INode<VAL, LBL> from, IFSAState<VAL, LBL> state)
+		{
+			this(from, Collections.singletonList(state));
+		}
 
 		From(INode<VAL, LBL> from)
 		{
-			this.builder = new SubTreeBuilder<>(element).setRoot(from);
+			this(from, Collections.emptyList());
 		}
 
-		From(ISubTreeBuilder<VAL, LBL> builder)
+		public void merge(From from)
 		{
-			this.builder = builder;
+			builder.addTree(from.builder, from.builder.getRoot());
+			limitStates.addAll(from.limitStates);
+		}
+
+		private From(ISubTreeBuilder<VAL, LBL> builder, List<IFSAState<VAL, LBL>> states)
+		{
+			this.builder     = builder;
+			this.limitStates = new ArrayList<>(states);
 		}
 
 		public From cpy()
 		{
-			return new From(new SubTreeBuilder<>(builder).addTree(builder.getRoot()));
+			return new From(new SubTreeBuilder<>(builder).addTree(builder.getRoot()), this.limitStates);
 		}
 
 		@Override
 		public String toString()
 		{
-			return builder.toString();
+			return new StringBuilder().append(limitStates).append(":").append(ITree.toString(builder)).toString();
+		}
+	}
+
+	// =========================================================================
+
+	private class Result
+	{
+		IFSAState<VAL, LBL>       root;
+		List<IFSAState<VAL, LBL>> leaves;
+		ISubTreeBuilder<VAL, LBL> builder;
+
+		Result(IFSAState<VAL, LBL> root, List<IFSAState<VAL, LBL>> leaves, ISubTreeBuilder<VAL, LBL> builder)
+		{
+			this.root    = root;
+			this.leaves  = leaves;
+			this.builder = builder;
 		}
 	}
 
@@ -138,7 +173,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 	private IBUFTA<VAL, LBL>         automaton;
 	private IGFPA<VAL, LBL>          gfpa;
 	private ITree<VAL, LBL>          element;
-	private Queue<ITree<VAL, LBL>>   currentResults;
+	private Queue<Result>            currentResults;
 	private Set<IFSAState<VAL, LBL>> initialLooped;
 
 	private boolean end = false;
@@ -170,10 +205,10 @@ class BUFTAGroupMatcher<VAL, LBL>
 	/**
 	 * @return the next match if exists or {@link TreeMatchResults#empty()}
 	 */
-	public ITreeMatchResult<VAL, LBL> nextMatch()
+	public ITreeBothResults<VAL, LBL> nextMatch()
 	{
 		if (end)
-			return TreeMatchResults.empty();
+			return TreeMatchResults.emptyBoth();
 
 		if (null == bottomUpNodes)
 			bottomUpNodes = processLeaves();
@@ -182,9 +217,12 @@ class BUFTAGroupMatcher<VAL, LBL>
 			nextValidStep();
 
 		if (currentResults.isEmpty())
-			return TreeMatchResults.empty();
+			return TreeMatchResults.emptyBoth();
 
-		return TreeMatchResults.create(currentResults.poll());
+		var             res       = currentResults.poll();
+		INode<VAL, LBL> rootNode  = automaton.getOriginalNode(res.root);
+		var             leafNodes = IterableUtils.transformedIterable(res.leaves, l -> automaton.getOriginalNode(l));
+		return TreeMatchResults.createBoth(TreeMatchResults.create(res.builder), TreeMatchResults.create(automaton.getOriginalTree(), rootNode, leafNodes));
 	}
 
 	/**
@@ -196,7 +234,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 	private Iterator<INode<VAL, LBL>> processLeaves()
 	{
 		return BUFTAMatches.processLeaves(gfpa, element, (node, states) -> {
-			NodeData nodeData = new NodeData(states, new From(node));
+			NodeData nodeData = createInitialNodeData(states, node);
 			nodeStatesMap.put(node, nodeData);
 			checkFinals(node, nodeData);
 		});
@@ -211,8 +249,8 @@ class BUFTAGroupMatcher<VAL, LBL>
 
 		for (IFSAState<VAL, LBL> state : finalStates)
 		{
-			for (From from : nodeData.getFroms(state, node))
-				currentResults.add(from.builder);
+			for (From from : nodeData.getFroms(state))
+				currentResults.add(new Result(state, from.limitStates, from.builder));
 		}
 		return true;
 	}
@@ -263,7 +301,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 							 * Generate a new From
 							 */
 							if (newStateIsInitial)
-								newNodeData.add(s, new From(node));
+								newNodeData.add(s, new From(node, s));
 							/*
 							 * Update builders.
 							 * Note: A starting looped initial state does not store any builder.
@@ -273,8 +311,8 @@ class BUFTAGroupMatcher<VAL, LBL>
 								From newFrom = new From(node);
 								newFrom.builder.add(childEdge).setRoot(node);
 
-								for (From from : childNodeData.getFroms(childState, node))
-									newFrom.builder.addTree(from.builder, from.builder.getRoot());
+								for (From from : childNodeData.getFroms(childState))
+									newFrom.merge(from);
 
 								newNodeData.add(s, newFrom);
 							}
@@ -315,7 +353,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 					{
 						var validState = validStates.get(0);
 
-						for (From from : childNodeData.getFroms(validState, node))
+						for (From from : childNodeData.getFroms(validState))
 							for (var nstate : newStates)
 								if (!nodeData.contains(nstate, from))
 									nodeData.add(nstate, from);
@@ -337,7 +375,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 								continue;
 
 							var childNodeData = childsSubStates.get(i).getRight();
-							childFroms.add(childNodeData.getFroms(validState, node));
+							childFroms.add(childNodeData.getFroms(validState));
 						}
 
 						for (List<From> froms : (Iterable<List<From>>) () -> HelpLists.cartesianProduct(childFroms))
@@ -345,7 +383,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 							From newFrom = new From(node);
 
 							for (From from : froms)
-								newFrom.builder.addTree(from.builder, from.builder.getRoot());
+								newFrom.merge(from);
 
 							for (var nstate : newStates)
 								if (!nodeData.contains(nstate, newFrom))
