@@ -9,8 +9,10 @@ import java.util.function.Function;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 
+import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
+import insomnia.data.creational.ISubTreeBuilder;
 import insomnia.data.creational.ITreeBuilder;
 import insomnia.implem.data.creational.SubTreeBuilder;
 import insomnia.implem.data.creational.TreeBuilder;
@@ -134,6 +136,29 @@ public final class Trees
 		return subTree(tbuilder);
 	}
 
+	/**
+	 * Create a complete tree version of a tree (rooted & terminal leaves).
+	 * 
+	 * @param tree the tree
+	 * @param root the root of the tree
+	 * @return a new complete tree
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> complete(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
+	{
+		return create(new TreeBuilder<VAL, LBL>().tree(tree, root).setComplete());
+	}
+
+	/**
+	 * Create a complete tree version of a tree (rooted & terminal leaves).
+	 * 
+	 * @param tree the tree
+	 * @return a new complete tree
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> complete(ITree<VAL, LBL> tree)
+	{
+		return complete(tree, tree.getRoot());
+	}
+
 	// =========================================================================
 
 	/**
@@ -175,6 +200,32 @@ public final class Trees
 
 		return Tree.subTree(tree, node);
 	}
+
+	/**
+	 * Create a snapshot of the tree delimited by a root and its leaves.
+	 * 
+	 * @param tree   the parent tree
+	 * @param node   the root node of the sub-tree
+	 * @param leaves the leaves of the sub-tree
+	 * @return
+	 * @throws IndexOutOfBoundsException if limits are invalid
+	 */
+	static public <VAL, LBL> ITree<VAL, LBL> subTree(ITree<VAL, LBL> tree, INode<VAL, LBL> root, Iterable<? extends INode<VAL, LBL>> leaves)
+	{
+		if (IterableUtils.isEmpty(leaves))
+			return emptySubTree(tree, root);
+
+		ISubTreeBuilder<VAL, LBL> builder = new SubTreeBuilder<VAL, LBL>(tree).setRoot(root);
+
+		for (INode<VAL, LBL> leaf : leaves)
+		{
+			for (IEdge<VAL, LBL> edge : ITree.parentEdges(tree, leaf, root))
+				builder.add(edge);
+		}
+		return subTree(builder);
+	}
+
+	// =========================================================================
 
 	/**
 	 * Create a view on a tree.
