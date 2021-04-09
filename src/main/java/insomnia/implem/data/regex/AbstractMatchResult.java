@@ -2,8 +2,6 @@ package insomnia.implem.data.regex;
 
 import java.util.List;
 
-import org.apache.commons.lang3.NotImplementedException;
-
 import insomnia.data.INode;
 import insomnia.data.ITree;
 
@@ -23,7 +21,7 @@ abstract class AbstractMatchResult<VAL, LBL, RET extends ITree<VAL, LBL>>
 
 	public List<INode<VAL, LBL>> end()
 	{
-		throw new NotImplementedException("end()");
+		return ITree.getLeaves(group);
 	}
 
 	public RET group()
