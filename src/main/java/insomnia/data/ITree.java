@@ -656,7 +656,7 @@ public interface ITree<VAL, LBL>
 	public static <VAL, LBL> boolean included(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
 		var automaton = new BUFTABuilder<>(a).setMode(Mode.PROJECTION).create();
-		return automaton.matcher(new TreeBuilder<>(b)).matches();
+		return automaton.matcher(b).matches();
 	}
 
 	/**
@@ -675,8 +675,8 @@ public interface ITree<VAL, LBL>
 		if (a.isEmpty() != b.isEmpty())
 			return false;
 
-		var automaton = new BUFTABuilder<>(new TreeBuilder<>(a)).setMode(Mode.STRUCTURE).create();
-		return automaton.matcher(new TreeBuilder<>(b)).matches();
+		var automaton = new BUFTABuilder<>(a).setMode(Mode.STRUCTURE).create();
+		return automaton.matcher(b).matches();
 	}
 
 	public static <VAL, LBL> boolean hasSemiTwig(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
