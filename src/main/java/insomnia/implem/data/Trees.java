@@ -171,7 +171,7 @@ public final class Trees
 	static public <VAL, LBL> ITree<VAL, LBL> subTree(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
 	{
 		if (ITree.isPath(tree, node))
-			return emptySubTree(tree, node);
+			return Paths.subPath(tree, node);
 
 		return Tree.subTree(tree, node);
 	}
