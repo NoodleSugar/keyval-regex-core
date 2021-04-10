@@ -8,7 +8,6 @@ import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
-import insomnia.implem.fsa.fta.edge.FTAEdge;
 
 /**
  * Bottom-up tree Automaton.
@@ -28,15 +27,6 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	 * @param parentStates the list of multi-States
 	 */
 	Collection<IFTAEdge<VAL, LBL>> getHyperEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates);
-
-	/**
-	 * Get all {@link IFTAEdgeCondition} that may validate a unique multi-state.
-	 * A naive implementation may return all edges with one parent of the automaton.
-	 * 
-	 * @param parentStates the multi-state child states
-	 * @return {@link FTAEdge}s which have a parent in a multi-state from {@code parentStates}
-	 */
-	Collection<IFTAEdge<VAL, LBL>> getOneHyperEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates);
 
 	/**
 	 * Get the original tree node that {@code state} represents.

@@ -9,9 +9,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
@@ -178,14 +176,6 @@ public final class BUFTABuilder<VAL, LBL>
 				ret.addAll(ftaEdgesOf.get(state));
 
 			return ret;
-		}
-
-		@Override
-		public Collection<IFTAEdge<VAL, LBL>> getOneHyperEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates)
-		{
-			return ftaEdges.stream() //
-				.filter(e -> e.getParents().size() == 1 && IterableUtils.matchesAny(parentStates, p -> p.contains(e.getParents().get(0)))) //
-				.collect(Collectors.toList());
 		}
 
 		@Override
