@@ -1,32 +1,25 @@
 package insomnia.implem.data.regex;
 
-import java.util.List;
-
-import insomnia.data.INode;
 import insomnia.data.ITree;
 
 abstract class AbstractMatchResult<VAL, LBL, RET extends ITree<VAL, LBL>>
 {
-	private RET group;
+	private RET group, original;
 
-	AbstractMatchResult(RET group)
+	AbstractMatchResult(RET group, RET original)
 	{
-		this.group = group;
-	}
-
-	public INode<VAL, LBL> start()
-	{
-		return group.getRoot();
-	}
-
-	public List<INode<VAL, LBL>> end()
-	{
-		return ITree.getLeaves(group);
+		this.group    = group;
+		this.original = original;
 	}
 
 	public RET group()
 	{
 		return group;
+	}
+
+	public RET original()
+	{
+		return original;
 	}
 
 	@Override

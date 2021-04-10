@@ -14,7 +14,7 @@ public final class PathMatchResults
 
 	public static <VAL, LBL> IPathMatchResult<VAL, LBL> create(IPath<VAL, LBL> group)
 	{
-		return new PathMatchResult<>(group);
+		return new PathMatchResult<>(group, null);
 	}
 
 	@SuppressWarnings("unchecked")

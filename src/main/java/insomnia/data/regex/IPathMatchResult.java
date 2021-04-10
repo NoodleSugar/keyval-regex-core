@@ -6,4 +6,7 @@ public interface IPathMatchResult<VAL, LBL> extends ITreeMatchResult<VAL, LBL>
 {
 	@Override
 	IPath<VAL, LBL> group();
+
+	@Override
+	IPath<VAL, LBL> original();
 }

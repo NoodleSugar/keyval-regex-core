@@ -29,21 +29,4 @@ public interface ITreeMatcher<VAL, LBL>
 	 * Get the last match as a {@link ITreeMatchResult}.
 	 */
 	ITreeMatchResult<VAL, LBL> toMatchResult();
-
-	/**
-	 * Get the last original match as a {@link ITreeMatchResult}.
-	 * <em>Original</em> refer to the initial tree used for the matching.
-	 */
-	ITreeMatchResult<VAL, LBL> originalMatchResult();
-
-	// =========================================================================
-
-	public interface ITreeBothResults<VAL, LBL>
-	{
-		ITreeMatchResult<VAL, LBL> standard();
-
-		ITreeMatchResult<VAL, LBL> original();
-	}
-
-	ITreeBothResults<VAL, LBL> bothResults();
 }

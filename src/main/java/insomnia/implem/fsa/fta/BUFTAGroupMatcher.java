@@ -17,7 +17,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
-import insomnia.data.regex.ITreeMatcher.ITreeBothResults;
+import insomnia.data.regex.ITreeMatchResult;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
@@ -251,10 +251,10 @@ class BUFTAGroupMatcher<VAL, LBL>
 	/**
 	 * @return the next match if exists or {@link TreeMatchResults#empty()}
 	 */
-	public ITreeBothResults<VAL, LBL> nextMatch()
+	public ITreeMatchResult<VAL, LBL> nextMatch()
 	{
 		if (end)
-			return TreeMatchResults.emptyBoth();
+			return TreeMatchResults.empty();
 
 		if (null == bottomUpNodes)
 			bottomUpNodes = processLeaves();
@@ -263,13 +263,13 @@ class BUFTAGroupMatcher<VAL, LBL>
 			nextValidStep();
 
 		if (currentResults.isEmpty())
-			return TreeMatchResults.emptyBoth();
+			return TreeMatchResults.empty();
 
 		var res = currentResults.poll();
 
-		return TreeMatchResults.createBoth( //
-			TreeMatchResults.create(element, res.elementRoot, res.getElementLeaves()), //
-			TreeMatchResults.create(automaton.getOriginalTree(), res.originalRoot, res.getOriginalLeaves()) //
+		return TreeMatchResults.create( //
+			Trees.subTree(element, res.elementRoot, res.getElementLeaves()), //
+			Trees.subTree(automaton.getOriginalTree(), res.originalRoot, res.getOriginalLeaves()) //
 		);
 	}
 

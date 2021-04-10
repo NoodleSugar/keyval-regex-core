@@ -7,8 +7,8 @@ class PathMatchResult<VAL, LBL> //
 	extends AbstractMatchResult<VAL, LBL, IPath<VAL, LBL>> //
 	implements IPathMatchResult<VAL, LBL>
 {
-	PathMatchResult(IPath<VAL, LBL> group)
+	PathMatchResult(IPath<VAL, LBL> group, IPath<VAL, LBL> original)
 	{
-		super(group);
+		super(group, original);
 	}
 }
