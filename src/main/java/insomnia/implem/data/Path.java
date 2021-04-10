@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import insomnia.data.AbstractNode;
 import insomnia.data.AbstractPath;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
@@ -64,7 +65,7 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 
 	// ==========================================================================
 
-	private static class PNode<VAL, LBL> implements INode<VAL, LBL>
+	private static class PNode<VAL, LBL> extends AbstractNode<VAL, LBL>
 	{
 		INode<VAL, LBL> ref;
 		int             index;
@@ -97,12 +98,6 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 		public boolean isTerminal()
 		{
 			return ref.isTerminal();
-		}
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			return ref == getRef((INode<?, ?>) obj);
 		}
 
 		@Override
@@ -142,11 +137,6 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 			return -1;
 
 		return ((PNode<?, ?>) node).getIndex();
-	}
-
-	private static <VAL, LBL> INode<VAL, LBL> getRef(INode<VAL, LBL> node)
-	{
-		return ((PNode<VAL, LBL>) node).ref;
 	}
 
 	// ==========================================================================

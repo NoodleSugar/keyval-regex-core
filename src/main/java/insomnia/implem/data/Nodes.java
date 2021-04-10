@@ -1,5 +1,6 @@
 package insomnia.implem.data;
 
+import insomnia.data.AbstractNode;
 import insomnia.data.INode;
 
 public final class Nodes
@@ -11,7 +12,7 @@ public final class Nodes
 
 	// ==========================================================================
 
-	private static abstract class Node<VAL, LBL> implements INode<VAL, LBL>
+	private static abstract class Node<VAL, LBL> extends AbstractNode<VAL, LBL>
 	{
 		private VAL value;
 
@@ -24,12 +25,6 @@ public final class Nodes
 		public VAL getValue()
 		{
 			return value;
-		}
-
-		@Override
-		public String toString()
-		{
-			return INode.toString(this);
 		}
 	}
 
@@ -53,6 +48,12 @@ public final class Nodes
 			}
 
 			@Override
+			public int hashCode()
+			{
+				return System.identityHashCode(this);
+			}
+
+			@Override
 			public boolean isTerminal()
 			{
 				return isTerminal;
@@ -62,12 +63,6 @@ public final class Nodes
 			public boolean isRooted()
 			{
 				return isRooted;
-			}
-
-			@Override
-			public String toString()
-			{
-				return INode.toString(this);
 			}
 		};
 	}
