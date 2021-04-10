@@ -569,6 +569,42 @@ public interface ITree<VAL, LBL>
 		}
 		return true;
 	}
+
+	// ==========================================================================
+
+	public static <VAL, LBL> boolean isSemiTwigOf(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		if (a == b)
+			return true;
+		if (!isSubTreeOf(a, b) || a.getChildren(a.getRoot()).size() > 1)
+			return false;
+
+		var anodes = ITree.bottomUpOrder(a);
+		{
+			int size = anodes.size();
+			anodes = anodes.subList(0, --size);
+
+			int pos = IterableUtils.indexOf(anodes, n -> a.getChildren(n).size() > 0);
+
+			if (pos == -1)
+				return true;
+
+			anodes = anodes.subList(pos, size);
+		}
+
+		for (var anode : anodes)
+		{
+			if (a.getChildren(anode).size() != b.getChildren(anode).size())
+				return false;
+		}
+		return true;
+	}
+
+	public static <VAL, LBL> boolean isSemiTwigOf(ITree<VAL, LBL> a, INode<VAL, LBL> anode, ITree<VAL, LBL> b, INode<VAL, LBL> bnode)
+	{
+		return isSemiTwigOf(Trees.subTree(a, anode), Trees.subTree(b, bnode));
+	}
+
 	// ==========================================================================
 
 	/**
