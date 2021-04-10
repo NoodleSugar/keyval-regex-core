@@ -1,6 +1,7 @@
 package insomnia.data;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.text.ParseException;
 import java.util.List;
@@ -132,17 +133,26 @@ public class TestTree
 
 	// ==========================================================================
 
-	public static Stream<Object[]> hasSemiTwig()
+	public static Stream<Object[]> semiTwigs()
 	{
 		return testOf("semi_twig");
 	}
 
 	@ParameterizedTest
 	@MethodSource
-
-	void hasSemiTwig(ITree<String, String> from, ITree<String, String> stwig, int val)
+	void semiTwigs(ITree<String, String> from, ITree<String, String> stwig, int val)
 	{
 		var semiTwigs = ITree.getSemiTwigs(from, stwig);
-		assertEquals(val, semiTwigs.size(), String.format("from=\n%sstwigs=\n%sFounded %d: %s\n", from, stwig, semiTwigs.size(), semiTwigs));
+		assertEquals(val, semiTwigs.size(), String.format("from=\n%sstwigs=\n%sFounded %d: %s\n", ITree.toString(from), ITree.toString(stwig), semiTwigs.size(), semiTwigs));
+
+		for (var st : semiTwigs)
+		{
+			assertTrue(ITree.isSemiTwigOf(st.group(), stwig), //
+				String.format("Expect\n%s to be a semi-twig of\n%s", ITree.toString(st.group()), ITree.toString(stwig)));
+			assertTrue(ITree.isSubTreeOf(st.original(), from), //
+				String.format("Expect\n%s to be a semi-twig of\n%s", ITree.toString(st.original()), from));
+			assertTrue(ITree.equals(Trees.complete(st.group()), Trees.complete(st.original())) //
+				, String.format("Expect\n%s to be equal to\n%s", ITree.toString(st.group()), ITree.toString(st.original())));
+		}
 	}
 }
