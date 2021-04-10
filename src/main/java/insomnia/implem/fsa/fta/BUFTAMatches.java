@@ -2,16 +2,16 @@ package insomnia.implem.fsa.fta;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 import insomnia.data.IEdge;
 import insomnia.data.INode;
@@ -67,7 +67,8 @@ class BUFTAMatches<VAL, LBL>
 				bottomUpNodes.previous();
 				break;
 			}
-			consume.accept(node, IGFPA.getInitials(gfpa, element, node));
+			for (var _class : IGFPA.getInitialClasses(gfpa, element, node))
+				consume.accept(node, _class);
 		}
 		return bottomUpNodes;
 	}
@@ -76,8 +77,8 @@ class BUFTAMatches<VAL, LBL>
 
 	public boolean matches()
 	{
-		Map<INode<VAL, LBL>, Collection<IFSAState<VAL, LBL>>> nodeStatesMap   = new HashMap<>();
-		List<Collection<IFSAState<VAL, LBL>>>                 childsSubStates = new ArrayList<>();
+		MultiValuedMap<INode<VAL, LBL>, IFSAState<VAL, LBL>> nodeStatesMap   = new ArrayListValuedHashMap<>();
+		List<Collection<IFSAState<VAL, LBL>>>                childsSubStates = new ArrayList<>();
 
 		finalLeaf = false;
 		Iterator<INode<VAL, LBL>> nodes = processLeaves(gfpa, element, //
@@ -88,7 +89,7 @@ class BUFTAMatches<VAL, LBL>
 					finalLeaf = true;
 					return;
 				}
-				nodeStatesMap.put(node, states);
+				nodeStatesMap.putAll(node, states);
 			});
 
 		if (finalLeaf)
@@ -134,7 +135,7 @@ class BUFTAMatches<VAL, LBL>
 				IFSAState<VAL, LBL> newState = hEdge.getChild();
 				newStates.addAll(IGFPA.getValidStates(gfpa, newState, stateOnNodePredicate));
 			}
-			nodeStatesMap.put(node, newStates);
+			nodeStatesMap.putAll(node, newStates);
 			childsSubStates.clear();
 
 			if (hasFinal(newStates))

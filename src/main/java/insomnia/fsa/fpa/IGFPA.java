@@ -150,6 +150,16 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 		return getValidStates(automaton, automaton.getInitialStates(), stateOnNodePredicate(automaton, element, node));
 	}
 
+	public static <VAL, LBL> Collection<Collection<IFSAState<VAL, LBL>>> getInitialClasses(IGFPA<VAL, LBL> automaton, ITree<VAL, LBL> element, INode<VAL, LBL> node)
+	{
+		Collection<Collection<IFSAState<VAL, LBL>>> classes = new ArrayList<>();
+
+		for (var initial : automaton.getInitialStates())
+			classes.add(getValidStates(automaton, initial, stateOnNodePredicate(automaton, element, node)));
+
+		return classes;
+	}
+
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getValidStates(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, Predicate<IFSAState<VAL, LBL>> fcheckState)
 	{
 		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>();

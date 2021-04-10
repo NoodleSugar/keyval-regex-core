@@ -2,6 +2,7 @@ package insomnia.fsa.fta;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import insomnia.data.INode;
 import insomnia.data.ITree;
@@ -43,7 +44,7 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	 * @param state the state
 	 * @return the node, or {@code null} if unavailable
 	 */
-	INode<VAL, LBL> getOriginalNode(IFSAState<VAL, LBL> state);
+	Map<IFSAState<VAL, LBL>, INode<VAL, LBL>> getOriginalNodes();
 
 	/**
 	 * Get the original tree used to build the automaton.

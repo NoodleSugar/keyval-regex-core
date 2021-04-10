@@ -2,31 +2,28 @@ package insomnia.implem.fsa.fta;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.IterableUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
-import insomnia.data.creational.ISubTreeBuilder;
 import insomnia.data.regex.ITreeMatcher.ITreeBothResults;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
-import insomnia.implem.data.creational.SubTreeBuilder;
+import insomnia.implem.data.Trees;
 import insomnia.implem.data.regex.TreeMatchResults;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
 import insomnia.lib.help.HelpLists;
@@ -36,7 +33,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 	// =========================================================================
 
 	/**
-	 * Stores states/From informations of a node.
+	 * Represents the informations to be associated with a node, that is its states and the origins (leaves).
 	 * 
 	 * @author zuri
 	 */
@@ -48,6 +45,10 @@ class BUFTAGroupMatcher<VAL, LBL>
 		{
 		}
 
+		/**
+		 * Add an origin to a state.
+		 * If the state is a initial looped one, than its previous origins are forgot.
+		 */
 		public void add(IFSAState<VAL, LBL> state, From from)
 		{
 			List<From> froms = statesMap.computeIfAbsent(state, k -> new ArrayList<>());
@@ -55,17 +56,26 @@ class BUFTAGroupMatcher<VAL, LBL>
 			if (initialLooped.contains(state))
 				froms.clear();
 
-			froms.add(from.cpy());
+			froms.add(from);
 		}
 
-		public boolean contains(IFSAState<VAL, LBL> state, From from)
+		/**
+		 * Merge an origin to a state origins.
+		 * 
+		 * @param state
+		 * @param from
+		 */
+		public void merge(IFSAState<VAL, LBL> state, From from)
 		{
-			Collection<From> froms = getFroms(state);
+			var presents = CollectionUtils.select(getFroms(state), from::equals);
 
-			if (null == froms)
-				return false;
-
-			return IterableUtils.matchesAny(froms, f -> ITree.sameAs(f.builder, from.builder));
+			if (presents.isEmpty())
+				add(state, from);
+			else
+			{
+				for (From f : presents)
+					f.merge(from);
+			}
 		}
 
 		public Collection<IFSAState<VAL, LBL>> getStates()
@@ -90,81 +100,117 @@ class BUFTAGroupMatcher<VAL, LBL>
 		}
 	}
 
-	public NodeData createInitialNodeData(Collection<IFSAState<VAL, LBL>> states, INode<VAL, LBL> initialNode)
+	/**
+	 * Create the NodeData to be associated with some initial states.
+	 * 
+	 * @implNote
+	 *           The algorithm assume that states are ordered in a way that all parents states appears before the child.
+	 * @param stateClass  the states to process.
+	 * @param initialLeaf the actual leaf of the element
+	 * @return
+	 */
+	public NodeData createInitialNodeData(Collection<IFSAState<VAL, LBL>> stateClass, INode<VAL, LBL> initialLeaf)
 	{
-		NodeData ret = new NodeData();
+		NodeData        ret          = new NodeData();
+		INode<VAL, LBL> originalNode = null;
 
-		for (IFSAState<VAL, LBL> state : states)
-			ret.add(state, new From(initialNode, state));
+		for (IFSAState<VAL, LBL> state : stateClass)
+		{
+			INode<VAL, LBL> nonode = automaton.getOriginalNodes().get(state);
+
+			if (null != nonode)
+				originalNode = nonode;
+
+			ret.add(state, new From(initialLeaf, originalNode));
+		}
 		return ret;
 	}
 
 	// =========================================================================
 
 	/**
-	 * Store the scanned edges before a node.
-	 * 
-	 * @author zuri
+	 * Represents an origin of a state, that is the tree leaves and a root when complete.
 	 */
 	private class From
 	{
-		private ISubTreeBuilder<VAL, LBL> builder;
-		private List<IFSAState<VAL, LBL>> limitStates;
+		private INode<VAL, LBL> elementRoot, originalRoot;
 
-		From(INode<VAL, LBL> from, List<IFSAState<VAL, LBL>> state)
+		private Map<INode<VAL, LBL>, INode<VAL, LBL>> nodeToOriginal;
+
+		From()
 		{
-			this.builder     = new SubTreeBuilder<>(element).setRoot(from);
-			this.limitStates = new ArrayList<>();
-			this.limitStates.addAll(state);
+			nodeToOriginal = new HashMap<>();
 		}
 
-		From(INode<VAL, LBL> from, IFSAState<VAL, LBL> state)
+		From(INode<VAL, LBL> elementLeaf, INode<VAL, LBL> originalLeaf)
 		{
-			this(from, Collections.singletonList(state));
+			nodeToOriginal = new HashMap<>();
+			elementRoot    = elementLeaf;
+			originalRoot   = originalLeaf;
+			nodeToOriginal.put(elementLeaf, originalLeaf);
 		}
 
-		From(INode<VAL, LBL> from)
+		From cpy()
 		{
-			this(from, Collections.emptyList());
+			From ret = new From();
+			ret.nodeToOriginal.putAll(this.nodeToOriginal);
+			ret.elementRoot  = elementRoot;
+			ret.originalRoot = originalRoot;
+			return ret;
+		}
+
+		void setRoot(INode<VAL, LBL> elementRoot, INode<VAL, LBL> originalRoot)
+		{
+			this.elementRoot  = elementRoot;
+			this.originalRoot = originalRoot;
 		}
 
 		public void merge(From from)
 		{
-			builder.addTree(from.builder, from.builder.getRoot());
-			limitStates.addAll(from.limitStates);
+			elementRoot = from.elementRoot;
+			if (null != from.originalRoot)
+			{
+				originalRoot = from.originalRoot;
+				nodeToOriginal.replace(elementRoot, originalRoot);
+			}
+			for (var kv : from.nodeToOriginal.entrySet())
+			{
+				if (!nodeToOriginal.containsKey(kv.getKey()))
+					nodeToOriginal.put(kv.getKey(), kv.getValue());
+				else if (null != kv.getValue())
+					nodeToOriginal.put(kv.getKey(), kv.getValue());
+			}
 		}
 
-		private From(ISubTreeBuilder<VAL, LBL> builder, List<IFSAState<VAL, LBL>> states)
+		public Collection<INode<VAL, LBL>> getElementLeaves()
 		{
-			this.builder     = builder;
-			this.limitStates = new ArrayList<>(states);
+			return nodeToOriginal.keySet();
 		}
 
-		public From cpy()
+		public Collection<INode<VAL, LBL>> getOriginalLeaves()
 		{
-			return new From(new SubTreeBuilder<>(builder).addTree(builder.getRoot()), this.limitStates);
+			return nodeToOriginal.values();
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return 0;
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			@SuppressWarnings("unchecked")
+			From from = (From) obj;
+			return elementRoot == from.elementRoot //
+				&& Objects.equals(getElementLeaves(), from.getElementLeaves());
 		}
 
 		@Override
 		public String toString()
 		{
-			return new StringBuilder().append(limitStates).append(":").append(ITree.toString(builder)).toString();
-		}
-	}
-
-	// =========================================================================
-
-	private class Result
-	{
-		IFSAState<VAL, LBL>       root;
-		List<IFSAState<VAL, LBL>> leaves;
-		ISubTreeBuilder<VAL, LBL> builder;
-
-		Result(IFSAState<VAL, LBL> root, List<IFSAState<VAL, LBL>> leaves, ISubTreeBuilder<VAL, LBL> builder)
-		{
-			this.root    = root;
-			this.leaves  = leaves;
-			this.builder = builder;
+			return new StringBuilder("from:").append(Trees.subTree(element, elementRoot, getElementLeaves())).toString();
 		}
 	}
 
@@ -173,7 +219,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 	private IBUFTA<VAL, LBL>         automaton;
 	private IGFPA<VAL, LBL>          gfpa;
 	private ITree<VAL, LBL>          element;
-	private Queue<Result>            currentResults;
+	private Queue<From>              currentResults;
 	private Set<IFSAState<VAL, LBL>> initialLooped;
 
 	private boolean end = false;
@@ -219,10 +265,12 @@ class BUFTAGroupMatcher<VAL, LBL>
 		if (currentResults.isEmpty())
 			return TreeMatchResults.emptyBoth();
 
-		var             res       = currentResults.poll();
-		INode<VAL, LBL> rootNode  = automaton.getOriginalNode(res.root);
-		var             leafNodes = IterableUtils.transformedIterable(res.leaves, l -> automaton.getOriginalNode(l));
-		return TreeMatchResults.createBoth(TreeMatchResults.create(res.builder), TreeMatchResults.create(automaton.getOriginalTree(), rootNode, leafNodes));
+		var res = currentResults.poll();
+
+		return TreeMatchResults.createBoth( //
+			TreeMatchResults.create(element, res.elementRoot, res.getElementLeaves()), //
+			TreeMatchResults.create(automaton.getOriginalTree(), res.originalRoot, res.getOriginalLeaves()) //
+		);
 	}
 
 	/**
@@ -233,9 +281,12 @@ class BUFTAGroupMatcher<VAL, LBL>
 	 */
 	private Iterator<INode<VAL, LBL>> processLeaves()
 	{
-		return BUFTAMatches.processLeaves(gfpa, element, (node, states) -> {
-			NodeData nodeData = createInitialNodeData(states, node);
-			nodeStatesMap.put(node, nodeData);
+		return BUFTAMatches.processLeaves(gfpa, element, (node, stateClass) -> {
+			NodeData nodeData    = nodeStatesMap.getOrDefault(node, new NodeData());
+			NodeData newNodeData = createInitialNodeData(stateClass, node);
+
+			nodeData.statesMap.putAll(newNodeData.statesMap);
+			nodeStatesMap.putIfAbsent(node, nodeData);
 			checkFinals(node, nodeData);
 		});
 	}
@@ -250,7 +301,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 		for (IFSAState<VAL, LBL> state : finalStates)
 		{
 			for (From from : nodeData.getFroms(state))
-				currentResults.add(new Result(state, from.limitStates, from.builder));
+				currentResults.add(from);
 		}
 		return true;
 	}
@@ -262,7 +313,6 @@ class BUFTAGroupMatcher<VAL, LBL>
 			INode<VAL, LBL>       node       = bottomUpNodes.next();
 			List<IEdge<VAL, LBL>> edgeChilds = element.getChildren(node);
 			int                   nbChilds   = edgeChilds.size();
-
 			/*
 			 * =============
 			 * CHILD PROCESS
@@ -271,7 +321,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 			 * For each child edge compute the valid states according to the this.gfpa.
 			 * This part result in the variable 'childsSubStates' which contains, in order, the NodeData of a node.
 			 */
-			List<Pair<INode<VAL, LBL>, NodeData>> childsSubStates = new ArrayList<>();
+			List<NodeData> childsSubStates = new ArrayList<>();
 
 			for (IEdge<VAL, LBL> childEdge : edgeChilds)
 			{
@@ -292,34 +342,36 @@ class BUFTAGroupMatcher<VAL, LBL>
 						IFSAState<VAL, LBL> newState          = edge.getChild();
 						boolean             isAnyLoop         = FSALabelConditions.isAnyLoop(edge.getLabelCondition());
 						boolean             newStateIsInitial = gfpa.isInitial(newState);
-						/*
-						 * For each new valid states update the From.builders
-						 */
+						INode<VAL, LBL>     originalNode      = null;
+
 						for (var s : IGFPA.getValidStates(gfpa, newState, IGFPA.stateOnNodePredicate(gfpa, element, node)))
 						{
 							/*
-							 * Generate a new From
+							 * Get the original node overriding the last one.
+							 * This part assume a good order parent->child in the sequence of 's'.
 							 */
+							{
+								INode<VAL, LBL> oNode = automaton.getOriginalNodes().get(s);
+								if (null != oNode)
+									originalNode = oNode;
+							}
+							// Generate a new origin
 							if (newStateIsInitial)
-								newNodeData.add(s, new From(node, s));
-							/*
-							 * Update builders.
-							 * Note: A starting looped initial state does not store any builder.
-							 */
+								newNodeData.add(s, new From(node, originalNode));
+							// Update the root origin
 							if (!isAnyLoop)
 							{
-								From newFrom = new From(node);
-								newFrom.builder.add(childEdge).setRoot(node);
-
 								for (From from : childNodeData.getFroms(childState))
-									newFrom.merge(from);
-
-								newNodeData.add(s, newFrom);
+								{
+									From newFrom = from.cpy();
+									newFrom.setRoot(node, originalNode);
+									newNodeData.add(s, newFrom);
+								}
 							}
 						}
 					}
 				}
-				childsSubStates.add(Pair.of(childNode, newNodeData));
+				childsSubStates.add(newNodeData);
 			}
 			NodeData nodeData = new NodeData();
 			/*
@@ -329,7 +381,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 			 * .
 			 * Use hyper-transitions to compute valid node states.
 			 */
-			List<Collection<IFSAState<VAL, LBL>>> childsStates = CollectionUtils.collect(childsSubStates, s -> s.getRight().getStates(), new ArrayList<>());
+			List<Collection<IFSAState<VAL, LBL>>> childsStates = CollectionUtils.collect(childsSubStates, s -> s.getStates(), new ArrayList<>());
 
 			for (IFTAEdge<VAL, LBL> hEdge : automaton.getHyperEdges(childsStates))
 			{
@@ -347,7 +399,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 				// Simplest case
 				if (nbChilds == 1)
 				{
-					var childNodeData = childsSubStates.get(0).getRight();
+					var childNodeData = childsSubStates.get(0);
 
 					for (List<IFSAState<VAL, LBL>> validStates : validChildsStates)
 					{
@@ -355,8 +407,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 
 						for (From from : childNodeData.getFroms(validState))
 							for (var nstate : newStates)
-								if (!nodeData.contains(nstate, from))
-									nodeData.add(nstate, from);
+								nodeData.merge(nstate, from);
 					}
 				}
 				// Multiple childs
@@ -374,20 +425,19 @@ class BUFTAGroupMatcher<VAL, LBL>
 							if (null == validState)
 								continue;
 
-							var childNodeData = childsSubStates.get(i).getRight();
+							var childNodeData = childsSubStates.get(i);
 							childFroms.add(childNodeData.getFroms(validState));
 						}
 
 						for (List<From> froms : (Iterable<List<From>>) () -> HelpLists.cartesianProduct(childFroms))
 						{
-							From newFrom = new From(node);
+							From newFrom = new From();
 
 							for (From from : froms)
 								newFrom.merge(from);
 
 							for (var nstate : newStates)
-								if (!nodeData.contains(nstate, newFrom))
-									nodeData.add(nstate, newFrom);
+								nodeData.merge(nstate, newFrom);
 						}
 					}
 				}

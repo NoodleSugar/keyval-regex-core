@@ -83,8 +83,7 @@ public class TestAutomaton
 	void find(String searchFor, ITree<String, String> tsearchIn, int nb) throws ParseException
 	{
 		assumeTrue(new RegexParser("''\"\"~~").parse(searchFor).size() == 1);
-		ITree<String, String> tsearchFor;
-		tsearchFor = Trees.treeFromString(searchFor);
+		ITree<String, String> tsearchFor = Trees.treeFromString(searchFor);
 
 		IBUFTA<String, String>       bufta   = new BUFTABuilder<>(tsearchFor).create();
 		ITreeMatcher<String, String> matcher = bufta.matcher(tsearchIn);

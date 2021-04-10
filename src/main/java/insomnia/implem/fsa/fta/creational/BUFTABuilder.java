@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
@@ -141,7 +142,7 @@ public final class BUFTABuilder<VAL, LBL>
 		{
 			this.gfpa          = new FPABuilder<>(builder.gchunk).mustBeSync(false).createNewStates(!true).create();
 			this.ftaEdges      = List.copyOf(builder.ftaEdges);
-			this.originalNodes = new HashMap<>(builder.originalNodes);
+			this.originalNodes = MapUtils.unmodifiableMap(new HashMap<>(builder.originalNodes));
 			this.originalTree  = Trees.subTree(builder.tree);
 			{
 				ArrayListValuedHashMap<IFSAState<VAL, LBL>, IFTAEdge<VAL, LBL>> ftaOf = new ArrayListValuedHashMap<>();
@@ -188,9 +189,9 @@ public final class BUFTABuilder<VAL, LBL>
 		}
 
 		@Override
-		public INode<VAL, LBL> getOriginalNode(IFSAState<VAL, LBL> state)
+		public Map<IFSAState<VAL, LBL>, INode<VAL, LBL>> getOriginalNodes()
 		{
-			return originalNodes.get(state);
+			return originalNodes;
 		}
 
 		@Override
@@ -208,6 +209,12 @@ public final class BUFTABuilder<VAL, LBL>
 			sb.append("FTAEdges:\n");
 			ftaEdges.stream().forEach(e -> sb.append(e).append("\n"));
 
+			if (null != originalTree)
+			{
+				sb.append("\nOriginal nodes:\n");
+				originalNodes.forEach((k, v) -> sb.append(k).append(": ").append(v).append("\n"));
+				sb.append("Original tree:\n").append(ITree.toString(originalTree));
+			}
 			return sb.toString();
 		}
 	}
@@ -405,6 +412,8 @@ public final class BUFTABuilder<VAL, LBL>
 			makeItInitial(initialState, node.isTerminal());
 			makeItFinal(finalState, node.isRooted());
 		}
+		originalNodes.put(initialState, node);
+		originalNodes.put(finalState, node);
 	}
 
 	// =========================================================================a
