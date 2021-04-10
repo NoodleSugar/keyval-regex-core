@@ -723,6 +723,17 @@ public interface ITree<VAL, LBL>
 
 	// =========================================================================
 
+	/**
+	 * Find the semi-twigs in b that are sub-trees of a.
+	 * 
+	 * @param a     the first tree
+	 * @param anode the root of the subtree of a
+	 * @param b     the second tree
+	 * @param bnode the root of the subtree of b
+	 * @return the results as an iterator of {@link ITreeMatchResult}.
+	 *         The {@link ITreeMatchResult#group()} contains a semi-twig of b,
+	 *         and {@link ITreeMatchResult#original()} contains the equivalent tree that is a sub-tree of a.
+	 */
 	public static <VAL, LBL> Iterator<ITreeMatchResult<VAL, LBL>> semiTwigsIterator(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
 		var automaton = new BUFTABuilder<>(a).setMode(Mode.SEMI_TWIG).create();
@@ -730,6 +741,17 @@ public interface ITree<VAL, LBL>
 		return IteratorUtils.filteredIterator(it, e -> !e.group().isEmpty());
 	}
 
+	/**
+	 * Find the semi-twigs in b that are sub-trees of a.
+	 * 
+	 * @param a     the first tree
+	 * @param anode the root of the subtree of a
+	 * @param b     the second tree
+	 * @param bnode the root of the subtree of b
+	 * @return the results as a {@link Collection} of {@link ITreeMatchResult}.
+	 *         The {@link ITreeMatchResult#group()} contains a semi-twig of b,
+	 *         and {@link ITreeMatchResult#original()} contains the equivalent tree that is a sub-tree of a.
+	 */
 	public static <VAL, LBL> Collection<ITreeMatchResult<VAL, LBL>> getSemiTwigs(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
 		return IteratorUtils.toList(semiTwigsIterator(a, b));
