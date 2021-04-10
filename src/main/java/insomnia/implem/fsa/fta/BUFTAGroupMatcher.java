@@ -269,8 +269,8 @@ class BUFTAGroupMatcher<VAL, LBL>
 
 		return TreeMatchResults.create( //
 			Trees.subTree(element, res.elementRoot, res.getElementLeaves()), //
-			Trees.subTree(automaton.getOriginalTree(), res.originalRoot, res.getOriginalLeaves()) //
-		);
+			Trees.subTree(automaton.getOriginalTree(), res.originalRoot, res.getOriginalLeaves()), //
+			res.nodeToOriginal);
 	}
 
 	/**

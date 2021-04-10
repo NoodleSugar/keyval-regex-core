@@ -1,5 +1,8 @@
 package insomnia.implem.data.regex;
 
+import java.util.Map;
+
+import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.data.regex.ITreeMatchResult;
 import insomnia.implem.data.Paths;
@@ -13,9 +16,9 @@ public final class TreeMatchResults
 
 	// =========================================================================
 
-	public static <VAL, LBL> ITreeMatchResult<VAL, LBL> create(ITree<VAL, LBL> group, ITree<VAL, LBL> original)
+	public static <VAL, LBL> ITreeMatchResult<VAL, LBL> create(ITree<VAL, LBL> group, ITree<VAL, LBL> original, Map<INode<VAL, LBL>, INode<VAL, LBL>> nodeToOriginal)
 	{
-		return new TreeMatchResult<>(group, original);
+		return new TreeMatchResult<>(group, original, nodeToOriginal);
 	}
 
 	private final static ITreeMatchResult<?, ?> emptyResult = new PathMatchResult<>(Paths.empty(), Paths.empty());
