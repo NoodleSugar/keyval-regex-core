@@ -1,11 +1,11 @@
 package insomnia.implem.data;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.collections4.ListUtils;
 
+import insomnia.AbstractTree;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.IPath;
@@ -16,7 +16,7 @@ import insomnia.data.ITree;
  * 
  * @author zuri
  */
-final class SubTreeView<VAL, LBL> implements ITree<VAL, LBL>
+final class SubTreeView<VAL, LBL> extends AbstractTree<VAL, LBL>
 {
 	private final ITree<VAL, LBL> parent;
 	private final INode<VAL, LBL> baseNode, root;
@@ -78,12 +78,6 @@ final class SubTreeView<VAL, LBL> implements ITree<VAL, LBL>
 	}
 
 	@Override
-	public boolean isRooted()
-	{
-		return getRoot().isRooted();
-	}
-
-	@Override
 	public List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node)
 	{
 		var parentPath = parentPath();
@@ -138,19 +132,5 @@ final class SubTreeView<VAL, LBL> implements ITree<VAL, LBL>
 			parentPath.getEdges(node);
 
 		return parent.getEdges(node);
-	}
-
-	@Override
-	public Collection<LBL> getVocabulary()
-	{
-		return ITree.getVocabulary(this);
-	}
-
-	// =========================================================================
-
-	@Override
-	public String toString()
-	{
-		return ITree.treeOrPathToString(this);
 	}
 }

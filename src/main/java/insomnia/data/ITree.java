@@ -3,6 +3,7 @@ package insomnia.data;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,6 +60,14 @@ public interface ITree<VAL, LBL>
 	 */
 	boolean isRooted();
 
+	/**
+	 * Is the node a leaf?
+	 * 
+	 * @param node the node to check
+	 * @return true if node is a leaf
+	 */
+	boolean isLeaf(INode<VAL, LBL> node);
+
 	List<IEdge<VAL, LBL>> getChildren(INode<VAL, LBL> node);
 
 	Optional<IEdge<VAL, LBL>> getParent(INode<VAL, LBL> node);
@@ -77,6 +86,21 @@ public interface ITree<VAL, LBL>
 	 * @return the nodes of the subtrees
 	 */
 	List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node);
+
+	/**
+	 * Get all the leaves of the tree
+	 * 
+	 * @return the leaves of the tree
+	 */
+	List<INode<VAL, LBL>> getLeaves();
+
+	/**
+	 * Get all the leaves of a subtree.
+	 * 
+	 * @param node the root of the subtree
+	 * @return the nodes of the subtrees
+	 */
+	List<INode<VAL, LBL>> getLeaves(INode<VAL, LBL> node);
 
 	/**
 	 * Get all the edges of a tree.
@@ -385,6 +409,18 @@ public interface ITree<VAL, LBL>
 	// =========================================================================
 
 	/**
+	 * Check if a node is a leaf of a tree.
+	 * 
+	 * @param tree the tree
+	 * @param node the node
+	 * @return if {@code node} is a leaf of {@code tree}
+	 */
+	public static <VAL, LBL> boolean isLeaf(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
+	{
+		return tree.getChildren(node).size() == 0;
+	}
+
+	/**
 	 * Scan the entire tree to get its nodes.
 	 * 
 	 * @param <VAL> type of node value
@@ -428,7 +464,7 @@ public interface ITree<VAL, LBL>
 	}
 
 	/**
-	 * Scan the entire tree to get its nodes.
+	 * Scan the entire tree to get its leaves.
 	 * 
 	 * @param <VAL> type of node value
 	 * @param <LBL> type of edge label
@@ -508,7 +544,7 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> Collection<LBL> getVocabulary(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
 	{
-		return CollectionUtils.collect(getEdges(tree, root), IEdge::getLabel);
+		return CollectionUtils.collect(getEdges(tree, root), IEdge::getLabel, new HashSet<>());
 	}
 
 	// =========================================================================
@@ -606,6 +642,12 @@ public interface ITree<VAL, LBL>
 	}
 
 	// ==========================================================================
+
+	public static <VAL, LBL> int hashCode(ITree<VAL, LBL> tree)
+	{
+		// TODO
+		return 0;
+	}
 
 	/**
 	 * Check if two trees are equal.

@@ -6,38 +6,13 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import insomnia.AbstractTree;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
 
-public abstract class AbstractTreeBuilder<VAL, LBL> implements ITreeBuilder<VAL, LBL>
+public abstract class AbstractTreeBuilder<VAL, LBL> extends AbstractTree<VAL, LBL> implements ITreeBuilder<VAL, LBL>
 {
-	@Override
-	public List<INode<VAL, LBL>> getNodes()
-	{
-		return ITree.getNodes(this);
-	}
-
-	@Override
-	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
-	{
-		return ITree.getNodes(this, node);
-	}
-
-	@Override
-	public List<IEdge<VAL, LBL>> getEdges()
-	{
-		return ITree.getEdges(this);
-	}
-
-	@Override
-	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
-	{
-		return ITree.getEdges(this, node);
-	}
-
-	// ==========================================================================
-
 	@Override
 	public ITreeBuilder<VAL, LBL> setComplete()
 	{
@@ -190,13 +165,5 @@ public abstract class AbstractTreeBuilder<VAL, LBL> implements ITreeBuilder<VAL,
 	{
 		setCurrentNode(ITree.followIndex(this, getCurrentNode(), coordinates));
 		return this;
-	}
-
-	// ==========================================================================
-
-	@Override
-	public String toString()
-	{
-		return ITree.treeOrPathToString(this);
 	}
 }

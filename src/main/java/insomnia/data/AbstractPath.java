@@ -1,14 +1,16 @@
 package insomnia.data;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.BooleanUtils;
 
+import insomnia.AbstractTree;
 import insomnia.implem.data.Paths;
 
-public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
+public abstract class AbstractPath<VAL, LBL> extends AbstractTree<VAL, LBL> implements IPath<VAL, LBL>
 {
 
 	@Override
@@ -32,27 +34,21 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	}
 
 	@Override
+	public List<INode<VAL, LBL>> getLeaves()
+	{
+		return Collections.singletonList(getLeaf());
+	}
+
+	@Override
+	public List<INode<VAL, LBL>> getLeaves(INode<VAL, LBL> node)
+	{
+		return getLeaves();
+	}
+
+	@Override
 	public List<INode<VAL, LBL>> getNodes()
 	{
 		return getNodes(getRoot());
-	}
-
-	@Override
-	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
-	{
-		return ITree.getNodes(this, node);
-	}
-
-	@Override
-	public List<IEdge<VAL, LBL>> getEdges()
-	{
-		return getEdges(getRoot());
-	}
-
-	@Override
-	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
-	{
-		return ITree.getEdges(this, node);
 	}
 
 	@Override
@@ -106,12 +102,6 @@ public abstract class AbstractPath<VAL, LBL> implements IPath<VAL, LBL>
 	public boolean isPath()
 	{
 		return true;
-	}
-
-	@Override
-	public boolean isRooted()
-	{
-		return getRoot().isRooted();
 	}
 
 	@Override

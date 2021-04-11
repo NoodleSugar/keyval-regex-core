@@ -10,18 +10,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import insomnia.AbstractTree;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.data.creational.ISubTreeBuilder;
-import insomnia.lib.help.HelpLists;
 
 /**
  * An implementation of a sub-tree builder which select existing nodes and edges from a tree.
  * 
  * @author zuri
  */
-public final class SubTreeBuilder<VAL, LBL> implements ISubTreeBuilder<VAL, LBL>
+public final class SubTreeBuilder<VAL, LBL> extends AbstractTree<VAL, LBL> implements ISubTreeBuilder<VAL, LBL>
 {
 	private ITree<VAL, LBL> parentTree;
 
@@ -62,45 +62,9 @@ public final class SubTreeBuilder<VAL, LBL> implements ISubTreeBuilder<VAL, LBL>
 	}
 
 	@Override
-	public boolean isPath()
-	{
-		return ITree.isPath(this);
-	}
-
-	@Override
-	public boolean isEmpty()
-	{
-		return childrenOf.getOrDefault(root, Collections.emptyList()).isEmpty();
-	}
-
-	@Override
-	public boolean isRooted()
-	{
-		return root.isRooted();
-	}
-
-	@Override
-	public List<INode<VAL, LBL>> getNodes()
-	{
-		return ITree.getNodes(this);
-	}
-
-	@Override
-	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
-	{
-		return ITree.getNodes(parentTree, node);
-	}
-
-	@Override
 	public List<IEdge<VAL, LBL>> getEdges()
 	{
-		return HelpLists.staticList(edges);
-	}
-
-	@Override
-	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
-	{
-		return ITree.getEdges(this, node);
+		return List.copyOf(edges);
 	}
 
 	@Override
@@ -209,13 +173,5 @@ public final class SubTreeBuilder<VAL, LBL> implements ISubTreeBuilder<VAL, LBL>
 			nextEdge.clear();
 		}
 		return this;
-	}
-
-	// =========================================================================
-
-	@Override
-	public String toString()
-	{
-		return ITree.treeOrPathToString(this);
 	}
 }

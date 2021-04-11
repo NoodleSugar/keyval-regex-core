@@ -13,11 +13,12 @@ import java.util.Queue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import insomnia.AbstractTree;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
 
-final class Tree<VAL, LBL> implements ITree<VAL, LBL>
+final class Tree<VAL, LBL> extends AbstractTree<VAL, LBL>
 {
 	private INode<VAL, LBL> root;
 
@@ -151,39 +152,9 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 	}
 
 	@Override
-	public boolean isEmpty()
-	{
-		return childrenOf.isEmpty() && INode.isEmpty(root);
-	}
-
-	@Override
-	public boolean isRooted()
-	{
-		return root.isRooted();
-	}
-
-	@Override
-	public List<INode<VAL, LBL>> getNodes()
-	{
-		return getNodes(getRoot());
-	}
-
-	@Override
-	public List<INode<VAL, LBL>> getNodes(INode<VAL, LBL> node)
-	{
-		return ITree.getNodes(this, node);
-	}
-
-	@Override
 	public List<IEdge<VAL, LBL>> getEdges()
 	{
 		return childrenOf.values().stream().flatMap(l -> l.stream()).collect(Collectors.toList());
-	}
-
-	@Override
-	public List<IEdge<VAL, LBL>> getEdges(INode<VAL, LBL> node)
-	{
-		return ITree.getEdges(this, node);
 	}
 
 	@Override
@@ -202,11 +173,5 @@ final class Tree<VAL, LBL> implements ITree<VAL, LBL>
 	public Collection<LBL> getVocabulary()
 	{
 		return vocabulary;
-	}
-
-	@Override
-	public String toString()
-	{
-		return ITree.toString(this);
 	}
 }
