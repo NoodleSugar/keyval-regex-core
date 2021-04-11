@@ -1,12 +1,13 @@
 package insomnia.rule;
 
 import java.util.Collection;
+import java.util.Map;
 
+import insomnia.data.INode;
 import insomnia.data.ITree;
 
 /**
  * A general rule composed of a tree body and head (body -> head).
- * The body and the share conceptually the root node, so the rooted nature of the trees must be the same.
  * 
  * @author zuri
  * @param <VAL>
@@ -24,4 +25,14 @@ public interface IRule<VAL, LBL>
 	boolean isExistential();
 
 	Collection<LBL> getVocabulary();
+
+	/**
+	 * Get the frontier of the rule.
+	 * The mapping relation is bidirectional.
+	 * 
+	 * @return the mappings between the frontier nodes of body and head
+	 */
+	Map<INode<VAL, LBL>, INode<VAL, LBL>> getFontier();
+
+	Collection<INode<VAL, LBL>> getExistentialNodes();
 }

@@ -2,8 +2,14 @@ package insomnia.implem.rule;
 
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+
+import insomnia.data.INode;
 import insomnia.data.IPath;
 import insomnia.implem.data.Paths;
 import insomnia.rule.IPathRule;
@@ -23,6 +29,8 @@ public final class PathRules<VAL, LBL>
 
 		private boolean isExistential;
 
+		private Map<INode<VAL, LBL>, INode<VAL, LBL>> frontier;
+
 		private PathRule(IPath<VAL, LBL> body, IPath<VAL, LBL> head, boolean isExistential) throws IllegalArgumentException
 		{
 			if (body.isRooted() != head.isRooted())
@@ -37,6 +45,14 @@ public final class PathRules<VAL, LBL>
 			this.body          = body;
 			this.head          = head;
 			this.isExistential = isExistential;
+
+			frontier = new DualHashBidiMap<>();
+			frontier.put(head.getRoot(), body.getRoot());
+
+			if (!isExistential)
+				frontier.put(head.getLeaf(), body.getLeaf());
+
+			frontier = MapUtils.unmodifiableMap(frontier);
 		}
 
 		@Override
@@ -55,6 +71,18 @@ public final class PathRules<VAL, LBL>
 		public boolean isExistential()
 		{
 			return isExistential;
+		}
+
+		@Override
+		public Map<INode<VAL, LBL>, INode<VAL, LBL>> getFontier()
+		{
+			return frontier;
+		}
+
+		@Override
+		public Collection<INode<VAL, LBL>> getExistentialNodes()
+		{
+			return isExistential ? Collections.singleton(head.getLeaf()) : Collections.emptyList();
 		}
 
 		@Override
