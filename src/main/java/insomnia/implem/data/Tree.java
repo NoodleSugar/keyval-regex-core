@@ -74,7 +74,7 @@ final class Tree<VAL, LBL> extends AbstractTree<VAL, LBL>
 
 	// =========================================================================
 
-	private static <VAL, LBL, TOVAL, TOLBL> Tree<TOVAL, TOLBL> map( //
+	static <VAL, LBL, TOVAL, TOLBL> Tree<TOVAL, TOLBL> map( //
 		ITree<VAL, LBL> tree, //
 		INode<VAL, LBL> root, //
 		Function<INode<VAL, LBL>, INode<TOVAL, TOLBL>> fmapNode, //
@@ -83,7 +83,6 @@ final class Tree<VAL, LBL> extends AbstractTree<VAL, LBL>
 	{
 		Tree<TOVAL, TOLBL> ret   = mutable();
 		Queue<INode<?, ?>> nodes = new LinkedList<>();
-
 		ret.root = fmapNode.apply(root);
 
 		if (tree.getChildren(root).isEmpty())
@@ -117,18 +116,6 @@ final class Tree<VAL, LBL> extends AbstractTree<VAL, LBL>
 			}
 		}
 		return ret;
-	}
-
-	// =========================================================================
-
-	public <TOVAL, TOLBL> Tree<TOVAL, TOLBL> map(INode<VAL, LBL> root, Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel)
-	{
-		return Tree.map(this, root, n -> Nodes.create(n, mapVal.apply(n.getValue())), mapLabel);
-	}
-
-	public <TOVAL, TOLBL> Tree<TOVAL, TOLBL> map(Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel)
-	{
-		return map(getRoot(), mapVal, mapLabel);
 	}
 
 	// =========================================================================

@@ -3,6 +3,7 @@ package insomnia.implem.data;
 import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.function.Function;
 
@@ -157,6 +158,32 @@ public final class Trees
 	static public <VAL, LBL> ITree<VAL, LBL> complete(ITree<VAL, LBL> tree)
 	{
 		return complete(tree, tree.getRoot());
+	}
+
+	// =========================================================================
+
+	public static <VAL, LBL, TOVAL, TOLBL> Tree<TOVAL, TOLBL> map(ITree<VAL, LBL> tree, INode<VAL, LBL> root, Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel)
+	{
+		return Tree.map(tree, root, n -> Nodes.create(n, mapVal.apply(n.getValue())), mapLabel);
+	}
+
+	public static <VAL, LBL, TOVAL, TOLBL> Tree<TOVAL, TOLBL> map(ITree<VAL, LBL> tree, Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel)
+	{
+		return map(tree, tree.getRoot(), mapVal, mapLabel);
+	}
+
+	public static <VAL, LBL, TOVAL, TOLBL> Tree<TOVAL, TOLBL> map(ITree<VAL, LBL> tree, Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel, Map<INode<VAL, LBL>, INode<TOVAL, TOLBL>> oldToNewNode)
+	{
+		return map(tree, tree.getRoot(), mapVal, mapLabel, oldToNewNode);
+	}
+
+	public static <VAL, LBL, TOVAL, TOLBL> Tree<TOVAL, TOLBL> map(ITree<VAL, LBL> tree, INode<VAL, LBL> root, Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel, Map<INode<VAL, LBL>, INode<TOVAL, TOLBL>> oldToNewNode)
+	{
+		return Tree.map(tree, root, n -> {
+			INode<TOVAL, TOLBL> newNode = Nodes.create(n, mapVal.apply(n.getValue()));
+			oldToNewNode.put(n, newNode);
+			return newNode;
+		}, mapLabel);
 	}
 
 	// =========================================================================
