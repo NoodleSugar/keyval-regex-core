@@ -46,7 +46,7 @@ final class TreeFromPRegexElementBuilder<VAL, LBL>
 		if (size > 1)
 			throw new IllegalArgumentException(String.format("Can't handle a size of %s for %s", size, element));
 
-		treeBuilder.setRooted(element.isRooted());
+		treeBuilder.setRooted(element.isRooted()).setValue(mapValue.apply(null));
 		doit(element);
 		return Trees.create(treeBuilder);
 	}
