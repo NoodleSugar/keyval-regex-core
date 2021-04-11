@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Stack;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -208,6 +210,54 @@ public interface ITree<VAL, LBL>
 				nodeQueue.add(edge.getChild());
 		}
 		return ret;
+	}
+
+	// =========================================================================
+
+	public static <VAL, LBL, TOVAL, TOLBL> ITree<TOVAL, TOLBL> update(ITree<VAL, LBL> tree, Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel)
+	{
+		return update(tree, tree.getRoot(), mapVal, mapLabel);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <VAL, LBL, TOVAL, TOLBL> ITree<TOVAL, TOLBL> update(ITree<VAL, LBL> tree, INode<VAL, LBL> root, Function<VAL, TOVAL> mapVal, Function<LBL, TOLBL> mapLabel)
+	{
+		breadthFirstWalk((ITree<TOVAL, TOLBL>) tree, (INode<TOVAL, TOLBL>) root //
+			, n -> n.setValue(mapVal.apply((VAL) n.getValue())) //
+			, e -> e.setLabel(mapLabel.apply((LBL) e.getLabel()))//
+		);
+		if (root == tree.getRoot())
+			return (ITree<TOVAL, TOLBL>) tree;
+
+		return (ITree<TOVAL, TOLBL>) Trees.subTree(tree, root);
+	}
+
+	public static <VAL, LBL> void breadthFirstWalk(ITree<VAL, LBL> tree, INode<VAL, LBL> root, Consumer<INode<VAL, LBL>> visitNode, Consumer<IEdge<VAL, LBL>> visitEdge)
+	{
+		Queue<INode<VAL, LBL>> nodes = new LinkedList<>();
+
+		visitNode.accept(root);
+
+		if (tree.getChildren(root).isEmpty())
+			return;
+
+		nodes.add(root);
+
+		while (!nodes.isEmpty())
+		{
+			for (var edge : tree.getChildren(nodes.poll()))
+			{
+				var nodeChild  = edge.getChild();
+				var edgeChilds = tree.getChildren(nodeChild);
+				visitEdge.accept(edge);
+				visitNode.accept(nodeChild);
+
+				if (edgeChilds.isEmpty())
+					continue;
+
+				nodes.add(nodeChild);
+			}
+		}
 	}
 
 	// =========================================================================
