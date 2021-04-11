@@ -89,6 +89,12 @@ final class Path<VAL, LBL> extends AbstractPath<VAL, LBL>
 		}
 
 		@Override
+		public void setValue(VAL value)
+		{
+			ref.setValue(value);
+		}
+
+		@Override
 		public boolean isRooted()
 		{
 			return ref.isRooted();

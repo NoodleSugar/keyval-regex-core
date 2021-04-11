@@ -1,6 +1,6 @@
 package insomnia.implem.data;
 
-import insomnia.data.AbstractNode;
+import insomnia.data.AbstractValuedNode;
 import insomnia.data.INode;
 
 public final class Nodes
@@ -12,19 +12,11 @@ public final class Nodes
 
 	// ==========================================================================
 
-	private static abstract class Node<VAL, LBL> extends AbstractNode<VAL, LBL>
+	private static abstract class Node<VAL, LBL> extends AbstractValuedNode<VAL, LBL>
 	{
-		private VAL value;
-
 		Node(VAL value)
 		{
-			this.value = value;
-		}
-
-		@Override
-		public VAL getValue()
-		{
-			return value;
+			super(value);
 		}
 	}
 

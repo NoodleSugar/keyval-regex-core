@@ -34,6 +34,12 @@ class Edge<VAL, LBL> implements IEdge<VAL, LBL>
 	}
 
 	@Override
+	public void setLabel(LBL label)
+	{
+		this.label = label;
+	}
+
+	@Override
 	public Node<VAL, LBL> getParent()
 	{
 		return parent;

@@ -33,6 +33,12 @@ public final class Edges
 		}
 
 		@Override
+		public void setLabel(LBL label)
+		{
+			this.label = label;
+		}
+
+		@Override
 		public INode<VAL, LBL> getParent()
 		{
 			return parent;

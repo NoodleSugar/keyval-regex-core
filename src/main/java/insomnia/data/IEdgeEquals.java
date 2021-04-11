@@ -51,6 +51,12 @@ interface IEdgeEquals<VAL, LBL> extends IEdge<VAL, LBL>
 			}
 
 			@Override
+			public void setLabel(LBL label)
+			{
+				src.setLabel(label);
+			}
+
+			@Override
 			public INode<VAL, LBL> getParent()
 			{
 				return src.getParent();

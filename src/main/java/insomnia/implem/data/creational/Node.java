@@ -71,7 +71,8 @@ class Node<VAL, LBL> implements INode<VAL, LBL>
 		this.isTerminal = isTerminal;
 	}
 
-	void setValue(VAL value)
+	@Override
+	public void setValue(VAL value)
 	{
 		this.value = value;
 	}

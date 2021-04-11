@@ -30,6 +30,13 @@ public interface INode<VAL, LBL>
 	VAL getValue();
 
 	/**
+	 * Change the value of the node.
+	 * 
+	 * @param value the new value
+	 */
+	void setValue(VAL value);
+
+	/**
 	 * Is the node a true rooted node?
 	 * This information belongs to the node, and do not change even if the node belongs to many trees.
 	 */

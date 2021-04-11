@@ -20,6 +20,8 @@ public interface IEdge<VAL, LBL>
 {
 	LBL getLabel();
 
+	void setLabel(LBL label);
+
 	INode<VAL, LBL> getParent();
 
 	INode<VAL, LBL> getChild();
