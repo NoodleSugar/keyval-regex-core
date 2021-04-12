@@ -24,6 +24,10 @@ public interface IRule<VAL, LBL>
 	 */
 	boolean isExistential();
 
+	boolean isExistential(INode<VAL, LBL> node);
+
+	boolean isFrontier(INode<VAL, LBL> node);
+
 	Collection<LBL> getVocabulary();
 
 	/**

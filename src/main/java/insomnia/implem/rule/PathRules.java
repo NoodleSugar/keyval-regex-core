@@ -74,6 +74,18 @@ public final class PathRules<VAL, LBL>
 		}
 
 		@Override
+		public boolean isExistential(INode<VAL, LBL> node)
+		{
+			return isExistential && INode.sameAs(node, getHead().getLeaf());
+		}
+
+		@Override
+		public boolean isFrontier(INode<VAL, LBL> node)
+		{
+			return !isExistential && (INode.sameAs(node, getHead().getLeaf()) || INode.sameAs(node, getBody().getLeaf()));
+		}
+
+		@Override
 		public Map<INode<VAL, LBL>, INode<VAL, LBL>> getFontier()
 		{
 			return frontier;

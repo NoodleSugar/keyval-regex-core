@@ -14,6 +14,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.junit.platform.commons.util.ToStringBuilder;
 
 import insomnia.data.INode;
 import insomnia.data.ITree;
@@ -65,6 +66,18 @@ public final class Rules<VAL, LBL>
 		}
 
 		@Override
+		public boolean isExistential(INode<VAL, LBL> node)
+		{
+			return existentialNodes.contains(node);
+		}
+
+		@Override
+		public boolean isFrontier(INode<VAL, LBL> node)
+		{
+			return frontier.containsKey(node);
+		}
+
+		@Override
 		public Collection<LBL> getVocabulary()
 		{
 			return new HashSet<>(FluentIterable.of(body.getVocabulary()).append(head.getVocabulary()).toList());
@@ -81,10 +94,20 @@ public final class Rules<VAL, LBL>
 		{
 			return existentialNodes;
 		}
+
+		@Override
+		public String toString()
+		{
+			return new ToStringBuilder(this) //
+				.append("body", ITree.toString(body)) //
+				.append("head", ITree.toString(head)) //
+				.append("frontier", frontier) //
+				.toString();
+		}
 	}
 	// =========================================================================
 
-	static final String emptyName = "";
+	private static final String emptyName = "";
 
 	private static Function<String, Object> mapVariable(Function<String, ?> mapValue)
 	{
