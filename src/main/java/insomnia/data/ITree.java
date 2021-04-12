@@ -226,7 +226,7 @@ public interface ITree<VAL, LBL>
 			, n -> n.setValue(mapVal.apply((VAL) n.getValue())) //
 			, e -> e.setLabel(mapLabel.apply((LBL) e.getLabel()))//
 		);
-		if (root == tree.getRoot())
+		if (INode.sameAs(root, tree.getRoot()))
 			return (ITree<TOVAL, TOLBL>) tree;
 
 		return (ITree<TOVAL, TOLBL>) Trees.subTree(tree, root);
@@ -434,7 +434,7 @@ public interface ITree<VAL, LBL>
 	 */
 	public static <VAL, LBL> List<IEdge<VAL, LBL>> parentEdges(ITree<VAL, LBL> tree, INode<VAL, LBL> node, INode<VAL, LBL> parent)
 	{
-		if (node == parent)
+		if (INode.sameAs(node, parent))
 			return Collections.emptyList();
 
 		List<IEdge<VAL, LBL>> ret = new ArrayList<>();
@@ -448,7 +448,7 @@ public interface ITree<VAL, LBL>
 
 			ret.add(parentEdge.get());
 
-			if (parentEdge.get().getParent() == parent)
+			if (INode.sameAs(parentEdge.get().getParent(), parent))
 				break;
 
 			node = parentEdge.get().getParent();

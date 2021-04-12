@@ -88,7 +88,7 @@ public interface INode<VAL, LBL>
 	 */
 	public static boolean equals(INode<?, ?> a, INode<?, ?> b)
 	{
-		return a == b || //
+		return sameAs(a, b) || //
 			(Objects.equals(a.getValue(), b.getValue()) //
 				&& a.isRooted() == b.isRooted() //
 				&& a.isTerminal() == b.isTerminal());
