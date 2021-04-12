@@ -3,7 +3,7 @@ package insomnia.implem.kv.unifier;
 import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.unifier.PathUnifier;
-import insomnia.unifier.PathUnifiers;
+import insomnia.implem.unifier.PathUnifiers;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public final class KVPathUnifiers

@@ -16,8 +16,8 @@ import insomnia.implem.kv.data.KVLabel;
 import insomnia.implem.kv.data.KVPaths;
 import insomnia.implem.kv.data.KVValue;
 import insomnia.implem.unifier.PathUnifier;
+import insomnia.implem.unifier.PathUnifiers;
 import insomnia.unifier.IPathUnifier;
-import insomnia.unifier.PathUnifiers;
 
 class TestUnifier
 {

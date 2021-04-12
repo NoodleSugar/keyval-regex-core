@@ -37,9 +37,9 @@ import insomnia.implem.rule.PathRules;
 import insomnia.implem.rule.dependency.BetaDependencyValidation;
 import insomnia.implem.rule.grd.creational.GRDFactory;
 import insomnia.implem.unifier.PathUnifier;
+import insomnia.implem.unifier.PathUnifiers;
 import insomnia.rule.IRule;
 import insomnia.rule.grd.IGRD;
-import insomnia.unifier.PathUnifiers;
 
 public class TestAutomaton
 {

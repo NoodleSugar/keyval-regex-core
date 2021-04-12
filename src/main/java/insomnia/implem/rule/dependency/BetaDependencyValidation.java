@@ -3,13 +3,13 @@ package insomnia.implem.rule.dependency;
 import java.util.Arrays;
 import java.util.Collection;
 
+import insomnia.implem.unifier.PathUnifiers;
 import insomnia.rule.IPathRule;
 import insomnia.rule.dependency.AbstractBetaDependencyValidation;
 import insomnia.rule.dependency.IDependency;
 import insomnia.rule.dependency.IDependencyCondition;
 import insomnia.rule.dependency.condition.VocabularyBetaCondition;
 import insomnia.unifier.IPathUnifier;
-import insomnia.unifier.PathUnifiers;
 
 public class BetaDependencyValidation<VAL, LBL> extends AbstractBetaDependencyValidation<VAL, LBL>
 {

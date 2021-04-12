@@ -1,4 +1,4 @@
-package insomnia.unifier;
+package insomnia.implem.unifier;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -8,6 +8,9 @@ import java.util.List;
 
 import insomnia.data.IPath;
 import insomnia.rule.IPathRule;
+import insomnia.unifier.AbstractPathUnifierFactory;
+import insomnia.unifier.IPathUnifier;
+import insomnia.unifier.IPathUnifierFactory;
 
 /**
  * Factory of {@link IPathUnifier} able to compute {@link IPathUnifier}s (strong/weak/all) depending on initials {@link IPath} or {@link IPathRule} .

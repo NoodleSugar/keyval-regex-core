@@ -5,10 +5,10 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.NotImplementedException;
 
+import insomnia.implem.unifier.PathUnifiers;
 import insomnia.rule.IPathRule;
 import insomnia.rule.IRule;
 import insomnia.unifier.IPathUnifier;
-import insomnia.unifier.PathUnifiers;
 
 public abstract class AbstractBetaDependencyValidation<VAL, LBL> extends AbstractDependencyValidation<VAL, LBL>
 {
