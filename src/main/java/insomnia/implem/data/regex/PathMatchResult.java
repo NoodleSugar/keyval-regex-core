@@ -10,7 +10,6 @@ class PathMatchResult<VAL, LBL> //
 	PathMatchResult(IPath<VAL, LBL> group, IPath<VAL, LBL> original)
 	{
 		super(group, original);
-		this.nodeToOriginal.put(group.getRoot(), original.getLeaf());
 		this.nodeToOriginal.put(group.getLeaf(), original.getLeaf());
 	}
 }

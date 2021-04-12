@@ -25,6 +25,7 @@ abstract class AbstractMatchResult<VAL, LBL, RET extends ITree<VAL, LBL>>
 		this.group          = group;
 		this.original       = original;
 		this.nodeToOriginal = new DualHashBidiMap<>(nodeToOriginal);
+		this.nodeToOriginal.put(group.getRoot(), original.getRoot());
 	}
 
 	public RET group()
