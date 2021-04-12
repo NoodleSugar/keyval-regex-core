@@ -471,6 +471,32 @@ public interface ITree<VAL, LBL>
 	}
 
 	/**
+	 * Check if a node is separator.
+	 * 
+	 * @param tree    the tree
+	 * @param subTree a sub-tree
+	 * @param node    the node to check
+	 * @return true if the node is separator
+	 */
+	public static <VAL, LBL> boolean isSeparator(ITree<VAL, LBL> tree, ITree<VAL, LBL> subTree, INode<VAL, LBL> node)
+	{
+		return tree.getChildren(node).size() != subTree.getChildren(node).size();
+	}
+
+	/**
+	 * Scan the entire tree to get its separator nodes.
+	 * 
+	 * @param <VAL> type of node value
+	 * @param <LBL> type of edge label
+	 * @param tree  the tree to consider
+	 * @return
+	 */
+	public static <VAL, LBL> List<INode<VAL, LBL>> getSeparators(ITree<VAL, LBL> tree, ITree<VAL, LBL> subTree)
+	{
+		return CollectionUtils.select(subTree.getNodes(), n -> isSeparator(tree, subTree, n), new ArrayList<>());
+	}
+
+	/**
 	 * Scan the entire tree to get its nodes.
 	 * 
 	 * @param <VAL> type of node value
@@ -680,7 +706,7 @@ public interface ITree<VAL, LBL>
 
 		for (var anode : anodes)
 		{
-			if (a.getChildren(anode).size() != b.getChildren(anode).size())
+			if (isSeparator(b, a, anode))
 				return false;
 		}
 		return true;

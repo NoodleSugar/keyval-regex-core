@@ -1,6 +1,7 @@
 package insomnia.implem.data;
 
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import org.apache.commons.collections4.IterableUtils;
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
+import insomnia.data.ITreeErasure;
 import insomnia.data.creational.ISubTreeBuilder;
 import insomnia.data.creational.ITreeBuilder;
 import insomnia.implem.data.creational.SubTreeBuilder;
@@ -305,6 +307,80 @@ public final class Trees
 	static public <VAL, LBL> ITree<VAL, LBL> subTreeView(ITree<VAL, LBL> tree, INode<VAL, LBL> node, INode<VAL, LBL> root)
 	{
 		return new SubTreeView<>(tree, node, root);
+	}
+
+	// =========================================================================
+
+	static public <VAL, LBL> ITree<VAL, LBL> top(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
+	{
+		ISubTreeBuilder<VAL, LBL> builder = new SubTreeBuilder<VAL, LBL>(tree);
+		Queue<INode<VAL, LBL>>    nodes   = new LinkedList<>();
+
+		if (node == tree.getRoot())
+			return Trees.emptySubTree(tree, node);
+
+		nodes.add(tree.getRoot());
+
+		while (!nodes.isEmpty())
+		{
+			for (var edge : tree.getChildren(nodes.poll()))
+			{
+				var nodeChild  = edge.getChild();
+				var edgeChilds = tree.getChildren(nodeChild);
+				builder.add(edge);
+
+				if (edgeChilds.isEmpty() || INode.sameAs(nodeChild, node))
+					continue;
+
+				nodes.add(nodeChild);
+			}
+		}
+		return Trees.subTree(builder);
+	}
+
+	static public <VAL, LBL> ITreeErasure<VAL, LBL> erasure(ITree<VAL, LBL> original, ITree<VAL, LBL> erase)
+	{
+
+		return new ITreeErasure<VAL, LBL>()
+		{
+			private final ITree<VAL, LBL>             top = Trees.top(original, erase.getRoot());
+			private final Collection<ITree<VAL, LBL>> side, bottom;
+			{
+				var p = IterableUtils.partition(ITree.getSeparators(original, erase), n -> erase.isLeaf(n));
+				bottom = List.copyOf(CollectionUtils.collect(p.get(0), n -> Trees.subTree(original, n)));
+				side   = List.copyOf(CollectionUtils.collect(p.get(1), n -> Trees.subTree(original, n)));
+			}
+
+			@Override
+			public ITree<VAL, LBL> original()
+			{
+				return original;
+			}
+
+			@Override
+			public ITree<VAL, LBL> erase()
+			{
+				return erase;
+			}
+
+			@Override
+			public ITree<VAL, LBL> top()
+			{
+				return top;
+			}
+
+			@Override
+			public Collection<ITree<VAL, LBL>> side()
+			{
+				return side;
+			}
+
+			@Override
+			public Collection<ITree<VAL, LBL>> bottom()
+			{
+				return bottom;
+			}
+		};
 	}
 
 	// =========================================================================
