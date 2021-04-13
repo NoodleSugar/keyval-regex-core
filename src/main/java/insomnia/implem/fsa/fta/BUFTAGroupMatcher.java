@@ -70,7 +70,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 			var presents = CollectionUtils.select(getFroms(state), from::equals);
 
 			if (presents.isEmpty())
-				add(state, from);
+				add(state, from.cpy());
 			else
 			{
 				for (From f : presents)
@@ -195,7 +195,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 		@Override
 		public int hashCode()
 		{
-			return 0;
+			return elementRoot.hashCode() + getElementLeaves().hashCode();
 		}
 
 		@Override
@@ -298,11 +298,14 @@ class BUFTAGroupMatcher<VAL, LBL>
 		if (finalStates.isEmpty())
 			return false;
 
+		Set<From> froms = new HashSet<>();
+
 		for (IFSAState<VAL, LBL> state : finalStates)
-		{
-			for (From from : nodeData.getFroms(state))
-				currentResults.add(from);
-		}
+			froms.addAll(nodeData.getFroms(state));
+
+		for (From from : froms)
+			currentResults.add(from);
+
 		return true;
 	}
 
