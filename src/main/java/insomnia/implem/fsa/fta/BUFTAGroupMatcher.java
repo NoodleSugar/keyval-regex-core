@@ -116,7 +116,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 
 		for (IFSAState<VAL, LBL> state : stateClass)
 		{
-			INode<VAL, LBL> nonode = automaton.getOriginalNodes().get(state);
+			INode<VAL, LBL> nonode = automaton.getStateNode(state);
 
 			if (null != nonode)
 				originalNode = nonode;
@@ -210,7 +210,9 @@ class BUFTAGroupMatcher<VAL, LBL>
 		@Override
 		public String toString()
 		{
-			return new StringBuilder("from:").append(Trees.subTree(element, elementRoot, getElementLeaves())).toString();
+			return new StringBuilder() //
+				.append(elementRoot).append(":").append(originalRoot) //
+				.append(";from:").append(ITree.toString(Trees.subTree(element, elementRoot, getElementLeaves()))).toString();
 		}
 	}
 
@@ -354,7 +356,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 							 * This part assume a good order parent->child in the sequence of 's'.
 							 */
 							{
-								INode<VAL, LBL> oNode = automaton.getOriginalNodes().get(s);
+								INode<VAL, LBL> oNode = automaton.getStateNode(s);
 								if (null != oNode)
 									originalNode = oNode;
 							}
@@ -367,7 +369,6 @@ class BUFTAGroupMatcher<VAL, LBL>
 								for (From from : childNodeData.getFroms(childState))
 								{
 									From newFrom = from.cpy();
-									newFrom.setRoot(node, originalNode);
 									newNodeData.add(s, newFrom);
 								}
 							}
@@ -409,8 +410,14 @@ class BUFTAGroupMatcher<VAL, LBL>
 						var validState = validStates.get(0);
 
 						for (From from : childNodeData.getFroms(validState))
+						{
 							for (var nstate : newStates)
+							{
+								var originalNode = automaton.getStateNode(nstate);
+								from.setRoot(node, originalNode);
 								nodeData.merge(nstate, from);
+							}
+						}
 					}
 				}
 				// Multiple childs
@@ -440,7 +447,11 @@ class BUFTAGroupMatcher<VAL, LBL>
 								newFrom.merge(from);
 
 							for (var nstate : newStates)
+							{
+								var originalNode = automaton.getStateNode(nstate);
+								newFrom.setRoot(node, originalNode);
 								nodeData.merge(nstate, newFrom);
+							}
 						}
 					}
 				}

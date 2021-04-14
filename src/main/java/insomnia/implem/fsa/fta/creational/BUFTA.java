@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.collections4.MultiMapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
@@ -20,6 +21,7 @@ import insomnia.fsa.fta.IFTAEdge;
 import insomnia.implem.data.Trees;
 import insomnia.implem.fsa.fpa.creational.FPABuilder;
 import insomnia.implem.fsa.fta.BUFTAMatchers;
+import insomnia.implem.fsa.fta.buftachunk.BUFTAChunk;
 
 /**
  * The concrete builded {@link IBUFTA} implementation.
@@ -36,16 +38,26 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 
 	private MultiValuedMap<IFSAState<VAL, LBL>, IFTAEdge<VAL, LBL>> ftaEdgesOf;
 
-	private Map<IFSAState<VAL, LBL>, INode<VAL, LBL>> originalNodes;
+	private Map<IFSAState<VAL, LBL>, INode<VAL, LBL>> stateNodeMap;
+
+	private MultiValuedMap<INode<VAL, LBL>, IFSAState<VAL, LBL>> nodeStatesMap;
 
 	private ITree<VAL, LBL> originalTree;
 
-	BUFTA(BUFTABuilder<VAL, LBL> builder)
+	BUFTA(BUFTAChunk<VAL, LBL> automaton)
 	{
-		this.gfpa          = new FPABuilder<>(builder.getGchunk()).mustBeSync(false).createNewStates(!true).create();
-		this.ftaEdges      = List.copyOf(builder.getFtaEdges());
-		this.originalNodes = MapUtils.unmodifiableMap(new HashMap<>(builder.getOriginalNodes()));
-		this.originalTree  = Trees.subTree(builder.getTree());
+		this.gfpa         = new FPABuilder<>(automaton.getGChunk()).mustBeSync(false).createNewStates(!true).create();
+		this.ftaEdges     = List.copyOf(automaton.getFTAEdges());
+		this.stateNodeMap = MapUtils.unmodifiableMap(new HashMap<>(automaton.getStateNodeMap()));
+
+		nodeStatesMap = new ArrayListValuedHashMap<>();
+
+		for (var entry : automaton.getNodeStatesMap().entrySet())
+			nodeStatesMap.putAll(entry.getKey(), entry.getValue());
+
+		nodeStatesMap = MultiMapUtils.unmodifiableMultiValuedMap(nodeStatesMap);
+
+		this.originalTree = Trees.subTree(automaton.getTree());
 		{
 			ArrayListValuedHashMap<IFSAState<VAL, LBL>, IFTAEdge<VAL, LBL>> ftaOf = new ArrayListValuedHashMap<>();
 
@@ -70,6 +82,12 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 	}
 
 	@Override
+	public Collection<IFTAEdge<VAL, LBL>> getFTAEdges()
+	{
+		return ftaEdges;
+	}
+
+	@Override
 	public Collection<IFTAEdge<VAL, LBL>> getFTAEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates)
 	{
 		Collection<IFTAEdge<VAL, LBL>> ret = new HashSet<>();
@@ -83,9 +101,33 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 	}
 
 	@Override
-	public Map<IFSAState<VAL, LBL>, INode<VAL, LBL>> getOriginalNodes()
+	public Collection<IFTAEdge<VAL, LBL>> getFTAEdgesTo(IFSAState<VAL, LBL> state)
 	{
-		return originalNodes;
+		return IBUFTA.getFTAEdgesTo(this, state);
+	}
+
+	@Override
+	public Map<IFSAState<VAL, LBL>, INode<VAL, LBL>> getStateNodeMap()
+	{
+		return stateNodeMap;
+	}
+
+	@Override
+	public Map<INode<VAL, LBL>, Collection<IFSAState<VAL, LBL>>> getNodeStatesMap()
+	{
+		return nodeStatesMap.asMap();
+	}
+
+	@Override
+	public INode<VAL, LBL> getStateNode(IFSAState<VAL, LBL> state)
+	{
+		return stateNodeMap.get(state);
+	}
+
+	@Override
+	public Collection<IFSAState<VAL, LBL>> getNodeStates(INode<VAL, LBL> node)
+	{
+		return nodeStatesMap.get(node);
 	}
 
 	@Override
@@ -97,18 +139,6 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 	@Override
 	public String toString()
 	{
-		StringBuilder sb = new StringBuilder();
-
-		sb.append(gfpa);
-		sb.append("FTAEdges:\n");
-		ftaEdges.stream().forEach(e -> sb.append(e).append("\n"));
-
-		if (null != originalTree)
-		{
-			sb.append("\nOriginal nodes:\n");
-			originalNodes.forEach((k, v) -> sb.append(k).append(": ").append(v).append("\n"));
-			sb.append("Original tree:\n").append(ITree.toString(originalTree));
-		}
-		return sb.toString();
+		return IBUFTA.toString(this);
 	}
 }
