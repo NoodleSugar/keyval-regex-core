@@ -24,9 +24,9 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	 * Get all {@link IFTAEdge} that may validate parentStates.
 	 * A naive implementation may return all the edges of the automaton.
 	 * 
-	 * @param parentStates the list of multi-States
+	 * @param parentStates the list of multi-states
 	 */
-	Collection<IFTAEdge<VAL, LBL>> getHyperEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates);
+	Collection<IFTAEdge<VAL, LBL>> getFTAEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates);
 
 	/**
 	 * Get the original tree node that {@code state} represents.

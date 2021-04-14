@@ -127,7 +127,7 @@ class BUFTAMatches<VAL, LBL>
 			Collection<IFSAState<VAL, LBL>> newStates = new HashSet<>();
 
 			// Check hyper transitions
-			for (IFTAEdge<VAL, LBL> hEdge : automaton.getHyperEdges(childsSubStates))
+			for (IFTAEdge<VAL, LBL> hEdge : automaton.getFTAEdges(childsSubStates))
 			{
 				if (!hEdge.getCondition().testND(childsSubStates))
 					continue;

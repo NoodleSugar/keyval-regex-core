@@ -70,7 +70,7 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 	}
 
 	@Override
-	public Collection<IFTAEdge<VAL, LBL>> getHyperEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates)
+	public Collection<IFTAEdge<VAL, LBL>> getFTAEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates)
 	{
 		Collection<IFTAEdge<VAL, LBL>> ret = new HashSet<>();
 
