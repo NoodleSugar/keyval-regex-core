@@ -3,6 +3,8 @@ package insomnia.rule;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.commons.collections4.IterableUtils;
+
 import insomnia.data.INode;
 import insomnia.data.ITree;
 
@@ -24,6 +26,8 @@ public interface IRule<VAL, LBL>
 	 */
 	boolean isExistential();
 
+	boolean frontierIsTerminal();
+
 	boolean isExistential(INode<VAL, LBL> node);
 
 	boolean isFrontier(INode<VAL, LBL> node);
@@ -31,12 +35,19 @@ public interface IRule<VAL, LBL>
 	Collection<LBL> getVocabulary();
 
 	/**
-	 * Get the frontier of the rule.
-	 * The mapping relation is bidirectional.
+	 * Get the frontier of the rule from head to body.
 	 * 
-	 * @return the mappings between the frontier nodes of body and head
+	 * @return the mappings associating a head {@link INode} to a body {@link INode}
 	 */
 	Map<INode<VAL, LBL>, INode<VAL, LBL>> getFontier();
 
 	Collection<INode<VAL, LBL>> getExistentialNodes();
+
+	// =========================================================================
+
+	static <VAL, LBL> boolean frontierIsTerminal(IRule<VAL, LBL> rule)
+	{
+		var bodyRoot = rule.getBody().getRoot();
+		return IterableUtils.matchesAll(rule.getFontier().values(), n -> n == bodyRoot || n.isTerminal());
+	}
 }

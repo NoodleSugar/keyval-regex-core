@@ -12,7 +12,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.FluentIterable;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.junit.platform.commons.util.ToStringBuilder;
 
@@ -43,7 +42,7 @@ public final class Rules<VAL, LBL>
 		{
 			this.body        = body;
 			this.head        = head;
-			this.frontier    = MapUtils.unmodifiableMap(new DualHashBidiMap<>(frontier));
+			this.frontier    = MapUtils.unmodifiableMap(new HashMap<>(frontier));
 			existentialNodes = Collections.unmodifiableCollection(CollectionUtils.select(head.getLeaves(), l -> !this.frontier.containsKey(l)));
 		}
 
@@ -57,6 +56,12 @@ public final class Rules<VAL, LBL>
 		public ITree<VAL, LBL> getHead()
 		{
 			return head;
+		}
+
+		@Override
+		public boolean frontierIsTerminal()
+		{
+			return IRule.frontierIsTerminal(this);
 		}
 
 		@Override
@@ -159,6 +164,11 @@ public final class Rules<VAL, LBL>
 		ITree<VAL, LBL>                         tbody       = processVariables(Trees.treeFromString(body, mapVariable(mapValue), mapLabel), bodyRefLeaf);
 		ITree<VAL, LBL>                         thead       = processVariables(Trees.treeFromString(head, mapVariable(mapValue), mapLabel), headRefLeaf);
 
+		for (var k : bodyRefLeaf.keySet())
+		{
+			if (bodyRefLeaf.get(k).size() > 1)
+				throw new IllegalArgumentException(String.format("The body variable %s cannot be repeated", k));
+		}
 		Map<INode<VAL, LBL>, INode<VAL, LBL>> frontier = new HashMap<>();
 
 		for (var headEntry : headRefLeaf.entries())
@@ -167,7 +177,12 @@ public final class Rules<VAL, LBL>
 				throw new IllegalArgumentException(String.format("The head variable %s must appears as a leaf of the body", headEntry.getKey()));
 
 			for (var bnode : bodyRefLeaf.get(headEntry.getKey()))
+			{
+				if (!INode.equals(bnode, headEntry.getValue()))
+					throw new IllegalArgumentException(String.format("Each node with the variable %s must be equal, have: %s and %s", headEntry.getKey(), headEntry.getValue(), bnode));
+
 				frontier.put(headEntry.getValue(), bnode);
+			}
 		}
 		frontier.put(thead.getRoot(), tbody.getRoot());
 		return new Rule<>(tbody, thead, frontier);

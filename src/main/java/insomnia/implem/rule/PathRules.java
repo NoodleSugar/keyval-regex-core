@@ -3,16 +3,17 @@ package insomnia.implem.rule;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
 import insomnia.data.INode;
 import insomnia.data.IPath;
 import insomnia.implem.data.Paths;
 import insomnia.rule.IPathRule;
+import insomnia.rule.IRule;
 
 public final class PathRules<VAL, LBL>
 {
@@ -46,7 +47,7 @@ public final class PathRules<VAL, LBL>
 			this.head          = head;
 			this.isExistential = isExistential;
 
-			frontier = new DualHashBidiMap<>();
+			frontier = new HashMap<>();
 			frontier.put(head.getRoot(), body.getRoot());
 
 			if (!isExistential)
@@ -71,6 +72,12 @@ public final class PathRules<VAL, LBL>
 		public boolean isExistential()
 		{
 			return isExistential;
+		}
+
+		@Override
+		public boolean frontierIsTerminal()
+		{
+			return IRule.frontierIsTerminal(this);
 		}
 
 		@Override
