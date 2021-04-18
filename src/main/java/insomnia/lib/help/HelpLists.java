@@ -120,17 +120,12 @@ public final class HelpLists
 			{
 				i  = 0;
 				nb = sets.size();
-				int ibase[] = new int[nb];
-				int i       = 0;
-
-				for (Collection<E> set : sets)
-					ibase[i++] = set.size();
 
 				ref = sets.stream().map(l -> l instanceof List ? (List<E>) l : new ArrayList<>(l)).collect(Collectors.toList());
 				num = new int[nb];
 				ret = new ArrayList<>(nb);
 
-				base = Base.from(ibase);
+				base = Base.cartesianProduct(sets);
 			}
 
 			@Override
