@@ -2,12 +2,20 @@ package insomnia.lib.help;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Queue;
+import java.util.function.BiPredicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -49,6 +57,34 @@ public final class HelpLists
 	public static <E> List<E> downcast(List<? extends E> list)
 	{
 		return Collections.unmodifiableList(list);
+	}
+
+	/**
+	 * Check that each element of a sequence match a predicate with any other element.
+	 * 
+	 * @param <E>   type of element
+	 * @param list  the sequence of elements
+	 * @param match the matching {@link BiPredicate}
+	 * @return true if each element match true with another one using the predicate.
+	 */
+	public static <E> boolean eachMatchAny(Iterable<E> list, BiPredicate<E, E> match)
+	{
+		LinkedList<E> cpy = new LinkedList<>();
+		CollectionUtils.addAll(cpy, list);
+		int i = cpy.size();
+
+		while (i-- != 0)
+		{
+			E a = cpy.poll();
+
+			for (E b : cpy)
+			{
+				if (!match.test(a, b))
+					return false;
+			}
+			cpy.add(a);
+		}
+		return true;
 	}
 
 	public static <A, B> List<Object[]> mergePairsArrays(Collection<Pair<A[], B[]>> pairs)
@@ -102,12 +138,220 @@ public final class HelpLists
 		return ret;
 	}
 
-	public static <E> Iterator<List<E>> cartesianProduct(Collection<Collection<E>> sets)
+	public static <E> Iterable<Pair<E, E>> pairsIterable(Iterable<E> sets)
 	{
-		return cartesianProduct(new ArrayList<>(sets));
+		return IteratorUtils.asIterable(pairs(sets));
 	}
 
-	public static <E> Iterator<List<E>> cartesianProduct(List<Collection<E>> sets)
+	public static <E> Iterator<Pair<E, E>> pairs(Iterable<E> sets)
+	{
+		return new Iterator<Pair<E, E>>()
+		{
+			Iterator<E> it   = sets.iterator();
+			E           last = it.next();
+
+			@Override
+			public boolean hasNext()
+			{
+				return it.hasNext();
+			}
+
+			@Override
+			public Pair<E, E> next()
+			{
+				Pair<E, E> ret = Pair.of(last, it.next());
+				last = ret.getRight();
+				return ret;
+			}
+		};
+	}
+
+	public static <E> Stream<List<E>> powerSetAsStream(Iterable<E> sets)
+	{
+		return StreamSupport.stream(powerSetIterable(sets).spliterator(), false);
+	}
+
+	public static <E> Iterable<List<E>> powerSetIterable(Iterable<E> sets)
+	{
+		return IteratorUtils.asIterable(powerSet(sets));
+	}
+
+	public static <E> Iterator<List<E>> powerSet(Iterable<E> sets)
+	{
+		return new Iterator<>()
+		{
+			private BitSet bits;
+			private int    size;
+			{
+				size = IterableUtils.size(sets);
+				bits = new BitSet(size + 1);
+			}
+
+			@Override
+			public boolean hasNext()
+			{
+				return !bits.get(size);
+			}
+
+			@Override
+			public List<E> next()
+			{
+				List<E> ret = new ArrayList<>(size);
+
+				for (int i = 0; i < size; i++)
+				{
+					if (bits.get(i))
+						ret.add(IterableUtils.get(sets, i));
+				}
+
+				for (int i = 0; i <= size; i++)
+				{
+					if (bits.get(i))
+						bits.clear(i);
+					else
+					{
+						bits.set(i);
+						break;
+					}
+				}
+				return ret;
+			}
+		};
+	}
+
+	public static <E> Stream<List<E>> powerSetAsStream(Iterable<E> sets, int size)
+	{
+		return StreamSupport.stream(powerSetIterable(sets, size).spliterator(), false);
+	}
+
+	public static <E> Iterable<List<E>> powerSetIterable(Iterable<E> sets, int size)
+	{
+		return IteratorUtils.asIterable(powerSet(sets, size));
+	}
+
+	public static <E> Iterator<List<E>> powerSet(Iterable<E> sets, int size)
+	{
+		return new Iterator<>()
+		{
+			private BitSet bits;
+			private int    itSize, retSize;
+			{
+				retSize = size;
+				itSize  = IterableUtils.size(sets);
+				bits    = new BitSet(itSize + 1);
+
+				if (retSize > itSize)
+					bits.set(itSize);
+				else
+				{
+					for (int i = 0; i < retSize; i++)
+						bits.set(i);
+				}
+			}
+
+			@Override
+			public boolean hasNext()
+			{
+				return !bits.get(itSize);
+			}
+
+			@Override
+			public List<E> next()
+			{
+				List<E> ret = new ArrayList<>(retSize);
+
+				for (int i = 0; i < itSize; i++)
+				{
+					if (bits.get(i))
+						ret.add(IterableUtils.get(sets, i));
+				}
+
+				int set = retSize;
+				do
+				{
+					for (int i = 0; i <= itSize; i++)
+					{
+						if (bits.get(i))
+						{
+							bits.clear(i);
+							retSize--;
+						}
+						else
+						{
+							bits.set(i);
+							retSize++;
+							break;
+						}
+					}
+				} while (set != retSize);
+				return ret;
+			}
+		};
+	}
+
+	public static <E> Collection<List<E>> getDisjointClasses(Iterable<E> sets, BiPredicate<E, E> compare)
+	{
+		return IteratorUtils.toList(disjointClasses(sets, compare));
+	}
+
+	public static <E> Stream<List<E>> disjointClassesAsStream(Iterable<E> sets, BiPredicate<E, E> compare)
+	{
+		return StreamSupport.stream(disjointClassesIterable(sets, compare).spliterator(), false);
+	}
+
+	public static <E> Iterable<List<E>> disjointClassesIterable(Iterable<E> sets, BiPredicate<E, E> compare)
+	{
+		return IteratorUtils.asIterable(disjointClasses(sets, compare));
+	}
+
+	public static <E> Iterator<List<E>> disjointClasses(Iterable<E> sets, BiPredicate<E, E> compare)
+	{
+		Queue<E> elements = new LinkedList<>();
+		CollectionUtils.addAll(elements, sets);
+
+		return new Iterator<>()
+		{
+			@Override
+			public boolean hasNext()
+			{
+				return !elements.isEmpty();
+			}
+
+			@Override
+			public List<E> next()
+			{
+				List<E> ret     = new ArrayList<>();
+				E       element = elements.poll();
+				ret.add(element);
+				var it = elements.iterator();
+
+				while (it.hasNext())
+				{
+					E e = it.next();
+
+					if (compare.test(element, e))
+					{
+						ret.add(e);
+						it.remove();
+					}
+				}
+				return ret;
+			}
+
+		};
+	}
+
+	public static <E> Stream<List<E>> cartesianProductAsStream(Iterable<? extends Iterable<E>> sets)
+	{
+		return StreamSupport.stream(cartesianProductIterable(sets).spliterator(), false);
+	}
+
+	public static <E> Iterable<List<E>> cartesianProductIterable(Iterable<? extends Iterable<E>> sets)
+	{
+		return IteratorUtils.asIterable(cartesianProduct(sets));
+	}
+
+	public static <E> Iterator<List<E>> cartesianProduct(Iterable<? extends Iterable<E>> sets)
 	{
 		return new Iterator<List<E>>()
 		{
@@ -118,10 +362,9 @@ public final class HelpLists
 			List<List<E>> ref;
 
 			{
-				i  = 0;
-				nb = sets.size();
-
-				ref = sets.stream().map(l -> l instanceof List ? (List<E>) l : new ArrayList<>(l)).collect(Collectors.toList());
+				i   = 0;
+				nb  = IterableUtils.size(sets);
+				ref = CollectionUtils.collect(sets, it -> IterableUtils.toList(it), new ArrayList<>(nb));
 				num = new int[nb];
 				ret = new ArrayList<>(nb);
 
