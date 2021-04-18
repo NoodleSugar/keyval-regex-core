@@ -3,6 +3,8 @@ package insomnia.lib.numeric;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.collections4.IterableUtils;
+
 public final class Base
 {
 	private int base[];
@@ -41,6 +43,18 @@ public final class Base
 	public static Base from(List<? extends Number> base)
 	{
 		return new Base(base);
+	}
+
+	public static Base cartesianProduct(Iterable<? extends Iterable<?>> sets)
+	{
+		int nb      = IterableUtils.size(sets);
+		int ibase[] = new int[nb];
+		int i       = 0;
+
+		for (Iterable<?> set : sets)
+			ibase[i++] = IterableUtils.size(set);
+
+		return Base.from(ibase);
 	}
 
 	// ==========================================================================
