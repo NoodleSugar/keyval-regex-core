@@ -1,6 +1,7 @@
 package insomnia.fsa;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public interface IFSALabelCondition<LBL> extends Predicate<LBL>
@@ -18,5 +19,10 @@ public interface IFSALabelCondition<LBL> extends Predicate<LBL>
 	public static boolean isEpsilon(IFSALabelCondition<?> labelCondition)
 	{
 		return labelCondition == null;
+	}
+
+	public static boolean equals(IFSALabelCondition<?> a, IFSALabelCondition<?> b)
+	{
+		return Objects.equals(a, b);
 	}
 }

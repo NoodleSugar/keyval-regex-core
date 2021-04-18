@@ -366,9 +366,24 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		getAFactory().setNodeCondition(state, nodeCondition);
 	}
 
+	public IFSAState<VAL, LBL> copyState(IFSAState<VAL, LBL> state)
+	{
+		return GCStates.copy((IGCState<VAL, LBL>) state);
+	}
+
 	public IFSAState<VAL, LBL> createState()
 	{
 		return getAFactory().create();
+	}
+
+	public IFSAState<VAL, LBL> createMergeState(Collection<IFSAState<VAL, LBL>> states)
+	{
+		IGCState<VAL, LBL> ret = (IGCState<VAL, LBL>) getAFactory().create();
+
+		for (var state : states)
+			GCStates.merge(ret, (IGCState<VAL, LBL>) state);
+
+		return ret;
 	}
 
 	public IFSAState<VAL, LBL> createState(VAL value)

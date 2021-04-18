@@ -834,12 +834,31 @@ public interface ITree<VAL, LBL>
 		return automaton.matcher(b).matches();
 	}
 
+	// =========================================================================
+
+	public static <VAL, LBL> boolean isRootedHomomorphismTo(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		if (a.isEmpty())
+			return true;
+
+		return isHomomorphismTo(new TreeBuilder<>(a).setRooted(), new TreeBuilder<>(b).setRooted());
+	}
+
+	public static <VAL, LBL> boolean isHomomorphismTo(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		if (a.isEmpty())
+			return true;
+
+		var automaton = new BUFTABuilder<>(a).setMode(Mode.PROJECTION).createHomomorphic();
+		return automaton.matcher(b).matches();
+	}
+
+	// =========================================================================
+
 	public static <VAL, LBL> boolean hasSemiTwig(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
 		return semiTwigsIterator(a, b).hasNext();
 	}
-
-	// =========================================================================
 
 	/**
 	 * Find the semi-twigs in b that are sub-trees of a.

@@ -133,6 +133,20 @@ public class TestTree
 
 	// ==========================================================================
 
+	public static Stream<Object[]> homomorphism()
+	{
+		return booleanTestOf("homomorphism");
+	}
+
+	@ParameterizedTest
+	@MethodSource
+	void homomorphism(ITree<String, String> from, ITree<String, String> to, boolean val)
+	{
+		assertEquals(val, ITree.isHomomorphismTo(from, to), String.format("Expected\n%s to%s be homomorphic to to\n%s", from, val ? "" : " not", to));
+	}
+
+	// ==========================================================================
+
 	public static Stream<Object[]> semiTwigs()
 	{
 		return testOf("semi_twig");
