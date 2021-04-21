@@ -25,6 +25,7 @@ import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSALabelCondition;
+import insomnia.fsa.IFSANodeCondition;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAValueCondition;
 import insomnia.fsa.fta.IBUFTA;
@@ -348,8 +349,17 @@ public final class BUFTABuilder<VAL, LBL>
 			makeItInitialFinal(automaton, initialState, node.isRooted(), node.isTerminal());
 		else
 		{
+			IFSANodeCondition<VAL, LBL> finalCond;
 			makeItInitial(automaton, initialState, node.isTerminal());
 			makeItFinal(automaton, finalState, node.isRooted());
+
+			if (nodeRootedConditionOnFinalStates && nodeTerminalConditionOnInitialStates)
+				finalCond = FSANodeConditions.create(node.isRooted(), node.isTerminal());
+			else
+				finalCond = FSANodeConditions.createProjection(node.isRooted(), node.isTerminal());
+
+			gchunk.setNodeCondition(finalState, finalCond);
+			gchunk.setNodeCondition(initialState, FSANodeConditions.createAny());
 		}
 		automaton.putOriginalNode(initialState, node);
 		automaton.putOriginalNode(finalState, node);
