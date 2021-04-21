@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 
 import insomnia.data.INode;
@@ -68,7 +67,7 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 		ret.tree          = tree;
 		ret.gChunk        = gChunk.copyClone();
 		ret.ftaEdges      = new ArrayList<>(ftaEdges);
-		ret.stateNodeMap  = new DualHashBidiMap<>(stateNodeMap);
+		ret.stateNodeMap  = new HashMap<>(stateNodeMap);
 		ret.nodeStatesMap = new HashSetValuedHashMap<>(nodeStatesMap);
 		return ret;
 	}
