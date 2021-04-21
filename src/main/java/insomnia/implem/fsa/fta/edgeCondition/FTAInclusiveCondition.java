@@ -15,16 +15,13 @@ import org.apache.commons.collections4.iterators.IteratorIterable;
 import org.apache.commons.lang3.tuple.Pair;
 
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.fta.IFTAEdgeCondition;
 import insomnia.lib.help.HelpLists;
 
-final class FTAInclusiveCondition<VAL, LBL> implements IFTAEdgeCondition<VAL, LBL>
+final class FTAInclusiveCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LBL>
 {
-	private List<IFSAState<VAL, LBL>> parentStates;
-
 	public FTAInclusiveCondition(List<IFSAState<VAL, LBL>> states)
 	{
-		this.parentStates = List.copyOf(states);
+		super(states);
 	}
 
 	// ==========================================================================

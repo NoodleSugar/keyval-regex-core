@@ -13,16 +13,13 @@ import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.iterators.IteratorIterable;
 
 import insomnia.fsa.IFSAState;
-import insomnia.fsa.fta.IFTAEdgeCondition;
 import insomnia.lib.help.HelpLists;
 
-final class FTAEqualityCondition<VAL, LBL> implements IFTAEdgeCondition<VAL, LBL>
+final class FTAEqualityCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LBL>
 {
-	private List<IFSAState<VAL, LBL>> parentStates;
-
 	public FTAEqualityCondition(List<IFSAState<VAL, LBL>> states)
 	{
-		this.parentStates = List.copyOf(states);
+		super(states);
 	}
 
 	// ==========================================================================
