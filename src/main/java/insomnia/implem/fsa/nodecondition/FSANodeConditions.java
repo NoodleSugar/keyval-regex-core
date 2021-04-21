@@ -1,5 +1,7 @@
 package insomnia.implem.fsa.nodecondition;
 
+import org.apache.commons.lang3.BooleanUtils;
+
 import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.fsa.IFSANodeCondition;
@@ -12,37 +14,81 @@ public final class FSANodeConditions
 	{
 		throw new AssertionError();
 	}
+
 	// =========================================================================
+
+	private static abstract class AbstractNodeCondition<VAL, LBL> implements IFSANodeCondition<VAL, LBL>
+	{
+		boolean rooted, terminal;
+
+		public AbstractNodeCondition(boolean rooted, boolean terminal)
+		{
+			this.rooted   = rooted;
+			this.terminal = terminal;
+		}
+
+		@Override
+		public int hashCode()
+		{
+			return BooleanUtils.toInteger(rooted) + BooleanUtils.toInteger(terminal) * 2;
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			@SuppressWarnings("unchecked")
+			AbstractNodeCondition<VAL, LBL> o = (AbstractNodeCondition<VAL, LBL>) obj;
+			return rooted == o.rooted && terminal == o.terminal;
+		}
+	};
+
+	// =========================================================================
+
+	private static class Projection<VAL, LBL> extends AbstractNodeCondition<VAL, LBL>
+	{
+		Projection(boolean rootedCheck, boolean terminalCheck)
+		{
+			super(rootedCheck, terminalCheck);
+		}
+
+		@Override
+		public boolean test(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
+		{
+			return (terminal || node.isTerminal()) && (rooted || node.isRooted());
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (obj == this)
+				return true;
+			if (!(obj instanceof Projection<?, ?>))
+				return false;
+
+			return super.equals(obj);
+		}
+
+		@Override
+		public String toString()
+		{
+			return "Π";
+		}
+	};
+
+	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> createProjection(boolean checkRooted, boolean checkTerminal)
+	{
+		return new Projection<>(!checkRooted, !checkTerminal);
+	}
 
 	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> createProjection(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
 	{
-		return new IFSANodeCondition<VAL, LBL>()
-		{
-			private final boolean rootedCheck, terminalCheck;
-			{
-				rootedCheck   = !automaton.isRooted(state);
-				terminalCheck = !automaton.isTerminal(state);
-			}
-
-			@Override
-			public boolean test(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
-			{
-				return (terminalCheck || node.isTerminal()) && (rootedCheck || node.isRooted());
-			}
-
-			@Override
-			public String toString()
-			{
-				return "Π";
-			}
-		};
+		return new Projection<>(!automaton.isRooted(state), !automaton.isTerminal(state));
 	}
 
 	// =========================================================================
 
 	private static class FSANodeAny<VAL, LBL> implements IFSANodeCondition<VAL, LBL>
 	{
-		@Override
 		public boolean test(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
 		{
 			return true;
@@ -69,80 +115,50 @@ public final class FSANodeConditions
 	}
 	// =========================================================================
 
-	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> createRooted(boolean rootedv)
+	private static class NodeCondition<VAL, LBL> extends AbstractNodeCondition<VAL, LBL>
 	{
-		return new IFSANodeCondition<VAL, LBL>()
+		public NodeCondition(boolean rooted, boolean terminal)
 		{
-			boolean rooted;
-			String  s;
-			{
-				rooted = rootedv;
-				s      = rootedv ? "^" : "!^";
-			}
+			super(rooted, terminal);
+		}
 
-			@Override
-			public boolean test(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
-			{
-				return node.isRooted() == rooted;
-			}
+		@Override
+		public boolean test(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
+		{
+			return node.isRooted() == rooted && node.isTerminal() == terminal;
+		}
 
-			@Override
-			public String toString()
-			{
-				return s;
-			}
-		};
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (obj == this)
+				return true;
+			if (!(obj instanceof NodeCondition<?, ?>))
+				return false;
+			return super.equals(obj);
+		}
+
+		@Override
+		public String toString()
+		{
+			String s = rooted ? "^" : "!^";
+			s += terminal ? "$" : "!$";
+			return s;
+		}
 	}
 
-	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> createTerminal(boolean terminalv)
+	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> createRooted(boolean rooted)
 	{
-		return new IFSANodeCondition<VAL, LBL>()
-		{
-			boolean terminal;
-			String  s;
-			{
-				terminal = terminalv;
-				s        = terminalv ? "$" : "!$";
-			}
-
-			@Override
-			public boolean test(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
-			{
-				return node.isTerminal() == terminal;
-			}
-
-			@Override
-			public String toString()
-			{
-				return s;
-			}
-		};
+		return create(rooted, false);
 	}
 
-	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> create(boolean rootedv, boolean terminalv)
+	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> createTerminal(boolean terminal)
 	{
-		return new IFSANodeCondition<VAL, LBL>()
-		{
-			boolean rooted, terminal;
-			String  s;
-			{
-				rooted    = rootedv;
-				terminal  = terminalv;
-				s         = rootedv ? "^" : "!^";
-				s        += terminalv ? "$" : "!$";
-			}
+		return create(false, terminal);
+	}
 
-			@Override
-			public boolean test(ITree<VAL, LBL> tree, INode<VAL, LBL> node)
-			{
-				return node.isRooted() == rooted && node.isTerminal() == terminal;
-			}
-
-			@Override
-			public String toString()
-			{
-				return s;
-			}
-		};
+	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> create(boolean rooted, boolean terminal)
+	{
+		return new NodeCondition<>(rooted, terminal);
 	}
 }
