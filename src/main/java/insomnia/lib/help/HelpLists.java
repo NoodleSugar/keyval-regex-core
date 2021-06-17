@@ -17,6 +17,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.collections4.ListValuedMap;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -166,6 +169,67 @@ public final class HelpLists
 		};
 	}
 
+	public static Stream<List<Integer>> ipowerSetAsStream(Iterable<?> sets)
+	{
+		return StreamSupport.stream(ipowerSetIterable(sets).spliterator(), false);
+	}
+
+	public static Iterable<List<Integer>> ipowerSetIterable(Iterable<?> sets)
+	{
+		return IteratorUtils.asIterable(ipowerSet(sets));
+	}
+
+	public static Iterator<List<Integer>> ipowerSet(Iterable<?> sets)
+	{
+		return ipowerSet(sets, true);
+	}
+
+	private static Iterator<List<Integer>> ipowerSet(Iterable<?> sets, boolean skipEmptySet)
+	{
+		return new Iterator<>()
+		{
+			private BitSet bits;
+			private int    size;
+			{
+				size = IterableUtils.size(sets);
+				bits = new BitSet(size + 1);
+
+				if (skipEmptySet)
+					bits.set(0);
+			}
+
+			@Override
+			public boolean hasNext()
+			{
+				return !bits.get(size);
+			}
+
+			@Override
+			public List<Integer> next()
+			{
+				List<Integer> ret = new ArrayList<>(size);
+
+				for (int i = 0; i < size; i++)
+				{
+					if (bits.get(i))
+						ret.add(i);
+				}
+
+				for (int i = 0; i <= size; i++)
+				{
+					if (bits.get(i))
+						bits.clear(i);
+					else
+					{
+						bits.set(i);
+						break;
+					}
+				}
+				return ret;
+			}
+		};
+	}
+
 	public static <E> Stream<List<E>> powerSetAsStream(Iterable<E> sets)
 	{
 		return StreamSupport.stream(powerSetIterable(sets).spliterator(), false);
@@ -178,6 +242,11 @@ public final class HelpLists
 
 	public static <E> Iterator<List<E>> powerSet(Iterable<E> sets)
 	{
+		return powerSet(sets, true);
+	}
+
+	private static <E> Iterator<List<E>> powerSet(Iterable<E> sets, boolean skipEmptySet)
+	{
 		return new Iterator<>()
 		{
 			private BitSet bits;
@@ -185,6 +254,9 @@ public final class HelpLists
 			{
 				size = IterableUtils.size(sets);
 				bits = new BitSet(size + 1);
+
+				if (skipEmptySet)
+					bits.set(0);
 			}
 
 			@Override
@@ -289,6 +361,115 @@ public final class HelpLists
 		};
 	}
 
+	public static <E> Collection<List<E>> getClasses(Iterable<E> sets, BiPredicate<E, E> compare)
+	{
+		return getClasses(sets, compare, new ArrayList<>());
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <E> Collection<List<E>> getClasses(Iterable<E> sets, BiPredicate<E, E> compare, Collection<? super List<E>> outputCollection)
+	{
+		CollectionUtils.addAll(outputCollection, classes(sets, compare));
+		return (Collection<List<E>>) outputCollection;
+	}
+
+	public static <E> Iterator<List<E>> classes(Iterable<E> sets, BiPredicate<E, E> compare)
+	{
+		return new Iterator<List<E>>()
+		{
+			private MapIterator<E, List<E>> classes = mapClasses(sets, compare);
+
+			@Override
+			public boolean hasNext()
+			{
+				return classes.hasNext();
+			}
+
+			@Override
+			public List<E> next()
+			{
+				classes.next();
+				return classes.getValue();
+			}
+		};
+	}
+
+	public static <E> ListValuedMap<E, E> getMapClasses(Iterable<E> sets, BiPredicate<E, E> compare)
+	{
+		var                 it  = mapClasses(sets, compare);
+		ListValuedMap<E, E> ret = new ArrayListValuedHashMap<>();
+
+		while (it.hasNext())
+		{
+			var key = it.next();
+			ret.putAll(key, it.getValue());
+		}
+		return ret;
+	}
+
+	public static <E> MapIterator<E, List<E>> mapClasses(Iterable<E> sets, BiPredicate<E, E> compare)
+	{
+		List<E> elements = new ArrayList<>();
+		CollectionUtils.addAll(elements, sets);
+		int nbElements = elements.size();
+
+		return new MapIterator<>()
+		{
+			int     processed = 0;
+			E       key;
+			List<E> values    = new ArrayList<>(nbElements);
+
+			@Override
+			public boolean hasNext()
+			{
+				return processed != nbElements;
+			}
+
+			@Override
+			public E next()
+			{
+				key = elements.get(0);
+				values.clear();
+
+				for (E e : elements)
+				{
+					if (compare.test(key, e))
+						values.add(e);
+				}
+				processed++;
+
+				if (hasNext())
+					Collections.swap(elements, 0, processed);
+
+				return key;
+			}
+
+			@Override
+			public E getKey()
+			{
+				return key;
+			}
+
+			@Override
+			public List<E> getValue()
+			{
+				return List.copyOf(values);
+			}
+
+			@Override
+			public void remove()
+			{
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public List<E> setValue(List<E> value)
+			{
+				throw new UnsupportedOperationException();
+			}
+		};
+	}
+
 	public static <E> Collection<List<E>> getDisjointClasses(Iterable<E> sets, BiPredicate<E, E> compare)
 	{
 		return IteratorUtils.toList(disjointClasses(sets, compare));
@@ -339,6 +520,11 @@ public final class HelpLists
 			}
 
 		};
+	}
+
+	public static <E> Collection<List<E>> getCartesianProduct(Iterable<? extends Iterable<E>> sets)
+	{
+		return IteratorUtils.toList(cartesianProduct(sets));
 	}
 
 	public static <E> Stream<List<E>> cartesianProductAsStream(Iterable<? extends Iterable<E>> sets)
