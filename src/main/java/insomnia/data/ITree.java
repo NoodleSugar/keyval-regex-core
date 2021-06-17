@@ -308,7 +308,7 @@ public interface ITree<VAL, LBL>
 				{
 					var child = childNodesIt.next();
 
-					if (IterableUtils.matchesAny(childNodes, c -> c != child && ITree.project(child, c)))
+					if (IterableUtils.matchesAny(childNodes, c -> c != child && ITree.projectOn(child, c)))
 					{
 						childNodesIt.remove();
 						ret.add(child);
@@ -766,9 +766,9 @@ public interface ITree<VAL, LBL>
 	 * @param b     second tree
 	 * @return true if a project on b
 	 * @see IEdge#projectEquals(IEdge, IEdge)
-	 * @see INode#projectEquals(INode, INode)
+	 * @see INode#projectOn(INode, INode)
 	 */
-	public static <VAL, LBL> boolean project(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	public static <VAL, LBL> boolean projectOn(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
 		if (a.isRooted() && !b.isRooted())
 			return false;
@@ -786,7 +786,7 @@ public interface ITree<VAL, LBL>
 	 * @param b     second tree
 	 * @return true if a project on b
 	 * @see IEdge#projectEquals(IEdge, IEdge)
-	 * @see INode#projectEquals(INode, INode)
+	 * @see INode#projectOn(INode, INode)
 	 */
 	public static <VAL, LBL> boolean structProject(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{
@@ -806,7 +806,7 @@ public interface ITree<VAL, LBL>
 	 * @param b     second tree
 	 * @return true if a project on b
 	 * @see IEdge#projectEquals(IEdge, IEdge)
-	 * @see INode#projectEquals(INode, INode)
+	 * @see INode#projectOn(INode, INode)
 	 */
 	public static <VAL, LBL> boolean included(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
 	{

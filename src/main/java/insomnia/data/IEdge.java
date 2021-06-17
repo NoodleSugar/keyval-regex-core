@@ -3,6 +3,7 @@ package insomnia.data;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -57,6 +58,46 @@ public interface IEdge<VAL, LBL>
 	}
 
 	/**
+	 * Define what must be check on a {@link INode#structEquals(INode, INode)} call.
+	 * 
+	 * @author zuri
+	 */
+	public enum StructCheck
+	{
+		/**
+		 * Check the nodes's values equality.
+		 * 
+		 * @see INode#valEquals(INode, INode)
+		 */
+		VAL
+
+		/**
+		 * Check the edges's labels equality.
+		 */
+		,LABEL
+	};
+
+	/**
+	 * Check if a and b have the same structure according to {@link StructCheck};
+	 * that is a.parent/a.child node is structurally equal to b.parent/b.child and the other checks ask with {@link StructCheck} are {@code true}
+	 * 
+	 * @return {@code true} if a and b have the same structure
+	 * @see INode#structEquals(INode, INode)
+	 * @see StructCheck
+	 */
+	public static <VAL, LBL> boolean structEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b, EnumSet<StructCheck> check)
+	{
+		var ap = a.getParent();
+		var ac = a.getChild();
+		var bp = b.getParent();
+		var bc = b.getChild();
+
+		return INode.structEquals(ap, bp) && INode.structEquals(ac, bc) //
+			&& (!check.contains(StructCheck.LABEL) || Objects.equals(a.getLabel(), b.getLabel())) //
+			&& (!check.contains(StructCheck.VAL) || (INode.valEquals(ap, bp) && INode.valEquals(ac, bc)));
+	}
+
+	/**
 	 * Check if a and b have the same tree structure;
 	 * that is a.parent/a.child node is structurally equal to b.parent/b.child, and labels are equal.
 	 * 
@@ -65,9 +106,7 @@ public interface IEdge<VAL, LBL>
 	 */
 	public static <VAL, LBL> boolean structEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
-		return INode.structEquals(a.getChild(), b.getChild()) //
-			&& INode.structEquals(a.getParent(), b.getParent()) //
-			&& Objects.equals(a.getLabel(), b.getLabel());
+		return structEquals(a, b, EnumSet.noneOf(StructCheck.class));
 	}
 
 	/**
@@ -75,12 +114,12 @@ public interface IEdge<VAL, LBL>
 	 * that is a.parent/a.child node can be projected on b.parent/b.child, and a.label == null or a.label is equal to b.label.
 	 * 
 	 * @return {@code true} if a can be projected to b
-	 * @see INode#projectEquals(INode, INode)
+	 * @see INode#projectOn(INode, INode)
 	 */
-	public static <VAL, LBL> boolean projectEquals(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
+	public static <VAL, LBL> boolean projectOn(IEdge<VAL, LBL> a, IEdge<VAL, LBL> b)
 	{
-		return INode.projectEquals(a.getChild(), b.getChild()) //
-			&& INode.projectEquals(a.getParent(), b.getParent()) //
+		return INode.projectOn(a.getChild(), b.getChild()) //
+			&& INode.projectOn(a.getParent(), b.getParent()) //
 			&& (null == a.getLabel() || Objects.equals(a.getLabel(), b.getLabel()));
 	}
 

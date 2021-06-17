@@ -64,6 +64,16 @@ public interface INode<VAL, LBL>
 
 	// =========================================================================
 
+	private static boolean _valEquals(INode<?, ?> a, INode<?, ?> b)
+	{
+		return Objects.equals(a.getValue(), b.getValue());
+	}
+
+	private static boolean _structEquals(INode<?, ?> a, INode<?, ?> b)
+	{
+		return (a.isRooted() == b.isRooted()) && (a.isTerminal() == b.isTerminal());
+	}
+
 	/**
 	 * Check if two nodes represents the same node;
 	 * that is they have the same {@link #getID()} object in memory
@@ -88,16 +98,25 @@ public interface INode<VAL, LBL>
 	 */
 	public static boolean equals(INode<?, ?> a, INode<?, ?> b)
 	{
-		return sameAs(a, b) || //
-			(Objects.equals(a.getValue(), b.getValue()) //
-				&& a.isRooted() == b.isRooted() //
-				&& a.isTerminal() == b.isTerminal());
+		return sameAs(a, b) || (_valEquals(a, b) && _structEquals(a, b));
+	}
+
+	/**
+	 * Check if two nodes have the same values.
+	 * 
+	 * @param a the first node
+	 * @param b the second node
+	 * @return {@code true} if a and b have the same values
+	 */
+	public static boolean valEquals(INode<?, ?> a, INode<?, ?> b)
+	{
+		return sameAs(a, b) || _valEquals(a, b);
 	}
 
 	/**
 	 * Check if two nodes are structurally equal.
 	 * <p>
-	 * Two nodes are structurally equal if their value are equal.
+	 * Two nodes are structurally equal if their rooted/terminal nature is the same.
 	 * 
 	 * @param a the first node
 	 * @param b the second node
@@ -105,7 +124,7 @@ public interface INode<VAL, LBL>
 	 */
 	public static boolean structEquals(INode<?, ?> a, INode<?, ?> b)
 	{
-		return a == b || (Objects.equals(a.getValue(), b.getValue()));
+		return sameAs(a, b) || _structEquals(a, b);
 	}
 
 	/**
@@ -118,10 +137,10 @@ public interface INode<VAL, LBL>
 	 * @param b the second node
 	 * @return {@code true} if a project on b
 	 */
-	public static boolean projectEquals(INode<?, ?> a, INode<?, ?> b)
+	public static boolean projectOn(INode<?, ?> a, INode<?, ?> b)
 	{
-		return a == b ||//
-			(a.getValue() == null || Objects.equals(a.getValue(), b.getValue()) //
+		return sameAs(a, b) || //
+			(a.getValue() == null || _valEquals(a, b) //
 				&& (!a.isRooted() || b.isRooted()) //
 				&& (!a.isTerminal() || b.isTerminal()) //
 			);

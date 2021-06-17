@@ -71,7 +71,7 @@ public class TestTree
 	@MethodSource
 	void project(ITree<String, String> from, ITree<String, String> to, boolean project)
 	{
-		assertEquals(project, ITree.project(from, to), String.format("Expected\n%s to%s be projected on\n%s", from, project ? "" : " not", to));
+		assertEquals(project, ITree.projectOn(from, to), String.format("Expected\n%s to%s be projected on\n%s", from, project ? "" : " not", to));
 	}
 
 	// ==========================================================================
