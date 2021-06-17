@@ -1,6 +1,5 @@
 package insomnia.implem.fsa.fpa.graphchunk;
 
-import java.security.InvalidParameterException;
 import java.util.Objects;
 
 import insomnia.fsa.IFSANodeCondition;
@@ -207,7 +206,7 @@ final class GCStates
 	public static <VAL, LBL> void setRooted(IGCState<VAL, LBL> state, boolean isRooted)
 	{
 		if (!(state instanceof AbstractGCState))
-			throw new InvalidParameterException();
+			throw new IllegalArgumentException();
 
 		((AbstractGCState<VAL, LBL>) state).setRooted(isRooted);
 	}
@@ -215,7 +214,7 @@ final class GCStates
 	public static <VAL, LBL> void setTerminal(IGCState<VAL, LBL> state, boolean isTerminal)
 	{
 		if (!(state instanceof AbstractGCState))
-			throw new InvalidParameterException();
+			throw new IllegalArgumentException();
 
 		((AbstractGCState<VAL, LBL>) state).setTerminal(isTerminal);
 	}
@@ -223,7 +222,7 @@ final class GCStates
 	public static <VAL, LBL> void setInitial(IGCState<VAL, LBL> state, boolean isInitial)
 	{
 		if (!(state instanceof AbstractGCState))
-			throw new InvalidParameterException();
+			throw new IllegalArgumentException();
 
 		((AbstractGCState<VAL, LBL>) state).setInitial(isInitial);
 	}
@@ -231,7 +230,7 @@ final class GCStates
 	public static <VAL, LBL> void setFinal(IGCState<VAL, LBL> state, boolean isFinal)
 	{
 		if (!(state instanceof AbstractGCState))
-			throw new InvalidParameterException();
+			throw new IllegalArgumentException();
 
 		((AbstractGCState<VAL, LBL>) state).setFinal(isFinal);
 	}
@@ -239,7 +238,7 @@ final class GCStates
 	public static <VAL, LBL> void setValueCondition(IGCState<VAL, LBL> state, IFSAValueCondition<VAL> valueCondition)
 	{
 		if (!(state instanceof AbstractGCState))
-			throw new InvalidParameterException();
+			throw new IllegalArgumentException();
 
 		((AbstractGCState<VAL, LBL>) state).valueCondition = valueCondition;
 	}
@@ -247,7 +246,7 @@ final class GCStates
 	public static <VAL, LBL> void setNodeCondition(IGCState<VAL, LBL> state, IFSANodeCondition<VAL, LBL> nodeCondition)
 	{
 		if (!(state instanceof AbstractGCState))
-			throw new InvalidParameterException();
+			throw new IllegalArgumentException();
 
 		((AbstractGCState<VAL, LBL>) state).nodeCondition = nodeCondition;
 	}
@@ -255,7 +254,7 @@ final class GCStates
 	public static <VAL, LBL> void merge(IGCState<VAL, LBL> dest, IGCState<VAL, LBL> src)
 	{
 		if (!(dest instanceof AbstractGCState))
-			throw new InvalidParameterException();
+			throw new IllegalArgumentException();
 
 		if (dest.getValueCondition().equals(FSAValueConditions.createAny()))
 			GCStates.setValueCondition(dest, src.getValueCondition());
@@ -275,7 +274,7 @@ final class GCStates
 	public static <VAL, LBL> void copy(IGCState<VAL, LBL> dest, IGCState<VAL, LBL> src)
 	{
 		if (!(dest instanceof AbstractGCState))
-			throw new InvalidParameterException();
+			throw new IllegalArgumentException();
 
 		AbstractGCState<VAL, LBL> gcDest = (AbstractGCState<VAL, LBL>) dest;
 		gcDest.valueCondition = src.getValueCondition();
