@@ -107,7 +107,7 @@ final class FTAInclusiveCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LB
 	}
 
 	@Override
-	public Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<Collection<IFSAState<VAL, LBL>>> multiStates)
+	public Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<? extends Collection<IFSAState<VAL, LBL>>> multiStates)
 	{
 		List<Collection<IFSAState<VAL, LBL>>> multiStatesBuffer = new ArrayList<>(multiStates);
 

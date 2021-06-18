@@ -27,14 +27,14 @@ final class FTAEqualityCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LBL
 	/**
 	 * Avoid states from {@code multiStates} that are not in {@code this.parentStates}
 	 */
-	private List<Collection<IFSAState<VAL, LBL>>> cleanBadStates(List<Collection<IFSAState<VAL, LBL>>> multiStates)
+	private List<Collection<IFSAState<VAL, LBL>>> cleanBadStates(List<? extends Collection<IFSAState<VAL, LBL>>> multiStates)
 	{
 		return multiStates = multiStates.stream() //
 			.map(states -> CollectionUtils.select(states, s -> parentStates.contains(s))) //
 			.collect(Collectors.toList());
 	}
 
-	private boolean preConditions(List<Collection<IFSAState<VAL, LBL>>> multiStates)
+	private boolean preConditions(List<? extends Collection<IFSAState<VAL, LBL>>> multiStates)
 	{
 		if (multiStates.size() != parentStates.size())
 			return false;
@@ -56,7 +56,7 @@ final class FTAEqualityCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LBL
 	}
 
 	@Override
-	public Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<Collection<IFSAState<VAL, LBL>>> multiStates)
+	public Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<? extends Collection<IFSAState<VAL, LBL>>> multiStates)
 	{
 		if (!preConditions(multiStates))
 			return Collections.emptyList();

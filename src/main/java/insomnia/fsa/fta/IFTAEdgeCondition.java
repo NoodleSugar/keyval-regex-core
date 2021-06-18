@@ -28,5 +28,5 @@ public interface IFTAEdgeCondition<VAL, LBL> extends Predicate<List<IFSAState<VA
 	 * @return the lists of simple state from the multi-state {@code states} that are valid, conserving their initial order in {@code states}.
 	 *         A i<sup>th</sup> element of a returned list may be null if no state of the i<sup>th</sup> multi-state from {@code states} is valid for this list.
 	 */
-	Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<Collection<IFSAState<VAL, LBL>>> states);
+	Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<? extends Collection<IFSAState<VAL, LBL>>> states);
 }

@@ -22,7 +22,7 @@ final class FTASemiTwigCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LBL
 
 	// ==========================================================================
 
-	private boolean preConditions(List<Collection<IFSAState<VAL, LBL>>> multiStates)
+	private boolean preConditions(List<? extends Collection<IFSAState<VAL, LBL>>> multiStates)
 	{
 		if (multiStates.size() > parentStates.size())
 			return false;
@@ -39,7 +39,7 @@ final class FTASemiTwigCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LBL
 	}
 
 	@Override
-	public Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<Collection<IFSAState<VAL, LBL>>> multiStates)
+	public Collection<List<IFSAState<VAL, LBL>>> validStatesND(List<? extends Collection<IFSAState<VAL, LBL>>> multiStates)
 	{
 		if (!preConditions(multiStates))
 			return Collections.emptyList();
