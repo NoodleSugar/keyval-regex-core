@@ -30,4 +30,29 @@ public class FTAEdgeConditions
 	{
 		return new FTASemiTwigCondition<>(states);
 	}
+
+	public static <VAL, LBL> IFTAEdgeCondition<VAL, LBL> copy(IFTAEdgeCondition<VAL, LBL> src, List<IFSAState<VAL, LBL>> states)
+	{
+		FTAAbstractCondition<VAL, LBL> ret = (FTAAbstractCondition<VAL, LBL>) copy(src);
+		ret.setParentStates(states);
+		return ret;
+	}
+
+	public static <VAL, LBL> IFTAEdgeCondition<VAL, LBL> copy(IFTAEdgeCondition<VAL, LBL> src)
+	{
+		List<IFSAState<VAL, LBL>> states;
+
+		if (!(src instanceof FTAAbstractCondition<?, ?>))
+			throw new IllegalArgumentException();
+
+		states = ((FTAAbstractCondition<VAL, LBL>) src).getParentStates();
+
+		if (src instanceof FTAEqualityCondition<?, ?>)
+			return createEq(states);
+		if (src instanceof FTAInclusiveCondition<?, ?>)
+			return createInclusive(states);
+		if (src instanceof FTASemiTwigCondition<?, ?>)
+			return createSemiTwig(states);
+		throw new AssertionError();
+	}
 }
