@@ -20,7 +20,7 @@ public final class FSALabelConditions
 
 	private abstract static class AbstractLabelCondition<LBL> implements IFSALabelCondition<LBL>
 	{
-		private Object obj;
+		Object obj;
 
 		public AbstractLabelCondition(Object obj)
 		{
@@ -57,6 +57,8 @@ public final class FSALabelConditions
 			return Objects.toString(obj);
 		}
 	}
+
+	// =========================================================================
 
 	private static abstract class Any<LBL> implements IFSALabelCondition<LBL>
 	{
@@ -117,22 +119,32 @@ public final class FSALabelConditions
 		return null;
 	}
 
+	// =========================================================================
+
+	private static class EqCondition<LBL> extends AbstractLabelCondition<LBL>
+	{
+		EqCondition(LBL label)
+		{
+			super(label);
+		}
+
+		@Override
+		public boolean test(LBL element)
+		{
+			return Objects.equals(obj, element);
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public Collection<LBL> getLabels()
+		{
+			return Collections.singleton((LBL) obj);
+		}
+	}
+
 	public static <LBL> IFSALabelCondition<LBL> createEq(LBL label)
 	{
-		return new AbstractLabelCondition<LBL>(label)
-		{
-			@Override
-			public boolean test(LBL element)
-			{
-				return Objects.equals(label, element);
-			}
-
-			@Override
-			public Collection<LBL> getLabels()
-			{
-				return Collections.singleton(label);
-			}
-		};
+		return new EqCondition<>(label);
 	}
 
 	public static <LBL> IFSALabelCondition<LBL> createAnyOrEq(LBL label)
@@ -142,6 +154,8 @@ public final class FSALabelConditions
 
 		return createEq(label);
 	}
+
+	// =========================================================================
 
 	public static <LBL> IFSALabelCondition<LBL> createRegex(String regex)
 	{
@@ -156,6 +170,8 @@ public final class FSALabelConditions
 			}
 		};
 	}
+
+	// =========================================================================
 
 	public static boolean isAny(IFSALabelCondition<?> labelCondition)
 	{
