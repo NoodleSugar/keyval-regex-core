@@ -29,9 +29,9 @@ final class FTAEqualityCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LBL
 	 */
 	private List<Collection<IFSAState<VAL, LBL>>> cleanBadStates(List<? extends Collection<IFSAState<VAL, LBL>>> multiStates)
 	{
-		return multiStates = multiStates.stream() //
+		return multiStates.stream() //
 			.map(states -> CollectionUtils.select(states, s -> parentStates.contains(s))) //
-			.collect(Collectors.toList());
+			.collect(Collectors.toCollection(() -> new ArrayList<Collection<IFSAState<VAL, LBL>>>()));
 	}
 
 	private boolean preConditions(List<? extends Collection<IFSAState<VAL, LBL>>> multiStates)
