@@ -36,7 +36,7 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	 * 
 	 * @param parentStates the list of multi-states
 	 */
-	Collection<IFTAEdge<VAL, LBL>> getFTAEdges(List<Collection<IFSAState<VAL, LBL>>> parentStates);
+	Collection<IFTAEdge<VAL, LBL>> getFTAEdges(List<? extends Collection<IFSAState<VAL, LBL>>> parentStates);
 
 	/**
 	 * Get all {@link IFTAEdge} having a specific state as child.
@@ -85,7 +85,7 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 
 	// =========================================================================
 
-	public static <VAL, LBL> Collection<IFTAEdge<VAL, LBL>> getFTAEdges(IBUFTA<VAL, LBL> automaton, List<Collection<IFSAState<VAL, LBL>>> parentStates)
+	public static <VAL, LBL> Collection<IFTAEdge<VAL, LBL>> getFTAEdges(IBUFTA<VAL, LBL> automaton, List<? extends Collection<IFSAState<VAL, LBL>>> parentStates)
 	{
 		Collection<IFTAEdge<VAL, LBL>> ret = new HashSet<>();
 
