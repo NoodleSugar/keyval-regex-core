@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fta.IFTAEdge;
 import insomnia.fsa.fta.IFTAEdgeCondition;
@@ -37,6 +40,18 @@ public final class FTAEdge<VAL, LBL> implements IFTAEdge<VAL, LBL>
 	public IFTAEdgeCondition<VAL, LBL> getCondition()
 	{
 		return condition;
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return HashCodeBuilder.reflectionHashCode(this, false);
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		return EqualsBuilder.reflectionEquals(this, obj, false);
 	}
 
 	@Override

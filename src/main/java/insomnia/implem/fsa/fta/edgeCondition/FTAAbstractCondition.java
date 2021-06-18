@@ -2,6 +2,9 @@ package insomnia.implem.fsa.fta.edgeCondition;
 
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fta.IFTAEdgeCondition;
 
@@ -22,5 +25,17 @@ abstract class FTAAbstractCondition<VAL, LBL> implements IFTAEdgeCondition<VAL, 
 	public List<IFSAState<VAL, LBL>> getParentStates()
 	{
 		return parentStates;
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return HashCodeBuilder.reflectionHashCode(this, false);
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		return EqualsBuilder.reflectionEquals(this, obj, false);
 	}
 }
