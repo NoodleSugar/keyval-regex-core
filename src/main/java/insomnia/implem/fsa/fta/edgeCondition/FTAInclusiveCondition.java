@@ -3,16 +3,12 @@ package insomnia.implem.fsa.fta.edgeCondition;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.Bag;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bag.HashBag;
-import org.apache.commons.collections4.iterators.IteratorIterable;
-import org.apache.commons.lang3.tuple.Pair;
 
 import insomnia.fsa.IFSAState;
 import insomnia.lib.help.HelpLists;
@@ -64,6 +60,9 @@ final class FTAInclusiveCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LB
 
 	private void fillDeletedPositions(Collection<List<IFSAState<VAL, LBL>>> ret, List<Integer> deletedPos)
 	{
+		if (deletedPos.isEmpty())
+			return;
+
 		for (List<IFSAState<VAL, LBL>> r : ret)
 		{
 			for (int i : deletedPos)
@@ -81,26 +80,23 @@ final class FTAInclusiveCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LB
 
 	private Collection<List<IFSAState<VAL, LBL>>> p_validStates(List<IFSAState<VAL, LBL>> states)
 	{
-		int parentSize        = parentStates.size();
+		Collection<List<IFSAState<VAL, LBL>>> ret = new ArrayList<>();
+
 		int initialStatesSize = states.size();
+		int parentSize        = getParentStates().size();
 
-		Collection<List<IFSAState<VAL, LBL>>>         ret            = new ArrayList<>();
-		Map<IFSAState<VAL, LBL>, Collection<Integer>> statePositions = validStates_solve(states);
-
-		if (statePositions.isEmpty())
+		if (!test_solve(states))
 			return Collections.emptyList();
 
-		List<Pair<IFSAState<VAL, LBL>, Collection<Integer>>> entries = new ArrayList<>(statePositions.size());
+		Iterable<List<Integer>> indexesIterable = () -> HelpLists.ipowerSetAsStream(states).filter(s -> s.size() == parentSize).iterator();
 
-		for (IFSAState<VAL, LBL> state : states)
-			entries.add(Pair.of(state, statePositions.get(state)));
-
-		for (List<Integer> indexes : new IteratorIterable<>(HelpLists.cartesianProduct(CollectionUtils.collect(entries, e -> e.getValue()))))
+		for (List<Integer> indexes : indexesIterable)
 		{
-			List<IFSAState<VAL, LBL>> validStates = new ArrayList<>(parentSize);
+			List<IFSAState<VAL, LBL>> validStates = new ArrayList<>(initialStatesSize);
 
 			for (int i = 0; i < initialStatesSize; i++)
 				validStates.add(indexes.contains(i) ? states.get(i) : null);
+
 			ret.add(validStates);
 		}
 		return ret;
@@ -119,30 +115,13 @@ final class FTAInclusiveCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LB
 
 		Collection<List<IFSAState<VAL, LBL>>> ret = new ArrayList<>();
 
-		for (List<IFSAState<VAL, LBL>> states : new IteratorIterable<>(HelpLists.cartesianProduct(multiStatesBuffer)))
+		for (List<IFSAState<VAL, LBL>> states : HelpLists.cartesianProductIterable(multiStatesBuffer))
 			ret.addAll(p_validStates(states));
 		if (ret.isEmpty())
 			return Collections.emptyList();
 
 		fillDeletedPositions(ret, deletedPos);
-		return new ArrayList<>(ret);
-	}
-
-	private Map<IFSAState<VAL, LBL>, Collection<Integer>> validStates_solve(List<IFSAState<VAL, LBL>> states)
-	{
-		if (!test_solve(states))
-			return Collections.emptyMap();
-
-		Map<IFSAState<VAL, LBL>, Collection<Integer>> statePositions = new HashMap<>();
-
-		for (IFSAState<VAL, LBL> parentState : parentStates)
-			statePositions.put(parentState, new ArrayList<>());
-
-		int i = 0;
-		for (IFSAState<VAL, LBL> state : states)
-			statePositions.get(state).add(i++);
-
-		return statePositions;
+		return ret;
 	}
 
 	// ==========================================================================
@@ -179,7 +158,7 @@ final class FTAInclusiveCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LB
 			return false;
 
 		// TODO: specific algorithm for not testing all the cases
-		for (List<IFSAState<VAL, LBL>> states : new IteratorIterable<>(HelpLists.cartesianProduct(multiStates)))
+		for (List<IFSAState<VAL, LBL>> states : HelpLists.cartesianProductIterable(multiStates))
 		{
 			if (test_solve(states))
 				return true;
