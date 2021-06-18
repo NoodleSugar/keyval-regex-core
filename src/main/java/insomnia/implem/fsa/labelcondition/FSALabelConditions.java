@@ -159,7 +159,7 @@ public final class FSALabelConditions
 
 	public static boolean isAny(IFSALabelCondition<?> labelCondition)
 	{
-		return labelCondition == any;
+		return labelCondition == any || labelCondition == anyLoop;
 	}
 
 	public static boolean isAnyLoop(IFSALabelCondition<?> labelCondition)
