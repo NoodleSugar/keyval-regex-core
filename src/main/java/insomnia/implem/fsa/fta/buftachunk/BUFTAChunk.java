@@ -17,6 +17,7 @@ import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
+import insomnia.implem.data.Trees;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 
 public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
@@ -40,7 +41,11 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 		this.ftaEdges      = new HashSet<>();
 		this.stateNodeMap  = new HashMap<>();
 		this.nodeStatesMap = new HashSetValuedHashMap<>();
+	}
 
+	public static <VAL, LBL> BUFTAChunk<VAL, LBL> create()
+	{
+		return new BUFTAChunk<>(Trees.empty());
 	}
 
 	public static <VAL, LBL> BUFTAChunk<VAL, LBL> create(ITree<VAL, LBL> tree)

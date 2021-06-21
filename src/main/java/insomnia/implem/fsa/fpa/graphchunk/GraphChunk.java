@@ -107,6 +107,18 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		ret.setEnd(a);
 		return ret;
 	}
+	// =========================================================================
+
+	public void union(IGFPA<VAL, LBL> src, Map<IFSAState<VAL, LBL>, IFSAState<VAL, LBL>> srcToNew)
+	{
+		for (var state : src.getStates())
+			srcToNew.put(state, this.copyState(src, state));
+
+		for (var edge : src.getAllEdges())
+			this.addEdge(srcToNew.get(edge.getParent()), srcToNew.get(edge.getChild()), edge.getLabelCondition());
+	}
+
+	// =========================================================================
 
 	/**
 	 * Get a new {@link GraphChunk} without the looped "any" edges from start and end states.
@@ -369,6 +381,22 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	public IFSAState<VAL, LBL> copyState(IFSAState<VAL, LBL> state)
 	{
 		return GCStates.copy((IGCState<VAL, LBL>) state);
+	}
+
+	public IFSAState<VAL, LBL> copyState(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
+		var ret = createState(state.getValueCondition());
+		setNodeCondition(ret, state.getNodeCondition());
+
+		if (automaton.isInitial(state))
+			setInitial(ret);
+		if (automaton.isFinal(state))
+			setFinal(ret);
+		if (automaton.isRooted(state))
+			setRooted(ret);
+		if (automaton.isTerminal(state))
+			setTerminal(ret);
+		return ret;
 	}
 
 	public IFSAState<VAL, LBL> createState()
