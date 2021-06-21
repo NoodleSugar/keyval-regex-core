@@ -30,7 +30,7 @@ import insomnia.implem.fsa.fta.buftachunk.BUFTAChunk;
 import insomnia.implem.fsa.fta.edge.FTAEdge;
 import insomnia.implem.fsa.fta.edgeCondition.FTAEdgeConditions;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
-import insomnia.implem.fsa.state.FSAMultiState;
+import insomnia.implem.fsa.state.FSAMultiStates;
 import insomnia.lib.help.HelpIterable;
 import insomnia.lib.help.HelpLists;
 
@@ -112,7 +112,7 @@ final class IntersectionBuilder<VAL, LBL>
 
 	private IFSAMultiState<VAL, LBL> multiStateEClosure(Collection<IFSAState<VAL, LBL>> states)
 	{
-		return new FSAMultiState<>(CollectionUtils.union( //
+		return FSAMultiStates.create(CollectionUtils.union( //
 			a.getGFPA().getEpsilonClosure(states, truePredicate), //
 			b.getGFPA().getEpsilonClosure(states, truePredicate) //
 		));
@@ -145,7 +145,7 @@ final class IntersectionBuilder<VAL, LBL>
 		Collection<IFSAMultiState<VAL, LBL>> nextStates = new ArrayList<>();
 		Set<IFSAMultiState<VAL, LBL>>        classes    = //
 			HelpLists.getClasses(states, IFSAState::projectOnMe) //
-				.stream().map(FSAMultiState::new).collect(Collectors.toSet());
+				.stream().map(FSAMultiStates::create).collect(Collectors.toSet());
 
 		for (IFSAMultiState<VAL, LBL> theClass : classes)
 		{
@@ -253,7 +253,7 @@ final class IntersectionBuilder<VAL, LBL>
 		for (var multiStates : validMultiStatesMap.keySet())
 		{
 			Collection<IFTAEdge<VAL, LBL>> edges           = validMultiStatesMap.get(multiStates);
-			IFSAMultiState<VAL, LBL>       childMultiState = new FSAMultiState<>(CollectionUtils.collect(edges, IFTAEdge::getChild));
+			IFSAMultiState<VAL, LBL>       childMultiState = FSAMultiStates.create(CollectionUtils.collect(edges, IFTAEdge::getChild));
 			IFTAEdgeCondition<VAL, LBL>    eCondition      = edges.iterator().next().getCondition();
 			List<IFSAState<VAL, LBL>>      parents         = CollectionUtils.collect(multiStates, s -> oldToNews.get(s), new ArrayList<>());
 
