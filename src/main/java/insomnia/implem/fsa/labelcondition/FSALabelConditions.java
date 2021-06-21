@@ -183,6 +183,27 @@ public final class FSALabelConditions
 		return labelCondition == anyLoop;
 	}
 
+
+	// =========================================================================
+
+	public static <LBL> boolean projectOnMe(IFSALabelCondition<LBL> a, IFSALabelCondition<LBL> b)
+	{
+		return projectOn(b, a);
+	}
+
+	public static <LBL> boolean projectOn(IFSALabelCondition<LBL> a, IFSALabelCondition<LBL> b)
+	{
+		if (a == b)
+			return true;
+		if (isAny(a))
+			return true;
+
+		if (a instanceof EqCondition<?> && b instanceof EqCondition<?> && Objects.equals(((EqCondition<?>) a).obj, ((EqCondition<?>) b).obj))
+			return true;
+
+		return false;
+	}
+
 	// =========================================================================
 
 	public static <VAL, LBL> IFSALabelCondition<VAL> intersection(IFSALabelCondition<VAL> a, IFSALabelCondition<VAL> b)

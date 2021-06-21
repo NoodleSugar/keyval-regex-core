@@ -138,6 +138,35 @@ public final class BUFTABuilder<VAL, LBL>
 
 	// =========================================================================
 
+	static <VAL, LBL> BUFTABuilder<VAL, LBL> createClean()
+	{
+		BUFTABuilder<VAL, LBL> ret = new BUFTABuilder<>();
+		ret.automaton = BUFTAChunk.create();
+		return ret;
+	}
+
+	static public <VAL, LBL> BUFTABuilder<VAL, LBL> getIntersection(ITree<VAL, LBL> a, ITree<VAL, LBL> b)
+	{
+		return new IntersectionBuilder<>(a, b).createBuilder();
+	}
+
+	static public <VAL, LBL> BUFTABuilder<VAL, LBL> getIntersection(IBUFTA<VAL, LBL> a, IBUFTA<VAL, LBL> b)
+	{
+		return new IntersectionBuilder<>(a, b).createBuilder();
+	}
+
+	public BUFTABuilder<VAL, LBL> getIntersection(ITree<VAL, LBL> a)
+	{
+		return new IntersectionBuilder<>(this.create(), a).createBuilder();
+	}
+
+	public BUFTABuilder<VAL, LBL> getIntersection(IBUFTA<VAL, LBL> a)
+	{
+		return new IntersectionBuilder<>(this.create(), a).createBuilder();
+	}
+
+	// =========================================================================
+
 	BUFTAChunk<VAL, LBL> getAutomaton()
 	{
 		if (automaton == null)

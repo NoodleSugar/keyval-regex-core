@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.text.ParseException;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.IteratorUtils;
@@ -103,5 +104,35 @@ public class TestAutomaton
 			assertTrue(ITree.isSubTreeOf(group, tsearchIn), //
 				String.format("Expected\n%s to be a subtree of\n %s", ITree.toString(group), ITree.toString(tsearchIn)));
 		}
+	}
+
+	public static Stream<Object[]> treeIntersection()
+	{
+		return HelpTests.loadResourceCSVAsMap("/insomnia/implem/fsa/intersection.csv").flatMap(record -> {
+			try
+			{
+				var     a     = Trees.treeFromString(record.get("a"));
+				var     b     = Trees.treeFromString(record.get("b"));
+				boolean match = Integer.parseInt(record.get("match")) > 0;
+
+				return Trees.treesFromString(record.get("test")).stream().map((test) -> new Object[] { a, b, test, match });
+			}
+			catch (ParseException e)
+			{
+				throw new AssertionError(e);
+			}
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource
+	void treeIntersection(ITree<String, String> a, ITree<String, String> b, ITree<String, String> test, boolean match) throws ParseException
+	{
+		Supplier<String> getMsg = () -> String.format("a=\n%s b=\n%s test=\n%s", a, b, ITree.toString(test));
+
+		var intersection = BUFTABuilder.getIntersection(a, b).create();
+		assertEquals(match, intersection.matcher(test).matches(), "intersection(a,b); " + getMsg.get());
+		intersection = BUFTABuilder.getIntersection(a, b).create();
+		assertEquals(match, intersection.matcher(test).matches(), "intersection(b,a); " + getMsg.get());
 	}
 }

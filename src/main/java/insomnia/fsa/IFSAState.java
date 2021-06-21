@@ -25,6 +25,11 @@ public interface IFSAState<VAL, LBL>
 		return Objects.equals(aValueC, bValueC);
 	}
 
+	static <VAL, LBL> boolean projectOnMe(IFSAState<VAL, LBL> a, IFSAState<VAL, LBL> b)
+	{
+		return projectOn(b, a);
+	}
+
 	static <VAL, LBL> boolean projectOn(IFSAState<VAL, LBL> a, IFSAState<VAL, LBL> b)
 	{
 		if (a == b)

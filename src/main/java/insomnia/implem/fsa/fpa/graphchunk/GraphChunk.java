@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.iterators.IteratorIterable;
 import org.apache.commons.collections4.iterators.ReverseListIterator;
 import org.jgrapht.Graph;
@@ -235,6 +236,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 			ret.addAll(graph.incomingEdgesOf(state));
 
 		return ret;
+	}
+
+	private Collection<IGCEdge<VAL, LBL>> gc_getEdgesBetween(IGCState<VAL, LBL> a, IGCState<VAL, LBL> b)
+	{
+		return CollectionUtils.emptyIfNull(graph.getAllEdges(a, b));
 	}
 
 	// =========================================================================
@@ -802,6 +808,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesTo(Collection<? extends IFSAState<VAL, LBL>> states)
 	{
 		return gc_as_fsa_edge(gc_getEdgesTo((Collection<IGCState<VAL, LBL>>) states));
+	}
+
+	public Collection<IFSAEdge<VAL, LBL>> getAllEdgesBetween(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child)
+	{
+		return gc_as_fsa_edge(gc_getEdgesBetween((IGCState<VAL, LBL>) parent, (IGCState<VAL, LBL>) child));
 	}
 
 	@Override
