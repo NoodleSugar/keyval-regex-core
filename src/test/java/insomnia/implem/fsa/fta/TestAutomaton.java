@@ -8,14 +8,17 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections4.IteratorUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import insomnia.HelpTests;
 import insomnia.data.ITree;
+import insomnia.data.regex.ITreeMatchResult;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.implem.data.Trees;
+import insomnia.implem.data.regex.TreeMatchResultIterator;
 import insomnia.implem.data.regex.parser.RegexParser;
 import insomnia.implem.fsa.fta.creational.BUFTABuilder;
 
@@ -88,18 +91,17 @@ public class TestAutomaton
 		IBUFTA<String, String>       bufta   = new BUFTABuilder<>(tsearchFor).create();
 		ITreeMatcher<String, String> matcher = bufta.matcher(tsearchIn);
 
-		int i = 0;
+		List<ITreeMatchResult<String, String>> results = IteratorUtils.toList(new TreeMatchResultIterator<>(matcher));
+		assertEquals(nb, results.size(), String.format("Expected to find %d match(es), founded: %d\nSearch for=\n%sSearch in=\n%s\nResults=\n%s", nb, results.size(), ITree.toString(tsearchFor), ITree.toString(tsearchIn), results));
 
-		while (matcher.find())
+		for (var result : results)
 		{
-			i++;
-			ITree<String, String> group = matcher.toMatchResult().group();
+			ITree<String, String> group = result.group();
 
 			assertTrue(ITree.structProject(tsearchFor, group), //
 				String.format("Expected \n%s; but have\n%s", ITree.toString(tsearchFor), ITree.toString(group)));
 			assertTrue(ITree.isSubTreeOf(group, tsearchIn), //
 				String.format("Expected\n%s to be a subtree of\n %s", ITree.toString(group), ITree.toString(tsearchIn)));
 		}
-		assertEquals(nb, i, String.format("Expected to find %d match(es), founded: %d\nSearch for=\n%sSearch in=\n%s", nb, i, ITree.toString(tsearchFor), ITree.toString(tsearchIn)));
 	}
 }
