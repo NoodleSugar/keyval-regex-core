@@ -182,4 +182,19 @@ public final class FSALabelConditions
 	{
 		return labelCondition == anyLoop;
 	}
+
+	// =========================================================================
+
+	public static <VAL, LBL> IFSALabelCondition<VAL> intersection(IFSALabelCondition<VAL> a, IFSALabelCondition<VAL> b)
+	{
+		if (isAny(a))
+			return b;
+		if (isAny(b))
+			return a;
+
+		if (a instanceof EqCondition<?> && b instanceof EqCondition<?> && Objects.equals(((EqCondition<?>) a).obj, ((EqCondition<?>) b).obj))
+			return a;
+
+		throw new IllegalArgumentException();
+	}
 }

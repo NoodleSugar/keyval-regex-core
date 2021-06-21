@@ -95,4 +95,42 @@ public final class FSAValueConditions
 
 		return createEq(value);
 	}
+
+	// =========================================================================
+
+	public static <VAL, LBL> IFSAValueCondition<VAL> union(IFSAValueCondition<VAL> a, IFSAValueCondition<VAL> b)
+	{
+		if (isAny(a) || Objects.equals(a, b))
+			return a;
+		if (isAny(b))
+			return b;
+
+		if (a instanceof FSAValueEq<?> || b instanceof FSAValueEq<?>)
+		{
+			FSAValueEq<VAL> aa = (FSAValueEq<VAL>) a;
+			FSAValueEq<VAL> bb = (FSAValueEq<VAL>) b;
+
+			if (Objects.equals(aa.value, bb.value))
+				return a;
+		}
+		throw new IllegalArgumentException("Can't do the union of " + a + " with " + b);
+	}
+
+	public static <VAL, LBL> IFSAValueCondition<VAL> intersection(IFSAValueCondition<VAL> a, IFSAValueCondition<VAL> b)
+	{
+		if (isAny(a) || Objects.equals(a, b))
+			return b;
+		if (isAny(b))
+			return a;
+
+		if (a instanceof FSAValueEq<?> || b instanceof FSAValueEq<?>)
+		{
+			FSAValueEq<VAL> aa = (FSAValueEq<VAL>) a;
+			FSAValueEq<VAL> bb = (FSAValueEq<VAL>) b;
+
+			if (Objects.equals(aa.value, bb.value))
+				return a;
+		}
+		throw new IllegalArgumentException("Can't do the intersection of " + a + " with " + b);
+	}
 }
