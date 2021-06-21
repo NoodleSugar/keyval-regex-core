@@ -381,7 +381,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		IGCState<VAL, LBL> ret = (IGCState<VAL, LBL>) getAFactory().create();
 
 		for (var state : states)
-			GCStates.merge(ret, (IGCState<VAL, LBL>) state);
+			GCStates.mergeSource(ret, (IGCState<VAL, LBL>) state);
 
 		return ret;
 	}
@@ -607,7 +607,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 			IGCState<VAL, LBL> source = graph.getEdgeSource(edgeData);
 			graph.addEdge(source, dest, copyEdge(edgeData));
 		}
-		GCStates.merge(dest, src);
+		GCStates.mergeSource(dest, src);
 		graph.removeVertex(src);
 	}
 

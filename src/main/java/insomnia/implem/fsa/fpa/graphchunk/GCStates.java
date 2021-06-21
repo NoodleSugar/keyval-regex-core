@@ -251,15 +251,23 @@ final class GCStates
 		((AbstractGCState<VAL, LBL>) state).nodeCondition = nodeCondition;
 	}
 
-	public static <VAL, LBL> void merge(IGCState<VAL, LBL> dest, IGCState<VAL, LBL> src)
+	/**
+	 * Restrict dest to src informations.
+	 * Informations of dest are intersected with src's own.
+	 */
+	public static <VAL, LBL> void mergeSource(IGCState<VAL, LBL> dest, IGCState<VAL, LBL> src)
 	{
 		if (!(dest instanceof AbstractGCState))
 			throw new IllegalArgumentException();
 
-		if (dest.getValueCondition().equals(FSAValueConditions.createAny()))
-			GCStates.setValueCondition(dest, src.getValueCondition());
-		else if (!src.getValueCondition().equals(FSAValueConditions.createAny()) && !src.getValueCondition().equals(dest.getValueCondition()))
-			throw new AssertionError();
+		var newValueCondition = FSAValueConditions.intersection(dest.getValueCondition(), src.getValueCondition());
+		var newNodeCondition  = FSANodeConditions.intersection(dest.getNodeCondition(), src.getNodeCondition());
+
+		if (null == newValueCondition || null == newNodeCondition)
+			throw new IllegalArgumentException();
+
+		GCStates.setValueCondition(dest, newValueCondition);
+		GCStates.setNodeCondition(dest, newNodeCondition);
 
 		if (src.isRooted())
 			setRooted(dest, true);
