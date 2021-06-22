@@ -562,7 +562,7 @@ public final class BUFTABuilder<VAL, LBL>
 					}
 				}
 				List<IFSAState<VAL, LBL>> parents = new ArrayList<>(nodeChildStates);
-				automaton.addFTAEdge(new FTAEdge<>(parents, newState, fcreateFTAEdgeCondition.apply(parents)));
+				addFTAEdge(automaton, parents, newState);
 			}
 
 			if (internalNodesAreInitial && node != treeRoot)
