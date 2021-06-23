@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -231,6 +232,7 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 	private static <VAL, LBL> void epsilonClosureTemplate( //
 		IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, //
 		BiFunction<IGFPA<VAL, LBL>, Collection<IFSAState<VAL, LBL>>, Collection<IFSAEdge<VAL, LBL>>> getEpsilonEdges, //
+		Function<IFSAEdge<VAL, LBL>, IFSAState<VAL, LBL>> getEdgeState, //
 		Predicate<IFSAState<VAL, LBL>> fcheckState //
 	)
 	{
@@ -249,7 +251,7 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 		{
 			for (IFSAEdge<VAL, LBL> edge : getEpsilonEdges.apply(automaton, buffStates))
 			{
-				var newState = edge.getChild();
+				var newState = getEdgeState.apply(edge);
 
 				if (IFSALabelCondition.isEpsilon(edge.getLabelCondition()) && fcheckState.test(newState) && !ret.contains(newState))
 					addedStates.add(newState);
@@ -264,27 +266,27 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 
 	public static <VAL, LBL> void epsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
 	{
-		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), (s) -> true);
+		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), IFSAEdge::getChild, (s) -> true);
 	}
 
 	public static <VAL, LBL> void epsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, VAL value)
 	{
-		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), stateOnValuePredicate(value));
+		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), IFSAEdge::getChild, stateOnValuePredicate(value));
 	}
 
 	public static <VAL, LBL> void epsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states, Predicate<IFSAState<VAL, LBL>> fcheckState)
 	{
-		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), fcheckState);
+		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesOf(e), IFSAEdge::getChild, fcheckState);
 	}
 
 	public static <VAL, LBL> void epsilonClosureTo(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
 	{
-		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesTo(e), (s) -> true);
+		epsilonClosureTemplate(automaton, states, (a, e) -> a.getEpsilonEdgesTo(e), IFSAEdge::getParent, (s) -> true);
 	}
 
 	public static <VAL, LBL> void allEpsilonClosure(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
 	{
-		epsilonClosureTemplate(automaton, states, (a, e) -> CollectionUtils.union(a.getEpsilonEdgesTo(e), a.getEpsilonEdgesOf(e)), (s) -> true);
+		epsilonClosureTemplate(automaton, states, (a, e) -> CollectionUtils.union(a.getEpsilonEdgesTo(e), a.getEpsilonEdgesOf(e)), IFSAEdge::getChild, (s) -> true);
 	}
 
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getEpsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<? extends IFSAState<VAL, LBL>> states, Predicate<IFSAState<VAL, LBL>> fcheckState)
