@@ -1,5 +1,6 @@
 package insomnia.data.creational;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +67,16 @@ public abstract class AbstractTreeBuilder<VAL, LBL> extends AbstractTree<VAL, LB
 		return coordinates.stream().mapToInt(Integer::valueOf).toArray();
 	}
 
+	@Override
+	public ITreeBuilder<VAL, LBL> removeAt(int... coordinates)
+	{
+		var node = getCurrentNode();
+		goDown(coordinates);
+		removeUp();
+		setCurrentNode(node);
+		return this;
+	}
+
 	// ==========================================================================
 
 	@Override
@@ -91,6 +102,21 @@ public abstract class AbstractTreeBuilder<VAL, LBL> extends AbstractTree<VAL, LB
 	}
 
 	// ==========================================================================
+
+	@Override
+	public ITreeBuilder<VAL, LBL> addChildAt(int... coordinates)
+	{
+		addChildAtDown(coordinates);
+		goUp(coordinates.length);
+		return this;
+	}
+
+	public ITreeBuilder<VAL, LBL> addChildAtDown(int... coordinates)
+	{
+		goDown(Arrays.copyOfRange(coordinates, 0, coordinates.length - 1));
+		addChildDown(coordinates[coordinates.length - 1]);
+		return this;
+	}
 
 	@Override
 	public ITreeBuilder<VAL, LBL> addChild(LBL label)

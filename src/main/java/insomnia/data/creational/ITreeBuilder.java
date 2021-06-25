@@ -96,6 +96,14 @@ public interface ITreeBuilder<VAL, LBL> extends ITree<VAL, LBL>
 	ITreeBuilder<VAL, LBL> setCurrentCoordinates(int... coordinates);
 
 	/**
+	 * Change the label of the parent edge.
+	 * 
+	 * @return the builder
+	 * @throws IllegalStateException if the node is the root
+	 */
+	ITreeBuilder<VAL, LBL> setLabel(LBL label);
+
+	/**
 	 * Change the value of the current node
 	 * 
 	 * @return the builder
@@ -109,6 +117,28 @@ public interface ITreeBuilder<VAL, LBL> extends ITree<VAL, LBL>
 	 * @throws IllegalStateException if the node is not a leaf
 	 */
 	ITreeBuilder<VAL, LBL> setTerminal(boolean terminal);
+
+	// ==========================================================================
+
+	/**
+	 * Remove all the childs of a node
+	 */
+	ITreeBuilder<VAL, LBL> removeChilds();
+
+	/**
+	 * Remove the current node and go to the parent
+	 * 
+	 * @throws IndexOutOfBoundsException if the node is the root
+	 */
+	ITreeBuilder<VAL, LBL> removeUp();
+
+	/**
+	 * Remove a node from the current node
+	 * 
+	 * @param coordinates the coordinate of the node to remove from the current node.
+	 * @throws IndexOutOfBoundsException if the coordinates are invalid
+	 */
+	ITreeBuilder<VAL, LBL> removeAt(int... coordinates);
 
 	// ==========================================================================
 
@@ -149,6 +179,44 @@ public interface ITreeBuilder<VAL, LBL> extends ITree<VAL, LBL>
 	ITreeBuilder<VAL, LBL> parentUp(LBL label, VAL val);
 
 	// ==========================================================================
+
+	/**
+	 * Insert a new child edge at a certain coordinate.
+	 * 
+	 * @param coordinates the coordinates to follow
+	 * @return the builder
+	 * @throws IllegalStateException     if the parent node is terminal
+	 * @throws IndexOutOfBoundsException if the coordinates are invalid
+	 */
+	ITreeBuilder<VAL, LBL> addChildAt(int... coordinates);
+
+	/**
+	 * Insert a new child edge at a certain coordinaten and set the cursor to the new node.
+	 * 
+	 * @param coordinates the coordinates to follow
+	 * @return the builder
+	 * @throws IllegalStateException     if the parent node is terminal
+	 * @throws IndexOutOfBoundsException if the coordinates are invalid
+	 */
+	ITreeBuilder<VAL, LBL> addChildAtDown(int... coordinates);
+
+	/**
+	 * Insert a new child edge at a certain position.
+	 * 
+	 * @param pos the position to insert the child
+	 * @return the builder
+	 * @throws IllegalStateException if the cursor is terminal
+	 */
+	ITreeBuilder<VAL, LBL> addChild(int pos);
+
+	/**
+	 * Insert a new child edge at a certain position and set the cursor to the new node.
+	 * 
+	 * @param pos the position to insert the child
+	 * @return the builder
+	 * @throws IllegalStateException if the cursor is terminal
+	 */
+	ITreeBuilder<VAL, LBL> addChildDown(int pos);
 
 	ITreeBuilder<VAL, LBL> addChild(LBL label);
 

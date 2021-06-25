@@ -111,6 +111,16 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	}
 
 	@Override
+	public ITreeBuilder<VAL, LBL> setLabel(LBL label)
+	{
+		if (currentNode == root)
+			throw new IllegalStateException("The root don't have a parent");
+
+		getParent(currentNode).get().setLabel(label);
+		return this;
+	}
+
+	@Override
 	public ITreeBuilder<VAL, LBL> setTerminal(boolean terminal)
 	{
 		if (currentNode.isTerminal() == terminal)
@@ -120,6 +130,30 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 
 		currentNode.setTerminal(terminal);
 		return this;
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> removeChilds()
+	{
+		currentNode.removeAllEdges();
+
+		if (!isPath)
+			isPath = ITree.isPath(this);
+
+		return this;
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> removeUp()
+	{
+		var edge = getParent(getCurrentNode());
+		goUp();
+		currentNode.removeEdge((Edge<VAL, LBL>) edge.get());
+
+		if (!isPath && currentNode.getChildren().size() <= 1)
+			isPath = ITree.isPath(this);
+
+		return null;
 	}
 
 	// ==========================================================================
@@ -206,6 +240,22 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	{
 		if (isPath && currentNode.getChildren().size() >= 1)
 			isPath = false;
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> addChild(int pos)
+	{
+		Node<VAL, LBL> newNode = new Node<>();
+		new Edge<>(pos, null, currentNode, newNode, vocab);
+		return this;
+	}
+
+	@Override
+	public ITreeBuilder<VAL, LBL> addChildDown(int pos)
+	{
+		addChild(pos);
+		goDown(pos);
+		return this;
 	}
 
 	@Override
