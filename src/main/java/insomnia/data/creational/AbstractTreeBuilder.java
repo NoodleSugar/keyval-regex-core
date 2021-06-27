@@ -189,7 +189,12 @@ public abstract class AbstractTreeBuilder<VAL, LBL> extends AbstractTree<VAL, LB
 	@Override
 	public ITreeBuilder<VAL, LBL> goDown(int... coordinates)
 	{
-		setCurrentNode(ITree.followIndex(this, getCurrentNode(), coordinates));
+		var node = ITree.followIndex(this, getCurrentNode(), coordinates);
+
+		if (null == node)
+			throw new IndexOutOfBoundsException("Invalid coordinates " + ArrayUtils.toString(coordinates));
+
+		setCurrentNode(node);
 		return this;
 	}
 }
