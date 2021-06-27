@@ -561,6 +561,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		return ret;
 	}
 
+	public GraphChunk<VAL, LBL> copy(Map<IFSAState<VAL, LBL>, IFSAState<VAL, LBL>> oldToNew_out)
+	{
+		return copy(create(), oldToNew_out);
+	}
+
 	public GraphChunk<VAL, LBL> copy()
 	{
 		return copy(create());
@@ -579,6 +584,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		return GCEdges.copy(src);
 	}
 
+	private GraphChunk<VAL, LBL> copy(GraphChunk<VAL, LBL> ret)
+	{
+		return copy(ret, new HashMap<>(graph.vertexSet().size() * 2));
+	}
+
 	/**
 	 * Copy this into ret.<br>
 	 * The copy create fresh {@link IGCState<VAL,LBL>}s.
@@ -586,29 +596,27 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	 * @param ret The {@link GraphChunk<LBL,VAL>} which become the copy.
 	 * @return A reference to ret.
 	 */
-	private GraphChunk<VAL, LBL> copy(GraphChunk<VAL, LBL> ret)
+	private GraphChunk<VAL, LBL> copy(GraphChunk<VAL, LBL> ret, Map<IFSAState<VAL, LBL>, IFSAState<VAL, LBL>> oldToNew)
 	{
 		Set<IGCState<VAL, LBL>> graphNodes = graph.vertexSet();
 		/**
 		 * key: state of graph
 		 * val: state of ret
 		 */
-		Map<IGCState<VAL, LBL>, IGCState<VAL, LBL>> states = new HashMap<>(graphNodes.size() * 2);
-
 		for (IGCState<VAL, LBL> graphNode : graphNodes)
 		{
 			IGCState<VAL, LBL> newState = (IGCState<VAL, LBL>) copyState(graphNode);
-			states.put(graphNode, newState);
+			oldToNew.put(graphNode, newState);
 			ret.graph.addVertex(newState);
 		}
-		ret.start      = states.get(start);
-		ret.end        = states.get(end);
+		ret.start      = (IGCState<VAL, LBL>) oldToNew.get(start);
+		ret.end        = (IGCState<VAL, LBL>) oldToNew.get(end);
 		ret.properties = properties;
 
 		for (IGCEdge<VAL, LBL> edgeData : graph.edgeSet())
 		{
-			IGCState<VAL, LBL> source = states.get(graph.getEdgeSource(edgeData));
-			IGCState<VAL, LBL> target = states.get(graph.getEdgeTarget(edgeData));
+			IGCState<VAL, LBL> source = (IGCState<VAL, LBL>) oldToNew.get(graph.getEdgeSource(edgeData));
+			IGCState<VAL, LBL> target = (IGCState<VAL, LBL>) oldToNew.get(graph.getEdgeTarget(edgeData));
 			ret.graph.addEdge(source, target, copyEdge(edgeData));
 		}
 		return ret;
