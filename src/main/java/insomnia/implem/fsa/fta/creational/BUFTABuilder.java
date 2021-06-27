@@ -35,6 +35,8 @@ import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
 import insomnia.fsa.fta.IFTAEdgeCondition;
 import insomnia.implem.data.Trees;
+import insomnia.implem.data.regex.parser.IRegexElement;
+import insomnia.implem.data.regex.parser.Quantifier;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fta.buftachunk.BUFTAChunk;
 import insomnia.implem.fsa.fta.buftachunk.modifier.IBUFTAChunkModifier;
@@ -134,6 +136,17 @@ public final class BUFTABuilder<VAL, LBL>
 			IFSAState<VAL, LBL>       child   = srcToThis.get(ftaEdge.getChild());
 			automaton.addFTAEdge(new FTAEdge<>(parents, child, FTAEdgeConditions.copy(ftaEdge.getCondition(), parents)));
 		}
+	}
+
+	private Function<String, LBL> mapLabel;
+	private Function<String, VAL> mapValue;
+
+	public BUFTABuilder(IRegexElement regex, Function<String, LBL> mapLabel, Function<String, VAL> mapValue)
+	{
+		this(Trees.empty());
+		this.mapLabel = mapLabel;
+		this.mapValue = mapValue;
+		automaton     = recursiveConstruct(regex, true);
 	}
 
 	// =========================================================================
@@ -472,6 +485,285 @@ public final class BUFTABuilder<VAL, LBL>
 			}
 		};
 		modifier.accept(automaton, env);
+	}
+
+	// =========================================================================
+
+	private BUFTAChunk<VAL, LBL> recursiveConstruct(IRegexElement element, boolean initialElement)
+	{
+		Quantifier           q = element.getQuantifier();
+		BUFTAChunk<VAL, LBL> currentAutomaton;
+
+		switch (element.getType())
+		{
+		case EMPTY:
+		{
+			VAL value = mapValue.apply(element.getValue());
+			currentAutomaton = BUFTAChunk.createOneState(element.isRooted(), element.isTerminal(), value);
+			addChildFTAEdge(currentAutomaton, currentAutomaton.getRoot());
+			break;
+		}
+		case KEY:
+		{
+			VAL value = mapValue.apply(element.getValue());
+			LBL label = mapLabel.apply(element.getLabel());
+
+			IFSALabelCondition<LBL> lcondition;
+
+			// Regex
+			if (element.getLabel() != null && element.getLabelDelimiters().equals("~~"))
+				lcondition = FSALabelConditions.createRegex(element.getLabel());
+			else
+				lcondition = FSALabelConditions.createAnyOrEq(label);
+
+			currentAutomaton = BUFTAChunk.createOneEdge(false, lcondition, null, value);
+			addChildFTAEdge(currentAutomaton, currentAutomaton.getRoot());
+
+			if (element.isTerminal())
+				currentAutomaton.getGChunk().setTerminal(currentAutomaton.getLeaf(), true);
+
+			break;
+		}
+		case DISJUNCTION:
+		{
+			List<BUFTAChunk<VAL, LBL>> chunks = new ArrayList<>(element.getElements().size());
+
+			for (IRegexElement ie : element.getElements())
+			{
+				BUFTAChunk<VAL, LBL> chunk = recursiveConstruct(ie, false);
+				chunks.add(chunk);
+			}
+			currentAutomaton = glueList(chunks);
+			break;
+		}
+		case SEQUENCE:
+		{
+			Iterator<IRegexElement> iterator = element.getElements().iterator();
+
+			if (!iterator.hasNext())
+			{
+				currentAutomaton = BUFTAChunk.createOneState(false, false, null);
+				addChildFTAEdge(currentAutomaton, currentAutomaton.getRoot());
+			}
+			else
+			{
+				currentAutomaton = recursiveConstruct(iterator.next(), false);
+
+				while (iterator.hasNext())
+					concat(currentAutomaton, recursiveConstruct(iterator.next(), false));
+			}
+			break;
+		}
+		case NODE:
+		{
+			List<BUFTAChunk<VAL, LBL>> chunks = new ArrayList<>(element.getElements().size());
+
+			List<BUFTAChunk<VAL, LBL>> mayBeEmpty = new ArrayList<>();
+
+			for (IRegexElement ie : element.getElements())
+			{
+				BUFTAChunk<VAL, LBL> chunk = recursiveConstruct(ie, false);
+
+				if (chunk.getLeaves().size() == 1 && chunk.getRoot() == chunk.getLeaf())
+					continue;
+
+				var finalEClosure = chunk.getGFPA().getEpsilonClosure(chunk.getLeaves(), s -> true);
+
+				if (finalEClosure.contains(chunk.getRoot()))
+					mayBeEmpty.add(chunk);
+
+				chunks.add(chunk);
+			}
+			currentAutomaton = nodeList(chunks, mayBeEmpty);
+
+			if (!Objects.equals(q, Quantifier.from(1, 1)))
+				throw new UnsupportedOperationException("Node element don't support a quantifier");
+
+			break;
+		}
+		default:
+			throw new IllegalArgumentException("Invalid regex element " + element.getType());
+		}
+		applyQuantifier(currentAutomaton, q);
+
+		if (initialElement)
+			finalizeAutomaton(currentAutomaton);
+		return currentAutomaton;
+	}
+
+	private void finalizeAutomaton(BUFTAChunk<VAL, LBL> automaton)
+	{
+		var gchunk = automaton.getGChunk();
+		gchunk.setFinal(automaton.getRoot());
+
+		for (var leaf : automaton.getLeaves())
+			gchunk.setInitial(leaf);
+	}
+
+	/**
+	 * dest.src
+	 * 
+	 * @param dest
+	 * @param src
+	 */
+	private void concat(BUFTAChunk<VAL, LBL> dest, BUFTAChunk<VAL, LBL> src)
+	{
+		dest.addFTAEdge(src.getFTAEdges());
+		dest.getGChunk().union(src.getGChunk(), null, null);
+
+		for (var leaf : dest.getLeaves())
+		{
+			dest.getGChunk().addEdge(src.getRoot(), leaf, null);
+			// The previous node cannot be a terminal one with a concatenation
+			dest.getGChunk().setTerminal(leaf, false);
+		}
+		dest.setLeaves(src.getLeaves());
+	}
+
+	/**
+	 * src.dest
+	 * 
+	 * @param dest
+	 * @param src
+	 */
+	private void concatr(BUFTAChunk<VAL, LBL> dest, BUFTAChunk<VAL, LBL> src)
+	{
+		dest.addFTAEdge(src.getFTAEdges());
+		dest.getGChunk().union(src.getGChunk(), null, null);
+
+		for (var leaf : src.getLeaves())
+		{
+			dest.getGChunk().addEdge(dest.getRoot(), leaf, null);
+			// The previous node cannot be a terminal one with a concatenation
+			dest.getGChunk().setTerminal(leaf, false);
+		}
+		dest.setRoot(src.getRoot());
+	}
+
+	private void concat(BUFTAChunk<VAL, LBL> dest, BUFTAChunk<VAL, LBL> src, int nb)
+	{
+		assert nb > 0;
+		concat(dest, src);
+		nb--;
+
+		while (nb-- != 0)
+		{
+			src = src.copy();
+			concat(dest, src);
+		}
+	}
+
+	private BUFTAChunk<VAL, LBL> nodeList(List<BUFTAChunk<VAL, LBL>> aList, List<BUFTAChunk<VAL, LBL>> mayBeEmpty)
+	{
+		if (aList.size() == 1)
+			return aList.get(0);
+
+		BUFTAChunk<VAL, LBL>      ret    = BUFTAChunk.create();
+		IFSAState<VAL, LBL>       root   = ret.getGChunk().createState();
+		List<IFSAState<VAL, LBL>> leaves = new ArrayList<>();
+		List<IFSAState<VAL, LBL>> roots  = new ArrayList<>();
+		ret.getGChunk().addState(root);
+		ret.setRoot(root);
+
+		for (BUFTAChunk<VAL, LBL> gc : aList)
+		{
+			ret.union(gc);
+			roots.add(gc.getRoot());
+			leaves.addAll(gc.getLeaves());
+		}
+		ret.setLeaves(leaves);
+		addFTAEdge(ret, roots, root);
+
+		if (!mayBeEmpty.isEmpty())
+		{
+			for (var delete : HelpLists.powerSetIterable(mayBeEmpty))
+			{
+				var parents = new ArrayList<>(roots);
+				var del     = delete.stream().map(d -> d.getRoot()).collect(Collectors.toList());
+
+				parents.removeAll(del);
+				addFTAEdge(ret, parents, root);
+			}
+		}
+		return ret;
+	}
+
+	private BUFTAChunk<VAL, LBL> glueList(List<BUFTAChunk<VAL, LBL>> aList)
+	{
+		if (aList.size() == 1)
+			return aList.get(0);
+
+		BUFTAChunk<VAL, LBL>      ret    = BUFTAChunk.create();
+		var                       gchunk = ret.getGChunk();
+		IFSAState<VAL, LBL>       root   = ret.getGChunk().createState();
+		List<IFSAState<VAL, LBL>> leaves = new ArrayList<>();
+		ret.setRoot(root);
+		addChildFTAEdge(ret, root);
+
+		for (BUFTAChunk<VAL, LBL> gc : aList)
+		{
+			gchunk.addEdge(gc.getRoot(), root, FSALabelConditions.epsilonCondition());
+			ret.union(gc);
+			leaves.addAll(gc.getLeaves());
+		}
+		ret.setLeaves(leaves);
+		return ret;
+	}
+
+	private void applyQuantifier(BUFTAChunk<VAL, LBL> gc, Quantifier q)
+	{
+		int inf = q.getInf();
+		int sup = q.getSup();
+
+		if (inf == 1 && sup == 1)
+			return;
+
+		BUFTAChunk<VAL, LBL> base = null;
+
+		if (sup != inf)
+			base = gc.copy();
+
+		if (inf == 1)
+			;
+		else if (inf == 0)
+		{
+			gc.cleanGraph();
+			var state = gc.getGChunk().createState();
+			gc.getGChunk().addState(state);
+			gc.setLeaf(state);
+			gc.setRoot(state);
+		}
+		else if (inf > 1)
+			concat(gc, gc.copy(), inf - 1);
+		else
+			throw new IllegalArgumentException("inf: " + inf);
+
+		// Infty repeat
+		if (sup == -1)
+		{
+			if (inf == 0)
+				gc.set(base);
+
+			for (var leaf : gc.getLeaves())
+				gc.getGChunk().addEdge(gc.getRoot(), leaf, FSALabelConditions.epsilonCondition());
+		}
+		else
+		{
+			if (sup < inf)
+				throw new IllegalArgumentException(String.format("sup(%d) must be lower than inf(%d)", sup, inf));
+			if (sup != inf)
+			{
+				int n      = sup - inf;
+				var gcroot = gc.getRoot();
+
+				while (n-- != 0)
+				{
+					concatr(gc, base);
+					gc.getGChunk().addEdge(gcroot, base.getRoot(), FSALabelConditions.epsilonCondition());
+					base = base.copy();
+				}
+			}
+		}
 	}
 
 	// =========================================================================
