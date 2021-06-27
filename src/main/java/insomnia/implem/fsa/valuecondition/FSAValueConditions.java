@@ -1,5 +1,7 @@
 package insomnia.implem.fsa.valuecondition;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 
 import insomnia.fsa.IFSAValueCondition;
@@ -19,6 +21,12 @@ public final class FSAValueConditions
 		public boolean test(VAL element)
 		{
 			return true;
+		}
+
+		@Override
+		public Collection<VAL> getValues()
+		{
+			return Collections.singleton(null);
 		}
 
 		@Override
@@ -55,6 +63,12 @@ public final class FSAValueConditions
 		public boolean test(VAL element)
 		{
 			return Objects.equals(value, element);
+		}
+
+		@Override
+		public Collection<VAL> getValues()
+		{
+			return Collections.singleton(value);
 		}
 
 		@Override
