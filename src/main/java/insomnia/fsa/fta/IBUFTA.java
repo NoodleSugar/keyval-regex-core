@@ -1,5 +1,6 @@
 package insomnia.fsa.fta;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +46,14 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	 * @return a {@link Collection} of edges having {@code state} as child.
 	 */
 	Collection<IFTAEdge<VAL, LBL>> getFTAEdgesTo(IFSAState<VAL, LBL> state);
+
+	/**
+	 * Get all {@link IFTAEdge} having a specific state as child.
+	 * 
+	 * @param states a collection of child states
+	 * @return a {@link Collection} of edges having {@code state} as child.
+	 */
+	Collection<IFTAEdge<VAL, LBL>> getFTAEdgesTo(Collection<IFSAState<VAL, LBL>> states);
 
 	/**
 	 * Get the mappings from a state to the node it represents.
@@ -100,6 +109,16 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	public static <VAL, LBL> Collection<IFTAEdge<VAL, LBL>> getFTAEdgesTo(IBUFTA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
 	{
 		return CollectionUtils.select(automaton.getFTAEdges(), e -> e.getChild() == state);
+	}
+
+	public static <VAL, LBL> Collection<IFTAEdge<VAL, LBL>> getFTAEdgesTo(IBUFTA<VAL, LBL> automaton, Iterable<? extends IFSAState<VAL, LBL>> states)
+	{
+		Collection<IFTAEdge<VAL, LBL>> ret = new ArrayList<>();
+
+		for (var state : states)
+			ret.addAll(getFTAEdgesTo(automaton, state));
+
+		return ret;
 	}
 
 	// =========================================================================

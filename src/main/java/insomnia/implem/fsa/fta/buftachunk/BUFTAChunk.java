@@ -162,6 +162,12 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	}
 
 	@Override
+	public Collection<IFTAEdge<VAL, LBL>> getFTAEdgesTo(Collection<IFSAState<VAL, LBL>> states)
+	{
+		return IBUFTA.getFTAEdgesTo(this, states);
+	}
+
+	@Override
 	public Collection<IFTAEdge<VAL, LBL>> getFTAEdges(List<? extends Collection<IFSAState<VAL, LBL>>> parentStates)
 	{
 		return IBUFTA.getFTAEdges(this, parentStates);

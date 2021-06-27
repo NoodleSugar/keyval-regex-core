@@ -107,6 +107,12 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 	}
 
 	@Override
+	public Collection<IFTAEdge<VAL, LBL>> getFTAEdgesTo(Collection<IFSAState<VAL, LBL>> states)
+	{
+		return IBUFTA.getFTAEdgesTo(this, states);
+	}
+
+	@Override
 	public Map<IFSAState<VAL, LBL>, INode<VAL, LBL>> getStateNodeMap()
 	{
 		return stateNodeMap;
