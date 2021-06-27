@@ -2,23 +2,29 @@ package insomnia.implem.fsa.fta.buftachunk;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 
 import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.data.regex.ITreeMatcher;
+import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
 import insomnia.implem.data.Trees;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
+import insomnia.implem.fsa.fta.edge.FTAEdge;
+import insomnia.implem.fsa.fta.edgeCondition.FTAEdgeConditions;
 
 public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 {
@@ -31,6 +37,9 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	private Collection<IFTAEdge<VAL, LBL>> ftaEdges;
 	private GraphChunk<VAL, LBL>           gChunk;
 	private ITree<VAL, LBL>                tree;
+
+	private IFSAState<VAL, LBL>       root;
+	private List<IFSAState<VAL, LBL>> leaves;
 
 	// =========================================================================
 
@@ -51,6 +60,64 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	public static <VAL, LBL> BUFTAChunk<VAL, LBL> create(ITree<VAL, LBL> tree)
 	{
 		return new BUFTAChunk<>(tree);
+	}
+
+	public static <VAL, LBL> BUFTAChunk<VAL, LBL> createOneEdge(boolean isRooted, IFSALabelCondition<LBL> labelCondition, VAL aval, VAL bval)
+	{
+		BUFTAChunk<VAL, LBL> ret = create();
+		ret.gChunk = GraphChunk.createOneEdge(isRooted, labelCondition, bval, aval);
+		ret.root   = ret.gChunk.getEnd();
+		ret.leaves = Collections.singletonList(ret.gChunk.getStart());
+		return ret;
+	}
+
+	public static <VAL, LBL> BUFTAChunk<VAL, LBL> createOneState(boolean isRooted, boolean isTerminal, VAL value)
+	{
+		BUFTAChunk<VAL, LBL> ret = create();
+		ret.gChunk = GraphChunk.createOneState(isRooted, isTerminal, value);
+		ret.root   = ret.gChunk.getStart();
+		ret.leaves = Collections.singletonList(ret.root);
+		return ret;
+	}
+
+	// =========================================================================
+
+	public IFSAState<VAL, LBL> getRoot()
+	{
+		return root;
+	}
+
+	public List<IFSAState<VAL, LBL>> getLeaves()
+	{
+		return leaves;
+	}
+
+	public IFSAState<VAL, LBL> getLeaf()
+	{
+		return CollectionUtils.extractSingleton(leaves);
+	}
+
+	public void setRoot(IFSAState<VAL, LBL> root)
+	{
+		this.root = root;
+	}
+
+	public void setLeaves(List<IFSAState<VAL, LBL>> leaves)
+	{
+		this.leaves = new ArrayList<>(leaves);
+	}
+
+	public void setLeaf(IFSAState<VAL, LBL> leaf)
+	{
+		this.leaves = Collections.singletonList(leaf);
+	}
+
+	public void cleanGraph()
+	{
+		gChunk.cleanGraph();
+		ftaEdges.clear();
+		stateNodeMap.clear();
+		nodeStatesMap.clear();
 	}
 
 	// =========================================================================
@@ -77,6 +144,32 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 		return ret;
 	}
 
+	public BUFTAChunk<VAL, LBL> copy()
+	{
+		BUFTAChunk<VAL, LBL> ret = BUFTAChunk.create();
+
+		Map<IFSAState<VAL, LBL>, IFSAState<VAL, LBL>> oldToNew = new HashMap<>();
+
+		ret.gChunk = this.gChunk.copy(oldToNew);
+		ret.root   = oldToNew.get(this.root);
+		ret.leaves = this.leaves.stream().map(oldToNew::get).collect(Collectors.toList());
+
+		for (var fedge : this.getFTAEdges())
+		{
+			var parents = fedge.getParents().stream().map(oldToNew::get).collect(Collectors.toList());
+			var child   = oldToNew.get(fedge.getChild());
+			ret.addFTAEdge(new FTAEdge<>(parents, child, FTAEdgeConditions.copy(fedge.getCondition(), parents)));
+		}
+
+		for (var entry : stateNodeMap.entrySet())
+			ret.stateNodeMap.put(oldToNew.get(entry.getKey()), entry.getValue());
+
+		for (var entry : nodeStatesMap.entries())
+			ret.nodeStatesMap.put(entry.getKey(), oldToNew.get(entry.getValue()));
+
+		return ret;
+	}
+
 	// =========================================================================
 
 	public void union(BUFTAChunk<VAL, LBL> src)
@@ -87,6 +180,13 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 		nodeStatesMap.putAll(src.nodeStatesMap);
 	}
 
+	public void set(BUFTAChunk<VAL, LBL> src)
+	{
+		cleanGraph();
+		union(src);
+		setRoot(src.getRoot());
+		setLeaves(src.getLeaves());
+	}
 	// =========================================================================
 
 	public ITree<VAL, LBL> getTree()
@@ -133,6 +233,11 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	public void addFTAEdge(IFTAEdge<VAL, LBL> ftaedge)
 	{
 		ftaEdges.add(ftaedge);
+	}
+
+	public void addFTAEdge(Collection<IFTAEdge<VAL, LBL>> ftaedges)
+	{
+		ftaEdges.addAll(ftaedges);
 	}
 
 	public void putOriginalNode(IFSAState<VAL, LBL> state, INode<VAL, LBL> node)
@@ -184,6 +289,9 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	@Override
 	public String toString()
 	{
-		return IBUFTA.toString(this);
+		return new StringBuilder()//
+			.append("root: ").append(getRoot()).append("\n") //
+			.append("leaves: ").append(getLeaves()).append("\n") //
+			.append(IBUFTA.toString(this)).toString();
 	}
 }
