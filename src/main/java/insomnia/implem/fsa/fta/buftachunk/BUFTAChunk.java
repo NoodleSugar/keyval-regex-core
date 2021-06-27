@@ -175,7 +175,7 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	public void union(BUFTAChunk<VAL, LBL> src)
 	{
 		ftaEdges.addAll(src.getFTAEdges());
-		gChunk.union(src.getGChunk());
+		gChunk.add(src.getGChunk());
 		stateNodeMap.putAll(src.stateNodeMap);
 		nodeStatesMap.putAll(src.nodeStatesMap);
 	}
