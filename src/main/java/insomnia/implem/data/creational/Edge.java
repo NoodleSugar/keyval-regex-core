@@ -27,6 +27,16 @@ class Edge<VAL, LBL> implements IEdge<VAL, LBL>
 		child.setParent(this);
 	}
 
+	Edge(int pos, LBL label, Node<VAL, LBL> parent, Node<VAL, LBL> child, Collection<LBL> vocabulary)
+	{
+		this.label  = label;
+		this.parent = parent;
+		this.child  = child;
+		vocabulary.add(label);
+		parent.addEdge(pos, this);
+		child.setParent(this);
+	}
+
 	@Override
 	public LBL getLabel()
 	{

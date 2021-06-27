@@ -46,14 +46,35 @@ class Node<VAL, LBL> implements INode<VAL, LBL>
 		return parent;
 	}
 
+	void addEdge(int pos, Edge<VAL, LBL> edge)
+	{
+		children.add(pos, edge);
+	}
+
 	void addEdge(Edge<VAL, LBL> edge)
 	{
 		children.add(edge);
 	}
 
+	void removeEdge(int pos)
+	{
+		children.remove(pos);
+	}
+
 	void removeEdge(Edge<VAL, LBL> edge)
 	{
 		children.remove(edge);
+	}
+
+	void removeEdge(Iterable<? extends Edge<VAL, LBL>> edges)
+	{
+		for (var e : edges)
+			children.remove(e);
+	}
+
+	void removeAllEdges()
+	{
+		children.clear();
 	}
 
 	void setParent(Edge<VAL, LBL> parent)

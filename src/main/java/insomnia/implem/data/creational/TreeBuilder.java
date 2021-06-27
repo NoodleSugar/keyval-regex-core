@@ -114,7 +114,7 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	public ITreeBuilder<VAL, LBL> setLabel(LBL label)
 	{
 		if (currentNode == root)
-			throw new IllegalStateException("The root don't have a parent");
+			throw new IndexOutOfBoundsException("The root don't have a parent");
 
 		getParent(currentNode).get().setLabel(label);
 		return this;
