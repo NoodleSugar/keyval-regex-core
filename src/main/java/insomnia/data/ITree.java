@@ -591,7 +591,7 @@ public interface ITree<VAL, LBL>
 			IEdge<VAL, LBL>             achild = aedges.poll();
 			Collection<IEdge<VAL, LBL>> edges  = tree.getChildren(achild.getChild());
 			aedges.addAll(edges);
-			ret.addAll(aedges);
+			ret.addAll(edges);
 		}
 		return ret;
 	}
