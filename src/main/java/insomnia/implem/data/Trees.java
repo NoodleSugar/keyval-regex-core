@@ -2,6 +2,7 @@ package insomnia.implem.data;
 
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import insomnia.data.ITree;
 import insomnia.data.ITreeErasure;
 import insomnia.data.creational.ISubTreeBuilder;
 import insomnia.data.creational.ITreeBuilder;
+import insomnia.fsa.fta.IBUFTA;
 import insomnia.implem.data.creational.SubTreeBuilder;
 import insomnia.implem.data.creational.TreeBuilder;
 import insomnia.implem.data.regex.parser.IRegexElement;
@@ -381,6 +383,74 @@ public final class Trees
 				return bottom;
 			}
 		};
+	}
+
+	// =========================================================================
+
+	public static final int AVOID_MAX_RECURSIVE_DEPTH = -1;
+
+	/**
+	 * Get the trees represented by an automaton.
+	 * <p>
+	 * The returned tree may be the same object in memory between two calls to {@link Iterator#next()}; so if more than one must be access for an operation, create new trees to be safe.
+	 * <br>
+	 * There is also no guarantee that a returned tree is unique among calls.
+	 * 
+	 * @param automaton         the automaton
+	 * @param maxRecursiveDepth the number of recursion allowed for a state; that is the number of times a state may be reached
+	 * @return An {@link Iterable} of Trees.
+	 * @throws IllegalArgumentException if {@code maxRecursiveDepth} is less than -1
+	 * @throws IllegalArgumentException if there is a recursion while recursion is avoided
+	 */
+	static public <VAL, LBL> Iterable<ITree<VAL, LBL>> treesFromAutomatonIterable(IBUFTA<VAL, LBL> automaton, int maxRecursiveDepth)
+	{
+		return new TreesFromBUFTABuilder<>(automaton).setMaxRecursiveDepth(maxRecursiveDepth);
+	}
+
+	/**
+	 * Get the trees represented by an automaton.
+	 * <p>
+	 * There is no guarantee that each tree is unique in the list.
+	 * 
+	 * @param automaton         the automaton
+	 * @param maxRecursiveDepth the number of recursion allowed for a state; that is the number of times a state may be reached
+	 * @return A {@link List} containing the trees.
+	 * @throws IllegalArgumentException if {@code maxRecursiveDepth} is less than -1
+	 * @throws IllegalArgumentException if there is a recursion while recursion is avoided
+	 */
+	static public <VAL, LBL> List<ITree<VAL, LBL>> treesFromAutomaton(IBUFTA<VAL, LBL> automaton, int maxRecursiveDepth)
+	{
+		return IterableUtils.toList(IterableUtils.transformedIterable(treesFromAutomatonIterable(automaton, maxRecursiveDepth), Trees::create));
+	}
+
+	/**
+	 * Get the trees represented by an automaton.
+	 * <p>
+	 * The returned tree may be the same object in memory between two calls to {@link Iterator#next()}; so if more than one must be access for an operation, create new trees to be safe.
+	 * <br>
+	 * There is also no guarantee that a returned tree is unique among calls.
+	 * 
+	 * @param automaton the automaton
+	 * @return An {@link Iterable} of Trees.
+	 * @throws IllegalArgumentException if there is a recursion
+	 */
+	static public <VAL, LBL> Iterable<ITree<VAL, LBL>> treesFromAutomatonIterable(IBUFTA<VAL, LBL> automaton)
+	{
+		return treesFromAutomatonIterable(automaton, AVOID_MAX_RECURSIVE_DEPTH);
+	}
+
+	/**
+	 * Get the trees represented by an automaton.
+	 * <p>
+	 * There is no guarantee that each tree is unique in the list.
+	 * 
+	 * @param automaton the automaton
+	 * @return A {@link List} containing the trees.
+	 * @throws IllegalArgumentException if there is a recursion while recursion
+	 */
+	static public <VAL, LBL> List<ITree<VAL, LBL>> treesFromAutomaton(IBUFTA<VAL, LBL> automaton)
+	{
+		return treesFromAutomaton(automaton, AVOID_MAX_RECURSIVE_DEPTH);
 	}
 
 	// =========================================================================
