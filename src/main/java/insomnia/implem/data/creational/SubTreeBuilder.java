@@ -148,6 +148,14 @@ public final class SubTreeBuilder<VAL, LBL> extends AbstractTree<VAL, LBL> imple
 	}
 
 	@Override
+	public ISubTreeBuilder<VAL, LBL> add(Collection<IEdge<VAL, LBL>> edges)
+	{
+		for (var e : edges)
+			add(e);
+		return this;
+	}
+
+	@Override
 	public SubTreeBuilder<VAL, LBL> addTree(INode<VAL, LBL> root)
 	{
 		return addTree(parentTree, root);

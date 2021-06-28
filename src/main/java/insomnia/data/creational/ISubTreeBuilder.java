@@ -1,5 +1,7 @@
 package insomnia.data.creational;
 
+import java.util.Collection;
+
 import insomnia.data.IEdge;
 import insomnia.data.INode;
 import insomnia.data.ITree;
@@ -71,4 +73,12 @@ public interface ISubTreeBuilder<VAL, LBL> extends ITree<VAL, LBL>
 	 * @return the builder
 	 */
 	ISubTreeBuilder<VAL, LBL> add(IEdge<VAL, LBL> edge);
+
+	/**
+	 * Add some edges from the parent tree to the builder
+	 * 
+	 * @param edges the edges to add
+	 * @return the builder
+	 */
+	ISubTreeBuilder<VAL, LBL> add(Collection<IEdge<VAL, LBL>> edges);
 }
