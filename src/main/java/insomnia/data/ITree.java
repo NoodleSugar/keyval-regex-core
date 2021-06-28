@@ -20,9 +20,11 @@ import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.ListValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
+import insomnia.data.creational.ISubTreeBuilder;
 import insomnia.data.regex.ITreeMatchResult;
 import insomnia.implem.data.Paths;
 import insomnia.implem.data.Trees;
+import insomnia.implem.data.creational.SubTreeBuilder;
 import insomnia.implem.data.creational.TreeBuilder;
 import insomnia.implem.data.regex.TreeMatchResultIterator;
 import insomnia.implem.fsa.fta.creational.BUFTABuilder;
@@ -208,6 +210,25 @@ public interface ITree<VAL, LBL>
 
 			for (IEdge<VAL, LBL> edge : edges)
 				nodeQueue.add(edge.getChild());
+		}
+		return ret;
+	}
+
+	// =========================================================================
+
+	public static <VAL, LBL> List<IPath<VAL, LBL>> getPaths(ITree<VAL, LBL> tree)
+	{
+		ISubTreeBuilder<VAL, LBL> tbuilder = new SubTreeBuilder<>(tree);
+		List<IPath<VAL, LBL>>     ret      = new ArrayList<>(tree.getLeaves().size());
+
+		// TODO better algorithm
+		var root = tree.getRoot();
+
+		for (var leaf : tree.getLeaves())
+		{
+			var edges = parentEdges(tree, leaf, root);
+			tbuilder.reset().add(edges);
+			ret.add(Paths.subPath(tbuilder));
 		}
 		return ret;
 	}
