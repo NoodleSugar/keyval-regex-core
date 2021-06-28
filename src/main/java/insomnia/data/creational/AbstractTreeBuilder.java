@@ -154,9 +154,9 @@ public abstract class AbstractTreeBuilder<VAL, LBL> extends AbstractTree<VAL, LB
 	// ==========================================================================
 
 	@Override
-	public ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree)
+	public ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree, boolean rewriteRootVal)
 	{
-		return tree(tree, tree.getRoot());
+		return tree(tree, tree.getRoot(), rewriteRootVal);
 	}
 
 	// ==========================================================================

@@ -52,7 +52,7 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	public ITreeBuilder<VAL, LBL> reset(ITree<VAL, LBL> src)
 	{
 		reset();
-		tree(src);
+		tree(src, true);
 		setRooted(src.isRooted());
 		return this;
 	}
@@ -279,13 +279,18 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 	}
 
 	@Override
-	public ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree, INode<VAL, LBL> treeRoot)
+	public ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree, INode<VAL, LBL> treeRoot, boolean rewriteRootVal)
 	{
 		if (currentNode.isTerminal())
 			throw new IllegalStateException("A terminal value can't have a child");
 
 		Deque<Pair<Node<VAL, LBL>, INode<VAL, LBL>>> nodes = new LinkedList<>();
 		nodes.add(Pair.of(currentNode, treeRoot));
+
+		VAL treeRootCopy = treeRoot.getValue();
+
+		if (!rewriteRootVal)
+			treeRoot.setValue(currentNode.getValue());
 
 		Pair<Node<VAL, LBL>, INode<VAL, LBL>> pair;
 
@@ -303,6 +308,10 @@ public final class TreeBuilder<VAL, LBL> extends AbstractTreeBuilder<VAL, LBL>
 				nodes.add(Pair.of(newEdge.getChild(), edge.getChild()));
 			}
 		}
+
+		if (!rewriteRootVal)
+			treeRoot.setValue(treeRootCopy);
+
 		return this;
 	}
 }

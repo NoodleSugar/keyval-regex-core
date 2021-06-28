@@ -276,18 +276,22 @@ public interface ITreeBuilder<VAL, LBL> extends ITree<VAL, LBL>
 	/**
 	 * Add a tree to the cursor.
 	 * 
+	 * @param tree           the tree
+	 * @param rewriteRootVal if {@code true}, rewrite the builder current node's value with that of the tree root.
 	 * @return the builder
 	 * @throws IllegalStateException if the cursor is terminal
 	 */
-	ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree);
+	ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree, boolean rewriteRootVal);
 
 	/**
 	 * Add a tree to the cursor considering {@code treeRoot} as its root.
 	 * 
+	 * @param tree           the tree
+	 * @param rewriteRootVal if {@code true}, rewrite the builder current node's value with that of the tree root.
 	 * @return the builder
 	 * @throws IllegalStateException if the cursor is terminal
 	 */
-	ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree, INode<VAL, LBL> treeRoot);
+	ITreeBuilder<VAL, LBL> tree(ITree<VAL, LBL> tree, INode<VAL, LBL> treeRoot, boolean rewriteRootVal);
 
 	// ==========================================================================
 

@@ -150,7 +150,7 @@ public final class Trees
 	 */
 	static public <VAL, LBL> ITree<VAL, LBL> complete(ITree<VAL, LBL> tree, INode<VAL, LBL> root)
 	{
-		return create(new TreeBuilder<VAL, LBL>().tree(tree, root).setComplete());
+		return create(new TreeBuilder<VAL, LBL>().tree(tree, root, true).setComplete());
 	}
 
 	/**
