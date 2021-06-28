@@ -99,6 +99,7 @@ public final class SubTreeBuilder<VAL, LBL> extends AbstractTree<VAL, LBL> imple
 	{
 		parentOf.clear();
 		childrenOf.clear();
+		edges.clear();
 		vocab.clear();
 		root = parentTree.getRoot();
 		return this;
