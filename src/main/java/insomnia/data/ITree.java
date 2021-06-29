@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Stack;
@@ -388,6 +389,28 @@ public interface ITree<VAL, LBL>
 			ret = edges.get(index).getChild();
 		}
 		return ret;
+	}
+
+	public static <VAL, LBL> VAL followUniquePath(ITree<VAL, LBL> tree, List<LBL> path)
+	{
+		var node = tree.getRoot();
+
+		for (int i = 0, c = path.size(); i < c; i++)
+		{
+			LBL label     = path.get(i);
+			var childEdge = tree.getEdges(node).stream().filter(e -> Objects.equals(label, e.getLabel())).findFirst();
+
+			if (!childEdge.isPresent())
+				return null;
+
+			node = childEdge.get().getChild();
+		}
+		return node.getValue();
+	}
+
+	public static <VAL, LBL> VAL followUniquePath(ITree<VAL, LBL> tree, IPath<VAL, LBL> path)
+	{
+		return followUniquePath(tree, path.getLabels());
 	}
 
 	/**
