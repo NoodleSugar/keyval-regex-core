@@ -832,7 +832,7 @@ public final class BUFTABuilder<VAL, LBL>
 			List<IEdge<VAL, LBL>> nodeChilds = tree.getChildren(node);
 			automaton.putOriginalNode(newState, node);
 
-			// Optimisation for 1 child node (reuse the same state for the ftaEdfe) ; not available if the node is the final one
+			// Optimisation for 1 child node (reuse the same state for the ftaEdge) ; not available if the node is the final one
 			if (nodeChilds.size() == 1 && nodes.hasNext())
 			{
 				IEdge<VAL, LBL>     edge  = nodeChilds.get(0);
@@ -867,8 +867,11 @@ public final class BUFTABuilder<VAL, LBL>
 						gchunk.setFinal(childState);
 						addChildFTAEdge(automaton, childState);
 
+						// Force internal state to not be rooted or terminal
 						if (node != treeRoot)
 							gchunk.setNodeCondition(childState, FSANodeConditions.createEq(false, false));
+						else
+							gchunk.setNodeCondition(childState, FSANodeConditions.createProjection(node.isRooted(), node.isTerminal()));
 					}
 				}
 				List<IFSAState<VAL, LBL>> parents = new ArrayList<>(nodeChildStates);
@@ -884,9 +887,7 @@ public final class BUFTABuilder<VAL, LBL>
 		var rootState = stateOf.get(treeRoot);
 		automaton.putOriginalNode(rootState, treeRoot);
 
-		if (settings.internalNodesAreFinal)
-			gchunk.setNodeCondition(rootState, FSANodeConditions.createAny());
-		else
+		if (!settings.internalNodesAreFinal)
 			makeItFinalFrom(automaton, rootState, treeRoot);
 
 		return automaton;
