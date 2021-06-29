@@ -60,7 +60,7 @@ public final class BUFTABuilder<VAL, LBL>
 
 	private Mode mode;
 
-	public static class Settings<VAL, LBL>
+	private static class Settings<VAL, LBL>
 	{
 		private Function<LBL, IFSALabelCondition<LBL>>                           fcreateLabelCondition;
 		private Function<VAL, IFSAValueCondition<VAL>>                           fcreateValueCondition;
