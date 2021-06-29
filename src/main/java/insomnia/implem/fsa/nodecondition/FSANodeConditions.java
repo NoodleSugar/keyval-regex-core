@@ -9,8 +9,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import insomnia.data.INode;
 import insomnia.data.ITree;
 import insomnia.fsa.IFSANodeCondition;
-import insomnia.fsa.IFSAState;
-import insomnia.fsa.fpa.IGFPA;
 
 public final class FSANodeConditions
 {
@@ -78,11 +76,6 @@ public final class FSANodeConditions
 	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> createProjection(boolean checkRooted, boolean checkTerminal)
 	{
 		return new NodeCondition<>(checkRooted, true, checkTerminal, true);
-	}
-
-	public static <VAL, LBL> IFSANodeCondition<VAL, LBL> createProjection(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
-	{
-		return createProjection(automaton.isRooted(state), automaton.isTerminal(state));
 	}
 
 	// =========================================================================
