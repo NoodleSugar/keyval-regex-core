@@ -187,6 +187,60 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 		setRoot(src.getRoot());
 		setLeaves(src.getLeaves());
 	}
+
+	// =========================================================================
+
+	public void concat(BUFTAChunk<VAL, LBL> src, int nb)
+	{
+		assert nb > 0;
+		this.concat(src);
+		nb--;
+
+		while (nb-- != 0)
+		{
+			src = src.copy();
+			this.concat(this);
+		}
+	}
+
+	/**
+	 * Concatenate src to this (this.src)
+	 * 
+	 * @param src the chunk to concatenate
+	 */
+	public void concat(BUFTAChunk<VAL, LBL> src)
+	{
+		this.addFTAEdge(src.getFTAEdges());
+		this.getGChunk().union(src.getGChunk(), null, null);
+
+		for (var leaf : this.getLeaves())
+		{
+			this.getGChunk().addEdge(src.getRoot(), leaf, null);
+			// The previous node cannot be a terminal one with a concatenation
+			this.getGChunk().setTerminal(leaf, false);
+		}
+		this.setLeaves(src.getLeaves());
+	}
+
+	/**
+	 * Reversed concatenation (src.this)
+	 * 
+	 * @param src the chunk to do the concatenation
+	 */
+	public void concatr(BUFTAChunk<VAL, LBL> src)
+	{
+		this.addFTAEdge(src.getFTAEdges());
+		this.getGChunk().union(src.getGChunk(), null, null);
+
+		for (var leaf : src.getLeaves())
+		{
+			this.getGChunk().addEdge(this.getRoot(), leaf, null);
+			// The previous node cannot be a terminal one with a concatenation
+			this.getGChunk().setTerminal(leaf, false);
+		}
+		this.setRoot(src.getRoot());
+	}
+
 	// =========================================================================
 
 	public ITree<VAL, LBL> getTree()
