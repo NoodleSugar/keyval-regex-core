@@ -70,6 +70,9 @@ public final class BUFTABuilder<VAL, LBL>
 		private BiFunction<Boolean, Boolean, IFSANodeCondition<VAL, LBL>> fcreateNodeCondition;
 
 		private boolean internalNodesAreInitial, internalNodesAreFinal;
+
+		private IBUFTAChunkModifier<VAL, LBL> modifier = (a, b) -> {
+		};
 	}
 
 	private Settings<VAL, LBL> settings = new Settings<>();
@@ -244,6 +247,7 @@ public final class BUFTABuilder<VAL, LBL>
 		if (automaton == null)
 			automaton = buildFromTree(tree);
 
+		settings.modifier.accept(automaton, getEnvironment());
 		return automaton;
 	}
 
