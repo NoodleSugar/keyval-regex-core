@@ -24,6 +24,8 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 {
 	IGFPA<VAL, LBL> getGFPA();
 
+	boolean contains(IFTAEdge<VAL, LBL> ftaEdge);
+
 	/**
 	 * Get all the {@link IFTAEdge} of the automaton.
 	 * 
@@ -54,6 +56,8 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	 * @return a {@link Collection} of edges having {@code state} as child.
 	 */
 	Collection<IFTAEdge<VAL, LBL>> getFTAEdgesTo(Collection<IFSAState<VAL, LBL>> states);
+
+	// =========================================================================
 
 	/**
 	 * Get the mappings from a state to the node it represents.

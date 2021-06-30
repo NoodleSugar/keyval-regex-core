@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.MultiMapUtils;
@@ -47,7 +48,7 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 	BUFTA(BUFTAChunk<VAL, LBL> automaton)
 	{
 		this.gfpa         = new FPABuilder<>(automaton.getGChunk()).mustBeSync(false).createNewStates(!true).create();
-		this.ftaEdges     = List.copyOf(automaton.getFTAEdges());
+		this.ftaEdges     = Set.copyOf(automaton.getFTAEdges());
 		this.stateNodeMap = MapUtils.unmodifiableMap(new HashMap<>(automaton.getStateNodeMap()));
 
 		nodeStatesMap = new ArrayListValuedHashMap<>();
@@ -79,6 +80,12 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 	public IGFPA<VAL, LBL> getGFPA()
 	{
 		return gfpa;
+	}
+
+	@Override
+	public boolean contains(IFTAEdge<VAL, LBL> ftaEdge)
+	{
+		return ftaEdges.contains(ftaEdge);
 	}
 
 	@Override

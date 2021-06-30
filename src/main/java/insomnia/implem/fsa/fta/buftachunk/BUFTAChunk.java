@@ -253,6 +253,12 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 		return gChunk;
 	}
 
+	@Override
+	public boolean contains(IFTAEdge<VAL, LBL> ftaEdge)
+	{
+		return ftaEdges.contains(ftaEdge);
+	}
+
 	public Collection<IFTAEdge<VAL, LBL>> getFTAEdges()
 	{
 		return ftaEdges;
