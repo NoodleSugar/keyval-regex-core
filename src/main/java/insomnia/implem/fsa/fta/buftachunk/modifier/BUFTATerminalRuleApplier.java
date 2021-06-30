@@ -127,7 +127,7 @@ public final class BUFTATerminalRuleApplier<VAL, LBL>
 											s -> semiTwigMatchedStates.contains(s) ? treeAutomatonRootState : s, //
 											new ArrayList<>());
 
-									automaton.addFTAEdge(new FTAEdge<VAL, LBL>(newParents, rootState, ftaEdge.getCondition()));
+									automaton.addFTAEdge(new FTAEdge<VAL, LBL>(newParents, rootState, ftaEdge.getConditionFactory()));
 								}
 							}
 						}

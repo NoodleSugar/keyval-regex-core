@@ -389,7 +389,7 @@ class BUFTAGroupMatcher<VAL, LBL>
 
 			for (IFTAEdge<VAL, LBL> hEdge : automaton.getFTAEdges(childsStates))
 			{
-				Collection<List<IFSAState<VAL, LBL>>> validChildsStates = hEdge.getCondition().validStatesND(childsStates);
+				Collection<List<IFSAState<VAL, LBL>>> validChildsStates = hEdge.getConditionFactory().apply(automaton, hEdge).validStatesND(childsStates);
 
 				if (validChildsStates.isEmpty())
 					continue;

@@ -1,6 +1,7 @@
 package insomnia.fsa.fta;
 
 import java.util.List;
+import java.util.function.BiFunction;
 
 import insomnia.fsa.IFSAState;
 
@@ -14,9 +15,14 @@ import insomnia.fsa.IFSAState;
  */
 public interface IFTAEdge<VAL, LBL>
 {
+	@FunctionalInterface
+	public interface ConditionFactory<VAL, LBL> extends BiFunction<IBUFTA<VAL, LBL>, IFTAEdge<VAL, LBL>, IFTAEdgeCondition<VAL, LBL>>
+	{
+	}
+
 	List<IFSAState<VAL, LBL>> getParents();
 
 	IFSAState<VAL, LBL> getChild();
 
-	IFTAEdgeCondition<VAL, LBL> getCondition();
+	ConditionFactory<VAL, LBL> getConditionFactory();
 }

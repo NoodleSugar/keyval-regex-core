@@ -24,7 +24,7 @@ import insomnia.fsa.IFSAMultiState;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
-import insomnia.fsa.fta.IFTAEdgeCondition;
+import insomnia.fsa.fta.IFTAEdge.ConditionFactory;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fta.buftachunk.BUFTAChunk;
 import insomnia.implem.fsa.fta.edge.FTAEdge;
@@ -229,7 +229,9 @@ final class IntersectionBuilder<VAL, LBL>
 		{
 			Collection<List<IFSAMultiState<VAL, LBL>>> validNewMultiStates = new ArrayList<>();
 
-			for (List<IFSAState<VAL, LBL>> validMultiState : ftaEdge.getCondition().validStatesND(currentStatesList))
+			IBUFTA<VAL, LBL> automaton = a.contains(ftaEdge) ? a : b;
+
+			for (List<IFSAState<VAL, LBL>> validMultiState : ftaEdge.getConditionFactory().apply(automaton, ftaEdge).validStatesND(currentStatesList))
 			{
 				List<IFSAMultiState<VAL, LBL>> validNewMultiState = new ArrayList<>();
 
@@ -252,14 +254,14 @@ final class IntersectionBuilder<VAL, LBL>
 		}
 		for (var multiStates : validMultiStatesMap.keySet())
 		{
-			Collection<IFTAEdge<VAL, LBL>> edges           = validMultiStatesMap.get(multiStates);
-			IFSAMultiState<VAL, LBL>       childMultiState = FSAMultiStates.create(CollectionUtils.collect(edges, IFTAEdge::getChild));
-			IFTAEdgeCondition<VAL, LBL>    eCondition      = edges.iterator().next().getCondition();
-			List<IFSAState<VAL, LBL>>      parents         = CollectionUtils.collect(multiStates, s -> oldToNews.get(s), new ArrayList<>());
+			Collection<IFTAEdge<VAL, LBL>> edges             = validMultiStatesMap.get(multiStates);
+			IFSAMultiState<VAL, LBL>       childMultiState   = FSAMultiStates.create(CollectionUtils.collect(edges, IFTAEdge::getChild));
+			ConditionFactory<VAL, LBL>     eConditionFactory = edges.iterator().next().getConditionFactory();
+			List<IFSAState<VAL, LBL>>      parents           = CollectionUtils.collect(multiStates, s -> oldToNews.get(s), new ArrayList<>());
 
 			for (var states : processStates(childMultiState))
 			{
-				var newFTAEdge = new FTAEdge<VAL, LBL>(parents, oldToNews.get(states), FTAEdgeConditions.copy(eCondition, parents));
+				var newFTAEdge = new FTAEdge<VAL, LBL>(parents, oldToNews.get(states), eConditionFactory);
 				build.addFTAEdge(automaton, newFTAEdge);
 
 				if (!processed.contains(states))
@@ -301,7 +303,7 @@ final class IntersectionBuilder<VAL, LBL>
 			if (!gchunk.isTerminal(state))
 			{
 				gchunk.addEdge(state, state, FSALabelConditions.createAnyLoop());
-				automaton.addFTAEdge(new FTAEdge<>(Collections.singletonList(state), state, FTAEdgeConditions.createInclusive(state)));
+				automaton.addFTAEdge(new FTAEdge<>(Collections.singletonList(state), state, FTAEdgeConditions.getInclusiveFactory()));
 			}
 		}
 		for (var state : gchunk.getFinalStates())
@@ -309,7 +311,7 @@ final class IntersectionBuilder<VAL, LBL>
 			if (!gchunk.isRooted(state))
 			{
 				gchunk.addEdge(state, state, FSALabelConditions.createAnyLoop());
-				automaton.addFTAEdge(new FTAEdge<>(Collections.singletonList(state), state, FTAEdgeConditions.createInclusive(state)));
+				automaton.addFTAEdge(new FTAEdge<>(Collections.singletonList(state), state, FTAEdgeConditions.getInclusiveFactory()));
 			}
 		}
 		return build;

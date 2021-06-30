@@ -24,7 +24,6 @@ import insomnia.fsa.fta.IFTAEdge;
 import insomnia.implem.data.Trees;
 import insomnia.implem.fsa.fpa.graphchunk.GraphChunk;
 import insomnia.implem.fsa.fta.edge.FTAEdge;
-import insomnia.implem.fsa.fta.edgeCondition.FTAEdgeConditions;
 
 public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 {
@@ -158,7 +157,7 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 		{
 			var parents = fedge.getParents().stream().map(oldToNew::get).collect(Collectors.toList());
 			var child   = oldToNew.get(fedge.getChild());
-			ret.addFTAEdge(new FTAEdge<>(parents, child, FTAEdgeConditions.copy(fedge.getCondition(), parents)));
+			ret.addFTAEdge(new FTAEdge<>(parents, child, fedge.getConditionFactory()));
 		}
 
 		for (var entry : stateNodeMap.entrySet())

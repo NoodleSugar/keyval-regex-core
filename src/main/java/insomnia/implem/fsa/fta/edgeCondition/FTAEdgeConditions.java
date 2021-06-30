@@ -1,58 +1,75 @@
 package insomnia.implem.fsa.fta.edgeCondition;
 
-import java.util.Collections;
-import java.util.List;
-
-import insomnia.fsa.IFSAState;
+import insomnia.fsa.fta.IBUFTA;
+import insomnia.fsa.fta.IFTAEdge;
+import insomnia.fsa.fta.IFTAEdge.ConditionFactory;
 import insomnia.fsa.fta.IFTAEdgeCondition;
 
 public class FTAEdgeConditions
 {
-	/**
-	 * Create a state that must contain at least the 'parents' states.
-	 */
-	public static <VAL, LBL> IFTAEdgeCondition<VAL, LBL> createInclusive(List<IFSAState<VAL, LBL>> states)
+	private static ConditionFactory<?, ?> inclusion = //
+		new ConditionFactory<>()
+		{
+			@Override
+			public IFTAEdgeCondition<Object, Object> apply(IBUFTA<Object, Object> arg0, IFTAEdge<Object, Object> arg1)
+			{
+				return new FTAInclusiveCondition<>(arg0, arg1);
+			}
+
+			@Override
+			public String toString()
+			{
+				return "∀";
+			}
+		};
+
+	private static ConditionFactory<?, ?> equality = //
+		new ConditionFactory<>()
+		{
+			@Override
+			public IFTAEdgeCondition<Object, Object> apply(IBUFTA<Object, Object> arg0, IFTAEdge<Object, Object> arg1)
+			{
+				return new FTAEqualityCondition<>(arg0, arg1);
+			}
+
+			@Override
+			public String toString()
+			{
+				return "=";
+			}
+		};
+
+	private static ConditionFactory<?, ?> semiTwig = //
+		new ConditionFactory<>()
+		{
+			@Override
+			public IFTAEdgeCondition<Object, Object> apply(IBUFTA<Object, Object> arg0, IFTAEdge<Object, Object> arg1)
+			{
+				return new FTASemiTwigCondition<>(arg0, arg1);
+			}
+
+			@Override
+			public String toString()
+			{
+				return "⧊";
+			}
+		};
+
+	@SuppressWarnings("unchecked")
+	public static <VAL, LBL> ConditionFactory<VAL, LBL> getInclusiveFactory()
 	{
-		return new FTAInclusiveCondition<>(states);
+		return (ConditionFactory<VAL, LBL>) inclusion;
 	}
 
-	public static <VAL, LBL> IFTAEdgeCondition<VAL, LBL> createInclusive(IFSAState<VAL, LBL> state)
+	@SuppressWarnings("unchecked")
+	public static <VAL, LBL> ConditionFactory<VAL, LBL> getEqualityFactory()
 	{
-		return new FTAInclusiveCondition<>(Collections.singletonList(state));
+		return (ConditionFactory<VAL, LBL>) equality;
 	}
 
-	public static <VAL, LBL> IFTAEdgeCondition<VAL, LBL> createEq(List<IFSAState<VAL, LBL>> states)
+	@SuppressWarnings("unchecked")
+	public static <VAL, LBL> ConditionFactory<VAL, LBL> getSemiTwigFactory()
 	{
-		return new FTAEqualityCondition<>(states);
-	}
-
-	public static <VAL, LBL> IFTAEdgeCondition<VAL, LBL> createSemiTwig(List<IFSAState<VAL, LBL>> states)
-	{
-		return new FTASemiTwigCondition<>(states);
-	}
-
-	public static <VAL, LBL> IFTAEdgeCondition<VAL, LBL> copy(IFTAEdgeCondition<VAL, LBL> src, List<IFSAState<VAL, LBL>> states)
-	{
-		FTAAbstractCondition<VAL, LBL> ret = (FTAAbstractCondition<VAL, LBL>) copy(src);
-		ret.setParentStates(states);
-		return ret;
-	}
-
-	public static <VAL, LBL> IFTAEdgeCondition<VAL, LBL> copy(IFTAEdgeCondition<VAL, LBL> src)
-	{
-		List<IFSAState<VAL, LBL>> states;
-
-		if (!(src instanceof FTAAbstractCondition<?, ?>))
-			throw new IllegalArgumentException();
-
-		states = ((FTAAbstractCondition<VAL, LBL>) src).getParentStates();
-
-		if (src instanceof FTAEqualityCondition<?, ?>)
-			return createEq(states);
-		if (src instanceof FTAInclusiveCondition<?, ?>)
-			return createInclusive(states);
-		if (src instanceof FTASemiTwigCondition<?, ?>)
-			return createSemiTwig(states);
-		throw new AssertionError();
+		return (ConditionFactory<VAL, LBL>) semiTwig;
 	}
 }

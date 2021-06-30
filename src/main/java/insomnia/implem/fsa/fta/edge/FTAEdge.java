@@ -9,19 +9,24 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fta.IFTAEdge;
-import insomnia.fsa.fta.IFTAEdgeCondition;
 
 public final class FTAEdge<VAL, LBL> implements IFTAEdge<VAL, LBL>
 {
-	private List<IFSAState<VAL, LBL>>   parents;
-	private IFSAState<VAL, LBL>         child;
-	private IFTAEdgeCondition<VAL, LBL> condition;
+	private List<IFSAState<VAL, LBL>>  parents;
+	private IFSAState<VAL, LBL>        child;
+	private ConditionFactory<VAL, LBL> conditionFactory;
 
-	public FTAEdge(List<IFSAState<VAL, LBL>> parents, IFSAState<VAL, LBL> child, IFTAEdgeCondition<VAL, LBL> condition)
+	public FTAEdge(List<IFSAState<VAL, LBL>> parents, IFSAState<VAL, LBL> child, ConditionFactory<VAL, LBL> conditionFactory)
 	{
-		this.parents   = Collections.unmodifiableList(new ArrayList<>(parents));
-		this.child     = child;
-		this.condition = condition;
+		this.parents          = Collections.unmodifiableList(new ArrayList<>(parents));
+		this.child            = child;
+		this.conditionFactory = conditionFactory;
+	}
+
+	@Override
+	public ConditionFactory<VAL, LBL> getConditionFactory()
+	{
+		return conditionFactory;
 	}
 
 	@Override
@@ -34,12 +39,6 @@ public final class FTAEdge<VAL, LBL> implements IFTAEdge<VAL, LBL>
 	public IFSAState<VAL, LBL> getChild()
 	{
 		return child;
-	}
-
-	@Override
-	public IFTAEdgeCondition<VAL, LBL> getCondition()
-	{
-		return condition;
 	}
 
 	@Override
@@ -58,7 +57,7 @@ public final class FTAEdge<VAL, LBL> implements IFTAEdge<VAL, LBL>
 	public String toString()
 	{
 		StringBuilder sb = new StringBuilder();
-		sb.append(parents).append(" ").append(" -(").append(condition).append(")-> ").append(child);
+		sb.append(parents).append(" ").append(" -(").append(conditionFactory).append(")-> ").append(child);
 		return sb.toString();
 	}
 }

@@ -27,7 +27,7 @@ import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAValueCondition;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
-import insomnia.fsa.fta.IFTAEdgeCondition;
+import insomnia.fsa.fta.IFTAEdge.ConditionFactory;
 import insomnia.implem.data.Trees;
 import insomnia.implem.data.regex.parser.IRegexElement;
 import insomnia.implem.data.regex.parser.Quantifier;
@@ -62,10 +62,10 @@ public final class BUFTABuilder<VAL, LBL>
 
 	private static class Settings<VAL, LBL>
 	{
-		private Function<LBL, IFSALabelCondition<LBL>>                           fcreateLabelCondition;
-		private Function<VAL, IFSAValueCondition<VAL>>                           fcreateValueCondition;
-		private Function<List<IFSAState<VAL, LBL>>, IFTAEdgeCondition<VAL, LBL>> fcreateFTAEdgeCondition;
-		private Function<List<IFSAState<VAL, LBL>>, IFTAEdgeCondition<VAL, LBL>> fcreateChildFTAEdgeCondition;
+		private Function<LBL, IFSALabelCondition<LBL>> fcreateLabelCondition;
+		private Function<VAL, IFSAValueCondition<VAL>> fcreateValueCondition;
+		private ConditionFactory<VAL, LBL>             fcreateFTAEdgeCondition;
+		private ConditionFactory<VAL, LBL>             fcreateChildFTAEdgeCondition;
 
 		private BiFunction<Boolean, Boolean, IFSANodeCondition<VAL, LBL>> fcreateNodeCondition;
 
@@ -110,36 +110,36 @@ public final class BUFTABuilder<VAL, LBL>
 		switch (mode)
 		{
 		case PROJECTION:
-			settings.fcreateFTAEdgeCondition = FTAEdgeConditions::createInclusive;
-			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions::createInclusive;
+			settings.fcreateFTAEdgeCondition = FTAEdgeConditions.getInclusiveFactory();
+			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions.getInclusiveFactory();
 			settings.fcreateLabelCondition = FSALabelConditions::createAnyOrEq;
 			settings.fcreateValueCondition = FSAValueConditions::createAnyOrEq;
 			settings.fcreateNodeCondition = FSANodeConditions::createProjection;
 			break;
 		case STRUCTURE_PROJECTION:
-			settings.fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
-			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions::createEq;
+			settings.fcreateFTAEdgeCondition = FTAEdgeConditions.getEqualityFactory();
+			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions.getEqualityFactory();
 			settings.fcreateLabelCondition = FSALabelConditions::createAnyOrEq;
 			settings.fcreateValueCondition = v -> FSAValueConditions.createAny();
 			settings.fcreateNodeCondition = FSANodeConditions::createProjection;
 			break;
 		case EQUALITY:
-			settings.fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
-			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions::createEq;
+			settings.fcreateFTAEdgeCondition = FTAEdgeConditions.getEqualityFactory();
+			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions.getEqualityFactory();
 			settings.fcreateLabelCondition = FSALabelConditions::createEq;
 			settings.fcreateValueCondition = FSAValueConditions::createEq;
 			settings.fcreateNodeCondition = FSANodeConditions::createEq;
 			break;
 		case STRUCTURE:
-			settings.fcreateFTAEdgeCondition = FTAEdgeConditions::createEq;
-			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions::createEq;
+			settings.fcreateFTAEdgeCondition = FTAEdgeConditions.getEqualityFactory();
+			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions.getEqualityFactory();
 			settings.fcreateLabelCondition = FSALabelConditions::createEq;
 			settings.fcreateValueCondition = v -> FSAValueConditions.createAny();
 			settings.fcreateNodeCondition = FSANodeConditions::createEq;
 			break;
 		case SEMI_TWIG:
-			settings.fcreateFTAEdgeCondition = FTAEdgeConditions::createSemiTwig;
-			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions::createInclusive;
+			settings.fcreateFTAEdgeCondition = FTAEdgeConditions.getSemiTwigFactory();
+			settings.fcreateChildFTAEdgeCondition = FTAEdgeConditions.getInclusiveFactory();
 			settings.fcreateLabelCondition = FSALabelConditions::createAnyOrEq;
 			settings.fcreateValueCondition = FSAValueConditions::createAnyOrEq;
 			settings.fcreateNodeCondition = FSANodeConditions::createProjection;
@@ -196,7 +196,7 @@ public final class BUFTABuilder<VAL, LBL>
 		{
 			List<IFSAState<VAL, LBL>> parents = CollectionUtils.collect(ftaEdge.getParents(), s -> srcToThis.get(s), new ArrayList<>());
 			IFSAState<VAL, LBL>       child   = srcToThis.get(ftaEdge.getChild());
-			automaton.addFTAEdge(new FTAEdge<>(parents, child, FTAEdgeConditions.copy(ftaEdge.getCondition(), parents)));
+			automaton.addFTAEdge(new FTAEdge<>(parents, child, ftaEdge.getConditionFactory()));
 		}
 	}
 
@@ -287,7 +287,7 @@ public final class BUFTABuilder<VAL, LBL>
 	private void addAnyLoop(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
 	{
 		automaton.getGChunk().addEdge(state, state, FSALabelConditions.createAnyLoop());
-		addFTAEdge(automaton, state, FTAEdgeConditions.createInclusive(state));
+		addFTAEdge(automaton, state, FTAEdgeConditions.getInclusiveFactory());
 	}
 
 	void addFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFTAEdge<VAL, LBL> ftaEdge)
@@ -297,18 +297,18 @@ public final class BUFTABuilder<VAL, LBL>
 
 	// =========================================================================
 
-	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> state, IFTAEdgeCondition<VAL, LBL> condition)
+	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> state, ConditionFactory<VAL, LBL> condition)
 	{
 		return addFTAEdge(automaton, state, state, condition);
 	}
 
-	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> state, IFTAEdgeCondition<VAL, LBL> condition)
+	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> state, ConditionFactory<VAL, LBL> condition)
 	{
 		var parents = Collections.singletonList(state);
 		return addFTAEdge(automaton, parents, state, condition);
 	}
 
-	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, List<IFSAState<VAL, LBL>> parents, IFSAState<VAL, LBL> state, IFTAEdgeCondition<VAL, LBL> condition)
+	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, List<IFSAState<VAL, LBL>> parents, IFSAState<VAL, LBL> state, ConditionFactory<VAL, LBL> condition)
 	{
 		var newEdge = new FTAEdge<>(parents, state, condition);
 		addFTAEdge(automaton, newEdge);
@@ -317,18 +317,18 @@ public final class BUFTABuilder<VAL, LBL>
 
 	// =========================================================================
 
-	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> state, Function<List<IFSAState<VAL, LBL>>, IFTAEdgeCondition<VAL, LBL>> createCondition)
+	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> state, Function<List<IFSAState<VAL, LBL>>, ConditionFactory<VAL, LBL>> createCondition)
 	{
 		return addFTAEdge(automaton, state, state, createCondition);
 	}
 
-	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> state, Function<List<IFSAState<VAL, LBL>>, IFTAEdgeCondition<VAL, LBL>> createCondition)
+	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> state, Function<List<IFSAState<VAL, LBL>>, ConditionFactory<VAL, LBL>> createCondition)
 	{
 		var parents = Collections.singletonList(parent);
 		return addFTAEdge(automaton, parents, state, createCondition);
 	}
 
-	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, List<IFSAState<VAL, LBL>> parents, IFSAState<VAL, LBL> state, Function<List<IFSAState<VAL, LBL>>, IFTAEdgeCondition<VAL, LBL>> createCondition)
+	private FTAEdge<VAL, LBL> addFTAEdge(BUFTAChunk<VAL, LBL> automaton, List<IFSAState<VAL, LBL>> parents, IFSAState<VAL, LBL> state, Function<List<IFSAState<VAL, LBL>>, ConditionFactory<VAL, LBL>> createCondition)
 	{
 		return addFTAEdge(automaton, parents, state, createCondition.apply(parents));
 	}
@@ -413,7 +413,7 @@ public final class BUFTABuilder<VAL, LBL>
 			initialState = preNewState;
 			gchunk.addEdge(preNewState, state, null);
 			addAnyLoop(automaton, preNewState);
-			addFTAEdge(automaton, state, FTAEdgeConditions.createInclusive(state));
+			addFTAEdge(automaton, state, FTAEdgeConditions.getInclusiveFactory());
 		}
 		makeItInitial(automaton, initialState, node.isTerminal());
 	}
@@ -439,7 +439,7 @@ public final class BUFTABuilder<VAL, LBL>
 			finalState = newState;
 			addAnyLoop(automaton, newState);
 			gchunk.addEdge(state, newState, null);
-			addFTAEdge(automaton, newState, FTAEdgeConditions.createInclusive(newState));
+			addFTAEdge(automaton, newState, FTAEdgeConditions.getInclusiveFactory());
 		}
 		makeItFinal(automaton, finalState, node.isRooted());
 	}

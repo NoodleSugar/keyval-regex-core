@@ -11,13 +11,15 @@ import org.apache.commons.collections4.bag.HashBag;
 import org.apache.commons.collections4.iterators.IteratorIterable;
 
 import insomnia.fsa.IFSAState;
+import insomnia.fsa.fta.IBUFTA;
+import insomnia.fsa.fta.IFTAEdge;
 import insomnia.lib.help.HelpLists;
 
 final class FTASemiTwigCondition<VAL, LBL> extends FTAAbstractCondition<VAL, LBL>
 {
-	public FTASemiTwigCondition(List<IFSAState<VAL, LBL>> states)
+	public FTASemiTwigCondition(IBUFTA<VAL, LBL> automaton, IFTAEdge<VAL, LBL> ftaEdge)
 	{
-		super(states);
+		super(automaton, ftaEdge);
 	}
 
 	// ==========================================================================

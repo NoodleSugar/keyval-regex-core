@@ -6,20 +6,20 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import insomnia.fsa.IFSAState;
+import insomnia.fsa.fta.IBUFTA;
+import insomnia.fsa.fta.IFTAEdge;
 import insomnia.fsa.fta.IFTAEdgeCondition;
 
 abstract class FTAAbstractCondition<VAL, LBL> implements IFTAEdgeCondition<VAL, LBL>
 {
+	protected IBUFTA<VAL, LBL> automaton;
+
 	protected List<IFSAState<VAL, LBL>> parentStates;
 
-	public FTAAbstractCondition(List<IFSAState<VAL, LBL>> states)
+	public FTAAbstractCondition(IBUFTA<VAL, LBL> automaton, IFTAEdge<VAL, LBL> ftaEdge)
 	{
-		setParentStates(states);
-	}
-
-	public void setParentStates(List<IFSAState<VAL, LBL>> parentStates)
-	{
-		this.parentStates = List.copyOf(parentStates);
+		this.automaton = automaton;
+		parentStates   = ftaEdge.getParents();
 	}
 
 	public List<IFSAState<VAL, LBL>> getParentStates()

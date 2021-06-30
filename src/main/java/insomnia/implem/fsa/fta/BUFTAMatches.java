@@ -129,7 +129,7 @@ class BUFTAMatches<VAL, LBL>
 			// Check hyper transitions
 			for (IFTAEdge<VAL, LBL> hEdge : automaton.getFTAEdges(childsSubStates))
 			{
-				if (!hEdge.getCondition().testND(childsSubStates))
+				if (!hEdge.getConditionFactory().apply(automaton, hEdge).testND(childsSubStates))
 					continue;
 
 				IFSAState<VAL, LBL> newState = hEdge.getChild();
