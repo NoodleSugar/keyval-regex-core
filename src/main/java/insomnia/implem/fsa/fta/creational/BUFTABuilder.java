@@ -538,8 +538,7 @@ public final class BUFTABuilder<VAL, LBL>
 		@Override
 		public IFSANodeCondition<VAL, LBL> createNodeCondition(boolean isRooted, boolean isTerminal)
 		{
-			// TODO Auto-generated method stub
-			return null;
+			return BUFTABuilder.this.createNodeCondition(isRooted, isTerminal);
 		}
 	};;
 
