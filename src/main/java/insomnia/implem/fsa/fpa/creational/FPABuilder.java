@@ -2,6 +2,7 @@ package insomnia.implem.fsa.fpa.creational;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -9,10 +10,9 @@ import java.util.Map;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.AbstractSimpleGFPA;
-import insomnia.fsa.fpa.IFPAProperties;
+import insomnia.fsa.fpa.GFPAProperty;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.fsa.edge.FSAEdge;
-import insomnia.implem.fsa.fpa.FPAProperties;
 import insomnia.implem.fsa.fpa.FPAs;
 import insomnia.implem.fsa.state.FSAState;
 
@@ -68,7 +68,7 @@ public final class FPABuilder<VAL, LBL>
 	public IGFPA<VAL, LBL> create()
 	{
 		IGFPA<VAL, LBL> gfpa       = this.gfpa;
-		boolean         mustBeSync = this.mustBeSync && !gfpa.getProperties().isSynchronous();
+		boolean         mustBeSync = this.mustBeSync && !gfpa.getProperties().contains(GFPAProperty.SYNCHRONOUS);
 
 		// Generate a copy of gfpa with new states and edges;
 		if (createNewStates)
@@ -172,7 +172,7 @@ public final class FPABuilder<VAL, LBL>
 			for (IFSAEdge<VAL, LBL> edge : gfpa.getEdgesOf(currentStates))
 				edges.add(new FSAEdge<>(state, edge.getChild(), edge.getLabelCondition()));
 		}
-		IFPAProperties properties = new FPAProperties(false, true);
+		EnumSet<GFPAProperty> properties = EnumSet.of(GFPAProperty.SYNCHRONOUS);
 		return FPAs.create(new AbstractSimpleGFPA<VAL, LBL>(gfpa.getStates(), rootedStates, terminalStates, initialStates, finalStates, edges, properties)
 		{
 		});

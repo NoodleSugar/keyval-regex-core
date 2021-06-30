@@ -62,7 +62,7 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	@Override
 	public void epsilonClosure(Collection<IFSAState<VAL, LBL>> states, VAL value)
 	{
-		if (getProperties().isSynchronous())
+		if (getProperties().contains(GFPAProperty.SYNCHRONOUS))
 			return;
 
 		IGFPA.epsilonClosureOf(this, states, value);
@@ -72,7 +72,7 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states, Predicate<IFSAState<VAL, LBL>> fcheckState)
 	{
-		if (getProperties().isSynchronous())
+		if (getProperties().contains(GFPAProperty.SYNCHRONOUS))
 			return (Collection<IFSAState<VAL, LBL>>) states;
 
 		return IGFPA.getEpsilonClosureOf(this, states, fcheckState);
@@ -88,7 +88,7 @@ public abstract class AbstractGFPA<VAL, LBL> implements IGFPA<VAL, LBL>
 	@Override
 	public Collection<IFSAState<VAL, LBL>> getEpsilonClosure(Collection<? extends IFSAState<VAL, LBL>> states, VAL value)
 	{
-		if (getProperties().isSynchronous())
+		if (getProperties().contains(GFPAProperty.SYNCHRONOUS))
 			return (Collection<IFSAState<VAL, LBL>>) states;
 
 		Collection<IFSAState<VAL, LBL>> ret = new HashSet<>(states);

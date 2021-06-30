@@ -3,6 +3,7 @@ package insomnia.fsa.fpa;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -24,7 +25,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	extends AbstractGFPA<VAL, LBL> //
 	implements IGFPA<VAL, LBL>
 {
-	private IFPAProperties properties;
+	private EnumSet<GFPAProperty> properties;
 
 	private Collection<IFSAState<VAL, LBL>> rootedStates;
 	private Collection<IFSAState<VAL, LBL>> terminalStates;
@@ -48,7 +49,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 		Collection<IFSAState<VAL, LBL>> initialStates, //
 		Collection<IFSAState<VAL, LBL>> finalStates, //
 		Collection<IFSAEdge<VAL, LBL>> allEdges, //
-		IFPAProperties properties //
+		EnumSet<GFPAProperty> properties //
 	)
 	{
 		this.states         = states;
@@ -62,7 +63,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 		this.edgesOf = new HashMap<>();
 		this.edgesTo = new HashMap<>();
 
-		if (properties.isSynchronous())
+		if (properties.contains(GFPAProperty.SYNCHRONOUS))
 		{
 			epsilonEdgesTo = Collections.emptyMap();
 			epsilonEdgesOf = Collections.emptyMap();
@@ -130,7 +131,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 	}
 
 	@Override
-	public IFPAProperties getProperties()
+	public EnumSet<GFPAProperty> getProperties()
 	{
 		return properties;
 	}
@@ -147,7 +148,7 @@ public abstract class AbstractSimpleGFPA<VAL, LBL> //
 		Collection<IFSAState<VAL, LBL>> ret = new ArrayList<>();
 		ret.addAll(states);
 
-		if (!properties.isSynchronous())
+		if (!properties.contains(GFPAProperty.SYNCHRONOUS))
 			IGFPA.epsilonClosureOf(this, ret, value);
 
 		return ret;

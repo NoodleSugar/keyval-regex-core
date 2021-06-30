@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,11 +30,12 @@ import insomnia.fsa.IFSANodeCondition;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.IFSAValueCondition;
 import insomnia.fsa.fpa.AbstractGFPA;
-import insomnia.fsa.fpa.IFPAProperties;
+import insomnia.fsa.fpa.GFPAProperties;
+import insomnia.fsa.fpa.GFPAProperty;
 import insomnia.fsa.fpa.IGFPA;
 import insomnia.implem.fsa.edge.FSAEdge;
-import insomnia.implem.fsa.fpa.FPAProperties;
 import insomnia.implem.fsa.fpa.GFPAMatchers;
+import insomnia.implem.fsa.fpa.graphchunk.GCEdges.GCEdge;
 import insomnia.implem.fsa.labelcondition.FSALabelConditions;
 
 /**
@@ -56,7 +58,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	private IGCState<VAL, LBL> start;
 	private IGCState<VAL, LBL> end;
 
-	private IFPAProperties properties;
+	private EnumSet<GFPAProperty> properties;
 
 	// =========================================================================
 
@@ -73,7 +75,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	{
 		super();
 		// By default we don't know if it is deterministic
-		properties = new FPAProperties(false, true);
+		properties = EnumSet.of(GFPAProperty.SYNCHRONOUS);
 		cleanGraph();
 	}
 
@@ -260,13 +262,8 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		return end;
 	}
 
-	public IGFPA<VAL, LBL> setProperties(IFPAProperties properties)
-	{
-		this.properties = properties;
-		return this;
-	}
-
-	public IFPAProperties getProperties()
+	@Override
+	public EnumSet<GFPAProperty> getProperties()
 	{
 		return properties;
 	}
@@ -320,11 +317,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	{
 		graph.addVertex((IGCState<VAL, LBL>) parent);
 		graph.addVertex((IGCState<VAL, LBL>) child);
-		graph.addEdge((IGCState<VAL, LBL>) parent, (IGCState<VAL, LBL>) child, new GCEdges.GCEdge<>(labelCondition));
+		graph.addEdge((IGCState<VAL, LBL>) parent, (IGCState<VAL, LBL>) child, new GCEdge<>(labelCondition));
 
 		// Is epsilon
 		if (IFSALabelCondition.isEpsilon(labelCondition))
-			setProperties(getProperties().setSynchronous(false));
+			properties.remove(GFPAProperty.SYNCHRONOUS);
 	}
 
 	public void prependEdge(IFSAState<VAL, LBL> start, IFSALabelCondition<LBL> labelCondition)
@@ -656,14 +653,14 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 	public void add(GraphChunk<VAL, LBL> b)
 	{
 		Graphs.addGraph(graph, b.graph);
-		properties = FPAProperties.union(properties, b.properties);
+		GFPAProperties.union(properties, b.properties);
 	}
 
 	private void glue(IGCState<VAL, LBL> glue, GraphChunk<VAL, LBL> b)
 	{
 		Graphs.addGraph(graph, b.graph);
 		replaceState(glue, b.start);
-		properties = FPAProperties.union(properties, b.properties);
+		GFPAProperties.union(properties, b.properties);
 	}
 
 	/**
@@ -723,7 +720,7 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		this.start = (IGCState<VAL, LBL>) start;
 		this.end   = (IGCState<VAL, LBL>) end;
 
-		setProperties(FPAProperties.union(getProperties(), b.getProperties()));
+		GFPAProperties.union(properties, b.properties);
 	}
 
 	/**

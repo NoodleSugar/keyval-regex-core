@@ -1,6 +1,7 @@
 package insomnia.implem.fsa.fpa;
 
 import insomnia.fsa.fpa.AbstractSimpleGFPA;
+import insomnia.fsa.fpa.GFPAProperty;
 import insomnia.fsa.fpa.IGFPA;
 
 public final class FPAs<VAL, LBL> //
@@ -40,7 +41,7 @@ public final class FPAs<VAL, LBL> //
 
 	public static <VAL, LBL> IGFPA<VAL, LBL> create(IGFPA<VAL, LBL> graphFPABuilder)
 	{
-		if (graphFPABuilder.getProperties().isSynchronous())
+		if (graphFPABuilder.getProperties().contains(GFPAProperty.SYNCHRONOUS))
 			return new FSASync<VAL, LBL>(graphFPABuilder);
 		else
 			return new FSAGeneral<VAL, LBL>(graphFPABuilder);
