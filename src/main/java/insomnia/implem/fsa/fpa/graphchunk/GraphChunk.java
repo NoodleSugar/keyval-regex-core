@@ -336,6 +336,11 @@ public final class GraphChunk<VAL, LBL> extends AbstractGFPA<VAL, LBL> implement
 		this.end = (IGCState<VAL, LBL>) end;
 	}
 
+	public void removeEdge(IFSAEdge<VAL, LBL> edge)
+	{
+		graph.removeEdge((IGCState<VAL, LBL>) edge.getParent(), (IGCState<VAL, LBL>) edge.getChild());
+	}
+
 	public void setRooted(IFSAState<VAL, LBL> state)
 	{
 		setRooted(state, true);
