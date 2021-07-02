@@ -26,6 +26,10 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 
 	boolean contains(IFTAEdge<VAL, LBL> ftaEdge);
 
+	boolean isFTAChild(IFSAState<VAL, LBL> state);
+
+	// ==========================================================================
+
 	/**
 	 * Get all the {@link IFTAEdge} of the automaton.
 	 * 
