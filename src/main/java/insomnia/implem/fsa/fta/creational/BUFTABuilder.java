@@ -544,6 +544,18 @@ public final class BUFTABuilder<VAL, LBL>
 		{
 			return BUFTABuilder.this.createNodeCondition(isRooted, isTerminal);
 		}
+
+		@Override
+		public FTAEdge<VAL, LBL> addChildFTAEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+		{
+			return BUFTABuilder.this.addChildFTAEdge(automaton, state);
+		}
+
+		@Override
+		public void addEdge(BUFTAChunk<VAL, LBL> automaton, IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child, IFSALabelCondition<LBL> lcondition)
+		{
+			automaton.addEdge(parent, child, lcondition);
+		}
 	};;
 
 	private Environment<VAL, LBL> getEnvironment()
