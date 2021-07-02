@@ -62,6 +62,59 @@ public final class HelpLists
 		return Collections.unmodifiableList(list);
 	}
 
+	// ==========================================================================
+
+	public static <E> List<E> excludeAll(List<? extends E> list, Collection<? extends Integer> pos, boolean posAreSorted)
+	{
+		List<E> ret       = new ArrayList<>(list.size() - pos.size());
+		int     nbPos     = pos.size();
+		int[]   positions = new int[nbPos + 1];
+
+		System.arraycopy(ArrayUtils.toPrimitive(pos.toArray(new Integer[0])), 0, positions, 0, pos.size());
+		positions[nbPos] = list.size();
+
+		if (!posAreSorted)
+			Arrays.sort(positions);
+
+		int p       = 0;
+		int exclude = positions[p];
+
+		for (int i = 0, c = list.size(); i < c; i++)
+		{
+			if (i == exclude)
+			{
+				exclude = positions[++p];
+				continue;
+			}
+			ret.add(list.get(i));
+		}
+		return ret;
+	}
+
+	// ==========================================================================
+
+	public static <E> List<E> getAll(List<? extends E> list, Iterable<? extends Integer> pos)
+	{
+		List<E> ret = new ArrayList<>();
+		getAll(ret, list, pos);
+		return ret;
+	}
+
+	public static <E> List<E> getAll(List<? extends E> list, Collection<? extends Integer> pos)
+	{
+		List<E> ret = new ArrayList<>(pos.size());
+		getAll(ret, list, pos);
+		return ret;
+	}
+
+	public static <E> void getAll(List<? super E> dest, List<? extends E> list, Iterable<? extends Integer> pos)
+	{
+		for (int i : pos)
+			dest.add(list.get(i));
+	}
+
+	// ==========================================================================
+
 	/**
 	 * Check that each element of a sequence match a predicate with any other element.
 	 * 
