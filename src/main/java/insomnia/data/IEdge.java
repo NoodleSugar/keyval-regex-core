@@ -2,13 +2,13 @@ package insomnia.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import org.apache.commons.collections4.CollectionUtils;
+
+import insomnia.lib.graph.IGraphEdge;
 
 /**
  * An oriented edge in a data.
@@ -17,14 +17,16 @@ import org.apache.commons.collections4.CollectionUtils;
  * @param <VAL> Type of the value (store in a node)
  * @param <LBL> Type of the label (store in an edge)
  */
-public interface IEdge<VAL, LBL>
+public interface IEdge<VAL, LBL> extends IGraphEdge<INode<VAL, LBL>>
 {
 	LBL getLabel();
 
 	void setLabel(LBL label);
 
+	@Override
 	INode<VAL, LBL> getParent();
 
+	@Override
 	INode<VAL, LBL> getChild();
 
 	// =========================================================================
@@ -125,27 +127,6 @@ public interface IEdge<VAL, LBL>
 
 	// =========================================================================
 
-	private static <VAL, LBL> List<INode<VAL, LBL>> getNodes(Iterable<? extends IEdge<VAL, LBL>> edges, Supplier<List<INode<VAL, LBL>>> createList)
-	{
-		var it = edges.iterator();
-
-		if (!it.hasNext())
-			return Collections.emptyList();
-
-		List<INode<VAL, LBL>> ret  = createList.get();
-		var                   edge = it.next();
-		ret.add(edge.getParent());
-
-		for (;;)
-		{
-			ret.add(edge.getChild());
-			if (!it.hasNext())
-				break;
-			edge = it.next();
-		}
-		return ret;
-	}
-
 	/**
 	 * Get {@link INode}s from a {@link List} of edges conserving the order.
 	 * 
@@ -154,7 +135,7 @@ public interface IEdge<VAL, LBL>
 	 */
 	public static <VAL, LBL> List<INode<VAL, LBL>> getNodes(Iterable<? extends IEdge<VAL, LBL>> edges)
 	{
-		return getNodes(edges, ArrayList::new);
+		return IGraphEdge.getNodes(edges);
 	}
 
 	/**
@@ -165,7 +146,7 @@ public interface IEdge<VAL, LBL>
 	 */
 	public static <VAL, LBL> List<INode<VAL, LBL>> getNodes(Collection<? extends IEdge<VAL, LBL>> edges)
 	{
-		return getNodes(edges, () -> new ArrayList<>(edges.size()));
+		return IGraphEdge.getNodes(edges);
 	}
 
 	/**
