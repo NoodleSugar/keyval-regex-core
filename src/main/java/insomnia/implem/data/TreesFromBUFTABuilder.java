@@ -19,6 +19,7 @@ import insomnia.fsa.fpa.IGFPA;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
 import insomnia.implem.data.creational.TreeBuilder;
+import insomnia.implem.fsa.labelcondition.FSALabelConditions;
 
 final class TreesFromBUFTABuilder<VAL, LBL> implements Iterable<ITree<VAL, LBL>>
 {
@@ -80,7 +81,7 @@ final class TreesFromBUFTABuilder<VAL, LBL> implements Iterable<ITree<VAL, LBL>>
 					var states = IGFPA.getEpsilonClosureTo(gfpa, Collections.singleton(initialState));
 					isInitial          = states.stream().anyMatch(automaton.getGFPA()::isInitial);
 					ftaEdges           = automaton.getFTAEdgesTo(states).iterator();
-					simpleEdges        = automaton.getGFPA().getEdgesTo(states).iterator();
+					simpleEdges        = automaton.getGFPA().getEdgesTo(states).stream().filter(e -> !FSALabelConditions.isAnyLoop(e.getLabelCondition())).iterator();
 					parentsData        = new ArrayList<>();
 					currentBuilderNode = tbuilder.getCurrentNode();
 				}
@@ -129,7 +130,7 @@ final class TreesFromBUFTABuilder<VAL, LBL> implements Iterable<ITree<VAL, LBL>>
 					if (nextFTAChildEdge(tbuilder))
 						return true;
 
-					for (;;)
+					main: for (;;)
 					{
 						if (!ftaEdges.hasNext())
 							return false;
@@ -152,6 +153,9 @@ final class TreesFromBUFTABuilder<VAL, LBL> implements Iterable<ITree<VAL, LBL>>
 							tbuilder.setCurrentNode(currentBuilderNode).addChildDown(null);
 							var data = createData(s, this, tbuilder);
 							tbuilder.goUp();
+
+							if (null == data)
+								continue main;
 
 							parentsData.add(data);
 						}
@@ -202,6 +206,9 @@ final class TreesFromBUFTABuilder<VAL, LBL> implements Iterable<ITree<VAL, LBL>>
 						throw new IllegalArgumentException(String.format("Can't handle en edge condition with multiple labels: %s", labels));
 					if (values.size() > 1)
 						throw new IllegalArgumentException(String.format("Can't handle en edge condition with multiple values: %s", values));
+
+					if (labels.isEmpty())
+						labels = Collections.singleton((LBL) null);
 
 					tbuilder //
 						.setLabel(CollectionUtils.extractSingleton(labels)) //
