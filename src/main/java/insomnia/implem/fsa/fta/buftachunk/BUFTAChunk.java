@@ -301,9 +301,12 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 
 	// =========================================================================
 
-	public void addFTAEdge(IFTAEdge<VAL, LBL> ftaedge)
+	public boolean addFTAEdge(IFTAEdge<VAL, LBL> ftaedge)
 	{
-		ftaEdges.add(ftaedge);
+		ftaChilds.add(ftaedge.getChild());
+		gChunk.addState(ftaedge.getChild());
+		ftaedge.getParents().forEach(gChunk::addState);
+		return ftaEdges.add(ftaedge);
 	}
 
 	public void addFTAEdge(Collection<IFTAEdge<VAL, LBL>> ftaedges)
