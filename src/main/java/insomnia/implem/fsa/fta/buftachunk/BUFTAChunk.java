@@ -301,6 +301,11 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 
 	// =========================================================================
 
+	public void removeFTAEdge(IFTAEdge<VAL, LBL> ftaedge)
+	{
+		ftaEdges.remove(ftaedge);
+	}
+
 	public boolean addFTAEdge(IFTAEdge<VAL, LBL> ftaedge)
 	{
 		ftaChilds.add(ftaedge.getChild());
@@ -321,6 +326,16 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	{
 		stateNodeMap.put(state, node);
 		nodeStatesMap.put(node, state);
+	}
+
+	public void addEdge(IFSAState<VAL, LBL> parent, IFSAState<VAL, LBL> child, IFSALabelCondition<LBL> lcondition)
+	{
+		if (IFSALabelCondition.isEpsilon(lcondition))
+		{
+			if ((!isFTAChild(parent) && isFTAChild(child)))
+				throw new IllegalArgumentException("Invalid ε-transition: !isFtaChild --ε--> isFtaChild");
+		}
+		gChunk.addEdge(parent, child, lcondition);
 	}
 
 	// =========================================================================
