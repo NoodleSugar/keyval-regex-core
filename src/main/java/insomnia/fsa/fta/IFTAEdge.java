@@ -1,5 +1,6 @@
 package insomnia.fsa.fta;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 
