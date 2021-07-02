@@ -25,4 +25,11 @@ public interface IFTAEdge<VAL, LBL>
 	IFSAState<VAL, LBL> getChild();
 
 	ConditionFactory<VAL, LBL> getConditionFactory();
+
+	// ==========================================================================
+
+	static public <VAL, LBL> boolean isPathEdge(IFTAEdge<VAL, LBL> ftaEdge)
+	{
+		return ftaEdge.getParents().equals(Collections.singletonList(ftaEdge.getChild()));
+	}
 }
