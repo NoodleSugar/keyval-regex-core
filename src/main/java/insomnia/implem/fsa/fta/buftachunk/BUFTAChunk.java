@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -34,6 +35,7 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	private MultiValuedMap<INode<VAL, LBL>, IFSAState<VAL, LBL>> nodeStatesMap;
 
 	private Collection<IFTAEdge<VAL, LBL>> ftaEdges;
+	private Set<IFSAState<VAL, LBL>>       ftaChilds;
 	private GraphChunk<VAL, LBL>           gChunk;
 	private ITree<VAL, LBL>                tree;
 
@@ -47,6 +49,7 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 		this.tree          = tree;
 		this.gChunk        = new GraphChunk<>();
 		this.ftaEdges      = new HashSet<>();
+		this.ftaChilds     = new HashSet<>();
 		this.stateNodeMap  = new HashMap<>();
 		this.nodeStatesMap = new HashSetValuedHashMap<>();
 	}
@@ -115,6 +118,7 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	{
 		gChunk.cleanGraph();
 		ftaEdges.clear();
+		ftaChilds.clear();
 		stateNodeMap.clear();
 		nodeStatesMap.clear();
 	}
@@ -137,7 +141,8 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	{
 		ret.tree          = tree;
 		ret.gChunk        = gChunk.copyClone();
-		ret.ftaEdges      = new ArrayList<>(ftaEdges);
+		ret.ftaEdges      = new HashSet<>(ftaEdges);
+		ret.ftaChilds     = new HashSet<>(ftaChilds);
 		ret.stateNodeMap  = new HashMap<>(stateNodeMap);
 		ret.nodeStatesMap = new HashSetValuedHashMap<>(nodeStatesMap);
 		return ret;
@@ -174,6 +179,7 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	public void union(BUFTAChunk<VAL, LBL> src)
 	{
 		ftaEdges.addAll(src.getFTAEdges());
+		ftaChilds.addAll(src.ftaChilds);
 		gChunk.add(src.getGChunk());
 		stateNodeMap.putAll(src.stateNodeMap);
 		nodeStatesMap.putAll(src.nodeStatesMap);
@@ -258,6 +264,12 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 		return ftaEdges.contains(ftaEdge);
 	}
 
+	@Override
+	public boolean isFTAChild(IFSAState<VAL, LBL> state)
+	{
+		return ftaChilds.contains(state);
+	}
+
 	public Collection<IFTAEdge<VAL, LBL>> getFTAEdges()
 	{
 		return ftaEdges;
@@ -297,6 +309,9 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	public void addFTAEdge(Collection<IFTAEdge<VAL, LBL>> ftaedges)
 	{
 		ftaEdges.addAll(ftaedges);
+
+		for (var e : ftaedges)
+			ftaChilds.add(e.getChild());
 	}
 
 	public void putOriginalNode(IFSAState<VAL, LBL> state, INode<VAL, LBL> node)
