@@ -2,6 +2,7 @@ package insomnia.fsa.fta;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +102,24 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	ITree<VAL, LBL> getOriginalTree();
 
 	// =========================================================================
+
+	public static <VAL, LBL> boolean mayBeFTAChild(IBUFTA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
+		return IGFPA.getEpsilonClosureTo(automaton.getGFPA(), state).stream().anyMatch(automaton::isFTAChild);
+	}
+
+	public static <VAL, LBL> boolean mayBeHyperRecursion(IBUFTA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
+		var     childs     = IGFPA.getEpsilonClosureOf(automaton.getGFPA(), Collections.singleton(state));
+		boolean injectable = automaton.getFTAEdges().stream()//
+			.filter(IFTAEdge::isNotPathEdge) //
+			.anyMatch(e -> CollectionUtils.containsAny(childs, e.getParents()));
+
+		if (injectable)
+			return true;
+
+		return false;
+	}
 
 	public static <VAL, LBL> Collection<IFTAEdge<VAL, LBL>> getFTAEdges(IBUFTA<VAL, LBL> automaton, List<? extends Collection<IFSAState<VAL, LBL>>> parentStates)
 	{
