@@ -1,6 +1,7 @@
 package insomnia.implem.fsa.fta.creational;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import insomnia.data.ITree;
 import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
+import insomnia.fsa.fta.BUFTAProperty;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
 import insomnia.implem.data.Trees;
@@ -35,6 +37,8 @@ import insomnia.implem.fsa.fta.buftachunk.BUFTAChunk;
 class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 {
 	private IGFPA<VAL, LBL> gfpa;
+
+	private EnumSet<BUFTAProperty> properties;
 
 	private Collection<IFTAEdge<VAL, LBL>> ftaEdges;
 
@@ -73,6 +77,7 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 
 			this.ftaEdgesOf = ftaOf;
 		}
+		properties = automaton.getProperties().clone();
 	}
 
 	@Override
@@ -85,6 +90,12 @@ class BUFTA<VAL, LBL> implements IBUFTA<VAL, LBL>
 	public IGFPA<VAL, LBL> getGFPA()
 	{
 		return gfpa;
+	}
+
+	@Override
+	public EnumSet<BUFTAProperty> getProperties()
+	{
+		return properties.clone();
 	}
 
 	@Override

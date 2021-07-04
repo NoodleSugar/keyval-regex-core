@@ -3,6 +3,7 @@ package insomnia.implem.fsa.fta.buftachunk.modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -14,6 +15,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import insomnia.fsa.IFSAEdge;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
+import insomnia.fsa.fta.BUFTAProperty;
 import insomnia.fsa.fta.IFTAEdge;
 import insomnia.implem.fsa.fta.buftachunk.BUFTAChunk;
 import insomnia.implem.fsa.fta.edge.FTAEdge;
@@ -160,5 +162,9 @@ public final class BUFTARemoveHyperRecursion<VAL, LBL> implements IBUFTAChunkMod
 				deletable.forEach(automaton::removeFTAEdge);
 			}
 		}
+		automaton.getProperties().remove(BUFTAProperty.HYPER_RECURSION);
+
+		assert !BUFTAProperty.checkProperties(automaton, EnumSet.of(BUFTAProperty.HYPER_RECURSION)) //
+			.contains(BUFTAProperty.HYPER_RECURSION);
 	}
 }

@@ -3,6 +3,7 @@ package insomnia.implem.fsa.fta.buftachunk;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import insomnia.data.regex.ITreeMatcher;
 import insomnia.fsa.IFSALabelCondition;
 import insomnia.fsa.IFSAState;
 import insomnia.fsa.fpa.IGFPA;
+import insomnia.fsa.fta.BUFTAProperty;
 import insomnia.fsa.fta.IBUFTA;
 import insomnia.fsa.fta.IFTAEdge;
 import insomnia.implem.data.Trees;
@@ -83,6 +85,12 @@ public final class BUFTAChunk<VAL, LBL> implements IBUFTA<VAL, LBL>
 	}
 
 	// =========================================================================
+
+	@Override
+	public EnumSet<BUFTAProperty> getProperties()
+	{
+		return BUFTAProperty.checkProperties(this);
+	}
 
 	public IFSAState<VAL, LBL> getRoot()
 	{

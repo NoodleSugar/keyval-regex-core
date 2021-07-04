@@ -3,6 +3,7 @@ package insomnia.fsa.fta;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,8 @@ import insomnia.fsa.fpa.IGFPA;
 public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 {
 	IGFPA<VAL, LBL> getGFPA();
+
+	EnumSet<BUFTAProperty> getProperties();
 
 	boolean contains(IFTAEdge<VAL, LBL> ftaEdge);
 
@@ -154,6 +157,7 @@ public interface IBUFTA<VAL, LBL> extends IFTA<VAL, LBL>
 	{
 		StringBuilder sb = new StringBuilder();
 
+		sb.append("HProperties: ").append(automaton.getProperties()).append("\n");
 		sb.append(automaton.getGFPA());
 		sb.append("FTAEdges:\n");
 		automaton.getFTAEdges().stream().forEach(e -> sb.append(e).append("\n"));
