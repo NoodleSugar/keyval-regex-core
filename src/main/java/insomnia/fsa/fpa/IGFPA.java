@@ -336,6 +336,21 @@ public interface IGFPA<VAL, LBL> extends IFPA<VAL, LBL>
 		return ret;
 	}
 
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getEpsilonClosureOf(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
+		return getEpsilonClosureOf(automaton, Collections.singleton(state));
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getEpsilonClosureTo(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
+		return getEpsilonClosureTo(automaton, Collections.singleton(state));
+	}
+
+	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getAllEpsilonClosure(IGFPA<VAL, LBL> automaton, IFSAState<VAL, LBL> state)
+	{
+		return getAllEpsilonClosure(automaton, Collections.singleton(state));
+	}
+
 	// ==========================================================================
 
 	public static <VAL, LBL> Collection<IFSAEdge<VAL, LBL>> getEEpsilonClosureOf(IGFPA<VAL, LBL> automaton, Collection<IFSAState<VAL, LBL>> states)
