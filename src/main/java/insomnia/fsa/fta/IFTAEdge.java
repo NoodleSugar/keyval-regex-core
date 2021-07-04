@@ -29,6 +29,11 @@ public interface IFTAEdge<VAL, LBL>
 
 	// ==========================================================================
 
+	static public <VAL, LBL> boolean isNotPathEdge(IFTAEdge<VAL, LBL> ftaEdge)
+	{
+		return !isPathEdge(ftaEdge);
+	}
+
 	static public <VAL, LBL> boolean isPathEdge(IFTAEdge<VAL, LBL> ftaEdge)
 	{
 		return ftaEdge.getParents().equals(Collections.singletonList(ftaEdge.getChild()));
