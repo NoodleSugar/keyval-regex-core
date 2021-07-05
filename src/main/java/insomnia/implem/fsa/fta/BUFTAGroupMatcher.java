@@ -283,14 +283,16 @@ class BUFTAGroupMatcher<VAL, LBL>
 	 */
 	private Iterator<INode<VAL, LBL>> processLeaves()
 	{
-		return BUFTAMatches.processLeaves(gfpa, element, (node, stateClass) -> {
+		BUFTAMatches.processLeaves(gfpa, element, (node, stateClass) -> {
 			NodeData nodeData    = nodeStatesMap.getOrDefault(node, new NodeData());
 			NodeData newNodeData = createInitialNodeData(stateClass, node);
 
 			nodeData.statesMap.putAll(newNodeData.statesMap);
 			nodeStatesMap.putIfAbsent(node, nodeData);
 			checkFinals(node, nodeData);
+			return false;
 		});
+		return ITree.bottomUpOrder_skipLeaves(element).iterator();
 	}
 
 	private boolean checkFinals(INode<VAL, LBL> node, NodeData nodeData)

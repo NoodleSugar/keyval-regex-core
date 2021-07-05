@@ -74,6 +74,8 @@ public final class BUFTAMatchers
 	 */
 	public static <VAL, LBL> Collection<IFSAState<VAL, LBL>> getPreFTAMatchingStates(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element)
 	{
-		return BUFTAPreStateMatcher.create(automaton, element).matches();
+		var matcher = BUFTAMatches.createPreStates(automaton, element);
+		matcher.matches();
+		return matcher.getRetStates();
 	}
 }

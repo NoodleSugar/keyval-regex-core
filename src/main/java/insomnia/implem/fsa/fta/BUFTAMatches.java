@@ -2,12 +2,14 @@ package insomnia.implem.fsa.fta;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -24,9 +26,25 @@ import insomnia.fsa.fta.IFTAEdge;
 
 class BUFTAMatches<VAL, LBL>
 {
+	private interface ProcessLeaves<VAL, LBL>
+	{
+		boolean apply(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element, MultiValuedMap<INode<VAL, LBL>, IFSAState<VAL, LBL>> nodeStatesMap);
+	}
+
+	private interface AfterEdgesCheck<VAL, LBL>
+	{
+		boolean apply(Iterator<INode<VAL, LBL>> nodes, List<Collection<IFSAState<VAL, LBL>>> childsSubStates_out);
+	}
+	// ==========================================================================
+
 	private IBUFTA<VAL, LBL> automaton;
 	private IGFPA<VAL, LBL>  gfpa;
 	private ITree<VAL, LBL>  element;
+
+	private ProcessLeaves<VAL, LBL>   processLeaves;
+	private AfterEdgesCheck<VAL, LBL> afterEdgesCheck;
+
+	private Collection<IFSAState<VAL, LBL>> retStates;
 
 	// ==========================================================================
 
@@ -37,9 +55,35 @@ class BUFTAMatches<VAL, LBL>
 		this.element   = element;
 	}
 
+	public IBUFTA<VAL, LBL> getAutomaton()
+	{
+		return automaton;
+	}
+
+	public ITree<VAL, LBL> getElement()
+	{
+		return element;
+	}
+
+	public Collection<IFSAState<VAL, LBL>> getRetStates()
+	{
+		return retStates;
+	}
+
 	public static <VAL, LBL> BUFTAMatches<VAL, LBL> create(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element)
 	{
-		return new BUFTAMatches<>(automaton, element);
+		var ret = new BUFTAMatches<>(automaton, element);
+		ret.processLeaves   = BUFTAMatches::normal_processLeaves;
+		ret.afterEdgesCheck = (a, b) -> false;
+		return ret;
+	}
+
+	public static <VAL, LBL> BUFTAMatches<VAL, LBL> createPreStates(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element)
+	{
+		var ret = new BUFTAMatches<>(automaton, element);
+		ret.processLeaves   = BUFTAMatches::preState_processLeaves;
+		ret.afterEdgesCheck = BUFTAMatches::preState_afterEdgesCheck;
+		return ret;
 	}
 
 	// ==========================================================================
@@ -49,55 +93,74 @@ class BUFTAMatches<VAL, LBL>
 		return IterableUtils.matchesAny(states, gfpa::isFinal);
 	}
 
+	// ==========================================================================
+
+	private static <VAL, LBL> boolean normal_processLeaves(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element, MultiValuedMap<INode<VAL, LBL>, IFSAState<VAL, LBL>> nodeStatesMap)
+	{
+		var gfpa = automaton.getGFPA();
+		return processLeaves(automaton.getGFPA(), element, //
+			(node, states) -> //
+			{
+				if (IterableUtils.matchesAny(states, gfpa::isFinal))
+					return true;
+
+				nodeStatesMap.putAll(node, states);
+				return false;
+			});
+	}
+
+	private static <VAL, LBL> boolean preState_processLeaves(IBUFTA<VAL, LBL> automaton, ITree<VAL, LBL> element, MultiValuedMap<INode<VAL, LBL>, IFSAState<VAL, LBL>> nodeStatesMap)
+	{
+		return BUFTAMatches.processLeaves(automaton.getGFPA(), element, //
+			(node, states) -> nodeStatesMap.putAll(node, states));
+	}
+
+	private static <VAL, LBL> boolean preState_afterEdgesCheck(Iterator<INode<VAL, LBL>> nodes, List<Collection<IFSAState<VAL, LBL>>> childsSubStates_out)
+	{
+		if (!nodes.hasNext())
+			return true;
+
+		return false;
+	}
+
+	// ==========================================================================
+
 	/**
 	 * Process the leaves of the element.
 	 * 
 	 * @return the remaining nodes to process in the order of processing
 	 */
-	static <VAL, LBL> Iterator<INode<VAL, LBL>> processLeaves(IGFPA<VAL, LBL> gfpa, ITree<VAL, LBL> element, BiConsumer<INode<VAL, LBL>, Collection<IFSAState<VAL, LBL>>> consume)
+	static <VAL, LBL> boolean processLeaves(IGFPA<VAL, LBL> gfpa, ITree<VAL, LBL> element, BiFunction<INode<VAL, LBL>, Collection<IFSAState<VAL, LBL>>, Boolean> consume)
 	{
-		ListIterator<INode<VAL, LBL>> bottomUpNodes = ITree.bottomUpOrder(element).listIterator();
-
-		while (bottomUpNodes.hasNext())
+		for (var node : element.getLeaves())
 		{
-			INode<VAL, LBL> node = bottomUpNodes.next();
-
-			if (0 < element.getChildren(node).size())
-			{
-				bottomUpNodes.previous();
-				break;
-			}
 			for (var _class : IGFPA.getInitialClasses(gfpa, element, node))
-				consume.accept(node, _class);
+				if (consume.apply(node, _class))
+					return true;
 		}
-		return bottomUpNodes;
+		return false;
 	}
 
-	private boolean finalLeaf = false;
+	private void finalizeResult(List<Collection<IFSAState<VAL, LBL>>> childsSubStates)
+	{
+		retStates = childsSubStates.stream().flatMap(Collection::stream).collect(Collectors.toSet());
+	}
 
 	public boolean matches()
 	{
-		MultiValuedMap<INode<VAL, LBL>, IFSAState<VAL, LBL>> nodeStatesMap   = new ArrayListValuedHashMap<>();
-		List<Collection<IFSAState<VAL, LBL>>>                childsSubStates = new ArrayList<>();
+		retStates = Collections.emptySet();
+		MultiValuedMap<INode<VAL, LBL>, IFSAState<VAL, LBL>> nodeStatesMap = new ArrayListValuedHashMap<>();
 
-		finalLeaf = false;
-		Iterator<INode<VAL, LBL>> nodes = processLeaves(gfpa, element, //
-			(node, states) -> //
-			{
-				if (hasFinal(states))
-				{
-					finalLeaf = true;
-					return;
-				}
-				nodeStatesMap.putAll(node, states);
-			});
-
-		if (finalLeaf)
+		if (processLeaves.apply(automaton, element, nodeStatesMap))
 			return true;
 
-		while (nodes.hasNext())
+		var gfpa = automaton.getGFPA();
+
+		List<Collection<IFSAState<VAL, LBL>>> childsSubStates = new ArrayList<>();
+		ListIterator<INode<VAL, LBL>>         bottomUpNodes   = ITree.bottomUpOrder(element).listIterator();
+
+		for (var node : ITree.bottomUpOrder_skipLeaves(element))
 		{
-			INode<VAL, LBL>       node       = nodes.next();
 			List<IEdge<VAL, LBL>> edgeChilds = element.getChildren(node);
 
 			Predicate<IFSAState<VAL, LBL>> stateOnNodePredicate = IGFPA.stateOnNodePredicate(gfpa, element, node);
@@ -124,6 +187,12 @@ class BUFTAMatches<VAL, LBL>
 				// No need of that node anymore
 				nodeStatesMap.remove(childNode);
 			}
+
+			if (afterEdgesCheck.apply(bottomUpNodes, childsSubStates))
+			{
+				finalizeResult(childsSubStates);
+				return true;
+			}
 			Collection<IFSAState<VAL, LBL>> newStates = new HashSet<>();
 
 			// Check hyper transitions
@@ -139,8 +208,13 @@ class BUFTAMatches<VAL, LBL>
 			childsSubStates.clear();
 
 			if (hasFinal(newStates))
+			{
+				finalizeResult(childsSubStates);
 				return true;
+			}
 		}
+		finalizeResult(childsSubStates);
 		return hasFinal(nodeStatesMap.get(element.getRoot()));
 	}
+
 }
