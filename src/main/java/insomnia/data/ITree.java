@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
@@ -176,6 +177,21 @@ public interface ITree<VAL, LBL>
 		Collections.reverse(b);
 		ret.addAll(b);
 		return ret;
+	}
+
+	public static <VAL, LBL> Iterable<INode<VAL, LBL>> bottomUpOrder_skipLeaves(ITree<VAL, LBL> tree)
+	{
+		ListIterator<INode<VAL, LBL>> bottomUpNodes = ITree.bottomUpOrder(tree).listIterator();
+
+		while (bottomUpNodes.hasNext())
+		{
+			if (!tree.isLeaf(bottomUpNodes.next()))
+			{
+				bottomUpNodes.previous();
+				break;
+			}
+		}
+		return () -> bottomUpNodes;
 	}
 
 	/**
